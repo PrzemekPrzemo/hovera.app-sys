@@ -7,7 +7,6 @@ namespace App\Tenancy;
 use App\Models\Central\Tenant;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Facades\Config;
-use RuntimeException;
 
 /**
  * Holds the current tenant for the request and reconfigures the
@@ -36,7 +35,7 @@ class TenantManager
     public function tenantOrFail(): Tenant
     {
         if ($this->current === null) {
-            throw new RuntimeException('No tenant initialised for this request.');
+            throw new \RuntimeException('No tenant initialised for this request.');
         }
 
         return $this->current;
@@ -53,16 +52,16 @@ class TenantManager
     }
 
     /**
-     * Forget the active tenant — close the PDO connection so the next
-     * request starts clean. Important for queue workers that reuse
-     * the process across many tenants.
+     * Forget the active tenant — drop the cached PDO so the next request
+     * (or the next iteration of a queue worker) starts clean. We purge
+     * the connection but leave the config intact: rebuilding it on the
+     * next setCurrent() is the responsibility of the caller. Wiping the
+     * config here would also break tests / artisan tasks that reuse the
+     * connection name with a different driver.
      */
     public function forget(): void
     {
         $this->db->purge('tenant');
-        Config::set('database.connections.tenant.database', null);
-        Config::set('database.connections.tenant.username', null);
-        Config::set('database.connections.tenant.password', null);
         $this->current = null;
     }
 
