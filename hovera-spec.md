@@ -14,16 +14,13 @@
 Hovera to wielodyscyplinarny SaaS do prowadzenia stajni i ośrodków jeździeckich w modelu B2B, świadomie projektowany jako **platforma operacyjna**, a nie kolejny "kalendarz dla szkółki". Łączymy w jednym systemie cztery konteksty, które konkurencja zwykle obsługuje osobno:
 
 1. **Szkółka jeździecka / lekcje** — zapisy online, karnety, instruktorzy
-2. **Pensjonat (livery) i opieka stała** — boksy, paszporty, opieka zdrowotna, rozliczenia z właścicielami
+2. **Pensjonat (livery) i opieka stała** — boksy, paszporty, opieka zdrowotna, rozliczenia z właścicielami, wyżywienie itp
 3. **Sport i trening** — programy treningowe, zawody, integracje sport (FEI/PZJ)
 4. **Hodowla (breeding)** — klacze, ogiery, krycia, źrebięta, paszporty (PASB i in.)
 
 Plus warstwa, której nikt w UE jeszcze nie ma porządnie:
 
-- **AI Copilot** dla managera stajni (predykcje obciążenia koni, alerty zdrowotne, podsumowania tygodniowe)
-- **E-invoicing-first** (KSeF dla PL, Peppol dla UE, ViDA-ready dla 2028)
-- **Marketplace usług** (weterynarz, kowal, transport) z rezerwacją z poziomu systemu
-- **Publiczny micro-site stajni** generowany automatycznie (lead generation jako wartość)
+- **E-invoicing-first** (KSeF dla PL, Peppol dla UE, ViDA-ready dla 2028) - będziemy to realizować przez billu.pl
 
 ### 1.1 Tagline robocze
 
