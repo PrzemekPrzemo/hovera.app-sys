@@ -33,8 +33,9 @@ class CreateCalendarEntry
 
         $startsAt = Carbon::parse($data['starts_at']);
         $endsAt = Carbon::parse($data['ends_at']);
+        $status = CalendarEntryStatus::from($data['status'] ?? CalendarEntryStatus::Confirmed->value);
 
-        $this->validateRequiredResources($type, $data);
+        $this->validateRequiredResources($type, $data, $status);
         $this->validateConflicts(
             $data['horse_id'] ?? null,
             $data['instructor_id'] ?? null,
@@ -113,11 +114,17 @@ class CreateCalendarEntry
         return $validator->validated();
     }
 
-    private function validateRequiredResources(CalendarEntryType $type, array $data): void
+    private function validateRequiredResources(CalendarEntryType $type, array $data, CalendarEntryStatus $status): void
     {
         $errors = [];
 
-        if ($type->requiresHorse() && empty($data['horse_id'])) {
+        // `requested` is a "pending approval" state — public booking
+        // creates entries here without a horse, the stable owner picks
+        // the horse when confirming. Horse is enforced as soon as the
+        // status moves to confirmed/completed (handled by UpdateCalendarEntry).
+        $horseRequired = $type->requiresHorse() && $status !== CalendarEntryStatus::Requested;
+
+        if ($horseRequired && empty($data['horse_id'])) {
             $errors['horse_id'] = "Typ {$type->label()} wymaga wskazania konia.";
         }
         if ($type->requiresInstructor() && empty($data['instructor_id'])) {
