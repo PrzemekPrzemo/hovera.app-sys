@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\Invitations\AcceptInvitationController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,4 +46,14 @@ Route::middleware(['web', 'auth'])->prefix('tenant')->name('tenant.')->group(fun
 
 Route::middleware(['web', 'auth'])->prefix('impersonation')->name('impersonation.')->group(function () {
     Route::post('/stop', [ImpersonationController::class, 'stop'])->name('stop');
+});
+
+/*
+ * Public invitation acceptance — the token IS the credential, no auth
+ * middleware. Intentionally rate-limited to slow down brute force on
+ * the 30-byte token space.
+ */
+Route::middleware(['web', 'throttle:6,1'])->prefix('invite')->name('invitations.')->group(function () {
+    Route::get('/{token}', [AcceptInvitationController::class, 'show'])->name('accept');
+    Route::post('/{token}', [AcceptInvitationController::class, 'submit'])->name('submit');
 });

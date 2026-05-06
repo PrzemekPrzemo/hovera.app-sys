@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Actions\Memberships;
 
+use App\Actions\Invitations\SendInvitation;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Models\Central\User;
+use App\Models\Central\UserInvitation;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -16,21 +18,30 @@ use Illuminate\Validation\ValidationException;
 /**
  * Attach a user to a tenant. Single source of truth used by:
  *   - the Filament memberships UI (admin & tenant panels)
- *   - the CreateTenant action (when supplied with owner_email)
- *   - future invite-by-email flows
+ *   - CreateTenant (when supplied with owner_email)
+ *   - any future invite flows
  *
  * Behaviour:
- *   - Email already exists → attach (or re-activate revoked) membership
- *   - Email not seen before → create User with a random password and
- *     attach. Caller is responsible for sending an invite e-mail with
- *     a password-reset link (this action returns the generated password
- *     so admin can share it manually if e-mail isn't wired yet).
+ *   - Email already in `users` → attach (or re-activate) membership now,
+ *     return mode='attached'
+ *   - Email new → create a UserInvitation, send invitation email, do
+ *     NOT create the user yet. Membership is created once the user
+ *     accepts the invite via /invite/{token}. Returns mode='invited'
+ *     and the underlying invitation so callers can show appropriate
+ *     UI (e.g. "Invitation sent to ...").
  */
 class AttachOrInviteUser
 {
+    public function __construct(private readonly SendInvitation $sendInvitation) {}
+
     /**
      * @param  array{tenant_id:string, email:string, role:string, name?:string|null}  $input
-     * @return array{membership:TenantMembership, user:User, generated_password:?string}
+     * @return array{
+     *     mode:'attached'|'invited',
+     *     membership:?TenantMembership,
+     *     user:?User,
+     *     invitation:?UserInvitation,
+     * }
      */
     public function execute(array $input): array
     {
@@ -38,37 +49,44 @@ class AttachOrInviteUser
 
         $tenant = Tenant::findOrFail($data['tenant_id']);
         $email = Str::lower($data['email']);
+        $existing = User::where('email', $email)->first();
 
-        return DB::connection('central')->transaction(function () use ($tenant, $data, $email) {
-            $generatedPassword = null;
-            $user = User::where('email', $email)->first();
-
-            if (! $user) {
-                $generatedPassword = Str::password(20, symbols: false);
-                $user = User::create([
-                    'email' => $email,
-                    'name' => $data['name'] ?? Str::before($email, '@'),
-                    'password' => Hash::make($generatedPassword),
-                    'locale' => $tenant->locale,
-                    'timezone' => $tenant->timezone,
+        if ($existing) {
+            $membership = DB::connection('central')->transaction(function () use ($tenant, $existing, $data) {
+                $m = TenantMembership::firstOrNew([
+                    'tenant_id' => $tenant->id,
+                    'user_id' => $existing->id,
                 ]);
-            }
+                $m->role = $data['role'];
+                $m->revoked_at = null;
+                $m->joined_at ??= now();
+                $m->save();
 
-            $membership = TenantMembership::firstOrNew([
-                'tenant_id' => $tenant->id,
-                'user_id' => $user->id,
-            ]);
-            $membership->role = $data['role'];
-            $membership->revoked_at = null;
-            $membership->joined_at ??= now();
-            $membership->save();
+                return $m;
+            });
 
             return [
+                'mode' => 'attached',
                 'membership' => $membership,
-                'user' => $user,
-                'generated_password' => $generatedPassword,
+                'user' => $existing,
+                'invitation' => null,
             ];
-        });
+        }
+
+        $result = $this->sendInvitation->execute(
+            email: $email,
+            tenant: $tenant,
+            role: $data['role'],
+            name: $data['name'] ?? null,
+            invitedBy: Auth::user(),
+        );
+
+        return [
+            'mode' => 'invited',
+            'membership' => null,
+            'user' => null,
+            'invitation' => $result['invitation'],
+        ];
     }
 
     private function validate(array $input): array

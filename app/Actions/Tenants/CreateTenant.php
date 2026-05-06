@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Actions\Tenants;
 
+use App\Actions\Invitations\SendInvitation;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Models\Central\User;
 use App\Tenancy\Provisioner;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -101,25 +101,31 @@ class CreateTenant
 
     private function attachOwner(Tenant $tenant, string $email, ?string $name): void
     {
-        $user = User::firstOrCreate(
-            ['email' => Str::lower($email)],
-            [
-                'name' => $name ?? $email,
-                'password' => Hash::make(Str::password(16)),
-                'locale' => $tenant->locale,
-                'timezone' => $tenant->timezone,
-            ],
-        );
+        $email = Str::lower($email);
+        $existing = User::where('email', $email)->first();
 
-        TenantMembership::firstOrCreate(
-            [
-                'tenant_id' => $tenant->id,
-                'user_id' => $user->id,
-            ],
-            [
-                'role' => 'owner',
-                'joined_at' => now(),
-            ],
+        // Existing user — attach immediately as owner.
+        if ($existing) {
+            TenantMembership::firstOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'user_id' => $existing->id,
+                ],
+                [
+                    'role' => 'owner',
+                    'joined_at' => now(),
+                ],
+            );
+
+            return;
+        }
+
+        // New user — send invitation. Membership is created on accept.
+        app(SendInvitation::class)->execute(
+            email: $email,
+            tenant: $tenant,
+            role: 'owner',
+            name: $name,
         );
     }
 

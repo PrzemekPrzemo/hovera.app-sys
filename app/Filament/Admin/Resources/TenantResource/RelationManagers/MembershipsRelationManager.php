@@ -101,26 +101,38 @@ class MembershipsRelationManager extends RelationManager
                             'role' => $data['role'],
                         ]);
 
-                        $audit->record(
-                            'membership.attach',
-                            'TenantMembership',
-                            $result['membership']->id,
-                            $tenant->id,
-                            [
-                                'email' => $result['user']->email,
-                                'role' => $data['role'],
-                                'created_user' => $result['generated_password'] !== null,
-                            ],
-                        );
+                        if ($result['mode'] === 'attached') {
+                            $audit->record(
+                                'membership.attach',
+                                'TenantMembership',
+                                $result['membership']->id,
+                                $tenant->id,
+                                ['email' => $result['user']->email, 'role' => $data['role']],
+                            );
 
-                        $body = $result['generated_password'] !== null
-                            ? "Utworzono użytkownika {$result['user']->email}. Wygenerowane hasło: {$result['generated_password']} — przekaż użytkownikowi i poproś o zmianę przy pierwszym logowaniu."
-                            : "Dodano {$result['user']->email} do stajni.";
+                            Notification::make()
+                                ->success()
+                                ->title('Członek dodany')
+                                ->body("Dodano {$result['user']->email} do stajni.")
+                                ->send();
+
+                            return;
+                        }
+
+                        // mode === 'invited'
+                        $audit->record(
+                            'invitation.sent',
+                            'UserInvitation',
+                            $result['invitation']->id,
+                            $tenant->id,
+                            ['email' => $result['invitation']->email, 'role' => $data['role']],
+                        );
 
                         Notification::make()
                             ->success()
-                            ->title('Członek dodany')
-                            ->body($body)
+                            ->title('Zaproszenie wysłane')
+                            ->body("Wysłano zaproszenie do {$result['invitation']->email}. Link wygasa "
+                                .$result['invitation']->expires_at->format('Y-m-d H:i').'.')
                             ->persistent()
                             ->send();
                     }),

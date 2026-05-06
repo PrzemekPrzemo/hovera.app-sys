@@ -34,6 +34,7 @@ class AppPanelProvider extends PanelProvider
             ->path('app')
             ->brandName('Hovera')
             ->login()
+            ->passwordReset()
             ->colors([
                 'primary' => Color::Emerald,
             ])

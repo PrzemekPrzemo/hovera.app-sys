@@ -8,8 +8,11 @@ use App\Actions\Memberships\AttachOrInviteUser;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Models\Central\User;
+use App\Models\Central\UserInvitation;
+use App\Notifications\UserInvitationNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -17,8 +20,10 @@ class AttachOrInviteUserTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_attaches_existing_user_without_creating_new_account(): void
+    public function test_attaches_existing_user_without_inviting(): void
     {
+        Notification::fake();
+
         $tenant = $this->makeTenant('alpha');
         $existing = User::create([
             'email' => 'jeździec@example.com',
@@ -32,18 +37,24 @@ class AttachOrInviteUserTest extends TestCase
             'role' => 'instructor',
         ]);
 
+        $this->assertSame('attached', $result['mode']);
         $this->assertSame($existing->id, $result['user']->id);
-        $this->assertNull($result['generated_password']);
+        $this->assertNotNull($result['membership']);
         $this->assertSame('instructor', $result['membership']->role);
-        $this->assertNotNull($result['membership']->joined_at);
+        $this->assertNull($result['invitation']);
         $this->assertNull($result['membership']->revoked_at);
 
         // Existing password unchanged
         $this->assertTrue(Hash::check('original', $existing->refresh()->password));
+
+        // No invitation email when user already exists
+        Notification::assertNothingSent();
     }
 
-    public function test_creates_new_user_when_email_unknown_and_returns_password(): void
+    public function test_unknown_email_creates_invitation_and_sends_mail(): void
     {
+        Notification::fake();
+
         $tenant = $this->makeTenant('beta');
 
         $result = $this->action()->execute([
@@ -53,15 +64,25 @@ class AttachOrInviteUserTest extends TestCase
             'role' => 'manager',
         ]);
 
-        $this->assertNotNull($result['generated_password']);
-        $this->assertSame(20, strlen($result['generated_password']));
-        $this->assertSame('Nowy User', $result['user']->name);
-        $this->assertTrue(Hash::check($result['generated_password'], $result['user']->password));
-        $this->assertSame('manager', $result['membership']->role);
+        $this->assertSame('invited', $result['mode']);
+        $this->assertNull($result['user']);
+        $this->assertNull($result['membership']);
+        $this->assertInstanceOf(UserInvitation::class, $result['invitation']);
+        $this->assertSame('nowy@example.com', $result['invitation']->email);
+        $this->assertSame('manager', $result['invitation']->role);
+        $this->assertSame($tenant->id, $result['invitation']->tenant_id);
+        $this->assertNull($result['invitation']->accepted_at);
+
+        // No User row was created — only the invitation.
+        $this->assertSame(0, User::where('email', 'nowy@example.com')->count());
+
+        Notification::assertSentOnDemand(UserInvitationNotification::class);
     }
 
     public function test_reactivates_a_revoked_membership(): void
     {
+        Notification::fake();
+
         $tenant = $this->makeTenant('gamma');
         $user = User::create([
             'email' => 'old@example.com',
@@ -82,6 +103,7 @@ class AttachOrInviteUserTest extends TestCase
             'role' => 'admin',
         ]);
 
+        $this->assertSame('attached', $result['mode']);
         $this->assertNull($result['membership']->revoked_at);
         $this->assertSame('admin', $result['membership']->role);
         $this->assertSame(1, TenantMembership::where('user_id', $user->id)->count());
@@ -89,6 +111,7 @@ class AttachOrInviteUserTest extends TestCase
 
     public function test_rejects_invalid_role(): void
     {
+        Notification::fake();
         $tenant = $this->makeTenant('delta');
         $this->expectException(ValidationException::class);
 
@@ -101,6 +124,7 @@ class AttachOrInviteUserTest extends TestCase
 
     public function test_rejects_unknown_tenant(): void
     {
+        Notification::fake();
         $this->expectException(ValidationException::class);
 
         $this->action()->execute([
