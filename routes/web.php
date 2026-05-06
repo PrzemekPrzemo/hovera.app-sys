@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Invitations\AcceptInvitationController;
+use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicSiteController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
@@ -86,4 +87,8 @@ Route::middleware(['web', 'throttle:30,1'])
         Route::get('/{instructor}', [PublicBookingController::class, 'pickSlot'])->name('slots');
         Route::get('/{instructor}/confirm', [PublicBookingController::class, 'confirmForm'])->name('confirm');
         Route::post('/{instructor}', [PublicBookingController::class, 'submit'])->name('submit');
+
+        // Customer-facing cancel link (signed URL with TTL = booking start time)
+        Route::get('/cancel/{entry}', [BookingCancellationController::class, 'show'])->name('cancel.show');
+        Route::post('/cancel/{entry}', [BookingCancellationController::class, 'submit'])->name('cancel.submit');
     });

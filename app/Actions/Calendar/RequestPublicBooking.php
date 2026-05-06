@@ -12,7 +12,9 @@ use App\Models\Central\User;
 use App\Models\Tenant\CalendarEntry;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Instructor;
+use App\Notifications\BookingRequestedClientNotification;
 use App\Notifications\NewBookingRequestNotification;
+use App\Services\Calendar\BookingCancellationLink;
 use App\Services\Calendar\ConflictDetector;
 use App\Services\Calendar\PublicBookingAvailability;
 use App\Services\TenantAuditLogger;
@@ -111,6 +113,7 @@ class RequestPublicBooking
             );
 
             $this->notifyOwners($tenant, $entry, $client, $instructor);
+            $this->notifyClient($tenant, $entry, $client, $instructor);
 
             return [
                 'client' => $client,
@@ -208,6 +211,26 @@ class RequestPublicBooking
             clientEmail: $client->email,
             clientPhone: $client->phone,
             notes: $entry->notes,
+        ));
+    }
+
+    private function notifyClient(Tenant $tenant, CalendarEntry $entry, Client $client, Instructor $instructor): void
+    {
+        if (! $client->email) {
+            return;
+        }
+
+        $duration = (int) $entry->starts_at->diffInMinutes($entry->ends_at);
+        $cancelUrl = app(BookingCancellationLink::class)
+            ->for($entry, $tenant->slug);
+
+        Notification::route('mail', $client->email)->notify(new BookingRequestedClientNotification(
+            tenantName: $tenant->name,
+            startsAt: $entry->starts_at,
+            durationMinutes: $duration,
+            instructorName: $instructor->name,
+            cancelUrl: $cancelUrl,
+            cancellationPolicyHours: (int) (data_get($tenant->settings, 'cancellation_policy.hours') ?? 12),
         ));
     }
 }

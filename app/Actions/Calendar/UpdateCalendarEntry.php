@@ -6,11 +6,17 @@ namespace App\Actions\Calendar;
 
 use App\Enums\CalendarEntryStatus;
 use App\Enums\CalendarEntryType;
+use App\Models\Central\Tenant;
 use App\Models\Tenant\CalendarEntry;
+use App\Notifications\BookingCancelledClientNotification;
+use App\Notifications\BookingConfirmedClientNotification;
+use App\Services\Calendar\BookingCancellationLink;
 use App\Services\Calendar\ConflictDetector;
 use App\Services\Calendar\PassUseManager;
 use App\Services\TenantAuditLogger;
+use App\Tenancy\TenantManager;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class UpdateCalendarEntry
@@ -19,6 +25,8 @@ class UpdateCalendarEntry
         private readonly ConflictDetector $conflicts,
         private readonly TenantAuditLogger $audit,
         private readonly PassUseManager $passes,
+        private readonly TenantManager $tenants,
+        private readonly BookingCancellationLink $cancelLinks,
     ) {}
 
     /**
@@ -51,8 +59,6 @@ class UpdateCalendarEntry
             $startsAt = $entry->starts_at instanceof Carbon ? $entry->starts_at : Carbon::parse($entry->starts_at);
             $endsAt = $entry->ends_at instanceof Carbon ? $entry->ends_at : Carbon::parse($entry->ends_at);
 
-            // Only validate conflicts if the new status would actually
-            // occupy resources — moving to "cancelled" can't conflict.
             $statusBlocks = $entry->status->blocksResources();
 
             if ($statusBlocks) {
@@ -71,6 +77,13 @@ class UpdateCalendarEntry
             }
         }
 
+        // Snapshot whether a pending pass-use would be restored — captured
+        // BEFORE reconcile actually performs the restore, so the customer
+        // email reflects what happened.
+        $passWouldBeRestored = $entry->status === CalendarEntryStatus::Cancelled
+            && $previousStatus->blocksResources()
+            && $this->passes->wouldRestoreOnCancel($entry);
+
         $changedFields = array_keys($entry->getDirty());
         $entry->save();
 
@@ -84,19 +97,11 @@ class UpdateCalendarEntry
         }
 
         $this->reconcilePassUseAfterStatusChange($entry, $previousStatus);
+        $this->notifyClientOnStatusTransition($entry, $previousStatus, $passWouldBeRestored);
 
         return $entry;
     }
 
-    /**
-     * Pass-use reconciliation matrix:
-     *
-     *   was confirmed/completed  →  cancelled       try restoreFor()
-     *   was confirmed/completed  →  no_show         keep use (it WAS owed)
-     *   was cancelled/no_show    →  confirmed       applyTo() fresh
-     *
-     * Anything else (no status change, or completed→completed) → no-op.
-     */
     private function reconcilePassUseAfterStatusChange(CalendarEntry $entry, CalendarEntryStatus $previousStatus): void
     {
         if (! $entry->client_id) {
@@ -114,10 +119,7 @@ class UpdateCalendarEntry
         $wasBlocking = $previousStatus->blocksResources();
         $isBlocking = $newStatus->blocksResources();
 
-        // Now-cancelled (or no_show), was active.
         if ($wasBlocking && ! $isBlocking) {
-            // No-show explicitly does not restore — the slot was held,
-            // costs incurred. Only honest cancellations have a chance.
             if ($newStatus === CalendarEntryStatus::Cancelled) {
                 $restored = $this->passes->restoreFor($entry, 'cancellation');
                 $this->audit->record(
@@ -130,7 +132,6 @@ class UpdateCalendarEntry
             return;
         }
 
-        // Re-activated booking that previously had its use restored.
         if (! $wasBlocking && $isBlocking) {
             $use = $this->passes->applyTo($entry);
             if ($use) {
@@ -142,5 +143,77 @@ class UpdateCalendarEntry
                 );
             }
         }
+    }
+
+    /**
+     * Customer-facing emails on owner-driven status changes.
+     *
+     *   requested → confirmed/completed   "Twoja rezerwacja potwierdzona"
+     *   * → cancelled                     "Stajnia odwołała Twoją rezerwację"
+     *
+     * Quietly skips when there's no client email, no active tenant, or
+     * the booking didn't change status. `$passWasRestored` is captured
+     * by the caller BEFORE reconcile so the email reflects the actual
+     * outcome.
+     */
+    private function notifyClientOnStatusTransition(
+        CalendarEntry $entry,
+        CalendarEntryStatus $previousStatus,
+        bool $passWasRestored,
+    ): void {
+        if ($entry->status === $previousStatus) {
+            return;
+        }
+
+        $client = $entry->client;
+        if (! $client || ! $client->email) {
+            return;
+        }
+
+        $tenant = $this->tenants->current();
+        if (! $tenant instanceof Tenant) {
+            return;
+        }
+
+        $becomingConfirmed = $previousStatus === CalendarEntryStatus::Requested
+            && in_array($entry->status, [CalendarEntryStatus::Confirmed, CalendarEntryStatus::Completed], true);
+
+        if ($becomingConfirmed) {
+            $this->dispatchConfirmedMail($tenant, $entry, $client);
+
+            return;
+        }
+
+        $becomingCancelled = $previousStatus->blocksResources()
+            && $entry->status === CalendarEntryStatus::Cancelled;
+
+        if ($becomingCancelled) {
+            Notification::route('mail', $client->email)->notify(new BookingCancelledClientNotification(
+                tenantName: $tenant->name,
+                startsAt: $entry->starts_at,
+                instructorName: $entry->instructor?->name ?? '—',
+                cancelledBy: 'stable',
+                passRestored: $passWasRestored,
+            ));
+        }
+    }
+
+    private function dispatchConfirmedMail(Tenant $tenant, CalendarEntry $entry, $client): void
+    {
+        $duration = (int) $entry->starts_at->diffInMinutes($entry->ends_at);
+        $publicProfile = (array) (data_get($tenant->settings, 'public_profile') ?? []);
+
+        Notification::route('mail', $client->email)->notify(new BookingConfirmedClientNotification(
+            tenantName: $tenant->name,
+            startsAt: $entry->starts_at,
+            durationMinutes: $duration,
+            instructorName: $entry->instructor?->name ?? '—',
+            horseName: $entry->horse?->name,
+            arenaName: $entry->arena?->name,
+            stableAddress: $publicProfile['address'] ?? null,
+            stablePhone: $publicProfile['phone'] ?? null,
+            cancelUrl: $this->cancelLinks->for($entry, $tenant->slug),
+            cancellationPolicyHours: (int) (data_get($tenant->settings, 'cancellation_policy.hours') ?? 12),
+        ));
     }
 }

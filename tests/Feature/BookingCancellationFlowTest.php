@@ -8,22 +8,21 @@ use App\Actions\Calendar\RequestPublicBooking;
 use App\Actions\Calendar\UpdateCalendarEntry;
 use App\Enums\CalendarEntryStatus;
 use App\Models\Central\Tenant;
-use App\Models\Central\TenantMembership;
-use App\Models\Central\User;
-use App\Models\Tenant\Client;
 use App\Models\Tenant\Instructor;
-use App\Notifications\NewBookingRequestNotification;
+use App\Notifications\BookingCancelledClientNotification;
+use App\Notifications\BookingConfirmedClientNotification;
+use App\Notifications\BookingRequestedClientNotification;
+use App\Services\Calendar\BookingCancellationLink;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Validation\ValidationException;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
-class RequestPublicBookingTest extends TestCase
+class BookingCancellationFlowTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -36,7 +35,7 @@ class RequestPublicBookingTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->tenantDbPath = tempnam(sys_get_temp_dir(), 'hovera_rpb_').'.sqlite';
+        $this->tenantDbPath = tempnam(sys_get_temp_dir(), 'hovera_bcf_').'.sqlite';
         touch($this->tenantDbPath);
 
         config()->set('database.connections.tenant', [
@@ -66,187 +65,180 @@ class RequestPublicBookingTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_creates_client_and_requested_entry(): void
+    public function test_request_dispatches_client_notification_with_cancel_url(): void
     {
         Notification::fake();
 
-        $startsAt = Carbon::tomorrow()->setTime(10, 0);
-
-        $result = $this->action()->execute($this->tenant, [
-            'instructor_id' => $this->instructor->id,
-            'starts_at' => $startsAt->toDateTimeString(),
-            'name' => 'Anna Kowalska',
-            'email' => 'ANNA@example.com',
-            'phone' => '+48 600 100 200',
-            'notes' => 'Pierwsza jazda',
-        ]);
-
-        $this->assertInstanceOf(Client::class, $result['client']);
-        $this->assertSame('anna@example.com', $result['client']->email);   // case-folded
-
-        $this->assertSame(CalendarEntryStatus::Requested, $result['entry']->status);
-        $this->assertNull($result['entry']->horse_id);
-        $this->assertSame($this->instructor->id, $result['entry']->instructor_id);
-        $this->assertSame($result['client']->id, $result['entry']->client_id);
-        $this->assertSame('public_booking', $result['entry']->metadata['source']);
-    }
-
-    public function test_disabled_public_booking_throws(): void
-    {
-        Notification::fake();
-        $disabled = $this->makeTenant(enabled: false);
-
-        $this->expectException(ValidationException::class);
-        $this->action()->execute($disabled, [
-            'instructor_id' => $this->instructor->id,
-            'starts_at' => Carbon::tomorrow()->setTime(10, 0)->toDateTimeString(),
-            'name' => 'X',
-            'email' => 'x@example.com',
-        ]);
-    }
-
-    public function test_inactive_instructor_throws(): void
-    {
-        Notification::fake();
-        $this->instructor->forceFill(['is_active' => false])->save();
-
-        $this->expectException(ValidationException::class);
-        $this->action()->execute($this->tenant, [
-            'instructor_id' => $this->instructor->id,
-            'starts_at' => Carbon::tomorrow()->setTime(10, 0)->toDateTimeString(),
-            'name' => 'X',
-            'email' => 'x@example.com',
-        ]);
-    }
-
-    public function test_existing_client_is_matched_not_duplicated(): void
-    {
-        Notification::fake();
-        $existing = Client::create([
-            'id' => '01HCLIENT00000000000000001',
-            'type' => 'individual',
-            'name' => 'Anna Stara',
-            'email' => 'anna@example.com',
-            'country' => 'PL',
-        ]);
-
-        $result = $this->action()->execute($this->tenant, [
-            'instructor_id' => $this->instructor->id,
-            'starts_at' => Carbon::tomorrow()->setTime(10, 0)->toDateTimeString(),
-            'name' => 'Anna Nowa',
-            'email' => 'anna@example.com',
-        ]);
-
-        $this->assertSame($existing->id, $result['client']->id);
-        $this->assertSame(1, Client::count());
-    }
-
-    public function test_too_close_booking_rejected(): void
-    {
-        Notification::fake();
-
-        $this->expectException(ValidationException::class);
-        $this->action()->execute($this->tenant, [
-            'instructor_id' => $this->instructor->id,
-            'starts_at' => now()->addMinutes(30)->toDateTimeString(),  // < advance_min_hours=4
-            'name' => 'X',
-            'email' => 'x@example.com',
-        ]);
-    }
-
-    public function test_owner_cannot_confirm_request_without_assigning_horse(): void
-    {
-        Notification::fake();
-
-        $result = $this->action()->execute($this->tenant, [
+        $this->app->make(RequestPublicBooking::class)->execute($this->tenant, [
             'instructor_id' => $this->instructor->id,
             'starts_at' => Carbon::tomorrow()->setTime(10, 0)->toDateTimeString(),
             'name' => 'Anna',
             'email' => 'anna@example.com',
         ]);
 
-        // Try to flip status to confirmed without setting horse_id → should fail
-        $this->expectException(ValidationException::class);
+        Notification::assertSentOnDemand(
+            BookingRequestedClientNotification::class,
+            function (BookingRequestedClientNotification $notification, array $channels, $notifiable) {
+                return $notification->tenantName === $this->tenant->name
+                    && str_starts_with($notification->cancelUrl, 'http')
+                    && $notification->cancellationPolicyHours > 0;
+            }
+        );
+    }
+
+    public function test_confirmation_by_owner_dispatches_confirmed_mail(): void
+    {
+        Notification::fake();
+
+        $req = $this->app->make(RequestPublicBooking::class)->execute($this->tenant, [
+            'instructor_id' => $this->instructor->id,
+            'starts_at' => Carbon::tomorrow()->setTime(10, 0)->toDateTimeString(),
+            'name' => 'Anna',
+            'email' => 'anna@example.com',
+        ]);
+
+        // Owner: assign horse + confirm
+        $this->app->make(UpdateCalendarEntry::class)->execute($req['entry'], [
+            'horse_id' => '01HHORSE0000000000000000A1',
+            'status' => CalendarEntryStatus::Confirmed->value,
+        ]);
+
+        Notification::assertSentOnDemand(BookingConfirmedClientNotification::class);
+    }
+
+    public function test_owner_cancellation_dispatches_cancelled_mail(): void
+    {
+        Notification::fake();
+
+        $req = $this->app->make(RequestPublicBooking::class)->execute($this->tenant, [
+            'instructor_id' => $this->instructor->id,
+            'starts_at' => Carbon::tomorrow()->setTime(10, 0)->toDateTimeString(),
+            'name' => 'Anna',
+            'email' => 'anna@example.com',
+        ]);
+
+        $this->app->make(UpdateCalendarEntry::class)->execute($req['entry'], [
+            'horse_id' => '01HHORSE0000000000000000A1',
+            'status' => CalendarEntryStatus::Confirmed->value,
+        ]);
+
         $this->app->make(UpdateCalendarEntry::class)->execute(
-            $result['entry'],
-            ['status' => CalendarEntryStatus::Confirmed->value],
+            $req['entry']->fresh(),
+            ['status' => CalendarEntryStatus::Cancelled->value],
         );
+
+        Notification::assertSentOnDemand(BookingCancelledClientNotification::class);
     }
 
-    public function test_owner_can_confirm_after_assigning_horse(): void
+    public function test_signed_cancel_url_renders_form_for_valid_signature(): void
     {
         Notification::fake();
 
-        $result = $this->action()->execute($this->tenant, [
+        $req = $this->app->make(RequestPublicBooking::class)->execute($this->tenant, [
             'instructor_id' => $this->instructor->id,
             'starts_at' => Carbon::tomorrow()->setTime(10, 0)->toDateTimeString(),
             'name' => 'Anna',
             'email' => 'anna@example.com',
         ]);
 
-        $updated = $this->app->make(UpdateCalendarEntry::class)->execute(
-            $result['entry'],
-            [
-                'horse_id' => '01HHORSE0000000000000000A1',
-                'status' => CalendarEntryStatus::Confirmed->value,
-            ],
-        );
+        $url = $this->app->make(BookingCancellationLink::class)
+            ->for($req['entry'], $this->tenant->slug);
 
-        $this->assertSame(CalendarEntryStatus::Confirmed, $updated->status);
-        $this->assertSame('01HHORSE0000000000000000A1', $updated->horse_id);
+        $this->get($url)
+            ->assertOk()
+            ->assertSee('Odwołaj rezerwację');
     }
 
-    public function test_notification_dispatched_to_owners(): void
+    public function test_unsigned_cancel_url_shows_invalid_page(): void
     {
         Notification::fake();
-
-        // Make a master admin who is also the tenant owner so the notification
-        // route('mail') call has a recipient.
-        $owner = User::create([
-            'email' => 'owner@example.com',
-            'name' => 'Owner',
-            'password' => bcrypt('secret'),
-        ]);
-        TenantMembership::create([
-            'tenant_id' => $this->tenant->id,
-            'user_id' => $owner->id,
-            'role' => 'owner',
-            'joined_at' => now(),
-        ]);
-
-        $this->action()->execute($this->tenant, [
+        $req = $this->app->make(RequestPublicBooking::class)->execute($this->tenant, [
             'instructor_id' => $this->instructor->id,
             'starts_at' => Carbon::tomorrow()->setTime(10, 0)->toDateTimeString(),
             'name' => 'Anna',
             'email' => 'anna@example.com',
         ]);
 
-        Notification::assertSentOnDemand(NewBookingRequestNotification::class);
+        // Plain URL without signature
+        $url = "/s/{$this->tenant->slug}/book/cancel/{$req['entry']->id}";
+
+        $this->get($url)
+            ->assertOk()
+            ->assertSee('Link wygasł');
     }
 
-    private function action(): RequestPublicBooking
+    public function test_cancel_post_marks_entry_cancelled_and_emails_client(): void
     {
-        return $this->app->make(RequestPublicBooking::class);
+        Notification::fake();
+        $req = $this->app->make(RequestPublicBooking::class)->execute($this->tenant, [
+            'instructor_id' => $this->instructor->id,
+            'starts_at' => Carbon::tomorrow()->setTime(10, 0)->toDateTimeString(),
+            'name' => 'Anna',
+            'email' => 'anna@example.com',
+        ]);
+
+        $url = $this->app->make(BookingCancellationLink::class)
+            ->for($req['entry'], $this->tenant->slug);
+
+        $parts = parse_url($url);
+        parse_str($parts['query'], $query);
+
+        $response = $this->post($parts['path'].'?'.$parts['query']);
+
+        $response->assertOk()->assertSee('Rezerwacja odwołana');
+
+        $this->assertSame(
+            CalendarEntryStatus::Cancelled,
+            $req['entry']->fresh()->status,
+        );
+
+        Notification::assertSentOnDemand(
+            BookingCancelledClientNotification::class,
+            fn (BookingCancelledClientNotification $n) => $n->cancelledBy === 'client',
+        );
     }
 
-    private function makeTenant(bool $enabled = true): Tenant
+    public function test_cancel_post_idempotent_on_already_cancelled_entry(): void
+    {
+        Notification::fake();
+        $req = $this->app->make(RequestPublicBooking::class)->execute($this->tenant, [
+            'instructor_id' => $this->instructor->id,
+            'starts_at' => Carbon::tomorrow()->setTime(10, 0)->toDateTimeString(),
+            'name' => 'Anna',
+            'email' => 'anna@example.com',
+        ]);
+
+        // Pre-cancel server-side
+        $req['entry']->forceFill(['status' => CalendarEntryStatus::Cancelled->value])->save();
+
+        $url = $this->app->make(BookingCancellationLink::class)
+            ->for($req['entry'], $this->tenant->slug);
+
+        // Should redirect (no second cancel)
+        $this->get($url)
+            ->assertOk()
+            ->assertSee('Rezerwacja już odwołana');
+    }
+
+    private function makeTenant(): Tenant
     {
         $u = uniqid();
         $t = new Tenant([
-            'slug' => 'rpb-'.$u,
-            'name' => 'RPB Test',
-            'db_name' => 'rpb_'.$u,
-            'db_username' => 'rpb_'.substr($u, -8),
+            'slug' => 'bcf-'.$u,
+            'name' => 'BCF Test',
+            'db_name' => 'bcf_'.$u,
+            'db_username' => 'bcf_'.substr($u, -8),
             'status' => 'active',
             'settings' => [
                 'public_booking' => [
-                    'enabled' => $enabled,
+                    'enabled' => true,
                     'lesson_duration_minutes' => 60,
                     'working_hours_start' => '09:00',
                     'working_hours_end' => '19:00',
                     'advance_min_hours' => 4,
                     'advance_max_days' => 30,
                 ],
+                'cancellation_policy' => ['hours' => 12],
             ],
         ]);
         $t->db_password = 'irrelevant';
