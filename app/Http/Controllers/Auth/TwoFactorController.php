@@ -16,9 +16,7 @@ use Illuminate\View\View;
 
 class TwoFactorController extends Controller
 {
-    public function __construct(private readonly TwoFactorAuthenticator $totp)
-    {
-    }
+    public function __construct(private readonly TwoFactorAuthenticator $totp) {}
 
     /**
      * Show the QR + confirmation form. If the user already enabled 2FA,
@@ -34,7 +32,7 @@ class TwoFactorController extends Controller
         }
 
         $secret = $request->session()->get('pending_2fa_secret');
-        if (!$secret) {
+        if (! $secret) {
             $secret = $this->totp->generateSecret();
             $request->session()->put('pending_2fa_secret', $secret);
         }
@@ -54,7 +52,7 @@ class TwoFactorController extends Controller
 
         $secret = $request->session()->get('pending_2fa_secret');
 
-        if (!$secret || !$this->totp->verify($secret, $request->string('code')->toString())) {
+        if (! $secret || ! $this->totp->verify($secret, $request->string('code')->toString())) {
             throw ValidationException::withMessages([
                 'code' => 'Kod jest nieprawidłowy lub wygasł.',
             ]);
@@ -65,9 +63,9 @@ class TwoFactorController extends Controller
         $recoveryCodes = $this->totp->generateRecoveryCodes();
 
         $user->forceFill([
-            'two_factor_secret'         => $secret,
+            'two_factor_secret' => $secret,
             'two_factor_recovery_codes' => $recoveryCodes,
-            'two_factor_confirmed_at'   => now(),
+            'two_factor_confirmed_at' => now(),
         ])->save();
 
         $request->session()->forget('pending_2fa_secret');
@@ -82,17 +80,19 @@ class TwoFactorController extends Controller
     public function showRecoveryCodes(Request $request): View|RedirectResponse
     {
         $codes = $request->session()->pull('two_factor_recovery_codes_view');
-        if (!$codes) {
-            return redirect('/' . config('hovera.admin.path'));
+        if (! $codes) {
+            return redirect('/'.config('hovera.admin.path'));
         }
+
         return view('auth.two-factor-recovery-codes', ['codes' => $codes]);
     }
 
     public function showChallenge(): View|RedirectResponse
     {
         if (session('two_factor_passed')) {
-            return redirect()->intended('/' . config('hovera.admin.path'));
+            return redirect()->intended('/'.config('hovera.admin.path'));
         }
+
         return view('auth.two-factor-challenge');
     }
 
@@ -107,7 +107,8 @@ class TwoFactorController extends Controller
         if ($this->totp->verify($user->two_factor_secret, $code)) {
             $request->session()->put('two_factor_passed', true);
             $audit->record('master.two_factor.challenge.passed', 'User', $user->id);
-            return redirect()->intended('/' . config('hovera.admin.path'));
+
+            return redirect()->intended('/'.config('hovera.admin.path'));
         }
 
         // Recovery code branch
@@ -119,7 +120,8 @@ class TwoFactorController extends Controller
             $audit->record('master.two_factor.recovery_used', 'User', $user->id, null, [
                 'remaining' => count($remaining),
             ]);
-            return redirect()->intended('/' . config('hovera.admin.path'));
+
+            return redirect()->intended('/'.config('hovera.admin.path'));
         }
 
         $audit->record('master.two_factor.challenge.failed', 'User', $user->id);

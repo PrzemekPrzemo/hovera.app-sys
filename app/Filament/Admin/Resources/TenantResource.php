@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources;
 
-use App\Actions\Tenants\CreateTenant;
 use App\Actions\Tenants\DeleteTenant;
 use App\Filament\Admin\Resources\TenantResource\Pages;
 use App\Models\Central\Plan;
@@ -22,11 +21,17 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class TenantResource extends Resource
 {
     protected static ?string $model = Tenant::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+
     protected static ?string $navigationLabel = 'Stajnie';
+
     protected static ?string $navigationGroup = 'Tenants';
+
     protected static ?string $modelLabel = 'Stajnia';
+
     protected static ?string $pluralModelLabel = 'Stajnie';
+
     protected static ?int $navigationSort = 10;
 
     public static function form(Form $form): Form
@@ -65,11 +70,11 @@ class TenantResource extends Resource
                     Forms\Components\Select::make('status')
                         ->options([
                             'provisioning' => 'provisioning',
-                            'trialing'     => 'trialing',
-                            'active'       => 'active',
-                            'past_due'     => 'past_due',
-                            'suspended'    => 'suspended',
-                            'churned'      => 'churned',
+                            'trialing' => 'trialing',
+                            'active' => 'active',
+                            'past_due' => 'past_due',
+                            'suspended' => 'suspended',
+                            'churned' => 'churned',
                         ])
                         ->disabledOn('create'),
                 ]),
@@ -95,10 +100,10 @@ class TenantResource extends Resource
                 Tables\Columns\TextColumn::make('plan.name')->label('Plan')->sortable(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
-                        'gray'    => fn ($state) => in_array($state, ['provisioning', 'churned'], true),
+                        'gray' => fn ($state) => in_array($state, ['provisioning', 'churned'], true),
                         'warning' => fn ($state) => in_array($state, ['trialing', 'past_due'], true),
                         'success' => 'active',
-                        'danger'  => fn ($state) => in_array($state, ['suspended', 'deleted'], true),
+                        'danger' => fn ($state) => in_array($state, ['suspended', 'deleted'], true),
                     ]),
                 Tables\Columns\TextColumn::make('db_name')->label('Baza')->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')->label('Utworzona')->dateTime()->sortable(),
@@ -107,11 +112,11 @@ class TenantResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'trialing'  => 'trialing',
-                        'active'    => 'active',
-                        'past_due'  => 'past_due',
+                        'trialing' => 'trialing',
+                        'active' => 'active',
+                        'past_due' => 'past_due',
                         'suspended' => 'suspended',
-                        'churned'   => 'churned',
+                        'churned' => 'churned',
                     ]),
                 Tables\Filters\TrashedFilter::make(),
             ])
@@ -128,8 +133,8 @@ class TenantResource extends Resource
                     ])
                     ->action(function (Tenant $record, array $data, MasterAuditLogger $audit) {
                         $record->forceFill([
-                            'status'           => 'suspended',
-                            'suspended_at'     => now(),
+                            'status' => 'suspended',
+                            'suspended_at' => now(),
                             'suspended_reason' => $data['reason'],
                         ])->save();
                         $audit->record('tenant.suspend', 'Tenant', $record->id, $record->id, $data);
@@ -143,8 +148,8 @@ class TenantResource extends Resource
                     ->requiresConfirmation()
                     ->action(function (Tenant $record, MasterAuditLogger $audit) {
                         $record->forceFill([
-                            'status'           => 'active',
-                            'suspended_at'     => null,
+                            'status' => 'active',
+                            'suspended_at' => null,
                             'suspended_reason' => null,
                         ])->save();
                         $audit->record('tenant.reactivate', 'Tenant', $record->id, $record->id);
@@ -175,11 +180,12 @@ class TenantResource extends Resource
                     ->action(function (Tenant $record, array $data, DeleteTenant $deleter, MasterAuditLogger $audit) {
                         if ($data['confirm_slug'] !== $record->slug) {
                             Notification::make()->danger()->title('Slug się nie zgadza.')->send();
+
                             return;
                         }
                         $audit->record('tenant.destroy', 'Tenant', $record->id, $record->id, [
                             'db_name' => $record->db_name,
-                            'slug'    => $record->slug,
+                            'slug' => $record->slug,
                         ]);
                         $deleter->destroy($record);
                         Notification::make()->success()->title('Stajnia trwale usunięta')->send();
@@ -195,9 +201,9 @@ class TenantResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListTenants::route('/'),
+            'index' => Pages\ListTenants::route('/'),
             'create' => Pages\CreateTenant::route('/create'),
-            'edit'   => Pages\EditTenant::route('/{record}/edit'),
+            'edit' => Pages\EditTenant::route('/{record}/edit'),
         ];
     }
 }

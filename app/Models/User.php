@@ -11,6 +11,4 @@ use App\Models\Central\User as CentralUser;
  * (config/auth.php points at App\Models\User). The actual definition
  * lives in App\Models\Central\User.
  */
-class User extends CentralUser
-{
-}
+class User extends CentralUser {}

@@ -31,11 +31,13 @@ class TenantsMigrateCommand extends Command
 
         if ($list->isEmpty()) {
             $this->warn('No matching tenants.');
+
             return self::SUCCESS;
         }
 
         if ($this->option('fresh') && $this->getLaravel()->isProduction()) {
             $this->error('--fresh is forbidden in production.');
+
             return self::FAILURE;
         }
 
@@ -44,9 +46,9 @@ class TenantsMigrateCommand extends Command
             $tenants->execute($tenant, function () {
                 Artisan::call($this->option('fresh') ? 'migrate:fresh' : 'migrate', [
                     '--database' => 'tenant',
-                    '--path'     => 'database/migrations/tenant',
+                    '--path' => 'database/migrations/tenant',
                     '--realpath' => false,
-                    '--force'    => true,
+                    '--force' => true,
                 ], $this->getOutput());
             });
         }

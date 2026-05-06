@@ -30,17 +30,18 @@ class MasterAdminSeeder extends Seeder
         if ($existing) {
             $existing->forceFill(['is_master_admin' => true])->save();
             $this->command->info("Master admin already exists: {$existing->email}");
+
             return;
         }
 
         $password = Str::password(20, symbols: false);
 
         $user = User::create([
-            'email'           => self::ADMIN_EMAIL,
-            'name'            => 'Przemek Szulecki',
-            'password'        => Hash::make($password),
-            'locale'          => 'pl',
-            'timezone'        => 'Europe/Warsaw',
+            'email' => self::ADMIN_EMAIL,
+            'name' => 'Przemek Szulecki',
+            'password' => Hash::make($password),
+            'locale' => 'pl',
+            'timezone' => 'Europe/Warsaw',
             'is_master_admin' => true,
             'email_verified_at' => now(),
         ]);

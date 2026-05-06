@@ -13,6 +13,7 @@ class AuditLogMaster extends Model
     use HasUlids;
 
     protected $connection = 'central';
+
     protected $table = 'audit_log_master';
 
     public $timestamps = false;
@@ -26,7 +27,7 @@ class AuditLogMaster extends Model
     protected function casts(): array
     {
         return [
-            'payload'    => 'array',
+            'payload' => 'array',
             'created_at' => 'datetime',
         ];
     }

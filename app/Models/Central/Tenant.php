@@ -16,6 +16,7 @@ class Tenant extends Model
     use HasUlids, SoftDeletes;
 
     protected $connection = 'central';
+
     protected $table = 'tenants';
 
     protected $fillable = [
@@ -29,13 +30,13 @@ class Tenant extends Model
     protected function casts(): array
     {
         return [
-            'branding'          => 'array',
-            'settings'          => 'array',
-            'trial_ends_at'     => 'datetime',
-            'suspended_at'      => 'datetime',
-            'last_activity_at'  => 'datetime',
-            'health_score'      => 'integer',
-            'db_port'           => 'integer',
+            'branding' => 'array',
+            'settings' => 'array',
+            'trial_ends_at' => 'datetime',
+            'suspended_at' => 'datetime',
+            'last_activity_at' => 'datetime',
+            'health_score' => 'integer',
+            'db_port' => 'integer',
         ];
     }
 
@@ -71,18 +72,18 @@ class Tenant extends Model
     public function databaseConnectionConfig(): array
     {
         return [
-            'driver'         => 'mysql',
-            'host'           => $this->db_host,
-            'port'           => $this->db_port,
-            'database'       => $this->db_name,
-            'username'       => $this->db_username,
-            'password'       => $this->db_password,
-            'charset'        => 'utf8mb4',
-            'collation'      => 'utf8mb4_unicode_ci',
-            'prefix'         => '',
+            'driver' => 'mysql',
+            'host' => $this->db_host,
+            'port' => $this->db_port,
+            'database' => $this->db_name,
+            'username' => $this->db_username,
+            'password' => $this->db_password,
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
             'prefix_indexes' => true,
-            'strict'         => true,
-            'engine'         => 'InnoDB',
+            'strict' => true,
+            'engine' => 'InnoDB',
         ];
     }
 

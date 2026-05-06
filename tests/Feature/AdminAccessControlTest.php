@@ -21,9 +21,9 @@ class AdminAccessControlTest extends TestCase
     public function test_non_admin_user_cannot_reach_admin(): void
     {
         $user = User::create([
-            'email'           => 'user@example.com',
-            'name'            => 'Regular',
-            'password'        => bcrypt('secret123'),
+            'email' => 'user@example.com',
+            'name' => 'Regular',
+            'password' => bcrypt('secret123'),
             'is_master_admin' => false,
         ]);
 
@@ -37,9 +37,9 @@ class AdminAccessControlTest extends TestCase
         config()->set('hovera.admin.require_2fa', false);
 
         $admin = User::create([
-            'email'           => 'admin@example.com',
-            'name'            => 'Admin',
-            'password'        => bcrypt('secret123'),
+            'email' => 'admin@example.com',
+            'name' => 'Admin',
+            'password' => bcrypt('secret123'),
             'is_master_admin' => true,
         ]);
 
@@ -53,9 +53,9 @@ class AdminAccessControlTest extends TestCase
         config()->set('hovera.admin.require_2fa', true);
 
         $admin = User::create([
-            'email'           => 'admin@example.com',
-            'name'            => 'Admin',
-            'password'        => bcrypt('secret123'),
+            'email' => 'admin@example.com',
+            'name' => 'Admin',
+            'password' => bcrypt('secret123'),
             'is_master_admin' => true,
         ]);
 

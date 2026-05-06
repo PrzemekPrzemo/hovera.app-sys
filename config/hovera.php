@@ -11,8 +11,8 @@ return [
     */
 
     'admin' => [
-        'path'         => env('HOVERA_ADMIN_PATH', 'admin'),
-        'require_2fa'  => env('HOVERA_ADMIN_REQUIRE_2FA', true),
+        'path' => env('HOVERA_ADMIN_PATH', 'admin'),
+        'require_2fa' => env('HOVERA_ADMIN_REQUIRE_2FA', true),
     ],
 
     /*
@@ -36,10 +36,10 @@ return [
     */
 
     'tenant' => [
-        'db_prefix'   => env('HOVERA_TENANT_DB_PREFIX', 'hovera_t_'),
+        'db_prefix' => env('HOVERA_TENANT_DB_PREFIX', 'hovera_t_'),
         'user_prefix' => env('HOVERA_TENANT_USER_PREFIX', 'hovera_t_'),
-        'db_host'     => env('HOVERA_TENANT_DB_HOST', '127.0.0.1'),
-        'db_port'     => (int) env('HOVERA_TENANT_DB_PORT', 3306),
+        'db_host' => env('HOVERA_TENANT_DB_HOST', '127.0.0.1'),
+        'db_port' => (int) env('HOVERA_TENANT_DB_PORT', 3306),
     ],
 
     /*

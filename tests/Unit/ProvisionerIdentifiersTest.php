@@ -68,6 +68,7 @@ class ProvisionerIdentifiersTest extends TestCase
         // Mocks are fine — these methods don't touch the DB.
         $tm = $this->createStub(TenantManager::class);
         $dm = $this->createStub(DatabaseManager::class);
+
         return new Provisioner($tm, $dm);
     }
 }

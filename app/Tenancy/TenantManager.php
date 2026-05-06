@@ -21,9 +21,7 @@ class TenantManager
 {
     private ?Tenant $current = null;
 
-    public function __construct(private readonly DatabaseManager $db)
-    {
-    }
+    public function __construct(private readonly DatabaseManager $db) {}
 
     public function current(): ?Tenant
     {
@@ -40,6 +38,7 @@ class TenantManager
         if ($this->current === null) {
             throw new RuntimeException('No tenant initialised for this request.');
         }
+
         return $this->current;
     }
 
@@ -77,6 +76,7 @@ class TenantManager
         $previous = $this->current;
         try {
             $this->setCurrent($tenant);
+
             return $callback($tenant);
         } finally {
             if ($previous !== null) {

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Central\User;
-use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use PragmaRX\Google2FA\Google2FA;
@@ -15,9 +15,7 @@ class TwoFactorAuthenticator
 {
     private const ISSUER = 'Hovera';
 
-    public function __construct(private readonly Google2FA $google2fa)
-    {
-    }
+    public function __construct(private readonly Google2FA $google2fa) {}
 
     public function generateSecret(): string
     {
@@ -31,7 +29,8 @@ class TwoFactorAuthenticator
 
     public function provisioningQrSvg(string $uri, int $size = 220): string
     {
-        $renderer = new ImageRenderer(new RendererStyle($size), new SvgImageBackEnd());
+        $renderer = new ImageRenderer(new RendererStyle($size), new SvgImageBackEnd);
+
         return (new Writer($renderer))->writeString($uri);
     }
 
@@ -49,6 +48,7 @@ class TwoFactorAuthenticator
         for ($i = 0; $i < $count; $i++) {
             $codes[] = strtoupper(bin2hex(random_bytes(5)));
         }
+
         return $codes;
     }
 }

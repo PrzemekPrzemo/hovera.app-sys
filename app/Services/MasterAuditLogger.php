@@ -31,14 +31,14 @@ class MasterAuditLogger
 
         AuditLogMaster::create([
             'actor_user_id' => Auth::id(),
-            'action'        => $action,
-            'target_type'   => $targetType,
-            'target_id'     => $targetId,
-            'tenant_id'     => $tenantId,
-            'payload'       => $payload,
-            'ip_address'    => $request?->ip(),
-            'user_agent'    => $request instanceof Request ? $request->userAgent() : null,
-            'created_at'    => now(),
+            'action' => $action,
+            'target_type' => $targetType,
+            'target_id' => $targetId,
+            'tenant_id' => $tenantId,
+            'payload' => $payload,
+            'ip_address' => $request?->ip(),
+            'user_agent' => $request instanceof Request ? $request->userAgent() : null,
+            'created_at' => now(),
         ]);
     }
 }

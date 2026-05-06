@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Controllers\Auth\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 |   /s/{slug}               Public per-stable micro-site (added later).
 */
 
-Route::get('/', fn () => redirect('/' . config('hovera.admin.path')));
+Route::get('/', fn () => redirect('/'.config('hovera.admin.path')));
 
 Route::middleware('web')->group(function () {
     Route::middleware('auth')->prefix('two-factor')->name('two-factor.')->group(function () {

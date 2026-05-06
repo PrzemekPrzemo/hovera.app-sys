@@ -9,7 +9,7 @@ use App\Models\Central\Tenant;
 use App\Tenancy\Provisioner;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
-use Mockery;
+use Illuminate\Validation\ValidationException;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
@@ -57,7 +57,7 @@ class CreateTenantActionTest extends TestCase
         /** @var CreateTenant $action */
         $action = $this->app->make(CreateTenant::class);
 
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $this->expectException(ValidationException::class);
 
         $action->execute([
             'slug' => 'A_BAD_SLUG!',
@@ -72,7 +72,7 @@ class CreateTenantActionTest extends TestCase
 
         $action->execute(['slug' => 'acme', 'name' => 'First']);
 
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $this->expectException(ValidationException::class);
         $action->execute(['slug' => 'acme', 'name' => 'Second']);
     }
 }

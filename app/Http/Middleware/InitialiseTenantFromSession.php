@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
+use App\Models\Central\User;
 use App\Tenancy\TenantManager;
 use Closure;
 use Illuminate\Http\Request;
@@ -21,23 +22,21 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class InitialiseTenantFromSession
 {
-    public function __construct(private readonly TenantManager $tenants)
-    {
-    }
+    public function __construct(private readonly TenantManager $tenants) {}
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
         $tenantId = $request->session()->get('current_tenant_id');
 
-        if (!$tenantId) {
+        if (! $tenantId) {
             return redirect()->route('tenant.select');
         }
 
-        /** @var \App\Models\Central\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         $membership = TenantMembership::query()
@@ -46,16 +45,18 @@ class InitialiseTenantFromSession
             ->whereNull('revoked_at')
             ->first();
 
-        if (!$membership) {
+        if (! $membership) {
             $request->session()->forget('current_tenant_id');
+
             return redirect()->route('tenant.select')
                 ->withErrors(['tenant' => 'Brak dostępu do wybranej stajni.']);
         }
 
         $tenant = Tenant::find($tenantId);
 
-        if (!$tenant || !$tenant->isUsable()) {
+        if (! $tenant || ! $tenant->isUsable()) {
             $request->session()->forget('current_tenant_id');
+
             return redirect()->route('tenant.select')
                 ->withErrors(['tenant' => 'Stajnia jest niedostępna.']);
         }

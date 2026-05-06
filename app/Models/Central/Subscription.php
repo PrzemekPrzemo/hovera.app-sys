@@ -13,6 +13,7 @@ class Subscription extends Model
     use HasUlids;
 
     protected $connection = 'central';
+
     protected $table = 'subscriptions';
 
     protected $fillable = [
@@ -26,8 +27,8 @@ class Subscription extends Model
     {
         return [
             'current_period_start' => 'datetime',
-            'current_period_end'   => 'datetime',
-            'cancelled_at'         => 'datetime',
+            'current_period_end' => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
     }
 
