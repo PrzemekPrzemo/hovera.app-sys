@@ -21,7 +21,7 @@ class CalendarEntry extends TenantModel
         'horse_id', 'instructor_id', 'arena_id', 'client_id',
         'recurrence_id', 'recurrence_occurrence',
         'status', 'title', 'notes', 'price_cents',
-        'metadata', 'created_by_central_user_id',
+        'metadata', 'reminder_sent_at', 'created_by_central_user_id',
     ];
 
     protected function casts(): array
@@ -33,6 +33,7 @@ class CalendarEntry extends TenantModel
             'price_cents' => 'integer',
             'type' => CalendarEntryType::class,
             'status' => CalendarEntryStatus::class,
+            'reminder_sent_at' => 'datetime',
         ];
     }
 
