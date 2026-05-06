@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Invitations\AcceptInvitationController;
+use App\Http\Controllers\Public\PublicSiteController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,3 +58,13 @@ Route::middleware(['web', 'throttle:6,1'])->prefix('invite')->name('invitations.
     Route::get('/{token}', [AcceptInvitationController::class, 'show'])->name('accept');
     Route::post('/{token}', [AcceptInvitationController::class, 'submit'])->name('submit');
 });
+
+/*
+ * Public per-stable micro-site — fully public, only needs `web` for
+ * cookies / sessions if the page ever needs them. Cached at controller
+ * level for 5 minutes.
+ */
+Route::middleware('web')
+    ->get('/'.config('hovera.public_site.prefix', 's').'/{slug}', [PublicSiteController::class, 'show'])
+    ->where('slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
+    ->name('public.tenant');

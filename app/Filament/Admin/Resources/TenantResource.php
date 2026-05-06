@@ -79,6 +79,48 @@ class TenantResource extends Resource
                         ->disabledOn('create'),
                 ]),
 
+            Forms\Components\Section::make('Branding')
+                ->description('Używane na publicznej stronie /s/{slug} i w mailach.')
+                ->collapsed()
+                ->columns(2)
+                ->schema([
+                    Forms\Components\ColorPicker::make('branding.primary_color')
+                        ->label('Kolor wiodący')
+                        ->default('#10b981'),
+                    Forms\Components\TextInput::make('branding.logo_url')
+                        ->label('URL logo')
+                        ->url()
+                        ->maxLength(500),
+                ]),
+
+            Forms\Components\Section::make('Profil publiczny')
+                ->description('Dane wyświetlane na publicznej stronie stajni /s/{slug}.')
+                ->collapsed()
+                ->columns(2)
+                ->schema([
+                    Forms\Components\Textarea::make('settings.public_profile.description')
+                        ->label('Opis stajni')
+                        ->rows(3)
+                        ->maxLength(2000)
+                        ->columnSpanFull(),
+                    Forms\Components\TextInput::make('settings.public_profile.email')
+                        ->label('Email kontaktowy (publiczny)')
+                        ->email()
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('settings.public_profile.phone')
+                        ->label('Telefon kontaktowy')
+                        ->tel()
+                        ->maxLength(40),
+                    Forms\Components\TextInput::make('settings.public_profile.address')
+                        ->label('Adres')
+                        ->maxLength(255)
+                        ->columnSpanFull(),
+                    Forms\Components\TextInput::make('settings.public_profile.website')
+                        ->label('Strona WWW')
+                        ->url()
+                        ->maxLength(500),
+                ]),
+
             Forms\Components\Section::make('Baza danych')
                 ->columns(3)
                 ->visibleOn('edit')
