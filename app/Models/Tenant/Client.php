@@ -18,6 +18,11 @@ class Client extends TenantModel
         'street', 'postal_code', 'city', 'country',
         'rodo_consent_at', 'rodo_consent_source',
         'central_user_id', 'notes', 'metadata',
+        'magic_link_token_hash', 'magic_link_expires_at', 'last_logged_in_at',
+    ];
+
+    protected $hidden = [
+        'magic_link_token_hash',
     ];
 
     protected function casts(): array
@@ -25,11 +30,18 @@ class Client extends TenantModel
         return [
             'metadata' => 'array',
             'rodo_consent_at' => 'datetime',
+            'magic_link_expires_at' => 'datetime',
+            'last_logged_in_at' => 'datetime',
         ];
     }
 
     public function horses(): HasMany
     {
         return $this->hasMany(Horse::class, 'owner_client_id');
+    }
+
+    public function calendarEntries(): HasMany
+    {
+        return $this->hasMany(CalendarEntry::class);
     }
 }

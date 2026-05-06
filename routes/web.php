@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Invitations\AcceptInvitationController;
 use App\Http\Controllers\Public\BookingCancellationController;
+use App\Http\Controllers\Public\ClientPortalController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicSiteController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
@@ -91,4 +92,23 @@ Route::middleware(['web', 'throttle:30,1'])
         // Customer-facing cancel link (signed URL with TTL = booking start time)
         Route::get('/cancel/{entry}', [BookingCancellationController::class, 'show'])->name('cancel.show');
         Route::post('/cancel/{entry}', [BookingCancellationController::class, 'submit'])->name('cancel.submit');
+    });
+
+/*
+ * Client portal — magic-link auth + dashboard. Rider enters email →
+ * gets a one-shot signed URL → lands on a list of upcoming + past
+ * bookings. Heavily throttled because the login endpoint sends mail.
+ */
+Route::middleware(['web', 'throttle:30,1'])
+    ->prefix('/'.$publicPrefix.'/{slug}/portal')
+    ->where(['slug' => $slugRegex])
+    ->name('client_portal.')
+    ->group(function () {
+        Route::get('/login', [ClientPortalController::class, 'showLogin'])->name('login.show');
+        Route::post('/login', [ClientPortalController::class, 'submitLogin'])
+            ->middleware('throttle:6,1')
+            ->name('login.submit');
+        Route::get('/login/{client}/consume', [ClientPortalController::class, 'consumeLogin'])->name('login.consume');
+        Route::post('/logout', [ClientPortalController::class, 'logout'])->name('logout');
+        Route::get('/', [ClientPortalController::class, 'dashboard'])->name('dashboard');
     });
