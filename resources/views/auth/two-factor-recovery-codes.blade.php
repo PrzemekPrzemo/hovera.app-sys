@@ -11,7 +11,7 @@
         @endforeach
     </div>
 
-    <form method="get" action="{{ url('/' . config('hovera.admin.path')) }}">
-        <button type="submit">Mam zapisane — przejdź do panelu</button>
+    <form method="get" action="{{ $return_to ?? url('/app') }}">
+        <button type="submit">Mam zapisane — wróć do aplikacji</button>
     </form>
 </x-auth-layout>
