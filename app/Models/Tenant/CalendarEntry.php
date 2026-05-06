@@ -19,6 +19,7 @@ class CalendarEntry extends TenantModel
     protected $fillable = [
         'type', 'starts_at', 'ends_at',
         'horse_id', 'instructor_id', 'arena_id', 'client_id',
+        'recurrence_id', 'recurrence_occurrence',
         'status', 'title', 'notes', 'price_cents',
         'metadata', 'created_by_central_user_id',
     ];
@@ -53,6 +54,11 @@ class CalendarEntry extends TenantModel
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function recurrence(): BelongsTo
+    {
+        return $this->belongsTo(RecurringCalendarEntry::class, 'recurrence_id');
     }
 
     /**
