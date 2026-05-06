@@ -64,6 +64,8 @@ class TenantSettings extends Page implements HasForms
 
         $tenant = app(TenantManager::class)->tenantOrFail();
 
+        $publicBooking = (array) (data_get($tenant->settings, 'public_booking') ?? []);
+
         $this->form->fill([
             'name' => $tenant->name,
             'legal_name' => $tenant->legal_name,
@@ -74,6 +76,12 @@ class TenantSettings extends Page implements HasForms
             'currency' => $tenant->currency,
             'primary_color' => $tenant->branding['primary_color'] ?? '#10b981',
             'logo_url' => $tenant->branding['logo_url'] ?? null,
+            'pb_enabled' => (bool) ($publicBooking['enabled'] ?? false),
+            'pb_lesson_duration_minutes' => $publicBooking['lesson_duration_minutes'] ?? 60,
+            'pb_working_hours_start' => $publicBooking['working_hours_start'] ?? '09:00',
+            'pb_working_hours_end' => $publicBooking['working_hours_end'] ?? '19:00',
+            'pb_advance_min_hours' => $publicBooking['advance_min_hours'] ?? 4,
+            'pb_advance_max_days' => $publicBooking['advance_max_days'] ?? 30,
         ]);
     }
 
@@ -116,6 +124,30 @@ class TenantSettings extends Page implements HasForms
                             ->url()->maxLength(500)
                             ->helperText('Tymczasowe — własne uploady dorzucimy w kolejnej iteracji.'),
                     ]),
+
+                Forms\Components\Section::make('Online booking')
+                    ->description('Klienci rezerwują lekcje przez /s/{slug}/book. Stajnia potwierdza zgłoszenia ręcznie i przydziela konia.')
+                    ->columns(3)
+                    ->schema([
+                        Forms\Components\Toggle::make('pb_enabled')
+                            ->label('Włącz online booking')
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('pb_lesson_duration_minutes')
+                            ->label('Długość lekcji (min)')
+                            ->numeric()->minValue(15)->maxValue(240)->default(60),
+                        Forms\Components\TimePicker::make('pb_working_hours_start')
+                            ->label('Godziny pracy od')->seconds(false)->default('09:00'),
+                        Forms\Components\TimePicker::make('pb_working_hours_end')
+                            ->label('Godziny pracy do')->seconds(false)->default('19:00'),
+                        Forms\Components\TextInput::make('pb_advance_min_hours')
+                            ->label('Min. wyprzedzenie (h)')
+                            ->numeric()->minValue(0)->maxValue(168)->default(4)
+                            ->helperText('Klient nie może rezerwować na czas bliższy niż X godzin.'),
+                        Forms\Components\TextInput::make('pb_advance_max_days')
+                            ->label('Max horyzont (dni)')
+                            ->numeric()->minValue(1)->maxValue(180)->default(30)
+                            ->helperText('Klient nie widzi terminów odleglejszych niż X dni.'),
+                    ]),
             ])
             ->statePath('data')
             ->columns(1);
@@ -132,6 +164,16 @@ class TenantSettings extends Page implements HasForms
         $branding['primary_color'] = $data['primary_color'] ?? null;
         $branding['logo_url'] = $data['logo_url'] ?? null;
 
+        $settings = (array) ($tenant->settings ?? []);
+        $settings['public_booking'] = [
+            'enabled' => (bool) ($data['pb_enabled'] ?? false),
+            'lesson_duration_minutes' => (int) ($data['pb_lesson_duration_minutes'] ?? 60),
+            'working_hours_start' => $this->normaliseTime($data['pb_working_hours_start'] ?? '09:00'),
+            'working_hours_end' => $this->normaliseTime($data['pb_working_hours_end'] ?? '19:00'),
+            'advance_min_hours' => (int) ($data['pb_advance_min_hours'] ?? 4),
+            'advance_max_days' => (int) ($data['pb_advance_max_days'] ?? 30),
+        ];
+
         $changes = [
             'name' => $data['name'],
             'legal_name' => $data['legal_name'] ?? null,
@@ -141,6 +183,7 @@ class TenantSettings extends Page implements HasForms
             'timezone' => $data['timezone'],
             'currency' => $data['currency'],
             'branding' => $branding,
+            'settings' => $settings,
         ];
 
         // Reload via Tenant model so JSON casts apply to `branding`.
@@ -159,5 +202,19 @@ class TenantSettings extends Page implements HasForms
             ->success()
             ->title('Ustawienia zapisane')
             ->send();
+    }
+
+    /**
+     * Filament TimePicker may emit either "HH:MM" or "HH:MM:SS" depending
+     * on `seconds(false)` config; we always store "HH:MM" so the
+     * settings JSON stays predictable.
+     */
+    private function normaliseTime(?string $value): string
+    {
+        if (! $value) {
+            return '09:00';
+        }
+
+        return substr($value, 0, 5);
     }
 }

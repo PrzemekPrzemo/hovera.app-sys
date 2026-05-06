@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Invitations\AcceptInvitationController;
+use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicSiteController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
 use Illuminate\Support\Facades\Route;
@@ -64,7 +65,25 @@ Route::middleware(['web', 'throttle:6,1'])->prefix('invite')->name('invitations.
  * cookies / sessions if the page ever needs them. Cached at controller
  * level for 5 minutes.
  */
+$publicPrefix = config('hovera.public_site.prefix', 's');
+$slugRegex = '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?';
+
 Route::middleware('web')
-    ->get('/'.config('hovera.public_site.prefix', 's').'/{slug}', [PublicSiteController::class, 'show'])
-    ->where('slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
+    ->get('/'.$publicPrefix.'/{slug}', [PublicSiteController::class, 'show'])
+    ->where('slug', $slugRegex)
     ->name('public.tenant');
+
+/*
+ * Public booking flow — pick instructor / pick slot / contact form / submit.
+ * No auth, lightly throttled to slow brute-force scanning.
+ */
+Route::middleware(['web', 'throttle:30,1'])
+    ->prefix('/'.$publicPrefix.'/{slug}/book')
+    ->where(['slug' => $slugRegex])
+    ->name('public.booking.')
+    ->group(function () {
+        Route::get('/', [PublicBookingController::class, 'chooseInstructor'])->name('instructors');
+        Route::get('/{instructor}', [PublicBookingController::class, 'pickSlot'])->name('slots');
+        Route::get('/{instructor}/confirm', [PublicBookingController::class, 'confirmForm'])->name('confirm');
+        Route::post('/{instructor}', [PublicBookingController::class, 'submit'])->name('submit');
+    });

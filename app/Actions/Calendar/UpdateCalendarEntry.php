@@ -11,6 +11,7 @@ use App\Services\Calendar\ConflictDetector;
 use App\Services\Calendar\PassUseManager;
 use App\Services\TenantAuditLogger;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class UpdateCalendarEntry
 {
@@ -28,6 +29,22 @@ class UpdateCalendarEntry
         $previousStatus = $entry->status;
 
         $entry->fill($changes);
+
+        // Public bookings land as `requested` and may not yet have a
+        // horse assigned — that's the owner's job when accepting.
+        // Block the transition to confirmed/completed if there's still
+        // no horse on a lesson.
+        $movingOutOfRequested = $previousStatus === CalendarEntryStatus::Requested
+            && $entry->status !== CalendarEntryStatus::Requested;
+        if ($movingOutOfRequested
+            && $entry->status->blocksResources()
+            && $entry->type->requiresHorse()
+            && empty($entry->horse_id)
+        ) {
+            throw ValidationException::withMessages([
+                'horse_id' => 'Aby potwierdzić rezerwację, wskaż konia.',
+            ]);
+        }
 
         // If time / resources changed, re-check conflicts (excluding self).
         if ($entry->isDirty(['starts_at', 'ends_at', 'horse_id', 'instructor_id', 'arena_id', 'status'])) {
