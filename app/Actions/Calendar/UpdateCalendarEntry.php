@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Actions\Calendar;
 
+use App\Enums\CalendarEntryStatus;
+use App\Enums\CalendarEntryType;
 use App\Models\Tenant\CalendarEntry;
 use App\Services\Calendar\ConflictDetector;
+use App\Services\Calendar\PassUseManager;
 use App\Services\TenantAuditLogger;
 use Illuminate\Support\Carbon;
 
@@ -14,6 +17,7 @@ class UpdateCalendarEntry
     public function __construct(
         private readonly ConflictDetector $conflicts,
         private readonly TenantAuditLogger $audit,
+        private readonly PassUseManager $passes,
     ) {}
 
     /**
@@ -21,6 +25,8 @@ class UpdateCalendarEntry
      */
     public function execute(CalendarEntry $entry, array $changes): CalendarEntry
     {
+        $previousStatus = $entry->status;
+
         $entry->fill($changes);
 
         // If time / resources changed, re-check conflicts (excluding self).
@@ -60,6 +66,64 @@ class UpdateCalendarEntry
             );
         }
 
+        $this->reconcilePassUseAfterStatusChange($entry, $previousStatus);
+
         return $entry;
+    }
+
+    /**
+     * Pass-use reconciliation matrix:
+     *
+     *   was confirmed/completed  →  cancelled       try restoreFor()
+     *   was confirmed/completed  →  no_show         keep use (it WAS owed)
+     *   was cancelled/no_show    →  confirmed       applyTo() fresh
+     *
+     * Anything else (no status change, or completed→completed) → no-op.
+     */
+    private function reconcilePassUseAfterStatusChange(CalendarEntry $entry, CalendarEntryStatus $previousStatus): void
+    {
+        if (! $entry->client_id) {
+            return;
+        }
+        if (! in_array($entry->type, [CalendarEntryType::LessonIndividual, CalendarEntryType::LessonGroup], true)) {
+            return;
+        }
+
+        $newStatus = $entry->status;
+        if ($newStatus === $previousStatus) {
+            return;
+        }
+
+        $wasBlocking = $previousStatus->blocksResources();
+        $isBlocking = $newStatus->blocksResources();
+
+        // Now-cancelled (or no_show), was active.
+        if ($wasBlocking && ! $isBlocking) {
+            // No-show explicitly does not restore — the slot was held,
+            // costs incurred. Only honest cancellations have a chance.
+            if ($newStatus === CalendarEntryStatus::Cancelled) {
+                $restored = $this->passes->restoreFor($entry, 'cancellation');
+                $this->audit->record(
+                    $restored ? 'pass.restored' : 'pass.cancellation_late',
+                    'CalendarEntry',
+                    (string) $entry->getKey(),
+                );
+            }
+
+            return;
+        }
+
+        // Re-activated booking that previously had its use restored.
+        if (! $wasBlocking && $isBlocking) {
+            $use = $this->passes->applyTo($entry);
+            if ($use) {
+                $this->audit->record(
+                    'pass.consumed',
+                    'PassUse',
+                    (string) $use->getKey(),
+                    ['pass_id' => $use->pass_id, 'calendar_entry_id' => $entry->id, 'reactivation' => true],
+                );
+            }
+        }
     }
 }

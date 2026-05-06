@@ -8,6 +8,7 @@ use App\Enums\CalendarEntryStatus;
 use App\Enums\CalendarEntryType;
 use App\Models\Tenant\CalendarEntry;
 use App\Services\Calendar\ConflictDetector;
+use App\Services\Calendar\PassUseManager;
 use App\Services\TenantAuditLogger;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +20,7 @@ class CreateCalendarEntry
     public function __construct(
         private readonly ConflictDetector $conflicts,
         private readonly TenantAuditLogger $audit,
+        private readonly PassUseManager $passes,
     ) {}
 
     /**
@@ -66,6 +68,24 @@ class CreateCalendarEntry
                 'duration_minutes' => $entry->durationMinutes(),
             ],
         );
+
+        // Auto-consume a pass if the booking is a lesson with a known
+        // client and they have any usable pass. Silent no-op otherwise
+        // (booking still proceeds — they'll pay another way).
+        if ($entry->status->blocksResources()
+            && in_array($type, [CalendarEntryType::LessonIndividual, CalendarEntryType::LessonGroup], true)
+            && $entry->client_id
+        ) {
+            $use = $this->passes->applyTo($entry);
+            if ($use) {
+                $this->audit->record(
+                    'pass.consumed',
+                    'PassUse',
+                    (string) $use->getKey(),
+                    ['pass_id' => $use->pass_id, 'calendar_entry_id' => $entry->id],
+                );
+            }
+        }
 
         return $entry;
     }
