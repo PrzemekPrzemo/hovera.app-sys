@@ -55,6 +55,33 @@ class UserInvitation extends Model
         return ! $this->isAccepted() && ! $this->isExpired();
     }
 
+    public function status(): string
+    {
+        if ($this->isAccepted()) {
+            return 'accepted';
+        }
+        if ($this->isExpired()) {
+            return 'expired';
+        }
+
+        return 'pending';
+    }
+
+    public function scopePending($query)
+    {
+        return $query->whereNull('accepted_at')->where('expires_at', '>', now());
+    }
+
+    public function scopeExpired($query)
+    {
+        return $query->whereNull('accepted_at')->where('expires_at', '<=', now());
+    }
+
+    public function scopeAccepted($query)
+    {
+        return $query->whereNotNull('accepted_at');
+    }
+
     public static function hashToken(string $plaintext): string
     {
         return hash('sha256', $plaintext);

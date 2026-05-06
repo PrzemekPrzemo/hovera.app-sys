@@ -202,6 +202,7 @@ class TenantResource extends Resource
     {
         return [
             TenantResource\RelationManagers\MembershipsRelationManager::class,
+            TenantResource\RelationManagers\InvitationsRelationManager::class,
         ];
     }
 
