@@ -31,6 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->path(config('hovera.admin.path', 'admin'))
             ->brandName('Hovera Master Admin')
             ->login()
+            ->passwordReset()
             ->colors([
                 'primary' => Color::Indigo,
             ])
