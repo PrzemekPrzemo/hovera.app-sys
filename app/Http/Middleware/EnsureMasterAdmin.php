@@ -10,10 +10,12 @@ use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Gate for /admin. Requires:
- *   - authenticated user
- *   - is_master_admin = true
- *   - 2FA confirmed (when HOVERA_ADMIN_REQUIRE_2FA is on)
+ * Gate for /admin. Sequence:
+ *
+ *   1. Authenticated?         no  → /admin/login
+ *   2. is_master_admin?       no  → 403
+ *   3. 2FA enrolled?          no  → /two-factor/setup     (when required)
+ *   4. 2FA challenge passed?  no  → /two-factor/challenge (when required)
  */
 class EnsureMasterAdmin
 {
@@ -22,15 +24,21 @@ class EnsureMasterAdmin
         $user = Auth::user();
 
         if (!$user) {
-            return redirect()->route('login');
+            return redirect()->guest(filament()->getCurrentPanel()?->getLoginUrl() ?? route('login'));
         }
 
         if (!$user->is_master_admin) {
             abort(403, 'Forbidden');
         }
 
-        if (config('hovera.admin.require_2fa') && !$user->hasTwoFactorEnabled()) {
+        $require2fa = (bool) config('hovera.admin.require_2fa', true);
+
+        if ($require2fa && !$user->hasTwoFactorEnabled()) {
             return redirect()->route('two-factor.setup');
+        }
+
+        if ($require2fa && $user->hasTwoFactorEnabled() && !$request->session()->get('two_factor_passed')) {
+            return redirect()->route('two-factor.challenge');
         }
 
         return $next($request);

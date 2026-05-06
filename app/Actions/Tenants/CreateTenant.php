@@ -42,7 +42,7 @@ class CreateTenant
         [$dbName, $dbUser] = array_values($this->provisioner->makeIdentifiers($data['slug']));
         $dbPassword = $this->provisioner->generatePassword();
 
-        $plan = $data['plan_code']
+        $plan = !empty($data['plan_code'])
             ? Plan::where('code', $data['plan_code'])->first()
             : null;
 
@@ -80,8 +80,9 @@ class CreateTenant
 
         $tenant->forceFill(['status' => 'trialing'])->save();
 
-        if (!empty($data['owner_email'])) {
-            $this->attachOwner($tenant, $data['owner_email'], $data['owner_name'] ?? null);
+        $ownerEmail = $data['owner_email'] ?? null;
+        if (!empty($ownerEmail)) {
+            $this->attachOwner($tenant, $ownerEmail, $data['owner_name'] ?? null);
         }
 
         return $tenant->fresh();
@@ -129,7 +130,7 @@ class CreateTenant
         $validator = validator($input, [
             'slug'        => ['required', 'string', 'min:3', 'max:63',
                               'regex:/^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/',
-                              Rule::unique((new Tenant)->getConnectionName() . '.tenants', 'slug')],
+                              Rule::unique(Tenant::class, 'slug')],
             'name'        => ['required', 'string', 'min:2', 'max:255'],
             'country'     => ['sometimes', 'string', 'size:2'],
             'locale'      => ['sometimes', 'string', 'max:10'],
