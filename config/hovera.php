@@ -55,4 +55,17 @@ return [
             'admin.heartbeat',
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Impersonation
+    |--------------------------------------------------------------------------
+    | Master admin impersonation is time-boxed. After `max_minutes` from
+    | the start, the EnforceImpersonationExpiry middleware ends the session
+    | automatically and returns the master admin to /admin.
+    */
+
+    'impersonation' => [
+        'max_minutes' => (int) env('HOVERA_IMPERSONATION_MAX_MINUTES', 60),
+    ],
 ];

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
 use Illuminate\Support\Facades\Route;
@@ -40,4 +41,8 @@ Route::middleware(['web', 'auth'])->prefix('tenant')->name('tenant.')->group(fun
     Route::get('/select', [TenantSelectorController::class, 'show'])->name('select');
     Route::post('/select', [TenantSelectorController::class, 'choose'])->name('select.choose');
     Route::get('/switch', [TenantSelectorController::class, 'switch'])->name('switch');
+});
+
+Route::middleware(['web', 'auth'])->prefix('impersonation')->name('impersonation.')->group(function () {
+    Route::post('/stop', [ImpersonationController::class, 'stop'])->name('stop');
 });

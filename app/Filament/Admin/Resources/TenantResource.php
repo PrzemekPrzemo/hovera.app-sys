@@ -198,6 +198,13 @@ class TenantResource extends Resource
         return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
+    public static function getRelations(): array
+    {
+        return [
+            TenantResource\RelationManagers\MembershipsRelationManager::class,
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
