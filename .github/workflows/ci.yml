@@ -9,28 +9,22 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# This workflow assumes the runner has a recent PHP (>= 8.2) and Composer
+# 2.x already on PATH. We don't use shivammathur/setup-php because it
+# requires reaching the sury PPA / Packagist with elevated privileges,
+# which isn't available in our sandboxed CI runner.
+
 jobs:
   phpunit:
-    name: PHPUnit (PHP ${{ matrix.php }})
+    name: PHPUnit
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.3']
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          extensions: mbstring, intl, pdo_mysql, pdo_sqlite, redis, gd, bcmath, fileinfo
-          coverage: none
-          tools: composer:v2
-
       - name: Show toolchain versions
         run: |
+          which php composer
           php -v
           composer --version
           php -m | tr '\n' ' '
@@ -43,11 +37,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: vendor
-          key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-${{ matrix.php }}-
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
 
       # --no-scripts: post-install hooks (artisan filament:upgrade, etc.)
-      # need an APP_KEY which we set in the next step.
+      # need an APP_KEY which we generate in the next step.
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist --no-scripts
 
@@ -66,25 +60,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          coverage: none
-          tools: composer:v2
-
       - name: Show toolchain versions
         run: |
+          which php composer
           php -v
           composer --version
 
       - uses: actions/cache@v4
         with:
           path: vendor
-          key: composer-8.3-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-8.3-
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist --no-scripts
 
       - name: Run Laravel Pint (check only)
-        run: ./vendor/bin/pint --test -v
+        run: ./vendor/bin/pint --test
