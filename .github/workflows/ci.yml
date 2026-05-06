@@ -29,6 +29,9 @@ jobs:
           coverage: none
           tools: composer:v2
 
+      - name: Prepare environment
+        run: cp .env.example .env
+
       - name: Cache Composer dependencies
         uses: actions/cache@v4
         with:
@@ -36,30 +39,40 @@ jobs:
           key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
           restore-keys: composer-${{ matrix.php }}-
 
-      - run: composer install --no-interaction --no-progress --prefer-dist
-
-      - name: Copy environment
-        run: cp .env.example .env
+      # --no-scripts: post-install hooks (artisan filament:upgrade, etc.)
+      # need an APP_KEY which we set in the next step.
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist --no-scripts
 
       - name: Generate APP_KEY
-        run: php artisan key:generate
+        run: php artisan key:generate --no-interaction
 
-      - run: ./vendor/bin/phpunit --testdox
+      - name: Discover packages
+        run: php artisan package:discover --no-interaction --ansi
+
+      - name: Run PHPUnit
+        run: ./vendor/bin/phpunit --testdox
 
   pint:
     name: Laravel Pint (style)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           coverage: none
           tools: composer:v2
+
       - uses: actions/cache@v4
         with:
           path: vendor
           key: composer-8.3-${{ hashFiles('composer.lock') }}
           restore-keys: composer-8.3-
-      - run: composer install --no-interaction --no-progress --prefer-dist
-      - run: ./vendor/bin/pint --test
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist --no-scripts
+
+      - name: Run Laravel Pint (check only)
+        run: ./vendor/bin/pint --test
