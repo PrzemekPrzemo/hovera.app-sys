@@ -23,21 +23,21 @@ class EnsureMasterAdmin
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->guest(filament()->getCurrentPanel()?->getLoginUrl() ?? route('login'));
         }
 
-        if (!$user->is_master_admin) {
+        if (! $user->is_master_admin) {
             abort(403, 'Forbidden');
         }
 
         $require2fa = (bool) config('hovera.admin.require_2fa', true);
 
-        if ($require2fa && !$user->hasTwoFactorEnabled()) {
+        if ($require2fa && ! $user->hasTwoFactorEnabled()) {
             return redirect()->route('two-factor.setup');
         }
 
-        if ($require2fa && $user->hasTwoFactorEnabled() && !$request->session()->get('two_factor_passed')) {
+        if ($require2fa && $user->hasTwoFactorEnabled() && ! $request->session()->get('two_factor_passed')) {
             return redirect()->route('two-factor.challenge');
         }
 

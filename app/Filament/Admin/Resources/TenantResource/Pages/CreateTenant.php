@@ -10,6 +10,7 @@ use App\Models\Central\Plan;
 use App\Services\MasterAuditLogger;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Routes Filament's default save through our CreateTenant action so the
@@ -19,7 +20,7 @@ class CreateTenant extends CreateRecord
 {
     protected static string $resource = TenantResource::class;
 
-    protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
+    protected function handleRecordCreation(array $data): Model
     {
         /** @var CreateTenantAction $action */
         $action = app(CreateTenantAction::class);
@@ -27,17 +28,17 @@ class CreateTenant extends CreateRecord
         $audit = app(MasterAuditLogger::class);
 
         $planCode = null;
-        if (!empty($data['plan_id'])) {
+        if (! empty($data['plan_id'])) {
             $planCode = Plan::find($data['plan_id'])?->code;
         }
 
         $tenant = $action->execute([
-            'slug'      => $data['slug'],
-            'name'      => $data['name'],
-            'country'   => $data['country'] ?? 'PL',
-            'locale'    => $data['locale'] ?? 'pl',
-            'timezone'  => $data['timezone'] ?? 'Europe/Warsaw',
-            'currency'  => $data['currency'] ?? 'PLN',
+            'slug' => $data['slug'],
+            'name' => $data['name'],
+            'country' => $data['country'] ?? 'PL',
+            'locale' => $data['locale'] ?? 'pl',
+            'timezone' => $data['timezone'] ?? 'Europe/Warsaw',
+            'currency' => $data['currency'] ?? 'PLN',
             'plan_code' => $planCode,
         ]);
 

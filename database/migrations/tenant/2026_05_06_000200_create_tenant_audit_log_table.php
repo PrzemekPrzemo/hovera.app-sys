@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -8,7 +10,8 @@ use Illuminate\Support\Facades\Schema;
  * Tenant-local audit log. Every mutation of core tenant entities
  * (horse, client, invoice, ...) writes here.
  */
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('audit_log', function (Blueprint $table) {

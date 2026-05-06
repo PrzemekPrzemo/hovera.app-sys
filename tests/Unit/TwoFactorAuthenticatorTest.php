@@ -12,12 +12,13 @@ use PragmaRX\Google2FA\Google2FA;
 class TwoFactorAuthenticatorTest extends TestCase
 {
     private TwoFactorAuthenticator $totp;
+
     private Google2FA $google2fa;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->google2fa = new Google2FA();
+        $this->google2fa = new Google2FA;
         $this->totp = new TwoFactorAuthenticator($this->google2fa);
     }
 

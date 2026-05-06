@@ -24,9 +24,7 @@ use Throwable;
  */
 class CreateTenant
 {
-    public function __construct(private readonly Provisioner $provisioner)
-    {
-    }
+    public function __construct(private readonly Provisioner $provisioner) {}
 
     /**
      * @param  array{
@@ -42,23 +40,23 @@ class CreateTenant
         [$dbName, $dbUser] = array_values($this->provisioner->makeIdentifiers($data['slug']));
         $dbPassword = $this->provisioner->generatePassword();
 
-        $plan = !empty($data['plan_code'])
+        $plan = ! empty($data['plan_code'])
             ? Plan::where('code', $data['plan_code'])->first()
             : null;
 
         $tenant = DB::connection('central')->transaction(function () use ($data, $dbName, $dbUser, $dbPassword, $plan) {
             $tenant = new Tenant([
-                'slug'      => $data['slug'],
-                'name'      => $data['name'],
-                'country'   => $data['country'],
-                'locale'    => $data['locale'],
-                'timezone'  => $data['timezone'],
-                'currency'  => $data['currency'],
-                'plan_id'   => $plan?->id,
-                'status'    => 'provisioning',
-                'db_host'   => config('hovera.tenant.db_host'),
-                'db_port'   => config('hovera.tenant.db_port'),
-                'db_name'   => $dbName,
+                'slug' => $data['slug'],
+                'name' => $data['name'],
+                'country' => $data['country'],
+                'locale' => $data['locale'],
+                'timezone' => $data['timezone'],
+                'currency' => $data['currency'],
+                'plan_id' => $plan?->id,
+                'status' => 'provisioning',
+                'db_host' => config('hovera.tenant.db_host'),
+                'db_port' => config('hovera.tenant.db_port'),
+                'db_name' => $dbName,
                 'db_username' => $dbUser,
             ]);
             $tenant->db_password = $dbPassword;        // mutator → encrypted
@@ -72,7 +70,7 @@ class CreateTenant
         } catch (Throwable $e) {
             Log::error('Tenant provisioning failed', [
                 'tenant_id' => $tenant->id,
-                'error'     => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
             $this->rollback($tenant);
             throw $e;
@@ -81,7 +79,7 @@ class CreateTenant
         $tenant->forceFill(['status' => 'trialing'])->save();
 
         $ownerEmail = $data['owner_email'] ?? null;
-        if (!empty($ownerEmail)) {
+        if (! empty($ownerEmail)) {
             $this->attachOwner($tenant, $ownerEmail, $data['owner_name'] ?? null);
         }
 
@@ -95,7 +93,7 @@ class CreateTenant
         } catch (Throwable $e) {
             Log::error('Provisioning rollback failed', [
                 'tenant_id' => $tenant->id,
-                'error'     => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
         $tenant->forceDelete();
@@ -106,9 +104,9 @@ class CreateTenant
         $user = User::firstOrCreate(
             ['email' => Str::lower($email)],
             [
-                'name'     => $name ?? $email,
+                'name' => $name ?? $email,
                 'password' => Hash::make(Str::password(16)),
-                'locale'   => $tenant->locale,
+                'locale' => $tenant->locale,
                 'timezone' => $tenant->timezone,
             ],
         );
@@ -116,10 +114,10 @@ class CreateTenant
         TenantMembership::firstOrCreate(
             [
                 'tenant_id' => $tenant->id,
-                'user_id'   => $user->id,
+                'user_id' => $user->id,
             ],
             [
-                'role'      => 'owner',
+                'role' => 'owner',
                 'joined_at' => now(),
             ],
         );
@@ -128,17 +126,17 @@ class CreateTenant
     private function validate(array $input): array
     {
         $validator = validator($input, [
-            'slug'        => ['required', 'string', 'min:3', 'max:63',
-                              'regex:/^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/',
-                              Rule::unique(Tenant::class, 'slug')],
-            'name'        => ['required', 'string', 'min:2', 'max:255'],
-            'country'     => ['sometimes', 'string', 'size:2'],
-            'locale'      => ['sometimes', 'string', 'max:10'],
-            'timezone'    => ['sometimes', 'string', 'max:64'],
-            'currency'    => ['sometimes', 'string', 'size:3'],
-            'plan_code'   => ['sometimes', 'nullable', 'string', 'max:32'],
+            'slug' => ['required', 'string', 'min:3', 'max:63',
+                'regex:/^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/',
+                Rule::unique(Tenant::class, 'slug')],
+            'name' => ['required', 'string', 'min:2', 'max:255'],
+            'country' => ['sometimes', 'string', 'size:2'],
+            'locale' => ['sometimes', 'string', 'max:10'],
+            'timezone' => ['sometimes', 'string', 'max:64'],
+            'currency' => ['sometimes', 'string', 'size:3'],
+            'plan_code' => ['sometimes', 'nullable', 'string', 'max:32'],
             'owner_email' => ['sometimes', 'nullable', 'email'],
-            'owner_name'  => ['sometimes', 'nullable', 'string', 'max:255'],
+            'owner_name' => ['sometimes', 'nullable', 'string', 'max:255'],
         ]);
 
         if ($validator->fails()) {
@@ -146,8 +144,8 @@ class CreateTenant
         }
 
         return array_replace([
-            'country'  => 'PL',
-            'locale'   => 'pl',
+            'country' => 'PL',
+            'locale' => 'pl',
             'timezone' => 'Europe/Warsaw',
             'currency' => 'PLN',
         ], $validator->validated());

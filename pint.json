@@ -1,0 +1,13 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "declare_strict_types": true,
+        "phpdoc_align": false
+    },
+    "exclude": [
+        "vendor",
+        "storage",
+        "bootstrap/cache",
+        "public"
+    ]
+}

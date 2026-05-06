@@ -8,10 +8,8 @@ use App\Models\Central\Tenant;
 use Illuminate\Database\Connection;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -29,8 +27,7 @@ class Provisioner
     public function __construct(
         private readonly TenantManager $tenants,
         private readonly DatabaseManager $db,
-    ) {
-    }
+    ) {}
 
     public function provision(Tenant $tenant): void
     {
@@ -41,7 +38,7 @@ class Provisioner
 
         Log::info('Tenant provisioned', [
             'tenant_id' => $tenant->id,
-            'db_name'   => $tenant->db_name,
+            'db_name' => $tenant->db_name,
         ]);
     }
 
@@ -52,9 +49,9 @@ class Provisioner
     public function destroy(Tenant $tenant): void
     {
         $conn = $this->provisionerConnection();
-        $dbName   = $this->quoteIdentifier($tenant->db_name);
+        $dbName = $this->quoteIdentifier($tenant->db_name);
         $username = $this->quoteString($tenant->db_username);
-        $host     = $this->quoteString('%');
+        $host = $this->quoteString('%');
 
         $this->tenants->forget();
 
@@ -64,7 +61,7 @@ class Provisioner
 
         Log::warning('Tenant destroyed', [
             'tenant_id' => $tenant->id,
-            'db_name'   => $tenant->db_name,
+            'db_name' => $tenant->db_name,
         ]);
     }
 
@@ -80,12 +77,12 @@ class Provisioner
             ->replace('-', '_')
             ->limit(40, '');
 
-        $dbPrefix   = config('hovera.tenant.db_prefix', 'hovera_t_');
+        $dbPrefix = config('hovera.tenant.db_prefix', 'hovera_t_');
         $userPrefix = config('hovera.tenant.user_prefix', 'hovera_t_');
 
         return [
-            'db_name'  => Str::limit($dbPrefix . $sanitised, 63, ''),
-            'db_user'  => Str::limit($userPrefix . $sanitised, 32, ''),
+            'db_name' => Str::limit($dbPrefix.$sanitised, 63, ''),
+            'db_user' => Str::limit($userPrefix.$sanitised, 32, ''),
         ];
     }
 
@@ -101,7 +98,7 @@ class Provisioner
 
         $conn->statement(
             "CREATE DATABASE IF NOT EXISTS {$dbName} "
-            . 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+            .'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
         );
     }
 
@@ -109,7 +106,7 @@ class Provisioner
     {
         $conn = $this->provisionerConnection();
         $username = $this->quoteString($tenant->db_username);
-        $host     = $this->quoteString('%');
+        $host = $this->quoteString('%');
         $password = $this->quoteString($tenant->db_password);
 
         $conn->statement(
@@ -125,9 +122,9 @@ class Provisioner
     private function grantPrivileges(Tenant $tenant): void
     {
         $conn = $this->provisionerConnection();
-        $dbName   = $this->quoteIdentifier($tenant->db_name);
+        $dbName = $this->quoteIdentifier($tenant->db_name);
         $username = $this->quoteString($tenant->db_username);
-        $host     = $this->quoteString('%');
+        $host = $this->quoteString('%');
 
         $conn->statement(
             "GRANT ALL PRIVILEGES ON {$dbName}.* TO {$username}@{$host}"
@@ -140,9 +137,9 @@ class Provisioner
         $this->tenants->execute($tenant, function () {
             Artisan::call('migrate', [
                 '--database' => 'tenant',
-                '--path'     => 'database/migrations/tenant',
+                '--path' => 'database/migrations/tenant',
                 '--realpath' => false,
-                '--force'    => true,
+                '--force' => true,
             ]);
         });
     }
@@ -159,10 +156,11 @@ class Provisioner
      */
     private function quoteIdentifier(string $identifier): string
     {
-        if (!preg_match('/^[A-Za-z0-9_]+$/', $identifier)) {
+        if (! preg_match('/^[A-Za-z0-9_]+$/', $identifier)) {
             throw new RuntimeException("Invalid SQL identifier: {$identifier}");
         }
-        return '`' . $identifier . '`';
+
+        return '`'.$identifier.'`';
     }
 
     /**

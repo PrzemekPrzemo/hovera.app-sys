@@ -13,6 +13,7 @@ class TenantMembership extends Model
     use HasUlids;
 
     protected $connection = 'central';
+
     protected $table = 'tenant_memberships';
 
     protected $fillable = [
@@ -25,9 +26,9 @@ class TenantMembership extends Model
     {
         return [
             'permissions' => 'array',
-            'invited_at'  => 'datetime',
-            'joined_at'   => 'datetime',
-            'revoked_at'  => 'datetime',
+            'invited_at' => 'datetime',
+            'joined_at' => 'datetime',
+            'revoked_at' => 'datetime',
         ];
     }
 

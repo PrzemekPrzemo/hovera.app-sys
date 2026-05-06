@@ -13,6 +13,7 @@ class Plan extends Model
     use HasUlids;
 
     protected $connection = 'central';
+
     protected $table = 'plans';
 
     protected $fillable = [
@@ -25,12 +26,12 @@ class Plan extends Model
     protected function casts(): array
     {
         return [
-            'limits'              => 'array',
-            'features'            => 'array',
-            'is_active'           => 'boolean',
-            'is_public'           => 'boolean',
+            'limits' => 'array',
+            'features' => 'array',
+            'is_active' => 'boolean',
+            'is_public' => 'boolean',
             'price_monthly_cents' => 'integer',
-            'price_yearly_cents'  => 'integer',
+            'price_yearly_cents' => 'integer',
         ];
     }
 

@@ -17,9 +17,7 @@ use Illuminate\Support\Facades\DB;
  */
 class DeleteTenant
 {
-    public function __construct(private readonly Provisioner $provisioner)
-    {
-    }
+    public function __construct(private readonly Provisioner $provisioner) {}
 
     public function softDelete(Tenant $tenant): void
     {

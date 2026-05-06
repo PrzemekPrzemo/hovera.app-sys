@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace App\Models\Central;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
 
 class User extends Authenticatable implements FilamentUser
 {
     use HasUlids, Notifiable, SoftDeletes;
 
     protected $connection = 'central';
+
     protected $table = 'users';
 
     protected $fillable = [
@@ -36,13 +36,13 @@ class User extends Authenticatable implements FilamentUser
     protected function casts(): array
     {
         return [
-            'email_verified_at'         => 'datetime',
-            'two_factor_confirmed_at'   => 'datetime',
-            'last_login_at'             => 'datetime',
-            'password'                  => 'hashed',
-            'two_factor_secret'         => 'encrypted',
+            'email_verified_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'password' => 'hashed',
+            'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
-            'is_master_admin'           => 'boolean',
+            'is_master_admin' => 'boolean',
         ];
     }
 
@@ -65,6 +65,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return match ($panel->getId()) {
             'admin' => $this->is_master_admin,
+            'app' => $this->activeMemberships()->exists(),
             default => false,
         };
     }
