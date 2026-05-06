@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'central'),
 
     /*
     |--------------------------------------------------------------------------
@@ -31,6 +31,72 @@ return [
 
     'connections' => [
 
+        /*
+         * Central database — holds master tables (tenants, users, plans,
+         * subscriptions, audit log, feature flags). Always available.
+         */
+        'central' => [
+            'driver' => env('DB_CENTRAL_DRIVER', env('DB_CONNECTION_DRIVER', 'mysql')),
+            'url' => env('DB_CENTRAL_URL'),
+            'host' => env('DB_CENTRAL_HOST', '127.0.0.1'),
+            'port' => env('DB_CENTRAL_PORT', '3306'),
+            'database' => env('DB_CENTRAL_DATABASE', 'hovera_core'),
+            'username' => env('DB_CENTRAL_USERNAME', 'hovera_core'),
+            'password' => env('DB_CENTRAL_PASSWORD', ''),
+            'unix_socket' => env('DB_CENTRAL_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => 'InnoDB',
+        ],
+
+        /*
+         * Tenant database — reconfigured per request by
+         * App\Tenancy\TenantManager based on session tenant_id.
+         * The placeholder values below are overwritten at runtime.
+         */
+        'tenant' => [
+            'driver' => 'mysql',
+            'host' => env('DB_TENANT_HOST', '127.0.0.1'),
+            'port' => env('DB_TENANT_PORT', '3306'),
+            'database' => null,
+            'username' => null,
+            'password' => null,
+            'unix_socket' => env('DB_TENANT_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => 'InnoDB',
+        ],
+
+        /*
+         * Provisioner connection — used only by the Tenant Provisioner service.
+         * Requires CREATE/DROP DATABASE + CREATE USER + GRANT OPTION privileges.
+         * Never used for application requests.
+         */
+        'provisioner' => [
+            'driver' => 'mysql',
+            'host' => env('DB_PROVISIONER_HOST', env('DB_CENTRAL_HOST', '127.0.0.1')),
+            'port' => env('DB_PROVISIONER_PORT', env('DB_CENTRAL_PORT', '3306')),
+            'database' => env('DB_PROVISIONER_DATABASE', 'mysql'),
+            'username' => env('DB_PROVISIONER_USERNAME', 'hovera_provisioner'),
+            'password' => env('DB_PROVISIONER_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => 'InnoDB',
+        ],
+
+        /*
+         * Local SQLite — convenience for local development of the central DB
+         * only. Tenant DBs always use MySQL even in dev.
+         */
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
