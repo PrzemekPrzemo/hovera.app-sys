@@ -31,6 +31,11 @@ class TwoFactorController extends Controller
             return redirect()->route('two-factor.challenge');
         }
 
+        // Remember where to send the user once enrolment finishes.
+        if ($referer = $request->headers->get('referer')) {
+            $request->session()->put('two_factor.return_to', $referer);
+        }
+
         $secret = $request->session()->get('pending_2fa_secret');
         if (! $secret) {
             $secret = $this->totp->generateSecret();
@@ -81,10 +86,13 @@ class TwoFactorController extends Controller
     {
         $codes = $request->session()->pull('two_factor_recovery_codes_view');
         if (! $codes) {
-            return redirect('/'.config('hovera.admin.path'));
+            return redirect($this->returnUrlAfterTwoFactor($request));
         }
 
-        return view('auth.two-factor-recovery-codes', ['codes' => $codes]);
+        return view('auth.two-factor-recovery-codes', [
+            'codes' => $codes,
+            'return_to' => $this->returnUrlAfterTwoFactor($request, peek: true),
+        ]);
     }
 
     public function showChallenge(): View|RedirectResponse
@@ -129,5 +137,36 @@ class TwoFactorController extends Controller
         throw ValidationException::withMessages([
             'code' => 'Nieprawidłowy kod.',
         ]);
+    }
+
+    /**
+     * Decide where to send the user after a 2FA flow concludes:
+     *   1. session-recorded referer (if it points to one of our panels)
+     *   2. master admins → /admin
+     *   3. tenant users → /app
+     *
+     * `peek` keeps the value in the session (used by the recovery codes
+     * view, which links to the returnUrl). Otherwise we pull-and-clear.
+     */
+    private function returnUrlAfterTwoFactor(Request $request, bool $peek = false): string
+    {
+        $stored = $peek
+            ? $request->session()->get('two_factor.return_to')
+            : $request->session()->pull('two_factor.return_to');
+
+        $appBase = $request->getSchemeAndHttpHost();
+        if ($stored && str_starts_with($stored, $appBase)) {
+            $path = parse_url($stored, PHP_URL_PATH) ?: '/';
+            if (str_starts_with($path, '/app/') || str_starts_with($path, '/'.config('hovera.admin.path').'/')) {
+                return $stored;
+            }
+        }
+
+        $user = Auth::user();
+        if ($user?->is_master_admin) {
+            return '/'.config('hovera.admin.path');
+        }
+
+        return '/app';
     }
 }
