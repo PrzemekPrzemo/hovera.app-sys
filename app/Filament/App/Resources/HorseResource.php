@@ -122,6 +122,13 @@ class HorseResource extends Resource
         return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
+    public static function getRelations(): array
+    {
+        return [
+            HorseResource\RelationManagers\HealthRecordsRelationManager::class,
+        ];
+    }
+
     public static function getPages(): array
     {
         return [

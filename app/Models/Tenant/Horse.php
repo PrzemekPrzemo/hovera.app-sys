@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Tenant;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Horse extends TenantModel
@@ -31,6 +32,11 @@ class Horse extends TenantModel
     public function owner(): BelongsTo
     {
         return $this->belongsTo(Client::class, 'owner_client_id');
+    }
+
+    public function healthRecords(): HasMany
+    {
+        return $this->hasMany(HealthRecord::class);
     }
 
     public function getAgeAttribute(): ?int
