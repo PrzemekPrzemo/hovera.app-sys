@@ -153,7 +153,9 @@ class PublicBookingController extends Controller
             abort(404);
         }
 
-        $this->tenants->setCurrent($tenant);
+        if ($this->tenants->current()?->id !== $tenant->id) {
+            $this->tenants->setCurrent($tenant);
+        }
 
         return $tenant;
     }
