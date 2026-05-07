@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\App\Pages;
 
 use App\Enums\PaymentProvider;
+use App\Services\Payments\Providers\MolliePaymentProvider;
 use App\Services\Payments\Providers\StripePaymentProvider;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
@@ -222,6 +223,11 @@ class PaymentSettings extends Page implements HasForms
         return [
             Forms\Components\TextInput::make('mollie.api_key')->label('API key (live_... lub test_...)')->password()->revealable()->required()
                 ->helperText('Pobierz z Mollie Dashboard → Developers → API keys.'),
+            Forms\Components\CheckboxList::make('mollie.enabled_methods')
+                ->label('Pokazywane metody płatności')
+                ->helperText('Pusta lista = Mollie pokaże wszystkie metody aktywne na Twoim koncie. Pojedyncza metoda = klient idzie od razu do tej metody (np. od razu BLIK).')
+                ->options(MolliePaymentProvider::methodOptions())
+                ->columns(2),
         ];
     }
 }
