@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 64" fill="none">
+  <!-- Hovera horizontal logo — ikona + wordmark.
+       Kolor sterowany przez fill/stroke (currentColor) — 1 plik dla light/dark. -->
+  <g stroke="currentColor" stroke-width="6" stroke-linecap="round" fill="none">
+    <path d="M 14 48 A 22 22 0 1 1 50 48" />
+  </g>
+  <text x="68" y="44" font-family="Satoshi, Inter, system-ui, -apple-system, 'Segoe UI', sans-serif"
+        font-size="32" font-weight="500" letter-spacing="-0.5"
+        fill="currentColor">hovera</text>
+</svg>

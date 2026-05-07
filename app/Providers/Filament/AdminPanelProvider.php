@@ -31,11 +31,15 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path(config('hovera.admin.path', 'admin'))
-            ->brandName('Hovera Master Admin')
+            ->brandName('hovera · master')
+            ->brandLogo(asset('img/brand/hovera-logo.svg'))
+            ->favicon(asset('favicon.svg'))
             ->login()
             ->passwordReset()
             ->colors([
-                'primary' => Color::Indigo,
+                // Brand: Ochre #A8956B (primary akcent), Deep Brown #3D2E22 (gray sidebar)
+                'primary' => Color::hex('#A8956B'),
+                'gray' => Color::hex('#3D2E22'),
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')

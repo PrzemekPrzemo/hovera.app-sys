@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round">
+  <!-- Hovera mark — abstrakcyjny półokrąg / podkowa,
+       symbol stabilności + lekkości + ochrony. -->
+  <path d="M 14 48 A 22 22 0 1 1 50 48" />
+</svg>

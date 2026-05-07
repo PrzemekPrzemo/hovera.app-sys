@@ -34,11 +34,15 @@ class AppPanelProvider extends PanelProvider
         return $panel
             ->id('app')
             ->path('app')
-            ->brandName('Hovera')
+            ->brandName('hovera')
+            ->brandLogo(asset('img/brand/hovera-logo.svg'))
+            ->favicon(asset('favicon.svg'))
             ->login()
             ->passwordReset()
             ->colors([
-                'primary' => Color::Emerald,
+                // Brand: Ochre #A8956B (primary akcent), Deep Brown #3D2E22 (gray sidebar)
+                'primary' => Color::hex('#A8956B'),
+                'gray' => Color::hex('#3D2E22'),
             ])
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\\Filament\\App\\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\\Filament\\App\\Pages')
