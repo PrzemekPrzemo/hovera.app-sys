@@ -17,3 +17,11 @@ Schedule::command('bookings:send-reminders')
     ->hourly()
     ->withoutOverlapping()
     ->onOneServer();
+
+// Daily health snapshot — recomputes health_score + last_activity_at
+// from each tenant DB so the master dashboard reflects yesterday's
+// reality without per-request tenant DB reads.
+Schedule::command('tenants:snapshot-health')
+    ->dailyAt('03:30')
+    ->withoutOverlapping()
+    ->onOneServer();
