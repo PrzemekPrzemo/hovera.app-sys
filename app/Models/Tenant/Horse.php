@@ -17,7 +17,7 @@ class Horse extends TenantModel
     protected $fillable = [
         'name', 'microchip', 'passport_number', 'ueln',
         'breed', 'sex', 'color', 'birth_date',
-        'owner_client_id', 'cover_image_path',
+        'owner_client_id', 'box_id', 'cover_image_path',
         'notes', 'metadata',
     ];
 
@@ -37,6 +37,21 @@ class Horse extends TenantModel
     public function healthRecords(): HasMany
     {
         return $this->hasMany(HealthRecord::class);
+    }
+
+    public function box(): BelongsTo
+    {
+        return $this->belongsTo(Box::class);
+    }
+
+    public function boxAssignments(): HasMany
+    {
+        return $this->hasMany(BoxAssignment::class)->orderByDesc('assigned_at');
+    }
+
+    public function currentBoxAssignment(): ?BoxAssignment
+    {
+        return $this->boxAssignments()->whereNull('vacated_at')->first();
     }
 
     public function getAgeAttribute(): ?int

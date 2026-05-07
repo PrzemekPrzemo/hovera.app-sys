@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\HorseResource\Pages;
+use App\Models\Tenant\Box;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
 use App\Services\TenantAuditLogger;
@@ -45,6 +46,15 @@ class HorseResource extends Resource
                         ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id'))
                         ->searchable()
                         ->placeholder('— stajnia —'),
+                    Forms\Components\Select::make('box_id')
+                        ->label('Box')
+                        ->options(fn () => Box::query()
+                            ->where('is_active', true)
+                            ->orderBy('sort_order')
+                            ->pluck('name', 'id'))
+                        ->searchable()
+                        ->placeholder('— bez przypisania —')
+                        ->helperText('Zmiana boxa zarejestruje historię w "Boxy → Historia przypisań".'),
                     Forms\Components\TextInput::make('microchip')->maxLength(32),
                     Forms\Components\TextInput::make('passport_number')->label('Nr paszportu')->maxLength(64),
                     Forms\Components\TextInput::make('ueln')->label('UELN')->maxLength(15)
