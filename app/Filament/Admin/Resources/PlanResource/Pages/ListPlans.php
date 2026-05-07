@@ -28,7 +28,7 @@ class ListPlans extends ListRecords
                 ->modalHeading('Zainstalować 5 domyślnych planów?')
                 ->modalDescription('Free, Solo, Stable, Pro, Enterprise — z cenami i limitami z marketing site.')
                 ->action(function () {
-                    PlansSeeder::run();
+                    PlansSeeder::seed();
                     Notification::make()
                         ->success()
                         ->title('Plany zainstalowane.')

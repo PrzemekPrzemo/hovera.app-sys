@@ -477,7 +477,8 @@ class HoveraDemoSeeder
 
             if ($statuses[$i] === 'paid') {
                 // PaymentProvider enum: none / stub / p24 / payu / stripe / mollie
-                // 'none' = płatność rozliczona poza systemem (przelew bankowy ręczny)
+                // PaymentStatus enum: pending / processing / succeeded / failed / refunded
+                // 'none' + 'succeeded' = przelew bankowy ręczny rozliczony poza systemem
                 Payment::create([
                     'client_id' => $client->id,
                     'invoice_id' => $invoice->id,
@@ -485,7 +486,7 @@ class HoveraDemoSeeder
                     'currency' => 'PLN',
                     'provider' => 'none',
                     'provider_ref' => 'DEMO-'.Str::upper(Str::random(8)),
-                    'status' => 'paid',
+                    'status' => 'succeeded',
                     'paid_at' => $invoice->paid_at,
                 ]);
             }

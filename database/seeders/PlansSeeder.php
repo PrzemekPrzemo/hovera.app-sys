@@ -20,7 +20,13 @@ use Illuminate\Database\Seeder;
  */
 class PlansSeeder extends Seeder
 {
-    public static function run(): void
+    /**
+     * Statyczna metoda dla wywołania z kontekstu UI (action button) bez
+     * potrzeby instancjowania Seedera. Instance `run()` poniżej deleguje
+     * do tej samej logiki, żeby `php artisan db:seed --class=PlansSeeder`
+     * też działało.
+     */
+    public static function seed(): void
     {
         $defs = [
             [
@@ -138,6 +144,6 @@ class PlansSeeder extends Seeder
 
     public function run(): void
     {
-        self::run();
+        self::seed();
     }
 }
