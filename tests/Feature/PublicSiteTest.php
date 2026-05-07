@@ -96,7 +96,7 @@ class PublicSiteTest extends TestCase
 
         $this->get('/s/plain')
             ->assertOk()
-            ->assertSee('#10b981', false);   // default emerald
+            ->assertSee('#A8956B', false);   // default Hovera ochre brand
     }
 
     public function test_logo_meta_is_omitted_when_missing(): void
