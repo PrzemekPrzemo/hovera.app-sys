@@ -11,14 +11,26 @@
 #   HOVERA_GIT_REF=v1.2.3 \
 #   bash <(curl -sSL https://raw.githubusercontent.com/PrzemekPrzemo/hovera.app-sys/main/bootstrap.sh)
 #
+# Z flagami (czysta reinstalacja — wyczyść katalog + DROP all tables):
+#   curl -sSL https://raw.githubusercontent.com/.../bootstrap.sh | bash -s -- --fresh
+#
 # Jeśli skrypt jest już lokalnie:
 #   bash bootstrap.sh
+#   bash bootstrap.sh --fresh
 
 set -euo pipefail
 
 REPO_URL="${HOVERA_REPO_URL:-https://github.com/PrzemekPrzemo/hovera.app-sys.git}"
 INSTALL_DIR="${HOVERA_INSTALL_DIR:-}"
 GIT_REF="${HOVERA_GIT_REF:-main}"
+FRESH=false
+
+# Parsuj nasze flagi (reszta jest forwardowana do install.sh)
+for arg in "$@"; do
+    case "$arg" in
+        --fresh) FRESH=true ;;
+    esac
+done
 
 # `curl ... | bash` — bash czyta CIAŁO SKRYPTU ze stdin (z pipe), więc
 # globalne `exec < /dev/tty` zerwałoby dostęp do reszty skryptu (bash
@@ -118,7 +130,13 @@ INSTALL_DIR="${INSTALL_DIR/#\~/$HOME}"
 log "Cel: $INSTALL_DIR  (ref: $GIT_REF)"
 
 # ── klonowanie / aktualizacja ───────────────────────────────────────
-if [[ -d "$INSTALL_DIR/.git" ]]; then
+if [[ -d "$INSTALL_DIR/.git" ]] && $FRESH; then
+    log "Repo istnieje, ale --fresh: czyszczę $INSTALL_DIR i klonuję od zera."
+    find "$INSTALL_DIR" -mindepth 1 -delete
+    git clone --branch "$GIT_REF" --single-branch "$REPO_URL" "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+    ok "Kod sklonowany od zera ($(git rev-parse --short HEAD))"
+elif [[ -d "$INSTALL_DIR/.git" ]]; then
     log "Repo już istnieje — robię git fetch + checkout zamiast klonować."
     cd "$INSTALL_DIR"
     git fetch --tags --prune origin
