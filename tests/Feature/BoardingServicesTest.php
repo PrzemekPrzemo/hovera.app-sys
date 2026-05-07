@@ -429,5 +429,26 @@ class BoardingServicesTest extends TestCase
             $t->timestamp('created_at')->useCurrent();
             $t->timestamp('updated_at')->useCurrent();
         });
+
+        Schema::connection('tenant')->create('horse_documents', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('horse_id', 26);
+            $t->string('name', 200);
+            $t->string('kind', 32);
+            $t->string('description', 500)->nullable();
+            $t->string('file_path', 500);
+            $t->string('original_name', 255);
+            $t->string('mime', 120);
+            $t->unsignedBigInteger('size_bytes');
+            $t->string('uploaded_by_role', 16);
+            $t->string('uploaded_by_user_id', 26)->nullable();
+            $t->string('uploaded_by_client_id', 26)->nullable();
+            $t->date('valid_from')->nullable();
+            $t->date('valid_until')->nullable();
+            $t->json('metadata')->nullable();
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+            $t->timestamp('deleted_at')->nullable();
+        });
     }
 }

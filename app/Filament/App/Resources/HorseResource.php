@@ -156,6 +156,7 @@ class HorseResource extends Resource
             HorseResource\RelationManagers\HealthRecordsRelationManager::class,
             HorseResource\RelationManagers\ActivitiesRelationManager::class,
             HorseResource\RelationManagers\MessagesRelationManager::class,
+            HorseResource\RelationManagers\DocumentsRelationManager::class,
         ];
     }
 

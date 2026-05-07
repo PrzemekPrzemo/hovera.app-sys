@@ -121,6 +121,9 @@ Route::middleware(['web', 'throttle:30,1'])
         Route::post('/horses/{horse}/messages', [ClientPortalController::class, 'sendHorseMessage'])->name('horses.messages.send');
         Route::get('/horses/{horse}/messages/{message}/attachment/{index}', [ClientPortalController::class, 'downloadAttachment'])
             ->name('horses.messages.attachment');
+        Route::post('/horses/{horse}/documents', [ClientPortalController::class, 'uploadHorseDocument'])->name('horses.documents.upload');
+        Route::get('/horses/{horse}/documents/{document}', [ClientPortalController::class, 'downloadHorseDocument'])->name('horses.documents.download');
+        Route::delete('/horses/{horse}/documents/{document}', [ClientPortalController::class, 'deleteHorseDocument'])->name('horses.documents.delete');
         Route::get('/messages', [ClientPortalController::class, 'showMessages'])->name('messages.show');
     });
 
