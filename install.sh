@@ -16,6 +16,7 @@
 #   bash install.sh --non-interactive     # czyta zmienne z env (HOVERA_*)
 #   bash install.sh --skip-deps           # nie odpalaj composer install
 #   bash install.sh --dry-run             # tylko pokaż co by się stało
+#   bash install.sh --fresh               # DROP all tables + reinstall (od zera)
 
 set -euo pipefail
 
@@ -25,11 +26,13 @@ cd "$SCRIPT_DIR"
 NON_INTERACTIVE=false
 SKIP_DEPS=false
 DRY_RUN=false
+FRESH=false
 for arg in "$@"; do
     case "$arg" in
         --non-interactive) NON_INTERACTIVE=true ;;
         --skip-deps) SKIP_DEPS=true ;;
         --dry-run) DRY_RUN=true ;;
+        --fresh) FRESH=true ;;
         -h|--help)
             sed -n '2,22p' "$0" | sed 's/^# \?//'
             exit 0 ;;
@@ -366,7 +369,50 @@ fi
 # ── 6. Migrations ───────────────────────────────────────────────────
 echo
 log "Uruchamiam migracje (centralna baza)…"
-run "$PHP_BIN artisan migrate --force"
+
+# Wykryj czy w bazie są już jakieś tabele (poprzednia nieudana instalacja itp.)
+EXISTING_TABLES=0
+if ! $DRY_RUN; then
+    EXISTING_TABLES="$(\
+        HOVERA_INSTALL_DB_HOST="$HOVERA_DB_HOST" \
+        HOVERA_INSTALL_DB_PORT="$HOVERA_DB_PORT" \
+        HOVERA_INSTALL_DB_NAME="$HOVERA_DB_CENTRAL_DB" \
+        HOVERA_INSTALL_DB_USER="$HOVERA_DB_CENTRAL_USER" \
+        HOVERA_INSTALL_DB_PASS="$HOVERA_DB_CENTRAL_PASS" \
+        "$PHP_BIN" -r '
+            try {
+                $pdo = new PDO(
+                    "mysql:host=" . getenv("HOVERA_INSTALL_DB_HOST") . ";port=" . getenv("HOVERA_INSTALL_DB_PORT") . ";dbname=" . getenv("HOVERA_INSTALL_DB_NAME"),
+                    getenv("HOVERA_INSTALL_DB_USER"),
+                    getenv("HOVERA_INSTALL_DB_PASS")
+                );
+                $n = $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()")->fetchColumn();
+                echo (int) $n;
+            } catch (Exception $e) {
+                echo "0";
+            }
+        ' 2>/dev/null)"
+    EXISTING_TABLES="${EXISTING_TABLES:-0}"
+fi
+
+USE_FRESH=false
+if $FRESH; then
+    USE_FRESH=true
+elif [[ "$EXISTING_TABLES" -gt 0 ]]; then
+    warn "W bazie ${HOVERA_DB_CENTRAL_DB} jest już $EXISTING_TABLES tabel (poprzednia instalacja?)."
+    if $NON_INTERACTIVE; then
+        fail "Baza nie jest pusta. Użyj --fresh żeby DROP all tables i zacząć od zera, albo wyczyść ręcznie."
+    fi
+    ask_yes_no DROP_TABLES "Wykonać DROP wszystkich tabel i zainstalować od zera (migrate:fresh)?" "y"
+    $DROP_TABLES && USE_FRESH=true
+fi
+
+if $USE_FRESH; then
+    warn "DROP wszystkich tabel + ponowna instalacja…"
+    run "$PHP_BIN artisan migrate:fresh --force"
+else
+    run "$PHP_BIN artisan migrate --force"
+fi
 ok "Migracje zakończone"
 
 # ── 7. Storage link ─────────────────────────────────────────────────
