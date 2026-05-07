@@ -406,3 +406,8 @@ echo "  4. Po dodaniu stajni odpal migracje tenantów: php artisan tenants:migra
 echo "  5. Skonfiguruj cron (kolejka + cyklicze zadania):"
 echo "     * * * * * cd $SCRIPT_DIR && php artisan schedule:run >> /dev/null 2>&1"
 echo
+echo "Aktualizacje (pull z gita + migracje + cache):"
+echo "  ./update.sh                  # pull main + pełen rollout"
+echo "  ./update.sh v1.2.3           # konkretny tag"
+echo "  ./update.sh --dry-run        # zobacz co by się stało"
+echo
