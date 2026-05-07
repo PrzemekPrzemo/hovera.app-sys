@@ -128,6 +128,23 @@
         .box-availability strong { display: block; font-size: 1.05rem; margin-bottom: .15rem; }
         .box-availability .meta { display: block; color: #6b7280; font-size: .85rem; }
 
+        ul.instructors {
+            list-style: none; padding: 0; margin: 0;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: .5rem;
+        }
+        ul.instructors li {
+            display: flex; align-items: center; gap: .6rem;
+            padding: .5rem .75rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            font-size: .95rem;
+        }
+        ul.instructors .dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            display: inline-block; flex: 0 0 auto;
+        }
+
         footer.site-footer {
             text-align: center;
             color: #9ca3af;
@@ -153,7 +170,7 @@
             <img src="{{ $logo_url }}" alt="Logo {{ $tenant->name }}" class="logo">
         @endif
         <h1>{{ $tenant->name }}</h1>
-        <p class="tagline">Stajnia jeździecka</p>
+        <p class="tagline">{{ $tagline ?? 'Stajnia jeździecka' }}</p>
     </header>
 
     <main>
@@ -184,7 +201,7 @@
             </section>
         @endif
 
-        @if ($contact_email || $contact_phone || $address || $website)
+        @if ($contact_email || $contact_phone || $address || $website || ($opening_hours ?? null))
             <section class="card">
                 <h2>Kontakt</h2>
                 <dl class="contact">
@@ -204,14 +221,32 @@
                         <dt>WWW</dt>
                         <dd><a href="{{ $website }}" rel="noopener" target="_blank">{{ $website }}</a></dd>
                     @endif
+                    @if (! empty($opening_hours))
+                        <dt>Godziny</dt>
+                        <dd>{{ $opening_hours }}</dd>
+                    @endif
                 </dl>
+            </section>
+        @endif
+
+        @if (! empty($instructors))
+            <section class="card">
+                <h2>Nasi instruktorzy</h2>
+                <ul class="instructors">
+                    @foreach ($instructors as $i)
+                        <li>
+                            <span class="dot" style="background: {{ $i['color'] }}"></span>
+                            <span>{{ $i['name'] }}</span>
+                        </li>
+                    @endforeach
+                </ul>
             </section>
         @endif
 
         <section class="card">
             <h2>Zapisy na lekcje</h2>
-            <p>Online booking będzie dostępny wkrótce. Tymczasowo zapisz się przez kontakt powyżej.</p>
-            <span class="soon">— Wkrótce</span>
+            <p>Wybierz instruktora, datę i terminy w naszym systemie online.</p>
+            <a class="cta" href="{{ url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug . '/book') }}">Zapisz się online →</a>
         </section>
     </main>
 

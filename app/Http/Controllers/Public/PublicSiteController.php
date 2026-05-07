@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Models\Central\Tenant;
 use App\Models\Tenant\Box;
+use App\Models\Tenant\Instructor;
 use App\Tenancy\TenantManager;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
@@ -51,17 +52,52 @@ class PublicSiteController extends Controller
             );
         }
 
+        // Lista instruktorów (opt-in przez settings.public_profile.show_instructors,
+        // default false). Cache 10 min razem z box availability.
+        $instructors = null;
+        if ((bool) ($publicProfile['show_instructors'] ?? false)) {
+            $instructors = Cache::remember(
+                "public_instructors:{$slug}",
+                now()->addMinutes(10),
+                fn () => $this->loadInstructors($tenant),
+            );
+        }
+
         return response()->view('public.tenant', [
             'tenant' => $tenant,
-            'primary_color' => $branding['primary_color'] ?? '#10b981',
+            'primary_color' => $branding['primary_color'] ?? '#A8956B',
             'logo_url' => $branding['logo_url'] ?? null,
+            'tagline' => $publicProfile['tagline'] ?? 'Stajnia jeździecka',
             'description' => $publicProfile['description'] ?? null,
             'contact_email' => $publicProfile['email'] ?? null,
             'contact_phone' => $publicProfile['phone'] ?? null,
             'address' => $publicProfile['address'] ?? null,
             'website' => $publicProfile['website'] ?? null,
+            'opening_hours' => $publicProfile['opening_hours'] ?? null,
             'box_availability' => $boxAvailability,
+            'instructors' => $instructors,
         ])->header('Cache-Control', 'public, max-age=60, s-maxage=300');
+    }
+
+    /**
+     * @return array<int, array{name: string, color: string}>|null
+     */
+    private function loadInstructors(Tenant $tenant): ?array
+    {
+        if ($this->tenants->current()?->id !== $tenant->id) {
+            $this->tenants->setCurrent($tenant);
+        }
+        try {
+            return Instructor::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->limit(8)
+                ->get(['name', 'color'])
+                ->map(fn ($i) => ['name' => $i->name, 'color' => $i->color ?? '#A8956B'])
+                ->all();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

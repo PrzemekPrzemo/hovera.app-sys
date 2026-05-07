@@ -10,6 +10,7 @@ use App\Tenancy\TenantManager;
 use Database\Seeders\Demo\HoveraDemoSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 
 class DemoSeedCommand extends Command
 {
@@ -74,6 +75,36 @@ class DemoSeedCommand extends Command
 
         $this->info('Generuję demo dane…');
         $seeder->run();
+
+        // Ustaw branding + public profile dla demo tenant'a — żeby /s/{slug}
+        // miało pełną treść (logo, opis, kontakt, godziny, lista instruktorów).
+        $tenant->forceFill([
+            'branding' => [
+                'primary_color' => '#A8956B', // Hovera ochre
+                'logo_url' => null,
+            ],
+            'settings' => array_merge((array) $tenant->settings, [
+                'public_profile' => [
+                    'tagline' => 'Stajnia z duszą — pensjonat, lekcje, rekreacja',
+                    'description' => 'Kameralna stajnia z 12 boksami położona w pięknej okolicy. '.
+                        'Prowadzimy pensjonat dla koni, lekcje jazdy konnej dla początkujących i zaawansowanych, '.
+                        "treningi przygotowujące do zawodów, organizujemy obozy jeździeckie i imprezy okolicznościowe.\n\n".
+                        'Indywidualne podejście do każdego konia. Codzienna opieka weterynaryjna, '.
+                        'stała współpraca z kowalem i fizjoterapeutą.',
+                    'email' => 'kontakt@demo-stajnia.pl',
+                    'phone' => '+48 600 100 200',
+                    'address' => 'ul. Jeździecka 1, 00-001 Warszawa',
+                    'website' => 'https://hovera.app',
+                    'opening_hours' => 'Pn–Pt: 9:00–20:00 · Sob–Nd: 8:00–18:00',
+                    'show_box_availability' => true,
+                    'show_instructors' => true,
+                ],
+            ]),
+        ])->save();
+
+        // Cache resetuję (`/s/{slug}` ma cache 5 min)
+        Cache::forget("public_site:{$tenant->slug}");
+        Cache::forget("public_box_availability:{$tenant->slug}");
 
         $this->newLine();
         $this->info('✓ Demo gotowe.');
