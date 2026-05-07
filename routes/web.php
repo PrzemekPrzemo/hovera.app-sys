@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Invitations\AcceptInvitationController;
 use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\ClientPortalController;
+use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicSiteController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
@@ -117,4 +118,23 @@ Route::middleware(['web', 'throttle:30,1'])
             ->name('reschedule.submit');
         Route::get('/horses/{horse}', [ClientPortalController::class, 'showHorse'])->name('horses.show');
         Route::get('/messages', [ClientPortalController::class, 'showMessages'])->name('messages.show');
+    });
+
+/*
+ * Tenant payment provider callbacks. The provider id is in the URL
+ * segment; PaymentWebhookController routes it to the right service.
+ *
+ * Webhooks are unsigned at the route level (provider implementation
+ * verifies signatures internally) and CSRF is bypassed via VerifyCsrfToken
+ * exclusion (configured in app/Http/Middleware) — see provider docs.
+ */
+Route::middleware('web')
+    ->prefix('/'.$publicPrefix.'/{slug}/payments')
+    ->where(['slug' => $slugRegex, 'provider' => '[a-z0-9]+'])
+    ->name('public.payments.')
+    ->group(function () {
+        Route::match(['get', 'post'], '/{provider}/webhook', [PaymentWebhookController::class, 'webhook'])
+            ->name('webhook');
+        Route::get('/{provider}/return/{payment}', [PaymentWebhookController::class, 'return'])
+            ->name('return');
     });
