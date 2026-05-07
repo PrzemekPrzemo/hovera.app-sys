@@ -16,7 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Payment webhooks come from third-party providers (Stripe, Mollie,
         // P24, PayU) — they don't carry our CSRF token. Each provider's
         // implementation verifies its own signature header instead.
-        $publicPrefix = config('hovera.public_site.prefix', 's');
+        //
+        // Use env() not config() — this callback runs during HttpKernel
+        // resolution, BEFORE LoadConfiguration bootstrapper registers the
+        // 'config' service. Calling config() here throws "Target class
+        // [config] does not exist" on every HTTP request.
+        $publicPrefix = env('HOVERA_PUBLIC_SITE_PREFIX', 's');
         $middleware->validateCsrfTokens(except: [
             $publicPrefix.'/*/payments/*/webhook',
         ]);
