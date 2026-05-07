@@ -27,8 +27,8 @@ return new class extends Migration
                 'training', 'care', 'event', 'block',
             ])->index();
 
-            $table->timestamp('starts_at')->index();
-            $table->timestamp('ends_at')->index();
+            $table->timestamp('starts_at')->nullable()->index();
+            $table->timestamp('ends_at')->nullable()->index();
 
             $table->foreignUlid('horse_id')->nullable()->constrained('horses')->nullOnDelete();
             $table->foreignUlid('instructor_id')->nullable()->constrained('instructors')->nullOnDelete();

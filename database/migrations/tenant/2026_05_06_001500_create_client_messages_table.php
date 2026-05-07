@@ -34,7 +34,7 @@ return new class extends Migration
             $table->string('related_type', 60)->nullable();
             $table->string('related_id', 26)->nullable();
 
-            $table->timestamp('sent_at')->index();
+            $table->timestamp('sent_at')->nullable()->index();
             $table->timestamps();
 
             $table->index(['client_id', 'sent_at']);

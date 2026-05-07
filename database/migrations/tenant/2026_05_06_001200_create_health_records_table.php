@@ -20,7 +20,7 @@ return new class extends Migration
                 'medication', 'other',
             ])->index();
 
-            $table->timestamp('performed_at')->index();
+            $table->timestamp('performed_at')->nullable()->index();
             $table->string('performed_by', 255)->nullable();
 
             $table->string('summary', 255);
