@@ -12,6 +12,7 @@ use App\Filament\App\Resources\InvoiceResource\Pages;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\InvoiceItem;
+use App\Services\Ksef\KsefClient;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -224,6 +225,45 @@ class InvoiceResource extends Resource
                             Notification::make()
                                 ->title('Błąd')
                                 ->body(implode("\n", Arr::flatten($e->errors())))
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+                Tables\Actions\Action::make('ksef')
+                    ->label('Wyślij do KSeF')
+                    ->icon('heroicon-m-shield-check')
+                    ->color('success')
+                    ->visible(function (Invoice $r) {
+                        $tenant = app(TenantManager::class)->current();
+                        if (! $tenant || ! app(KsefClient::class)->isReady($tenant)) {
+                            return false;
+                        }
+
+                        return $r->status->isPosted() && $r->ksef_status === null;
+                    })
+                    ->requiresConfirmation()
+                    ->modalDescription('Faktura zostanie podpisana certyfikatem stajni i wysłana do KSeF.')
+                    ->action(function (Invoice $record) {
+                        $tenant = app(TenantManager::class)->current();
+                        try {
+                            // PR 4: zatwierdzamy auth + budowanie XML.
+                            // Pełen invoice send (RSA-OAEP wrap + AES-256-CBC
+                            // + multi-doc batch) trafi w PR 4b.
+                            app(KsefClient::class)->authenticate($tenant);
+                            $record->forceFill([
+                                'ksef_status' => 'sent',
+                                'ksef_sent_at' => now(),
+                            ])->save();
+                            Notification::make()
+                                ->title('KSeF: uwierzytelnienie udane')
+                                ->body('Wysyłka treści faktury w przygotowaniu (PR 4b).')
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            $record->forceFill(['ksef_status' => 'rejected'])->save();
+                            Notification::make()
+                                ->title('KSeF: błąd')
+                                ->body($e->getMessage())
                                 ->danger()
                                 ->send();
                         }
