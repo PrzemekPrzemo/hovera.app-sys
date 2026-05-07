@@ -1,114 +1,138 @@
-# Hovera — wdrożenie na app.hovera.app (VPS Debian + Plesk)
+# Hovera — wdrożenie na app.hovera.app (Plesk UI first)
 
-> Krótki przewodnik: co przygotować w Plesku **zanim** odpalisz `./deploy.sh`, a potem jak deployować codziennie.
+> Cały setup robisz **z Pleska** (klikalnie) i **phpMyAdmina** (SQL).
+> SSH/root używasz tylko w jednym miejscu — i tylko jeśli Plesk nie ma składnika (Composer / Git CLI). U większości nowoczesnych Plesków jest. Jeśli nie — pojedy mail do hostingu.
 
-## TL;DR
+## TL;DR — kolejność klików
 
-```bash
-# Jednorazowo (po Plesk setupie z sekcji „Pre-flight")
-ssh hovera_app@vps
-cd ~/httpdocs
-git clone git@github.com:PrzemekPrzemo/hovera.app-sys.git .
-cp .env.example .env && nano .env          # uzupełnij sekrety
-php artisan key:generate
-php artisan migrate --force                 # central
-./deploy.sh --skip-tenants                  # nie ma jeszcze tenantów
+1. Plesk → **Add Domain** `app.hovera.app`
+2. Plesk → **PHP Settings** → 8.3 + memory_limit 256M + tz Warsaw
+3. Plesk → **Hosting Settings** → document root `httpdocs/public`
+4. Plesk → **SSL/TLS** → Let's Encrypt + force HTTPS
+5. Plesk → **Databases** → utwórz `hovera_core` + user `hovera_core`
+6. Plesk → **phpMyAdmin** (na `hovera_core`) → wklej SQL z 1.5.B (provisioner)
+7. Plesk → **Git** → repo + auto-deploy → wskaż `deploy.sh` jako "Additional deployment actions"
+8. Plesk → **File Manager** → wklej `.env` (skopiuj z `.env.example`, uzupełnij sekrety)
+9. Plesk → **Scheduled Tasks** → `* * * * * php artisan schedule:run`
+10. Plesk → **Scheduled Tasks** → `* * * * * php artisan queue:work --stop-when-empty --max-time=55`
+11. Plesk → **Backup Manager** → daily 04:00 + retention 14d
+12. Pierwszy deploy: Plesk → Git → **Pull Updates Now** (uruchomi `deploy.sh` automatycznie)
 
-# Później, na każdy release:
-./deploy.sh                                 # latest origin/main
-./deploy.sh v1.2.3                          # konkretny tag
-```
+To wszystko — możesz mieć pierwszą stajnię w 30 minut bez touchu na shellu.
 
 ---
 
-## 1. Pre-flight w Plesku — co ustawić **przed** pierwszym deployem
+## 1. Setup w Plesku — krok po kroku
 
 ### 1.1 Domena
-- **Domains → Add Domain**: `app.hovera.app`
-- DNS A-record `app.hovera.app` → IP serwera (jeśli DNS nie jest pod Pleskiem, ustaw u rejestratora)
-- Subscription: dedykowany użytkownik systemowy, np. `hovera_app` (Plesk tworzy go automatycznie). Wszystkie polecenia odpalamy jako on, **nie jako root**.
+
+**Domains → Add Domain**
+- Domain name: `app.hovera.app`
+- Subscription: dedykowana (Plesk utworzy usera, np. `hovera_app`)
+- Hosting type: Website hosting
+
+DNS — A-record `app.hovera.app` → IP serwera. Jeśli DNS hostujesz pod Pleskiem, wszystko już ustawione. Jeśli u rejestratora (cloudflare/home.pl/etc.), dorzuć ręcznie.
 
 ### 1.2 PHP
-- **Domain → PHP Settings**:
-  - PHP version: **8.3** (8.2+ minimum)
-  - Run PHP as: **FPM application served by Apache** (lub Nginx — bez różnicy)
-  - PHP CLI: ta sama wersja (Plesk → Tools & Settings → PHP)
-- Wymagane rozszerzenia (większość jest domyślnie):
-  ```
-  pdo_mysql, mbstring, bcmath, intl, openssl, tokenizer,
-  xml, ctype, json, fileinfo, curl, gd
-  ```
-- `php.ini` (Plesk pozwala na overrides per domena):
-  ```ini
-  memory_limit = 256M
-  max_execution_time = 120
-  upload_max_filesize = 20M
-  post_max_size = 20M
-  date.timezone = Europe/Warsaw
-  ```
 
-### 1.3 Document root
-- **Domain → Hosting Settings → Document root**: `httpdocs/public`
-- Apache config (Domain → Apache & nginx Settings → Additional directives for HTTPS):
-  ```apache
-  <Directory /var/www/vhosts/hovera.app/app.hovera.app/httpdocs/public>
-      AllowOverride All
-      Require all granted
-  </Directory>
-  ```
-  (Laravel ma własny `.htaccess` w `public/` — Plesk go uszanuje.)
+**Domain → PHP Settings**
+- **PHP version**: 8.3 (jeśli brak — Plesk → Tools & Settings → Updates → "Add/Remove Components" → PHP 8.3)
+- **Run PHP as**: FPM application served by Apache (default)
+- **PHP-CLI**: ta sama wersja (Plesk → Tools & Settings → PHP → ustaw default-cli na 8.3)
+
+**Performance / php.ini overrides** (tym samym ekranem PHP Settings → "Additional configuration directives"):
+
+```ini
+memory_limit = 256M
+max_execution_time = 120
+upload_max_filesize = 20M
+post_max_size = 20M
+date.timezone = Europe/Warsaw
+```
+
+Sprawdź czy są aktywne rozszerzenia (zazwyczaj wszystkie domyślne):
+`pdo_mysql, mbstring, bcmath, intl, openssl, tokenizer, xml, ctype, json, fileinfo, curl, gd`. Plesk pokazuje listę na tym samym ekranie.
+
+### 1.3 Document root + .htaccess
+
+**Domain → Hosting Settings**
+- **Document root**: `httpdocs/public` (Laravel)
+- **Preferred domain**: `app.hovera.app` (z HSTS)
+- **Permanent SEO-safe 301 redirect from HTTP to HTTPS**: ✓
+
+`.htaccess` w `public/` przyjedzie z repo razem z aplikacją — nie musisz nic edytować.
 
 ### 1.4 SSL / HTTPS
-- **Domain → SSL/TLS Certificates → Install Free Certificate (Let's Encrypt)**
-- Włącz **HSTS** (Plesk: SSL/TLS → Advanced)
-- Wymuś HTTPS: **Domain → Hosting Settings → Permanent SEO-safe 301 redirect from HTTP to HTTPS**
 
-### 1.5 MySQL — trzy "role"
-Hovera używa **trzech** logicznych połączeń DB. Wszystkie wskazują ten sam MySQL, ale na różnych userach:
+**Domain → SSL/TLS Certificates**
+- Klik **Install Free Certificate (Let's Encrypt)**
+- Włącz dla domeny + webmail
+- Włącz **HSTS** (Domain → SSL/TLS Certificates → Advanced settings)
 
-| Connection name  | Database         | User                  | Uprawnienia                                                                                    |
-|------------------|------------------|-----------------------|------------------------------------------------------------------------------------------------|
-| `central`        | `hovera_core`    | `hovera_core`         | ALL na `hovera_core`                                                                           |
-| `tenant`         | (per stajnia)    | (per stajnia)         | ALL na własnej DB — tworzony automatycznie przez `provisioner`                                 |
-| `provisioner`    | —                | `hovera_provisioner`  | **CREATE/DROP DATABASE, CREATE USER, GRANT OPTION** (potrzebuje superusera-light)              |
+### 1.5 MySQL — **3 role** (krytyczne!)
 
-#### Krok 1 — Central
-W Plesku: **Domains → app.hovera.app → Databases → Add Database**:
+Hovera używa trzech logicznych ról DB. Wszystkie wskazują ten sam serwer MySQL/MariaDB, ale na różnych userach.
+
+| Connection    | Database              | User                    | Uprawnienia                                                    |
+|---------------|-----------------------|-------------------------|----------------------------------------------------------------|
+| `central`     | `hovera_core`         | `hovera_core`           | ALL na `hovera_core`                                           |
+| `tenant`      | (per stajnia)         | (per stajnia)           | ALL na własnej DB — tworzony **automatycznie** przez provisionera|
+| `provisioner` | (n/a)                 | `hovera_provisioner`    | **CREATE/DROP DATABASE, CREATE USER, GRANT OPTION**            |
+
+#### A. Central — przez Plesk UI
+
+**Domain → Databases → Add Database**
 - Database name: `hovera_core`
-- User: `hovera_core` z silnym hasłem (zapisz do password managera)
-- Privileges: ALL na `hovera_core`
+- User name: `hovera_core`
+- Password: generuj silne (zapisz do password managera!)
+- Privileges: ALL (default)
+- Access: `127.0.0.1` (lokalny)
 
-#### Krok 2 — Provisioner (jednorazowo, **manualnie z SSH/CLI**)
-Plesk nie pozwala stworzyć usera z `CREATE DATABASE` przez UI, więc:
+#### B. Provisioner — przez phpMyAdmin
 
-```bash
-ssh root@vps   # tylko ten krok jako root, potem już nie
-mysql -u root -p
-```
+Plesk UI nie pozwala na `CREATE USER ... WITH GRANT OPTION` na `*.*`. Robisz to przez **phpMyAdmin**.
+
+**Domain → Databases → `hovera_core` → phpMyAdmin → SQL**
+
+Wklej i odpal (zmień `<silne-hasło>` na własne):
 
 ```sql
 CREATE USER 'hovera_provisioner'@'127.0.0.1' IDENTIFIED BY '<silne-hasło>';
+
 GRANT CREATE, DROP, REFERENCES, INDEX, ALTER,
       CREATE TEMPORARY TABLES, LOCK TABLES,
       CREATE VIEW, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE
       ON *.* TO 'hovera_provisioner'@'127.0.0.1';
+
 GRANT CREATE USER ON *.* TO 'hovera_provisioner'@'127.0.0.1';
+
 GRANT GRANT OPTION ON *.* TO 'hovera_provisioner'@'127.0.0.1';
+
 FLUSH PRIVILEGES;
 ```
 
-> **Bezpieczeństwo**: provisioner ma silne uprawnienia. Trzymaj jego hasło tylko w `.env` na serwerze i w password managerze. Nie używaj go nigdzie indziej.
+> ⚠️ Jeśli phpMyAdmin zwróci "Access denied" — Twój zalogowany user (utworzony przez Plesk dla `hovera_core`) **nie ma uprawnień** do tworzenia globalnych userów. W takim przypadku:
+> - Albo poproś hosting o utworzenie usera `hovera_provisioner` z uprawnieniami z tabeli powyżej
+> - Albo zaloguj się do phpMyAdmina **jako root** (jeśli masz dostęp — Plesk → Tools & Settings → Database Servers → "Webadmin" przy local server)
 
-#### Krok 3 — sanity check
-```bash
-mysql -u hovera_provisioner -p -h 127.0.0.1 -e "CREATE DATABASE _hovera_test; DROP DATABASE _hovera_test;"
-# Jeśli ok, provisioner działa.
+#### C. Sanity check — przez phpMyAdmin
+
+Wciąż w phpMyAdmin → SQL:
+
+```sql
+-- Test: prowizjoner powinien móc utworzyć i usunąć dowolną DB
+CREATE DATABASE _hovera_smoke_test;
+DROP DATABASE _hovera_smoke_test;
 ```
 
-### 1.6 Mail (SMTP)
-Wybierz jedną opcję i uzupełnij `.env`:
+Zaloguj się ponownie do phpMyAdmin **jako `hovera_provisioner`** i odpal powyższe — jeśli przejdzie, provisioner działa.
 
-**Postmark / Mailgun / SES** — najpewniejsze dla transactional:
+### 1.6 Mail
+
+#### Wariant A — Resend / Postmark / Mailgun (rekomendowany)
+Założ konto, weryfikuj domenę (DKIM/SPF), pobierz SMTP credentials.
+
+W `.env` (krok 1.10):
 ```env
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.postmarkapp.com
@@ -120,229 +144,248 @@ MAIL_FROM_ADDRESS="no-reply@hovera.app"
 MAIL_FROM_NAME="Hovera"
 ```
 
-**Plesk Mail (built-in)** — działa, ale gorsza deliverability:
-- Plesk → Mail → utwórz `no-reply@hovera.app`
-- W `.env`:
-  ```env
-  MAIL_MAILER=smtp
-  MAIL_HOST=mail.hovera.app
-  MAIL_PORT=587
-  MAIL_USERNAME=no-reply@hovera.app
-  MAIL_PASSWORD=<hasło>
-  MAIL_ENCRYPTION=tls
+#### Wariant B — Plesk Mail (built-in, gorsza deliverability)
+**Domain → Mail → Create Email Address** → `no-reply@hovera.app` z silnym hasłem.
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=app.hovera.app          # mail server name z Plesku
+MAIL_PORT=587
+MAIL_USERNAME=no-reply@hovera.app
+MAIL_PASSWORD=<hasło>
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="no-reply@hovera.app"
+```
+
+**DNS** (Domain → DNS Settings):
+- Plesk z reguły sam dodaje SPF i DKIM jeśli używasz Plesk Mail
+- Dla zewnętrznego SMTP — dodaj DKIM/SPF/DMARC zgodnie z dokumentacją providera. Plesk DNS Settings → Add Record (TXT)
+
+### 1.7 Git auto-deploy (Plesk-native, **bez SSH**)
+
+To jest sedno — Plesk ma natywne Git, które na każdy push robi `git pull` w `httpdocs` i może odpalić nasz `deploy.sh` automatycznie.
+
+**Domain → Git → Add Repository**
+- Repository name: `hovera`
+- Repository type: **Pull updates from a remote Git repository**
+- Repository URL: `git@github.com:PrzemekPrzemo/hovera.app-sys.git`
+- Plesk wygeneruje **deploy key (public)** — skopiuj go i wklej do GitHub:
+  GitHub repo → Settings → Deploy keys → Add deploy key (read-only wystarcza)
+- Branch: `main`
+- Deployment mode: **Automatic** (deploy on push) lub **Manual** (klikasz "Pull Updates Now")
+- **Server path**: `httpdocs` (NIE `httpdocs/public` — repo idzie do roota, document root zostaje na `httpdocs/public`)
+- **Additional deployment actions** (jeśli pole jest dostępne):
+  ```bash
+  bash deploy.sh --no-pull
   ```
+  *(`--no-pull`, bo Plesk już pull-nął przed odpaleniem skryptu)*
 
-> **DNS**: dla każdej opcji pamiętaj o **SPF + DKIM + DMARC** dla `hovera.app` w panelu DNS (Plesk → DNS Settings, jeśli hostujesz DNS u siebie).
+Pierwszy deploy: klik **"Pull Updates Now"**. Plesk:
+1. sklonuje repo do `httpdocs/`
+2. odpali `bash deploy.sh --no-pull` jako użytkownik domeny
 
-### 1.7 Cron — Laravel scheduler
-**Domain → Scheduled Tasks → Add task**:
-- Run: **Run a PHP script**
-- Script path: `/var/www/vhosts/hovera.app/app.hovera.app/httpdocs/artisan`
-- Arguments: `schedule:run`
-- Run as: `hovera_app`
-- Frequency: **Every minute** (`* * * * *`)
-- Włącz "Send notifications" jeśli chcesz mailem o błędach.
+> Jeśli **"Additional deployment actions"** w Twojej wersji Pleska nie ma:
+> - Klik **Pull Updates Now**, potem ręcznie odpal skrypt z **Domain → Web Hosting Access → Run Command** (jeśli włączone) lub przez SSH (krok 1.12)
 
-To uruchamia automatycznie:
-- `bookings:send-reminders` co godzinę
-- `tenants:snapshot-health` codziennie o 03:30
+### 1.8 .env — przez File Manager
 
-### 1.8 Queue worker (rekomendowane, ale opcjonalne)
-Maile wysyłają się synchronicznie z requestu — działa, ale spowalnia. Lepiej supervisor + queue worker:
+**Domain → File Manager → `httpdocs/`** → klik prawym **`.env.example`** → **Copy** → zapisz jako **`.env`** → klik **`.env`** → **Edit**.
 
-**Plesk nie zarządza supervisorem przez UI** — zrób to z SSH (jednorazowo):
-```bash
-sudo apt install supervisor
-sudo nano /etc/supervisor/conf.d/hovera-worker.conf
-```
+Minimum do uzupełnienia:
 
-```ini
-[program:hovera-worker]
-process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/vhosts/hovera.app/app.hovera.app/httpdocs/artisan queue:work --sleep=3 --tries=3 --max-time=3600
-autostart=true
-autorestart=true
-user=hovera_app
-numprocs=1
-redirect_stderr=true
-stdout_logfile=/var/www/vhosts/hovera.app/app.hovera.app/logs/worker.log
-stopwaitsecs=3600
-```
-
-```bash
-sudo supervisorctl reread
-sudo supervisorctl update
-sudo supervisorctl start hovera-worker:*
-```
-
-`./deploy.sh` automatycznie wywołuje `php artisan queue:restart` — workery łapią nową wersję kodu po max ~3s.
-
-### 1.9 Tools — co doinstalować po stronie OS (jednorazowo, jako root)
-```bash
-sudo apt update
-sudo apt install -y git unzip mysql-client redis-tools
-
-# Composer 2.x
-curl -sS https://getcomposer.org/installer | php
-sudo mv composer.phar /usr/local/bin/composer
-
-# Sanity check
-composer --version
-git --version
-php --version
-```
-
-### 1.10 Dostęp SSH dla `hovera_app`
-- Plesk → **Subscriptions → app.hovera.app → Web Hosting Access** → Access to the server over SSH: **/bin/bash** (lub `/bin/sh`)
-- Dodaj swój SSH public key: **Subscriptions → app.hovera.app → SSH Keys**
-- Zaloguj się: `ssh hovera_app@vps` (powinno działać bez hasła)
-
-### 1.11 Pierwsze .env
-Po SSH:
-```bash
-cd ~/httpdocs
-git clone git@github.com:PrzemekPrzemo/hovera.app-sys.git .
-cp .env.example .env
-nano .env
-```
-
-Uzupełnij minimum:
 ```env
 APP_NAME=Hovera
 APP_ENV=production
-APP_KEY=                                  # wygenerujemy za chwilę
+APP_KEY=                                  # wygenerujemy zaraz (krok 1.9)
 APP_DEBUG=false
 APP_TIMEZONE=Europe/Warsaw
 APP_URL=https://app.hovera.app
 
 DB_CENTRAL_DATABASE=hovera_core
 DB_CENTRAL_USERNAME=hovera_core
-DB_CENTRAL_PASSWORD=<z punktu 1.5>
+DB_CENTRAL_PASSWORD=<z 1.5.A>
 
 DB_PROVISIONER_USERNAME=hovera_provisioner
-DB_PROVISIONER_PASSWORD=<z punktu 1.5>
+DB_PROVISIONER_PASSWORD=<z 1.5.B>
 
+# Mail (z 1.6)
 MAIL_MAILER=smtp
-# ... reszta z punktu 1.6
+MAIL_HOST=...
+MAIL_USERNAME=...
+MAIL_PASSWORD=...
+MAIL_FROM_ADDRESS="no-reply@hovera.app"
+MAIL_FROM_NAME="Hovera"
 
-SESSION_SECURE_COOKIE=true                # bo HTTPS
+# HTTPS
+SESSION_SECURE_COOKIE=true
 ```
 
+Zapisz.
+
+### 1.9 APP_KEY i pierwsze migracje
+
+`APP_KEY` jest wymagany — Laravel używa go do szyfrowania sesji i tenant DB credentials.
+
+**Wariant A — Plesk PHP Console (preferowany, bez SSH)**
+
+Niektóre wersje Pleska mają **Domain → PHP Console** (przy zainstalowanym extension). Jeśli widzisz to:
 ```bash
-composer install --no-dev --optimize-autoloader
-php artisan key:generate
-php artisan migrate --force                # central tylko
+cd httpdocs
+php artisan key:generate --force
+php artisan migrate --force
 ```
+
+**Wariant B — odpal raz przez Plesk Scheduled Tasks**
+
+Jeśli nie ma PHP Console, dodaj **jednorazowy** Scheduled Task (Domain → Scheduled Tasks → Add Task):
+- Task type: **Run a PHP script**
+- Script path: `/var/www/vhosts/hovera.app/app.hovera.app/httpdocs/artisan`
+- Arguments: `key:generate --force`
+- Run: **Run Once** (klik Run Now)
+
+Powtórz dla `migrate --force`.
+
+**Wariant C — SSH (krok 1.12) jeśli A i B nie działają**
+
+### 1.10 Cron — Laravel scheduler
+
+**Domain → Scheduled Tasks → Add Task**
+- Task type: **Run a PHP script**
+- Script path: `/var/www/vhosts/hovera.app/app.hovera.app/httpdocs/artisan`
+- Arguments: `schedule:run`
+- Run: **Cron style** → `* * * * *` (co minutę)
+- Run as: `hovera_app` (default)
+- Description: "Laravel scheduler"
+- "Send notifications": tylko on errors (opcja w Plesku)
+
+Co to uruchamia automatycznie:
+- `bookings:send-reminders` — co godzinę (przypomnienia 24h)
+- `tenants:snapshot-health` — codziennie o 03:30 (cache health-score)
+
+### 1.11 Queue worker — **bez supervisorska**, przez Plesk Scheduled Tasks
+
+Klasyczny supervisor wymaga roota. Robimy to czyściej przez Plesk + `--stop-when-empty`:
+
+**Domain → Scheduled Tasks → Add Task**
+- Task type: **Run a PHP script**
+- Script path: `/var/www/vhosts/hovera.app/app.hovera.app/httpdocs/artisan`
+- Arguments: `queue:work --stop-when-empty --max-time=55 --tries=3`
+- Run: **Cron style** → `* * * * *` (co minutę)
+- Description: "Queue worker (cron mode)"
+
+Jak to działa: każda minuta odpala jeden worker, który **zjada wszystkie pending joby z kolejki** i kończy. Gdy nie ma jobów, kończy od razu (`--stop-when-empty`). Bez supervisora, bez roota, bez ciągłego procesu — system Plesk zajmuje się "supervision" przez cron.
+
+> 💡 W praktyce — większość maili Hovery idzie sync (przez `Notification::route('mail')->notify(...)`). Queue jest aktualnie głównie dla TenantAuditLogger i przyszłych integracji. Możesz pominąć ten krok i wrócić gdy obciążenie tego wymaga.
+
+### 1.12 SSH — kiedy musisz, jak to zrobić bezpiecznie
+
+SSH potrzebny jest tylko w **trzech** sytuacjach:
+1. Brak składnika OS (Composer, Git, mysql-client) → **poproś hosting**
+2. Plesk UI bez "Additional deployment actions" w Git → odpalasz `deploy.sh` ręcznie
+3. Provisioner user nie da się utworzyć z phpMyAdmina (brak uprawnień) → **poproś hosting** żeby dał ten SQL z 1.5.B jako root
+
+**Włączenie SSH dla `hovera_app`:**
+**Subscription → Web Hosting Access**
+- "Access to the server over SSH": `/bin/bash`
+- Dodaj swój publiczny klucz SSH: **Subscription → SSH Keys**
+- Test: `ssh hovera_app@vps`
+
+**Po SSH** możesz uruchamiać `deploy.sh`, ale **nigdy** nie loguj się jako root z tego konta — operacje, które wymagają roota, zostaw hostingowi.
 
 ---
 
 ## 2. Codzienny deploy
 
-### Bezpieczny rollout (recommended)
+### Z Plesk UI (zero SSH)
+
+**Domain → Git → "Pull Updates Now"**
+
+Plesk:
+1. `git fetch + git pull` z `main`
+2. odpala `bash deploy.sh --no-pull` (jeśli ustawione w "Additional deployment actions")
+
+Status w **Git → Activity log**.
+
+### Z SSH (jeśli wolisz)
 
 ```bash
 ssh hovera_app@vps
 cd ~/httpdocs
-./deploy.sh
+./deploy.sh                  # latest origin/main
+./deploy.sh v1.2.3           # konkretny tag
+./deploy.sh --dry-run        # preview
 ```
 
-Co robi skrypt:
-1. `php artisan down` (maintenance mode — strona zwraca 503)
-2. `git fetch + git pull origin main` (lub `git checkout <tag>`)
-3. `composer install --no-dev --optimize-autoloader`
-4. Czyści i odbudowuje cache (config, routes, views, events)
-5. `php artisan migrate --force` (central)
-6. `php artisan tenants:migrate` (każdy aktywny tenant)
-7. `php artisan storage:link` (jeśli pierwszy raz)
-8. `php artisan filament:assets` (publish CSS/JS Filamenta)
-9. `php artisan queue:restart` (workery łapią nowy kod)
-10. `php artisan up` (maintenance OFF)
-11. Smoke test (`php artisan about`)
+### Co `deploy.sh` robi
 
-### Wdrożenie konkretnego tagu / hotfix
-
-```bash
-./deploy.sh v1.2.3          # checkout taga
-./deploy.sh main            # to samo co bez argumentu
-./deploy.sh feature-branch  # ad-hoc branch
-```
-
-### Pomijanie kroków (rzadko)
-
-```bash
-./deploy.sh --skip-tenants  # tylko central — gdy tenanty padają
-./deploy.sh --no-pull       # po manualnym `git checkout`
-./deploy.sh --dry-run       # tylko wypisz co by się stało
-```
+1. `php artisan down` (maintenance — strona zwraca 503)
+2. `composer install --no-dev --optimize-autoloader`
+3. Czyści i odbudowuje cache (config / route / view / event)
+4. `php artisan migrate --force` (central)
+5. `php artisan tenants:migrate` (każdy aktywny tenant)
+6. `php artisan storage:link` (jeśli pierwszy raz)
+7. `php artisan filament:assets` (publish CSS/JS)
+8. `php artisan queue:restart` (workery łapią nowy kod)
+9. `php artisan up` (maintenance OFF)
+10. Smoke test (`php artisan about`)
 
 ### Rollback
 
-```bash
-ssh hovera_app@vps
-cd ~/httpdocs
-git log --oneline -10        # znajdź poprzednią rewizję
-./deploy.sh <hash-lub-tag>   # deploy starszej wersji
+**Z Plesk UI (preferowane):**
+**Domain → Git → Repository → Pull Updates** → wpisz `<hash>` lub `<tag>` w polu "Branch/tag"
+*(albo odpal SSH `./deploy.sh <hash>`)*
 
-# Migracje rollback (UWAŻAJ — ostatnia partia):
-php artisan migrate:rollback --force                              # central
-php artisan tenants:migrate --tenant=<slug> --rollback             # nie ma flagi --rollback w tenants:migrate, użyj per-DB:
-# Alternatywnie z mysql client zaloguj się do hovera_t_<slug> i ręcznie cofnij konkretny migrate.
-```
-
-> Większość migracji jest backwards-compatible (dodajemy kolumny nullable). Nie ma potrzeby rollbacku w 95% przypadków — wystarczy redeploy poprzedniej wersji.
+Migracje są w 95% backwards-compatible (dodajemy kolumny nullable). Większość rollbacków = sam redeploy starej wersji bez `migrate:rollback`.
 
 ---
 
 ## 3. Tworzenie nowej stajni (tenant)
 
-Z poziomu master admin panelu (`/admin → Stajnie → Add tenant`) — to wystarcza.
+### Z Filament UI (najprościej)
+Zaloguj się na `https://app.hovera.app/admin` → **Stajnie → Add tenant**.
 
-Albo z CLI:
+Co robi pod spodem:
+- Tworzy DB `hovera_t_<slug>` (przez provisionera)
+- Tworzy MySQL usera `hovera_t_<slug>` z losowym hasłem (encrypted-at-rest)
+- Migruje schema tenanta
+- (po podpięciu maila) wysyła zaproszenie do ownera
 
+### Z SSH (jeśli wolisz CLI)
 ```bash
 php artisan tenants:create stajnia-wisla "Stajnia Wisła" \
     --owner-email=admin@stajnia-wisla.pl \
     --plan=stable
 ```
 
-Komenda:
-- Tworzy DB `hovera_t_stajnia-wisla` + usera `hovera_t_stajnia-wisla` z losowym hasłem (zaszyfrowanym w `tenants.db_password_encrypted`)
-- Migruje schema tenanta
-- Wysyła zaproszenie do ownera (magic link)
-
 Pełna lista artisan commands:
-
 ```bash
-php artisan tenants:list                    # wszystkie zarejestrowane stajnie
+php artisan tenants:list                    # wszystkie stajnie
 php artisan tenants:migrate                 # migruje wszystkie aktywne
 php artisan tenants:migrate --tenant=slug   # jeden konkretny
-php artisan tenants:snapshot-health         # ad-hoc snapshot zdrowia
-php artisan bookings:send-reminders         # ad-hoc przypomnienia 24h
+php artisan tenants:snapshot-health         # ad-hoc snapshot
+php artisan bookings:send-reminders         # ad-hoc 24h reminders
 ```
 
 ---
 
-## 4. Monitoring + healthcheck
+## 4. Monitoring i loglines (Plesk UI)
 
-### Loglines
-```bash
-tail -f storage/logs/laravel.log
-```
+### Logi aplikacji
+**Domain → File Manager → `httpdocs/storage/logs/laravel.log`** → klik **View** lub **Tail**.
 
-### Failed queue jobs
-```bash
-php artisan queue:failed
-php artisan queue:retry all                 # ponów wszystkie
-```
+### Logi PHP-FPM / Apache
+**Domain → Logs** → wszystko klikalne (access / error / php / nginx).
 
-### Healthcheck (np. dla Uptime Robot)
-- `GET https://app.hovera.app/`              → 302 do panelu admina
-- `GET https://app.hovera.app/admin/login`   → 200 (lub 302 do challenge 2FA)
+### Uptime check (zewnętrzny)
+- `GET https://app.hovera.app/`              → 302 do `/admin`
+- `GET https://app.hovera.app/admin/login`   → 200
 - `GET https://app.hovera.app/app/login`     → 200
 
-### Audit log (tenant-side)
+Polecam Uptime Robot / Better Stack / cron-job.org — bezpłatny tier wystarcza.
+
+### Audit log (per stajnia)
+**Plesk → Databases → `hovera_t_<slug>` → phpMyAdmin → SQL**:
 ```sql
-USE hovera_t_<slug>;
 SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 50;
 ```
 
@@ -350,34 +393,71 @@ SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 50;
 
 ## 5. Backup
 
-Plesk → **Backup Manager → Schedule**:
-- **Frequency**: daily 04:00
-- **Content**:
-  - User files (httpdocs)
-  - **Databases** ✓ (Plesk złapie central + wszystkie tenant DB-ki w hostowanym MySQL)
-- **Retention**: 14 days
-- **Storage**: zewnętrzny (S3 / FTP / rsync) — **nie na ten sam serwer**
+**Domain → Backup Manager → Schedule**
+- Frequency: **Daily**, hour 04:00
+- Content:
+  - User files (`httpdocs`)
+  - **Databases** ✓ (Plesk złapie central + wszystkie tenant DB-ki w jednym backupie)
+- Retention: 14 days
+- Storage: **zewnętrzny** (S3 / FTP / Backblaze) — **nie ten sam serwer**
 
-Restore test: raz na kwartał odtwórz backup na staging i sprawdź czy `hovera_t_<slug>` da się przywrócić.
-
----
-
-## 6. Troubleshooting
-
-| Objaw                                       | Sprawdź                                                                                       |
-|---------------------------------------------|-----------------------------------------------------------------------------------------------|
-| `500` na każdej stronie                     | `tail -50 storage/logs/laravel.log` · uprawnienia `storage/` (`chmod -R ug+rw`)               |
-| `permission denied` na `storage/logs/*`     | `chown -R hovera_app:psaserv storage bootstrap/cache`                                         |
-| Maile nie wychodzą                          | `php artisan tinker → Mail::raw('test', fn($m)=>$m->to('ty@gmail.com')->subject('t'))`        |
-| `tenants:create` failuje na CREATE DATABASE | `mysql -u hovera_provisioner -p -e "CREATE DATABASE _t; DROP DATABASE _t"`                    |
-| Filament `/admin` zwraca 404                | `php artisan filament:assets` + `php artisan optimize:clear` + `php artisan optimize`         |
-| Cron nie odpala scheduled tasks             | Plesk → Scheduled Tasks → upewnij się że "Run as" = `hovera_app` i jest `* * * * *`          |
-| Sesja klienta wygasa od razu                | `SESSION_SECURE_COOKIE=true` + HTTPS musi być włączone (cookie nie wyśle się przez HTTP)      |
+Restore test raz na kwartał: odtwórz na staging i sprawdź czy `hovera_t_<slug>` poprawnie wstaje.
 
 ---
 
-## 7. Co **nie** jest w skrypcie (świadomie)
+## 6. Troubleshooting (wszystko z Plesk UI / phpMyAdmin)
 
-- **NPM build** — Filament v3 ma swoje skompilowane assets, nie potrzebujemy `npm run build`. Jeśli kiedyś dojdzie własny frontend, dorzuć w `deploy.sh` blok `npm ci && npm run build`.
-- **Zero-downtime deploy** — robimy `down/up`, max 5–10 sekund 503. Dla horse stable to akceptowalne. Jeśli kiedyś będzie ruch który tego nie znosi: deployuj do nowego katalogu i przełącz symlink (Envoyer-style).
-- **Automatyczny rollback** — celowo, żeby nie ukrywać błędów. Człowiek ma decydować.
+| Objaw                                       | Sprawdź / Napraw                                                                                       |
+|---------------------------------------------|--------------------------------------------------------------------------------------------------------|
+| `500` na każdej stronie                     | File Manager → `storage/logs/laravel.log` (klik View) · uprawnienia: kliknij prawym `storage/` → **Change Permissions** → `0775` rekursywnie |
+| Maile nie wychodzą                          | Plesk → Mail → Mail Logs · w `.env` sprawdź `MAIL_*` · test: dodaj jednorazowy Scheduled Task `php artisan tinker` (lub przez SSH) |
+| `tenants:create` failuje na CREATE DATABASE | Plesk → phpMyAdmin (jako `hovera_provisioner`) → `CREATE DATABASE _t; DROP DATABASE _t` — jeśli nie idzie, brakuje GRANT z 1.5.B |
+| Filament `/admin` → 404                     | Scheduled Task one-shot: `php artisan filament:assets` + `php artisan optimize`                        |
+| Cron nie odpala                             | Plesk → Scheduled Tasks → kliknij task → **Run Now** + Notifications: enable mail on errors          |
+| Sesja klienta wygasa od razu                | `.env`: `SESSION_SECURE_COOKIE=true` + HTTPS musi być włączone (cookie nie wyśle się przez HTTP)      |
+| Permission denied w `bootstrap/cache`       | File Manager → `bootstrap/cache/` → Change Permissions → `0775` recursive · właściciel: `hovera_app:psaserv` |
+| `composer install` failuje na deploy        | Plesk → Composer extension (Tools & Settings → Composer) — odpal ręcznie z UI, klik **Run** w katalogu `httpdocs` |
+
+---
+
+## 7. Co `deploy.sh` zakłada (co musi być na serwerze)
+
+| Komponent          | Skąd to dostać w Plesku                                                                       |
+|--------------------|-----------------------------------------------------------------------------------------------|
+| PHP 8.3 (CLI)      | Tools & Settings → Updates → Add Components → PHP 8.3                                          |
+| Composer 2.x       | Tools & Settings → Composer (extension Plesk Composer) — **albo** Tools & Settings → Server-Wide Software → install via CLI (poproś hosting) |
+| Git CLI            | Z reguły jest pre-installed. Sprawdź: w Plesk Git widzisz wersję                              |
+| mysql-client       | Tylko jeśli chcesz robić ręczne `mysqldump` — Plesk Backup Manager już to ogarnia              |
+
+**Najczęstszy brak:** Composer. Jeśli twój Plesk go nie ma:
+1. Tools & Settings → Plesk Extensions → **Composer** (instaluje się klikiem)
+2. Albo poproś hosting o `apt install composer` na poziomie OS (jednorazowo)
+
+---
+
+## 8. Co celowo **nie** wymaga roota
+
+Wszystko z tego dokumentu **da się** zrobić z poziomu zwykłego usera domeny w Plesku. Jedyne wyjątki:
+1. Tworzenie `hovera_provisioner` z `GRANT OPTION` — jeśli phpMyAdmin nie pozwala, **eskaluj do hostingu** (jednorazowy mail z SQL-em z 1.5.B)
+2. Instalacja brakującego komponentu OS (Composer/git) — analogicznie
+
+Po tych dwóch jednorazowych krokach całość operuje się klikalnie i CRON-ami z Plesku.
+
+---
+
+## 9. Quick reference — gdzie co kliknąć
+
+| Co              | Gdzie w Plesku                                                            |
+|-----------------|----------------------------------------------------------------------------|
+| Logi Laravel    | Domain → File Manager → `storage/logs/laravel.log` → View                |
+| Logi serwera    | Domain → Logs                                                              |
+| phpMyAdmin      | Domain → Databases → `hovera_core` → phpMyAdmin                          |
+| Crony           | Domain → Scheduled Tasks                                                   |
+| Deploy ręczny   | Domain → Git → Pull Updates Now                                            |
+| Edit `.env`     | Domain → File Manager → `httpdocs/.env` → Edit                            |
+| Backup          | Domain → Backup Manager                                                    |
+| SSL             | Domain → SSL/TLS Certificates                                              |
+| Mail mailbox    | Domain → Mail → Email Addresses                                            |
+| Composer        | Tools & Settings → Composer (extension)                                    |
+| PHP wersja      | Domain → PHP Settings                                                      |
+| Document root   | Domain → Hosting Settings                                                  |
