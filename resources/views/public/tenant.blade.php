@@ -112,6 +112,22 @@
             margin-left: .5rem;
         }
 
+        section.card.box-availability {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 1.25rem;
+        }
+        .box-pill {
+            display: grid; place-items: center;
+            min-width: 64px; min-height: 64px;
+            border-radius: 999px;
+            font-weight: 800; font-size: 1.5rem;
+            color: #fff;
+        }
+        .box-pill.box-free { background: var(--primary); }
+        .box-pill.box-full { background: #6b7280; }
+        .box-availability strong { display: block; font-size: 1.05rem; margin-bottom: .15rem; }
+        .box-availability .meta { display: block; color: #6b7280; font-size: .85rem; }
+
         footer.site-footer {
             text-align: center;
             color: #9ca3af;
@@ -141,6 +157,26 @@
     </header>
 
     <main>
+        @if (! empty($box_availability))
+            <section class="card box-availability">
+                @if ($box_availability['free'] > 0)
+                    <div class="box-pill box-free">{{ $box_availability['free'] }}</div>
+                    <div>
+                        <strong>Mamy {{ $box_availability['free'] }}
+                            {{ $box_availability['free'] === 1 ? 'wolny box' : ($box_availability['free'] < 5 ? 'wolne boksy' : 'wolnych boksów') }}
+                            — czekamy na Ciebie!</strong>
+                        <span class="meta">na {{ $box_availability['total'] }} łącznie · skontaktuj się ze stajnią</span>
+                    </div>
+                @else
+                    <div class="box-pill box-full">0</div>
+                    <div>
+                        <strong>Wszystkie boksy są zajęte</strong>
+                        <span class="meta">{{ $box_availability['total'] }} boksów · zostaw kontakt — wpiszemy na listę oczekujących</span>
+                    </div>
+                @endif
+            </section>
+        @endif
+
         @if ($description)
             <section class="card">
                 <h2>O stajni</h2>
