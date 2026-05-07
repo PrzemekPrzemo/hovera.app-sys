@@ -476,12 +476,14 @@ class HoveraDemoSeeder
             ]);
 
             if ($statuses[$i] === 'paid') {
+                // PaymentProvider enum: none / stub / p24 / payu / stripe / mollie
+                // 'none' = płatność rozliczona poza systemem (przelew bankowy ręczny)
                 Payment::create([
                     'client_id' => $client->id,
                     'invoice_id' => $invoice->id,
                     'amount_cents' => $total,
                     'currency' => 'PLN',
-                    'provider' => 'manual',
+                    'provider' => 'none',
                     'provider_ref' => 'DEMO-'.Str::upper(Str::random(8)),
                     'status' => 'paid',
                     'paid_at' => $invoice->paid_at,
