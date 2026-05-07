@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\App\Pages;
 
 use App\Enums\PaymentProvider;
+use App\Services\Payments\Providers\StripePaymentProvider;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
@@ -206,6 +207,12 @@ class PaymentSettings extends Page implements HasForms
             Forms\Components\TextInput::make('stripe.secret_key')->label('Secret key (sk_...)')->password()->revealable()->required(),
             Forms\Components\TextInput::make('stripe.webhook_secret')->label('Webhook secret (whsec_...)')->password()->revealable()->required()
                 ->helperText('Skopiuj ze Stripe Dashboard → Developers → Webhooks → endpoint → Signing secret.'),
+            Forms\Components\CheckboxList::make('stripe.enabled_methods')
+                ->label('Pokazywane metody płatności')
+                ->helperText('Wybierz, które opcje klient zobaczy w Stripe Checkout. Domyślnie tylko karty.')
+                ->options(StripePaymentProvider::methodOptions())
+                ->columns(2)
+                ->default(['card']),
         ];
     }
 
