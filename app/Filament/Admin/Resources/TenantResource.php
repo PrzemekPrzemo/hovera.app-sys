@@ -9,6 +9,8 @@ use App\Filament\Admin\Resources\TenantResource\Pages;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
 use App\Services\MasterAuditLogger;
+use App\Tenancy\TenantManager;
+use Database\Seeders\Demo\HoveraDemoSeeder;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -17,6 +19,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Artisan;
 
 class TenantResource extends Resource
 {
@@ -205,6 +208,51 @@ class TenantResource extends Resource
                 Tables\Actions\RestoreAction::make()
                     ->after(function (Tenant $record, MasterAuditLogger $audit) {
                         $audit->record('tenant.restore', 'Tenant', $record->id, $record->id);
+                    }),
+                Tables\Actions\Action::make('seed_demo')
+                    ->label('Wgraj demo dane')
+                    ->icon('heroicon-o-sparkles')
+                    ->color('warning')
+                    ->visible(fn (Tenant $r) => ! $r->trashed() && $r->status === 'active')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Tenant $r) => "Wgrać demo dane do {$r->name}?")
+                    ->modalDescription('Doda 14 koni, 6 klientów, 12 boxów, kalendarz, faktury i resztę zestawu pokazowego. Działa na bazie tenanta.')
+                    ->form([
+                        Forms\Components\Toggle::make('fresh')
+                            ->label('Wyczyść istniejące dane (DROP all tables)')
+                            ->default(false)
+                            ->helperText('UWAGA: usunie wszystkie obecne dane stajni przed seed.'),
+                    ])
+                    ->action(function (Tenant $record, array $data, TenantManager $tm, HoveraDemoSeeder $seeder, MasterAuditLogger $audit) {
+                        $tm->setCurrent($record);
+                        try {
+                            if ($data['fresh'] ?? false) {
+                                Artisan::call('migrate:fresh', [
+                                    '--database' => 'tenant',
+                                    '--path' => 'database/migrations/tenant',
+                                    '--force' => true,
+                                ]);
+                            } else {
+                                Artisan::call('migrate', [
+                                    '--database' => 'tenant',
+                                    '--path' => 'database/migrations/tenant',
+                                    '--force' => true,
+                                ]);
+                            }
+                            $seeder->run();
+                            $audit->record('tenant.demo_seeded', 'Tenant', $record->id, $record->id, [
+                                'fresh' => $data['fresh'] ?? false,
+                            ]);
+                            Notification::make()->success()
+                                ->title('Demo dane wgrane')
+                                ->body("Stajnia {$record->name} ma teraz pełen zestaw pokazowy.")
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()->danger()
+                                ->title('Nie udało się wgrać demo')
+                                ->body($e->getMessage())
+                                ->send();
+                        }
                     }),
                 Tables\Actions\Action::make('destroy')
                     ->label('Drop database')
