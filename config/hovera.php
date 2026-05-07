@@ -6,6 +6,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Brand
+    |--------------------------------------------------------------------------
+    | Centralna definicja brand assets — używana w mailach, public sites,
+    | landing page'ach. Filament panele mają własne `brandLogo()` /
+    | `brandName()` (patrz Providers/Filament/*PanelProvider).
+    */
+
+    'brand' => [
+        'name' => 'hovera',
+        'tagline' => 'Clear. Calm. Confident.',
+        'description' => 'European SaaS for stable and equestrian business management',
+        'logo' => '/img/brand/hovera-logo.svg',
+        'icon' => '/img/brand/hovera-icon.svg',
+        'favicon' => '/favicon.svg',
+        'colors' => [
+            // Wybrane z brand book — używaj tych nazw zamiast hardcode'owanych hex
+            'deep_brown' => '#3D2E22',  // primary dark / sidebar / heading
+            'ochre' => '#A8956B',       // accent / CTA / link
+            'cream' => '#F7F4EF',       // background light
+            'sand' => '#E9E2D3',        // soft surface
+            'taupe' => '#C8B8A4',       // muted accent
+            'stone' => '#8F8576',       // secondary text
+            'charcoal' => '#1F1A17',    // emphatic text
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Master admin
     |--------------------------------------------------------------------------
     */
