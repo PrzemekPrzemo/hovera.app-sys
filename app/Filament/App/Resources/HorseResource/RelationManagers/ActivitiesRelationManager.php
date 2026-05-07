@@ -77,7 +77,7 @@ class ActivitiesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('cost_cents')
                     ->label('Koszt')
                     ->placeholder('—')
-                    ->formatStateUsing(fn (?int $s) => $s !== null ? number_format($s / 100, 2, ',', ' ').' zł' : '—')
+                    ->formatStateUsing(fn (?int $state) => $state !== null ? number_format($state / 100, 2, ',', ' ').' zł' : '—')
                     ->toggleable(),
             ])
             ->defaultSort('performed_at', 'desc')
