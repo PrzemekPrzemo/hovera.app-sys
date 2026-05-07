@@ -66,10 +66,43 @@ class InvitationsRelationManager extends RelationManager
                     ->query(fn ($query) => $query->accepted()),
             ])
             ->actions([
-                Tables\Actions\Action::make('resend')
-                    ->label('Wyślij ponownie')
-                    ->icon('heroicon-o-paper-airplane')
+                Tables\Actions\Action::make('show_url')
+                    ->label('Pokaż link logowania')
+                    ->icon('heroicon-o-link')
                     ->color('primary')
+                    ->visible(fn (UserInvitation $r) => ! $r->isAccepted())
+                    ->modalHeading(fn (UserInvitation $r) => "Link logowania dla {$r->email}")
+                    ->modalDescription('Każde wywołanie generuje NOWY token (poprzedni jest unieważniany). Token surowy nie jest zapisany w DB — pojawia się tylko tutaj raz.')
+                    ->action(function (UserInvitation $record, SendInvitation $send, MasterAuditLogger $audit) {
+                        $result = $send->execute(
+                            email: $record->email,
+                            tenant: $record->tenant,
+                            role: $record->role,
+                            name: $record->name,
+                            invitedBy: Auth::user(),
+                        );
+
+                        $url = route('invitations.accept', ['token' => $result['plaintext_token']]);
+
+                        $audit->record(
+                            'invitation.url_shown',
+                            'UserInvitation',
+                            $result['invitation']->id,
+                            $record->tenant_id,
+                            ['email' => $record->email],
+                        );
+
+                        Notification::make()
+                            ->success()
+                            ->title('Link wygenerowany — skopiuj poniżej:')
+                            ->body($url)
+                            ->persistent()
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('resend')
+                    ->label('Wyślij mailem')
+                    ->icon('heroicon-o-paper-airplane')
+                    ->color('gray')
                     ->visible(fn (UserInvitation $r) => ! $r->isAccepted())
                     ->requiresConfirmation()
                     ->action(function (UserInvitation $record, SendInvitation $send, MasterAuditLogger $audit) {
@@ -81,6 +114,8 @@ class InvitationsRelationManager extends RelationManager
                             invitedBy: Auth::user(),
                         );
 
+                        $url = route('invitations.accept', ['token' => $result['plaintext_token']]);
+
                         $audit->record(
                             'invitation.resent',
                             'UserInvitation',
@@ -91,8 +126,9 @@ class InvitationsRelationManager extends RelationManager
 
                         Notification::make()
                             ->success()
-                            ->title('Zaproszenie wysłane ponownie')
-                            ->body("Nowy link wysłany na {$record->email}. Poprzedni unieważniony.")
+                            ->title("Zaproszenie wysłane na {$record->email}")
+                            ->body("Link (do skopiowania jeśli mail nie dojdzie):\n{$url}")
+                            ->persistent()
                             ->send();
                     }),
 
