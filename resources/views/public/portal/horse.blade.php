@@ -32,6 +32,32 @@
         .pill.warning { background: #fef3c7; color: #92400e; }
         .pill.primary { background: color-mix(in srgb, var(--primary) 18%, white); color: var(--primary); }
         .pill.gray { background: #e5e7eb; color: #374151; }
+        .pill.activity-feeding { background: #d1fae5; color: #065f46; }
+        .pill.activity-grooming { background: color-mix(in srgb, var(--primary) 18%, white); color: var(--primary); }
+        .pill.activity-turnout { background: #fef3c7; color: #92400e; }
+        .pill.activity-exercise { background: color-mix(in srgb, var(--primary) 30%, white); color: var(--primary); }
+        .pill.activity-box_cleaning { background: #e0e7ff; color: #3730a3; }
+        .pill.activity-transport_event { background: #fee2e2; color: #991b1b; }
+        .pill.activity-other { background: #e5e7eb; color: #374151; }
+        .box-info { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: #f9fafb; border-radius: 8px; margin-bottom: 1rem; }
+        .box-info .box-pill { background: var(--primary); color: white; padding: .5rem 1rem; border-radius: 8px; font-weight: 700; }
+        .box-info .box-meta { color: #6b7280; font-size: .9rem; }
+        .services { width: 100%; border-collapse: collapse; margin-top: .5rem; font-size: .9rem; }
+        .services th, .services td { padding: .5rem .65rem; border-bottom: 1px solid #f3f4f6; text-align: left; }
+        .services th { background: #f9fafb; color: #374151; font-weight: 600; font-size: .8rem; text-transform: uppercase; }
+        .services td.num, .services th.num { text-align: right; }
+        .services .meta { display: block; color: #9ca3af; font-size: .8rem; }
+        .cost-summary { padding: 1rem; background: color-mix(in srgb, var(--primary) 10%, white); border-radius: 8px; margin-top: 1rem; display: flex; flex-direction: column; gap: .15rem; }
+        .cost-summary .big { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
+        .activity { padding: .8rem 0; border-bottom: 1px solid #f3f4f6; }
+        .activity:last-of-type { border-bottom: 0; }
+        .activity-head { display: flex; justify-content: space-between; gap: .5rem; align-items: baseline; margin-bottom: .25rem; }
+        .activity-head .date { color: #6b7280; font-size: .85rem; white-space: nowrap; }
+        .activity-summary { color: #1f2937; font-size: .95rem; margin-top: .15rem; }
+        .activity-meta { color: #9ca3af; font-size: .85rem; margin-top: .25rem; }
+        .small { font-size: .85rem; line-height: 1.4; }
+        h3.muted { font-size: .85rem; color: #6b7280; margin: 1rem 0 .35rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+        .muted { color: #6b7280; }
         @media (prefers-color-scheme: dark) {
             body { background: #0f172a; color: #e5e7eb; }
             .card { background: #1e293b; }
@@ -64,6 +90,96 @@
                 @if ($horse->passport_number)<dt>Paszport</dt><dd>{{ $horse->passport_number }}</dd>@endif
             </dl>
         </div>
+
+        @if ($horse->box || $horse->boardingServices->isNotEmpty())
+            <div class="card">
+                <h2>Pensja i koszty</h2>
+
+                @if ($horse->box)
+                    <div class="box-info">
+                        <div class="box-pill">
+                            🏠 Box {{ $horse->box->label ?: $horse->box->name }}
+                        </div>
+                        <div class="box-meta">
+                            {{ $horse->box->typeLabel() }}
+                            @if ($horse->box->size_m2) · {{ $horse->box->size_m2 }} m² @endif
+                            @if ($horse->box->monthly_rate_cents)
+                                · pensjonat: {{ $horse->box->monthlyRateFormatted() }}/mies.
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
+                @if ($horse->boardingServices->isNotEmpty())
+                    <h3 class="muted">Naliczane usługi</h3>
+                    <table class="services">
+                        <thead>
+                        <tr>
+                            <th>Pozycja</th>
+                            <th class="num">Cena</th>
+                            <th>Częstotliwość</th>
+                            <th class="num">~mies.</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach ($horse->boardingServices as $service)
+                            @php
+                                $unitPrice = (int) ($service->pivot->price_override_cents ?? $service->price_cents);
+                                $qty = (float) ($service->pivot->quantity ?? 1);
+                                $monthly = (int) round($unitPrice * $qty * $service->frequency->monthlyMultiplier());
+                            @endphp
+                            <tr>
+                                <td>
+                                    <strong>{{ $service->name }}</strong>
+                                    @if ($qty > 1)
+                                        <span class="muted"> · {{ rtrim(rtrim(number_format($qty, 3, ',', ' '), '0'), ',') }} {{ $service->unit }}</span>
+                                    @endif
+                                    @if ($service->description)
+                                        <span class="meta">{{ $service->description }}</span>
+                                    @endif
+                                </td>
+                                <td class="num">{{ number_format($unitPrice / 100, 2, ',', ' ') }} zł / {{ $service->unit }}</td>
+                                <td>{{ $service->frequency->label() }}</td>
+                                <td class="num">
+                                    @if ($monthly > 0)
+                                        {{ number_format($monthly / 100, 2, ',', ' ') }} zł
+                                    @else
+                                        <span class="muted">—</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                @endif
+
+                <div class="cost-summary">
+                    <strong>Szacunkowy koszt miesięczny:</strong>
+                    <span class="big">{{ number_format($estimated_monthly_cents / 100, 2, ',', ' ') }} zł</span>
+                    <small class="muted">Bez usług "za użycie" i jednorazowych — te pojawiają się tylko gdy są naliczane.</small>
+                </div>
+            </div>
+        @endif
+
+        @if ($activities->isNotEmpty())
+            <div class="card">
+                <h2>Co robimy z Twoim koniem</h2>
+                @foreach ($activities as $activity)
+                    <div class="activity">
+                        <div class="activity-head">
+                            <span class="pill activity-{{ $activity->type->value }}">{{ $activity->type->label() }}</span>
+                            <span class="date">{{ $activity->performed_at->translatedFormat('d.m.Y · H:i') }}</span>
+                        </div>
+                        @if ($activity->summary)<div class="activity-summary">{{ $activity->summary }}</div>@endif
+                        @if ($activity->details)<div class="muted small">{{ $activity->details }}</div>@endif
+                        <div class="activity-meta">
+                            @if ($activity->performed_by) {{ $activity->performed_by }} @endif
+                            @if ($activity->cost_cents) · <strong>{{ $activity->costFormatted() }}</strong> @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
 
         <div class="card">
             <h2>Historia weterynaryjna</h2>

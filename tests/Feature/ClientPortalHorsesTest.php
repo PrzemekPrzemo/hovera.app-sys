@@ -335,6 +335,48 @@ class ClientPortalHorsesTest extends TestCase
             $t->timestamp('deleted_at')->nullable();
         });
 
+        Schema::connection('tenant')->create('boarding_services', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('name', 120);
+            $t->string('description', 500)->nullable();
+            $t->string('unit', 32)->default('szt.');
+            $t->string('frequency', 32);
+            $t->unsignedInteger('price_cents');
+            $t->string('vat_rate', 8)->default('23');
+            $t->boolean('is_active')->default(true);
+            $t->unsignedSmallInteger('sort_order')->default(0);
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+            $t->timestamp('deleted_at')->nullable();
+        });
+
+        Schema::connection('tenant')->create('horse_boarding_services', function ($t) {
+            $t->string('horse_id', 26);
+            $t->string('boarding_service_id', 26);
+            $t->unsignedInteger('price_override_cents')->nullable();
+            $t->decimal('quantity', 10, 3)->default(1);
+            $t->date('starts_at')->nullable();
+            $t->date('ends_at')->nullable();
+            $t->text('notes')->nullable();
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+            $t->primary(['horse_id', 'boarding_service_id']);
+        });
+
+        Schema::connection('tenant')->create('stable_activities', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('horse_id', 26);
+            $t->string('type', 32);
+            $t->timestamp('performed_at');
+            $t->string('performed_by', 120)->nullable();
+            $t->string('summary', 200)->nullable();
+            $t->text('details')->nullable();
+            $t->unsignedInteger('cost_cents')->nullable();
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+            $t->timestamp('deleted_at')->nullable();
+        });
+
         Schema::connection('tenant')->create('client_messages', function ($t) {
             $t->string('id', 26)->primary();
             $t->string('client_id', 26);
