@@ -12,6 +12,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -48,6 +49,16 @@ class AppPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/App/Widgets'), for: 'App\\Filament\\App\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
+            ])
+            // Sidebar layout — explicit groups z collapsible state.
+            // Filament: ikony albo na grupach albo na itemach, nie obu —
+            // zostawiamy ikony per-resource (lepsza czytelność niż wspólna
+            // ikona grupy). Kolejność tutaj wyznacza kolejność na sidebarze.
+            ->navigationGroups([
+                NavigationGroup::make('Stajnia')->collapsible(),
+                NavigationGroup::make('Kalendarz')->collapsible(),
+                NavigationGroup::make('Finanse')->collapsible(),
+                NavigationGroup::make('Ustawienia')->collapsed()->collapsible(),
             ])
             ->userMenuItems([
                 MenuItem::make()

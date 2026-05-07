@@ -30,9 +30,9 @@ class TenantSettings extends Page implements HasForms
 
     protected static ?string $title = 'Ustawienia stajni';
 
-    protected static ?string $navigationGroup = 'Stajnia';
+    protected static ?string $navigationGroup = 'Ustawienia';
 
-    protected static ?int $navigationSort = 99;
+    protected static ?int $navigationSort = 10;
 
     protected static string $view = 'filament.pages.tenant-settings';
 
