@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\HydrateTenantConnectionFromSession;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,6 +25,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $publicPrefix = env('HOVERA_PUBLIC_SITE_PREFIX', 's');
         $middleware->validateCsrfTokens(except: [
             $publicPrefix.'/*/payments/*/webhook',
+        ]);
+
+        // Hydrate tenant connection ze sesji na KAŻDYM web request (nie
+        // tylko panel auth). Konieczne żeby Livewire endpoints (np.
+        // /livewire/update) miały tenant connection — bez tego pluck()
+        // na BoardingService etc. wybucha z "Access denied for ''@'localhost'".
+        $middleware->web(append: [
+            HydrateTenantConnectionFromSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
