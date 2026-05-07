@@ -7,6 +7,7 @@ namespace App\Filament\App\Pages;
 use App\Enums\PaymentProvider;
 use App\Services\Payments\Providers\MolliePaymentProvider;
 use App\Services\Payments\Providers\P24PaymentProvider;
+use App\Services\Payments\Providers\PayUPaymentProvider;
 use App\Services\Payments\Providers\StripePaymentProvider;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
@@ -199,11 +200,17 @@ class PaymentSettings extends Page implements HasForms
     private function payuSchema(): array
     {
         return [
-            Forms\Components\TextInput::make('payu.pos_id')->label('POS ID')->required(),
+            Forms\Components\TextInput::make('payu.pos_id')->label('POS ID (merchantPosId)')->required(),
             Forms\Components\TextInput::make('payu.client_id')->label('OAuth client_id')->required(),
             Forms\Components\TextInput::make('payu.client_secret')->label('OAuth client_secret')->password()->revealable()->required(),
-            Forms\Components\TextInput::make('payu.md5_key')->label('Klucz drugi (MD5)')->password()->revealable()->required(),
+            Forms\Components\TextInput::make('payu.md5_key')->label('Klucz drugi (MD5)')->password()->revealable()->required()
+                ->helperText('Panel PayU → Punkty płatności → Twój POS → "drugi klucz (MD5)".'),
             Forms\Components\Toggle::make('payu.sandbox')->label('Sandbox (test)')->default(true),
+            Forms\Components\Select::make('payu.force_method')
+                ->label('Wymuś jedną metodę (opcjonalne)')
+                ->helperText('Pusto = klient zobaczy pełną listę metod w PayU (rekomendowane). Wybierz np. BLIK żeby od razu skierować do tej metody.')
+                ->options(PayUPaymentProvider::methodOptions())
+                ->placeholder('— Pełna lista metod —'),
         ];
     }
 
