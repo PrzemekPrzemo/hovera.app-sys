@@ -29,6 +29,7 @@ class BookingConfirmedClientNotification extends Notification
         public readonly ?string $stablePhone,
         public readonly string $cancelUrl,
         public readonly int $cancellationPolicyHours,
+        public readonly ?string $portalUrl = null,
     ) {}
 
     /** @return array<int,string> */
@@ -59,10 +60,16 @@ class BookingConfirmedClientNotification extends Notification
             $message->line("**Telefon do stajni:** {$this->stablePhone}");
         }
 
-        return $message
+        $message
             ->line('Jeśli musisz odwołać, kliknij poniżej. '
                 .'Odwołanie minimum '.$this->cancellationPolicyHours.' godzin przed lekcją jest bez kosztu.')
-            ->action('Odwołaj rezerwację', $this->cancelUrl)
+            ->action('Odwołaj rezerwację', $this->cancelUrl);
+
+        if ($this->portalUrl) {
+            $message->line("Wszystkie rezerwacje znajdziesz w panelu klienta: [{$this->portalUrl}]({$this->portalUrl})");
+        }
+
+        return $message
             ->line('Do zobaczenia!')
             ->salutation("— {$this->tenantName}");
     }

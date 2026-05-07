@@ -231,6 +231,7 @@ class RequestPublicBooking
             instructorName: $instructor->name,
             cancelUrl: $cancelUrl,
             cancellationPolicyHours: (int) (data_get($tenant->settings, 'cancellation_policy.hours') ?? 12),
+            portalUrl: route('client_portal.login.show', ['slug' => $tenant->slug]),
         ));
     }
 }

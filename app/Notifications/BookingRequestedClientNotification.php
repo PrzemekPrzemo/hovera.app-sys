@@ -24,6 +24,7 @@ class BookingRequestedClientNotification extends Notification
         public readonly string $instructorName,
         public readonly string $cancelUrl,
         public readonly int $cancellationPolicyHours,
+        public readonly ?string $portalUrl = null,
     ) {}
 
     /** @return array<int,string> */
@@ -34,7 +35,7 @@ class BookingRequestedClientNotification extends Notification
 
     public function toMail(mixed $notifiable): MailMessage
     {
-        return (new MailMessage)
+        $message = (new MailMessage)
             ->subject("Otrzymaliśmy zgłoszenie — {$this->tenantName}")
             ->greeting('Cześć!')
             ->line("Dziękujemy za zgłoszenie rezerwacji w stajni **{$this->tenantName}**.")
@@ -44,7 +45,12 @@ class BookingRequestedClientNotification extends Notification
             ->line('Jeśli musisz odwołać, kliknij poniżej. '
                 .'Odwołanie minimum '.$this->cancellationPolicyHours.' godzin przed lekcją jest bez kosztu.')
             ->action('Odwołaj rezerwację', $this->cancelUrl)
-            ->line('Jeśli nie odwołasz w terminie, karnet (jeśli używany) zostanie zużyty.')
-            ->salutation("— {$this->tenantName}");
+            ->line('Jeśli nie odwołasz w terminie, karnet (jeśli używany) zostanie zużyty.');
+
+        if ($this->portalUrl) {
+            $message->line("Wszystkie rezerwacje znajdziesz w panelu klienta: [{$this->portalUrl}]({$this->portalUrl})");
+        }
+
+        return $message->salutation("— {$this->tenantName}");
     }
 }

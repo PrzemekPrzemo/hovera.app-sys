@@ -131,6 +131,7 @@ class SendBookingRemindersCommand extends Command
                 stablePhone: $publicProfile['phone'] ?? null,
                 cancelUrl: $cancelLinks->for($entry, $tenant->slug),
                 cancellationPolicyHours: $cancellationHours,
+                portalUrl: route('client_portal.login.show', ['slug' => $tenant->slug]),
             ));
 
             $entry->forceFill(['reminder_sent_at' => $now])->save();

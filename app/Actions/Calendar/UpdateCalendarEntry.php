@@ -214,6 +214,7 @@ class UpdateCalendarEntry
             stablePhone: $publicProfile['phone'] ?? null,
             cancelUrl: $this->cancelLinks->for($entry, $tenant->slug),
             cancellationPolicyHours: (int) (data_get($tenant->settings, 'cancellation_policy.hours') ?? 12),
+            portalUrl: route('client_portal.login.show', ['slug' => $tenant->slug]),
         ));
     }
 }
