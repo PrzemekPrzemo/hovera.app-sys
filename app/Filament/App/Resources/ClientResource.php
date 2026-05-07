@@ -6,9 +6,12 @@ namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\ClientResource\Pages;
 use App\Models\Tenant\Client;
+use App\Services\CompanyLookup\CompanyLookupService;
+use App\Services\CompanyLookup\GusApiService;
 use App\Services\TenantAuditLogger;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -50,7 +53,45 @@ class ClientResource extends Resource
                     Forms\Components\TextInput::make('name')->label('Imię i nazwisko / Nazwa')->required(),
                     Forms\Components\TextInput::make('email')->email()->maxLength(255),
                     Forms\Components\TextInput::make('phone')->label('Telefon')->tel()->maxLength(40),
-                    Forms\Components\TextInput::make('tax_id')->label('NIP / VAT ID')->maxLength(32),
+                    Forms\Components\TextInput::make('tax_id')
+                        ->label('NIP / VAT ID')
+                        ->maxLength(32)
+                        ->suffixAction(
+                            // "Pobierz z GUS" — fills name + address from GUS BIR
+                            // when NIP is valid + master-admin skonfigurował klucz API.
+                            Forms\Components\Actions\Action::make('lookupGus')
+                                ->label('Pobierz z GUS')
+                                ->icon('heroicon-m-magnifying-glass')
+                                ->visible(fn () => app(GusApiService::class)->isConfigured())
+                                ->action(function (Forms\Get $get, Forms\Set $set) {
+                                    $nip = (string) $get('tax_id');
+                                    if (! CompanyLookupService::isValidNip($nip)) {
+                                        Notification::make()->title('Nieprawidłowy NIP (suma kontrolna).')
+                                            ->danger()->send();
+
+                                        return;
+                                    }
+
+                                    $data = app(CompanyLookupService::class)->lookupByNip($nip);
+                                    if ($data === null) {
+                                        Notification::make()->title('Nie znaleziono firmy w GUS.')
+                                            ->warning()->send();
+
+                                        return;
+                                    }
+
+                                    $set('name', (string) ($data['name'] ?? ''));
+                                    $set('street', trim(($data['street'] ?? '').' '
+                                        .($data['building'] ?? '')
+                                        .($data['apartment'] ? '/'.$data['apartment'] : '')));
+                                    $set('city', (string) ($data['city'] ?? ''));
+                                    $set('postal_code', (string) ($data['postal_code'] ?? ''));
+                                    $set('country', 'PL');
+                                    $set('type', 'organisation');
+
+                                    Notification::make()->title('Pobrano dane z GUS.')->success()->send();
+                                }),
+                        ),
                 ]),
 
             Forms\Components\Section::make('Adres')
