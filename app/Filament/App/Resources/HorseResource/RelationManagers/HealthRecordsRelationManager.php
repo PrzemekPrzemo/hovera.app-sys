@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources\HorseResource\RelationManagers;
 
 use App\Enums\HealthRecordType;
+use App\Filament\Components\PriceInput;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -51,7 +52,7 @@ class HealthRecordsRelationManager extends RelationManager
             Forms\Components\Grid::make(2)->schema([
                 Forms\Components\TextInput::make('performed_by')->label('Wykonał')->maxLength(255),
                 Forms\Components\DatePicker::make('next_due_at')->label('Następny zabieg'),
-                Forms\Components\TextInput::make('cost_cents')->label('Koszt (gr)')->numeric()->minValue(0),
+                PriceInput::make('cost_cents', 'Koszt'),
             ]),
             Forms\Components\Textarea::make('details')->label('Notatki')->rows(3),
         ]);
