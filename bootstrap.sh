@@ -20,6 +20,13 @@ REPO_URL="${HOVERA_REPO_URL:-https://github.com/PrzemekPrzemo/hovera.app-sys.git
 INSTALL_DIR="${HOVERA_INSTALL_DIR:-}"
 GIT_REF="${HOVERA_GIT_REF:-main}"
 
+# `curl ... | bash` pipuje skrypt przez stdin, więc `read` nie ma do czego
+# zaglądać. Otwórz stdin na /dev/tty żeby prompty działały (i exec do
+# install.sh dziedziczył działający stdin).
+if [[ ! -t 0 ]] && [[ -r /dev/tty ]]; then
+    exec < /dev/tty
+fi
+
 # ── kolory ──────────────────────────────────────────────────────────
 c_blue()  { printf '\033[36m%s\033[0m' "$*"; }
 c_green() { printf '\033[32m%s\033[0m' "$*"; }

@@ -36,6 +36,13 @@ for arg in "$@"; do
     esac
 done
 
+# Gdy skrypt jest pipowany (`curl ... | bash` albo `exec`-iony z bootstrapa),
+# stdin nie jest terminalem — `read` zwraca EOF i prompty się nie pokazują.
+# Przekieruj stdin na /dev/tty żeby pytania działały.
+if ! $NON_INTERACTIVE && [[ ! -t 0 ]] && [[ -r /dev/tty ]]; then
+    exec < /dev/tty
+fi
+
 # ── Helpery ─────────────────────────────────────────────────────────
 c_blue()  { printf '\033[36m%s\033[0m' "$*"; }
 c_green() { printf '\033[32m%s\033[0m' "$*"; }
