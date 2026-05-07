@@ -45,6 +45,11 @@
         .horse-row:hover { background: #f9fafb; margin: 0 -.5rem; padding: .8rem .5rem; border-radius: 8px; }
         .horse-row .meta { display: block; color: #9ca3af; font-size: .8rem; margin-top: .15rem; }
         .horse-alerts { display: flex; gap: .35rem; }
+        .more { float: right; font-size: .75rem; font-weight: 500; color: var(--primary); text-decoration: none; }
+        .more:hover { text-decoration: underline; }
+        .message { padding: .65rem 0; border-bottom: 1px solid #f3f4f6; font-size: .9rem; }
+        .message:last-of-type { border-bottom: 0; }
+        .message-head { display: flex; justify-content: space-between; gap: .5rem; align-items: baseline; margin-bottom: .15rem; }
         .pill { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
         .pill.req { background: #fef3c7; color: #92400e; }
         .pill.conf { background: #d1fae5; color: #065f46; }
@@ -208,6 +213,21 @@
                 <div class="empty">Brak historii rezerwacji.</div>
             @endforelse
         </section>
+
+        @if ($recent_messages->isNotEmpty())
+            <section class="section">
+                <h2>Wiadomości <a href="{{ route('client_portal.messages.show', ['slug' => $tenant->slug]) }}" class="more">Wszystkie →</a></h2>
+                @foreach ($recent_messages as $message)
+                    <div class="message">
+                        <div class="message-head">
+                            <strong>{{ $message->subject }}</strong>
+                            <span class="muted">{{ $message->sent_at->format('d.m.Y H:i') }}</span>
+                        </div>
+                        <div class="muted">{{ $message->label() }}</div>
+                    </div>
+                @endforeach
+            </section>
+        @endif
 
         @if ($horses->isNotEmpty())
             <section class="section">

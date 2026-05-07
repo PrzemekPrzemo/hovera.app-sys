@@ -9,6 +9,7 @@ use App\Models\Central\Tenant;
 use App\Models\Tenant\CalendarEntry;
 use App\Notifications\BookingReminderClientNotification;
 use App\Services\Calendar\BookingCancellationLink;
+use App\Services\Portal\ClientMessageJournal;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Illuminate\Console\Command;
@@ -41,6 +42,7 @@ class SendBookingRemindersCommand extends Command
         TenantManager $tenants,
         BookingCancellationLink $cancelLinks,
         TenantAuditLogger $audit,
+        ClientMessageJournal $journal,
     ): int {
         $hoursAhead = (int) $this->option('hours-ahead');
         $window = (int) $this->option('window');
@@ -67,11 +69,11 @@ class SendBookingRemindersCommand extends Command
                 // would otherwise rebuild the connection from MySQL credentials
                 // and wipe any test override.
                 if ($tenants->current()?->id === $tenant->id) {
-                    $sent = $this->processTenant($tenant, $hoursAhead, $window, $cancelLinks, $audit);
+                    $sent = $this->processTenant($tenant, $hoursAhead, $window, $cancelLinks, $audit, $journal);
                 } else {
                     $sent = $tenants->execute(
                         $tenant,
-                        fn () => $this->processTenant($tenant, $hoursAhead, $window, $cancelLinks, $audit),
+                        fn () => $this->processTenant($tenant, $hoursAhead, $window, $cancelLinks, $audit, $journal),
                     );
                 }
                 $totalSent += $sent;
@@ -93,6 +95,7 @@ class SendBookingRemindersCommand extends Command
         int $window,
         BookingCancellationLink $cancelLinks,
         TenantAuditLogger $audit,
+        ClientMessageJournal $journal,
     ): int {
         $now = Carbon::now();
         $from = $now->copy()->addHours($hoursAhead - $window);
@@ -136,6 +139,14 @@ class SendBookingRemindersCommand extends Command
 
             $entry->forceFill(['reminder_sent_at' => $now])->save();
             $audit->record('booking.reminder_sent', 'CalendarEntry', (string) $entry->getKey());
+            $journal->record(
+                $client,
+                'booking.reminder',
+                "Przypomnienie 24h — {$tenant->name}",
+                ['starts_at' => $entry->starts_at->toIso8601String(), 'duration' => $duration],
+                'CalendarEntry',
+                (string) $entry->id,
+            );
             $sent++;
         }
 

@@ -4,26 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Enums\HealthRecordType;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\Client;
-use App\Models\Tenant\HealthRecord;
-use App\Models\Tenant\Horse;
+use App\Models\Tenant\ClientMessage;
+use App\Services\Portal\ClientMessageJournal;
 use App\Services\Portal\ClientPortalAuth;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
 /**
- * Iter. 17c — boarders see their horses on the dashboard and can drill
- * into a read-only health record timeline.
+ * Iter. 17d — Notifications hub: dashboard recent-list, dedicated
+ * full-history page, journal record() invariants.
  */
-class ClientPortalHorsesTest extends TestCase
+class ClientPortalMessagesTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -36,7 +34,7 @@ class ClientPortalHorsesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->tenantDbPath = tempnam(sys_get_temp_dir(), 'hovera_h_').'.sqlite';
+        $this->tenantDbPath = tempnam(sys_get_temp_dir(), 'hovera_msg_').'.sqlite';
         touch($this->tenantDbPath);
 
         config()->set('database.connections.tenant', [
@@ -52,7 +50,7 @@ class ClientPortalHorsesTest extends TestCase
 
         $this->client = Client::create([
             'id' => '01HCLI0000000000000000001',
-            'name' => 'Marek Klient',
+            'name' => 'Marek',
             'email' => 'marek@example.com',
         ]);
 
@@ -69,129 +67,125 @@ class ClientPortalHorsesTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_dashboard_shows_owned_horses(): void
+    public function test_journal_record_writes_to_tenant_db(): void
     {
-        Horse::create([
-            'id' => '01HHORSE000000000000000001',
-            'name' => 'Bucefał',
-            'owner_client_id' => $this->client->id,
-            'breed' => 'Arabian',
+        $journal = app(ClientMessageJournal::class);
+
+        $msg = $journal->record(
+            $this->client,
+            'booking.confirmed',
+            'Test subject',
+            ['foo' => 'bar'],
+            'CalendarEntry',
+            '01HENTRY00000000000000001',
+        );
+
+        $this->assertNotNull($msg);
+        $this->assertSame('marek@example.com', $msg->to_email);
+        $this->assertSame(['foo' => 'bar'], $msg->preview);
+        $this->assertSame(1, ClientMessage::query()->count());
+    }
+
+    public function test_journal_skips_when_client_has_no_email(): void
+    {
+        $silent = Client::create([
+            'id' => '01HCLI0000000000000000999',
+            'name' => 'Bez emaila',
         ]);
+
+        $msg = app(ClientMessageJournal::class)->record($silent, 'portal.magic_link', 'x');
+
+        $this->assertNull($msg);
+        $this->assertSame(0, ClientMessage::query()->count());
+    }
+
+    public function test_dashboard_lists_recent_messages(): void
+    {
+        for ($i = 1; $i <= 7; $i++) {
+            ClientMessage::create([
+                'id' => (string) Str::ulid(),
+                'client_id' => $this->client->id,
+                'type' => 'booking.confirmed',
+                'subject' => 'Wiadomość '.$i,
+                'to_email' => $this->client->email,
+                'sent_at' => now()->subMinutes($i),
+            ]);
+        }
 
         $response = $this->get(route('client_portal.dashboard', ['slug' => $this->tenant->slug]));
 
         $response->assertOk()
-            ->assertSee('Twoje konie')
-            ->assertSee('Bucefał');
+            ->assertSee('Wiadomości')
+            ->assertSee('Wiadomość 1')
+            ->assertSee('Wiadomość 5')
+            // Only top 5, so #6 / #7 don't render in dashboard preview
+            ->assertDontSee('Wiadomość 6')
+            ->assertDontSee('Wiadomość 7');
     }
 
-    public function test_dashboard_omits_horses_owned_by_others(): void
+    public function test_messages_page_paginates_full_history(): void
+    {
+        for ($i = 1; $i <= 35; $i++) {
+            ClientMessage::create([
+                'id' => (string) Str::ulid(),
+                'client_id' => $this->client->id,
+                'type' => 'booking.reminder',
+                'subject' => 'Old '.$i,
+                'to_email' => $this->client->email,
+                'sent_at' => now()->subDays($i),
+            ]);
+        }
+
+        $response = $this->get(route('client_portal.messages.show', ['slug' => $this->tenant->slug]));
+
+        $response->assertOk()
+            ->assertSee('Wiadomości')
+            ->assertSee('Old 1')
+            // Page size is 30 — last 5 should be on page 2
+            ->assertDontSee('Old 31');
+    }
+
+    public function test_messages_page_isolates_by_client(): void
     {
         $other = Client::create([
-            'id' => '01HCLI0000000000000000999',
+            'id' => '01HCLI0000000000000000777',
             'name' => 'Inny',
+            'email' => 'inny@example.com',
         ]);
-        Horse::create([
-            'id' => '01HHORSE000000000000000888',
-            'name' => 'Cudzy',
-            'owner_client_id' => $other->id,
+        ClientMessage::create([
+            'id' => (string) Str::ulid(),
+            'client_id' => $other->id,
+            'type' => 'booking.confirmed',
+            'subject' => 'Wiadomość cudzy',
+            'to_email' => $other->email,
+            'sent_at' => now()->subHour(),
         ]);
 
-        $response = $this->get(route('client_portal.dashboard', ['slug' => $this->tenant->slug]));
+        $response = $this->get(route('client_portal.messages.show', ['slug' => $this->tenant->slug]));
 
-        $this->assertStringNotContainsString('Cudzy', (string) $response->getContent());
-        // No "Twoje konie" section if client has no horses
-        $this->assertStringNotContainsString('Twoje konie', (string) $response->getContent());
+        $this->assertStringNotContainsString('cudzy', strtolower((string) $response->getContent()));
     }
 
-    public function test_dashboard_aggregates_overdue_and_upcoming_alerts(): void
-    {
-        $horse = Horse::create([
-            'id' => '01HHORSE000000000000000001',
-            'name' => 'Bucefał',
-            'owner_client_id' => $this->client->id,
-        ]);
-
-        $this->makeRecord($horse, nextDue: now()->subDay());           // overdue
-        $this->makeRecord($horse, nextDue: now()->addDays(20));        // upcoming 30
-        $this->makeRecord($horse, nextDue: now()->addDays(60));        // out of window
-        $this->makeRecord($horse, nextDue: null);                       // no schedule
-
-        $response = $this->get(route('client_portal.dashboard', ['slug' => $this->tenant->slug]));
-
-        $response->assertOk()
-            ->assertSee('1 przeterm.')
-            ->assertSee('1 w 30 dni');
-    }
-
-    public function test_horse_detail_renders_health_history(): void
-    {
-        $horse = Horse::create([
-            'id' => '01HHORSE000000000000000001',
-            'name' => 'Bucefał',
-            'owner_client_id' => $this->client->id,
-            'breed' => 'Arabian',
-        ]);
-        $this->makeRecord($horse, summary: 'Szczepienie tężec', performedAt: now()->subMonths(2));
-
-        $response = $this->get(route('client_portal.horses.show', [
-            'slug' => $this->tenant->slug,
-            'horse' => $horse->id,
-        ]));
-
-        $response->assertOk()
-            ->assertSee('Bucefał')
-            ->assertSee('Arabian')
-            ->assertSee('Szczepienie tężec');
-    }
-
-    public function test_horse_detail_404_for_horse_owned_by_someone_else(): void
-    {
-        $other = Client::create([
-            'id' => '01HCLI0000000000000000999',
-            'name' => 'Inny',
-        ]);
-        $horse = Horse::create([
-            'id' => '01HHORSE000000000000000888',
-            'name' => 'Cudzy',
-            'owner_client_id' => $other->id,
-        ]);
-
-        $this->get(route('client_portal.horses.show', [
-            'slug' => $this->tenant->slug,
-            'horse' => $horse->id,
-        ]))->assertNotFound();
-    }
-
-    public function test_horse_detail_redirects_when_logged_out(): void
+    public function test_messages_page_requires_login(): void
     {
         $this->flushSession();
-        $horse = Horse::create([
-            'id' => '01HHORSE000000000000000001',
-            'name' => 'Bucefał',
-            'owner_client_id' => $this->client->id,
-        ]);
 
-        $this->get(route('client_portal.horses.show', [
-            'slug' => $this->tenant->slug,
-            'horse' => $horse->id,
-        ]))->assertRedirect(route('client_portal.login.show', ['slug' => $this->tenant->slug]));
+        $this->get(route('client_portal.messages.show', ['slug' => $this->tenant->slug]))
+            ->assertRedirect(route('client_portal.login.show', ['slug' => $this->tenant->slug]));
     }
 
-    private function makeRecord(
-        Horse $horse,
-        string $summary = 'Test',
-        ?Carbon $nextDue = null,
-        ?Carbon $performedAt = null,
-    ): HealthRecord {
-        return HealthRecord::create([
+    public function test_message_label_humanises_unknown_type(): void
+    {
+        $msg = ClientMessage::create([
             'id' => (string) Str::ulid(),
-            'horse_id' => $horse->id,
-            'type' => HealthRecordType::Vaccination->value,
-            'performed_at' => $performedAt ?? now()->subDay(),
-            'summary' => $summary,
-            'next_due_at' => $nextDue?->toDateString(),
+            'client_id' => $this->client->id,
+            'type' => 'invoice.issued',
+            'subject' => 'FV',
+            'to_email' => $this->client->email,
+            'sent_at' => now(),
         ]);
+
+        $this->assertSame('invoice · issued', $msg->label());
     }
 
     private function loginAs(Client $client): void
@@ -208,10 +202,10 @@ class ClientPortalHorsesTest extends TestCase
     {
         $u = uniqid();
         $t = new Tenant([
-            'slug' => 'h-'.$u,
+            'slug' => 'msg-'.$u,
             'name' => 'Stable',
-            'db_name' => 'h_'.$u,
-            'db_username' => 'h_'.substr($u, -8),
+            'db_name' => 'msg_'.$u,
+            'db_username' => 'msg_'.substr($u, -8),
             'status' => 'active',
             'settings' => [],
         ]);
@@ -234,7 +228,6 @@ class ClientPortalHorsesTest extends TestCase
             $t->string('type')->default('individual');
             $t->string('name');
             $t->string('email')->nullable();
-            $t->string('phone', 40)->nullable();
             $t->string('central_user_id', 26)->nullable();
             $t->string('magic_link_token_hash', 64)->nullable();
             $t->timestamp('magic_link_expires_at')->nullable();
@@ -248,15 +241,6 @@ class ClientPortalHorsesTest extends TestCase
             $t->string('id', 26)->primary();
             $t->string('name', 120);
             $t->string('owner_client_id', 26)->nullable();
-            $t->string('microchip', 32)->nullable();
-            $t->string('passport_number', 64)->nullable();
-            $t->string('breed', 120)->nullable();
-            $t->string('sex', 32)->nullable();
-            $t->string('color', 60)->nullable();
-            $t->date('birth_date')->nullable();
-            $t->string('cover_image_path')->nullable();
-            $t->text('notes')->nullable();
-            $t->json('metadata')->nullable();
             $t->timestamp('created_at')->useCurrent();
             $t->timestamp('updated_at')->useCurrent();
             $t->timestamp('deleted_at')->nullable();
@@ -325,11 +309,8 @@ class ClientPortalHorsesTest extends TestCase
             $t->string('horse_id', 26);
             $t->string('type', 32);
             $t->dateTime('performed_at');
-            $t->string('performed_by', 255)->nullable();
             $t->string('summary', 255);
-            $t->text('details')->nullable();
             $t->date('next_due_at')->nullable();
-            $t->unsignedInteger('cost_cents')->nullable();
             $t->timestamp('created_at')->useCurrent();
             $t->timestamp('updated_at')->useCurrent();
             $t->timestamp('deleted_at')->nullable();

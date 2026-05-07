@@ -9,6 +9,7 @@ use App\Enums\CalendarEntryStatus;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\CalendarEntry;
 use App\Models\Tenant\Client;
+use App\Models\Tenant\ClientMessage;
 use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\Pass;
@@ -17,6 +18,7 @@ use App\Notifications\BookingRescheduledClientNotification;
 use App\Notifications\ClientPortalMagicLinkNotification;
 use App\Services\Calendar\BookingCancellationLink;
 use App\Services\Calendar\PublicBookingAvailability;
+use App\Services\Portal\ClientMessageJournal;
 use App\Services\Portal\ClientPortalAuth;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
@@ -38,6 +40,7 @@ class ClientPortalController extends Controller
         private readonly TenantAuditLogger $audit,
         private readonly PublicBookingAvailability $availability,
         private readonly RescheduleBookingByClient $reschedule,
+        private readonly ClientMessageJournal $journal,
     ) {}
 
     public function showLogin(Request $request, string $slug): View|RedirectResponse
@@ -82,6 +85,12 @@ class ClientPortalController extends Controller
             );
 
             $this->audit->record('client_portal.magic_link_sent', 'Client', (string) $client->id);
+            $this->journal->record(
+                $client,
+                'portal.magic_link',
+                "Logowanie do panelu — {$tenant->name}",
+                ['ttl_minutes' => ClientPortalAuth::TOKEN_TTL_MINUTES],
+            );
         }
 
         return view('public.portal.login-sent', [
@@ -196,6 +205,12 @@ class ClientPortalController extends Controller
                 ->keyBy('horse_id');
         }
 
+        $recentMessages = ClientMessage::query()
+            ->where('client_id', $client->id)
+            ->orderByDesc('sent_at')
+            ->limit(5)
+            ->get();
+
         return view('public.portal.dashboard', [
             'tenant' => $tenant,
             'client' => $client,
@@ -205,7 +220,29 @@ class ClientPortalController extends Controller
             'recent_uses' => $recentUses,
             'horses' => $horses,
             'horse_alerts' => $horseAlerts,
+            'recent_messages' => $recentMessages,
             'cancel_links' => $cancelLinks,
+            'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
+        ]);
+    }
+
+    public function showMessages(Request $request, string $slug): View|RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $messages = ClientMessage::query()
+            ->where('client_id', $client->id)
+            ->orderByDesc('sent_at')
+            ->paginate(30);
+
+        return view('public.portal.messages', [
+            'tenant' => $tenant,
+            'client' => $client,
+            'messages' => $messages,
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
         ]);
     }
@@ -323,6 +360,14 @@ class ClientPortalController extends Controller
                 cancelUrl: $this->cancelLinks->for($entry, $tenant->slug),
                 portalUrl: route('client_portal.login.show', ['slug' => $tenant->slug]),
             ));
+            $this->journal->record(
+                $client,
+                'booking.rescheduled',
+                "Rezerwacja przesunięta — {$tenant->name}",
+                ['from' => $oldStart->toIso8601String(), 'to' => $entry->starts_at->toIso8601String()],
+                'CalendarEntry',
+                (string) $entry->id,
+            );
         }
 
         return redirect()
