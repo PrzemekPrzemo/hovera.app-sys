@@ -34,7 +34,7 @@ return new class extends Migration
             $table->text('reason');     // mandatory justification for RODO
             $table->string('ip_address', 45)->nullable();
             $table->timestamp('started_at')->useCurrent();
-            $table->timestamp('expires_at');
+            $table->timestamp('expires_at')->nullable();
             $table->timestamp('ended_at')->nullable();
 
             $table->index(['master_user_id', 'started_at']);

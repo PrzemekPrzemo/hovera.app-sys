@@ -65,7 +65,7 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->foreignUlid('horse_id')->constrained('horses')->cascadeOnDelete();
             $table->string('type', 32)->index();              // StableActivityType
-            $table->timestamp('performed_at')->index();
+            $table->timestamp('performed_at')->nullable()->index();
             $table->string('performed_by', 120)->nullable();  // imię stajennego / "automatyzm"
             $table->string('summary', 200)->nullable();
             $table->text('details')->nullable();

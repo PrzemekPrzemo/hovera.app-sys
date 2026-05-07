@@ -49,7 +49,7 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->foreignUlid('horse_id')->constrained('horses')->cascadeOnDelete();
             $table->foreignUlid('box_id')->constrained('boxes')->cascadeOnDelete();
-            $table->timestamp('assigned_at')->index();
+            $table->timestamp('assigned_at')->nullable()->index();
             $table->timestamp('vacated_at')->nullable()->index(); // null = wciąż tam jest
             $table->string('reason', 120)->nullable();             // np. "remont B-3"
             $table->string('assigned_by_user_id', 26)->nullable(); // kto przesunął

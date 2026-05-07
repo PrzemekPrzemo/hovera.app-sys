@@ -42,7 +42,7 @@ return new class extends Migration
             // Lista attachmentów (JSON: [{path, original_name, mime, size}, ...])
             $table->json('attachments')->nullable();
 
-            $table->timestamp('sent_at')->index();
+            $table->timestamp('sent_at')->nullable()->index();
             // Flaga "odczytane" per kierunek — gdy from_stable=true, klient
             // odczyta → ustawimy read_by_client_at; gdy from_client=true,
             // stajnia → read_by_stable_at.

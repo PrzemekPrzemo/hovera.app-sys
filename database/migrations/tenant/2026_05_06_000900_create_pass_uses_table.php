@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignUlid('pass_id')->constrained('passes')->cascadeOnDelete();
             $table->foreignUlid('calendar_entry_id')->constrained('calendar_entries')->cascadeOnDelete();
 
-            $table->timestamp('consumed_at');
+            $table->timestamp('consumed_at')->nullable();
             $table->timestamp('restored_at')->nullable();
             $table->string('restored_reason', 120)->nullable();
 
