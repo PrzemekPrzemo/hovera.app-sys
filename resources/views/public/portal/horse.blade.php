@@ -58,6 +58,24 @@
         .small { font-size: .85rem; line-height: 1.4; }
         h3.muted { font-size: .85rem; color: #6b7280; margin: 1rem 0 .35rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
         .muted { color: #6b7280; }
+        .flash { background: #d1fae5; color: #065f46; padding: .65rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
+        .msg-form { display: grid; gap: .5rem; padding: 1rem; background: #f9fafb; border-radius: 8px; margin-bottom: 1rem; }
+        .msg-form input[type=text], .msg-form textarea { padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: 6px; font: inherit; }
+        .msg-form input[type=file] { font-size: .85rem; }
+        .msg-form button { padding: .65rem 1rem; background: var(--primary); color: white; border: 0; border-radius: 6px; font-weight: 600; cursor: pointer; align-self: end; }
+        .msg-form button:hover { filter: brightness(0.95); }
+        .msg-form .error { color: #b91c1c; font-size: .85rem; }
+        .msg { padding: .9rem 0; border-bottom: 1px solid #f3f4f6; }
+        .msg:last-of-type { border-bottom: 0; }
+        .msg-head { display: flex; justify-content: space-between; gap: .5rem; align-items: baseline; margin-bottom: .25rem; }
+        .msg-head strong { font-size: .95rem; }
+        .msg-head .date { color: #6b7280; font-size: .85rem; white-space: nowrap; }
+        .msg-subject { font-weight: 600; margin-bottom: .25rem; }
+        .msg-body { white-space: pre-wrap; line-height: 1.5; }
+        .msg-attachments { margin-top: .5rem; display: flex; flex-wrap: wrap; gap: .5rem; }
+        .msg-attachments a { font-size: .85rem; padding: .2rem .55rem; background: #f3f4f6; border-radius: 4px; text-decoration: none; color: var(--primary); }
+        .msg-attachments a:hover { background: #e5e7eb; }
+        .msg-from_stable { background: color-mix(in srgb, var(--primary) 5%, white); margin: 0 -.5rem; padding-left: .5rem; padding-right: .5rem; border-radius: 8px; }
         @media (prefers-color-scheme: dark) {
             body { background: #0f172a; color: #e5e7eb; }
             .card { background: #1e293b; }
@@ -180,6 +198,56 @@
                 @endforeach
             </div>
         @endif
+
+        <div class="card">
+            <h2>Wiadomości ze stajni</h2>
+            @if (session('horse_message_sent'))
+                <div class="flash">✓ Wiadomość wysłana — stajnia dostała powiadomienie e-mail.</div>
+            @endif
+
+            <form method="post" enctype="multipart/form-data"
+                  action="{{ route('client_portal.horses.messages.send', ['slug' => $tenant->slug, 'horse' => $horse->id]) }}"
+                  class="msg-form">
+                @csrf
+                <input type="text" name="subject" placeholder="Temat (opcjonalnie)" maxlength="200" value="{{ old('subject') }}">
+                <textarea name="body" rows="3" placeholder="Napisz coś do stajni…" required maxlength="5000">{{ old('body') }}</textarea>
+                <input type="file" name="attachments[]" multiple accept="image/*,application/pdf,.doc,.docx">
+                @error('body')<div class="error">{{ $message }}</div>@enderror
+                @error('attachments.*')<div class="error">{{ $message }}</div>@enderror
+                <button type="submit">Wyślij</button>
+            </form>
+
+            @forelse ($messages as $message)
+                <div class="msg msg-{{ $message->direction }}">
+                    <div class="msg-head">
+                        <strong>
+                            @if ($message->isFromStable())
+                                {{ $tenant->name }}
+                            @else
+                                Ty
+                            @endif
+                        </strong>
+                        <span class="date">{{ $message->sent_at->translatedFormat('d.m.Y · H:i') }}</span>
+                    </div>
+                    @if ($message->subject)<div class="msg-subject">{{ $message->subject }}</div>@endif
+                    <div class="msg-body">{!! nl2br(e($message->body)) !!}</div>
+                    @if ($message->attachmentCount() > 0)
+                        <div class="msg-attachments">
+                            @foreach ((array) $message->attachments as $i => $a)
+                                <a href="{{ route('client_portal.horses.messages.attachment', [
+                                    'slug' => $tenant->slug,
+                                    'horse' => $horse->id,
+                                    'message' => $message->id,
+                                    'index' => $i,
+                                ]) }}">📎 {{ $a['original_name'] ?? 'załącznik' }}</a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @empty
+                <div class="empty">Brak wiadomości — napisz pierwszą.</div>
+            @endforelse
+        </div>
 
         <div class="card">
             <h2>Historia weterynaryjna</h2>

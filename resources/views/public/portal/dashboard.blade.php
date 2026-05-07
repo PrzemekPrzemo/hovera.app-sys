@@ -40,6 +40,7 @@
         .use { display: flex; justify-content: space-between; padding: .35rem 0; font-size: .85rem; }
         .muted { color: #6b7280; }
         .flash { background: #d1fae5; color: #065f46; padding: .65rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
+        .unread-badge { display: inline-block; margin-left: .5rem; padding: .15rem .55rem; border-radius: 999px; background: var(--primary); color: white; font-size: .75rem; font-weight: 600; vertical-align: middle; }
         .horse-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid #f3f4f6; text-decoration: none; color: inherit; }
         .horse-row:last-of-type { border-bottom: 0; }
         .horse-row:hover { background: #f9fafb; margin: 0 -.5rem; padding: .8rem .5rem; border-radius: 8px; }
@@ -258,7 +259,12 @@
 
         @if ($horses->isNotEmpty())
             <section class="section">
-                <h2>Twoje konie</h2>
+                <h2>
+                    Twoje konie
+                    @if (! empty($unread_horse_messages) && $unread_horse_messages > 0)
+                        <span class="unread-badge">📬 {{ $unread_horse_messages }} nowa{{ $unread_horse_messages === 1 ? '' : 'ch' }} {{ $unread_horse_messages === 1 ? 'wiadomość' : 'wiadomości' }}</span>
+                    @endif
+                </h2>
                 @foreach ($horses as $horse)
                     @php
                         $alerts = $horse_alerts->get($horse->id);
