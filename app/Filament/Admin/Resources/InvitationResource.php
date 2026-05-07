@@ -22,7 +22,7 @@ class InvitationResource extends Resource
 
     protected static ?string $navigationLabel = 'Zaproszenia';
 
-    protected static ?string $navigationGroup = 'Tenants';
+    protected static ?string $navigationGroup = 'Stajnie';
 
     protected static ?string $modelLabel = 'zaproszenie';
 

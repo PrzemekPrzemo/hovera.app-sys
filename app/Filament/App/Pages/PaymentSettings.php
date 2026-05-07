@@ -41,9 +41,9 @@ class PaymentSettings extends Page implements HasForms
 
     protected static ?string $title = 'Płatności online';
 
-    protected static ?string $navigationGroup = 'Stajnia';
+    protected static ?string $navigationGroup = 'Ustawienia';
 
-    protected static ?int $navigationSort = 98;
+    protected static ?int $navigationSort = 20;
 
     protected static string $view = 'filament.pages.payment-settings';
 
