@@ -111,4 +111,8 @@ Route::middleware(['web', 'throttle:30,1'])
         Route::get('/login/{client}/consume', [ClientPortalController::class, 'consumeLogin'])->name('login.consume');
         Route::post('/logout', [ClientPortalController::class, 'logout'])->name('logout');
         Route::get('/', [ClientPortalController::class, 'dashboard'])->name('dashboard');
+        Route::get('/bookings/{entry}/reschedule', [ClientPortalController::class, 'showReschedule'])
+            ->name('reschedule.show');
+        Route::post('/bookings/{entry}/reschedule', [ClientPortalController::class, 'submitReschedule'])
+            ->name('reschedule.submit');
     });

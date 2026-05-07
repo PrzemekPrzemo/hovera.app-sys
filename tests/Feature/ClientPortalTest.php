@@ -340,5 +340,32 @@ class ClientPortalTest extends TestCase
             $t->timestamp('updated_at')->useCurrent();
             $t->timestamp('deleted_at')->nullable();
         });
+
+        Schema::connection('tenant')->create('passes', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('client_id', 26);
+            $t->string('name', 120);
+            $t->unsignedSmallInteger('total_uses');
+            $t->smallInteger('remaining_uses');
+            $t->date('valid_from')->nullable();
+            $t->date('valid_until')->nullable();
+            $t->unsignedInteger('price_cents')->nullable();
+            $t->string('status', 32)->default('active');
+            $t->unsignedSmallInteger('cancellation_policy_hours')->nullable();
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+            $t->timestamp('deleted_at')->nullable();
+        });
+
+        Schema::connection('tenant')->create('pass_uses', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('pass_id', 26);
+            $t->string('calendar_entry_id', 26);
+            $t->timestamp('consumed_at');
+            $t->timestamp('restored_at')->nullable();
+            $t->string('restored_reason', 120)->nullable();
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+        });
     }
 }

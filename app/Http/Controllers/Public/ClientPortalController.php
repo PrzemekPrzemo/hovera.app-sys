@@ -4,20 +4,27 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
+use App\Actions\Calendar\RescheduleBookingByClient;
 use App\Enums\CalendarEntryStatus;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\CalendarEntry;
 use App\Models\Tenant\Client;
+use App\Models\Tenant\Pass;
+use App\Models\Tenant\PassUse;
+use App\Notifications\BookingRescheduledClientNotification;
 use App\Notifications\ClientPortalMagicLinkNotification;
 use App\Services\Calendar\BookingCancellationLink;
+use App\Services\Calendar\PublicBookingAvailability;
 use App\Services\Portal\ClientPortalAuth;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ClientPortalController extends Controller
@@ -27,6 +34,8 @@ class ClientPortalController extends Controller
         private readonly ClientPortalAuth $auth,
         private readonly BookingCancellationLink $cancelLinks,
         private readonly TenantAuditLogger $audit,
+        private readonly PublicBookingAvailability $availability,
+        private readonly RescheduleBookingByClient $reschedule,
     ) {}
 
     public function showLogin(Request $request, string $slug): View|RedirectResponse
@@ -148,14 +157,120 @@ class ClientPortalController extends Controller
                 $e->id => $this->cancelLinks->for($e, $tenant->slug),
             ]);
 
+        $passes = Pass::query()
+            ->where('client_id', $client->id)
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+
+        $recentUses = PassUse::query()
+            ->with('calendarEntry')
+            ->whereIn('pass_id', $passes->pluck('id'))
+            ->whereNull('restored_at')
+            ->orderByDesc('consumed_at')
+            ->limit(5)
+            ->get();
+
         return view('public.portal.dashboard', [
             'tenant' => $tenant,
             'client' => $client,
             'upcoming' => $upcoming,
             'past' => $past,
+            'passes' => $passes,
+            'recent_uses' => $recentUses,
             'cancel_links' => $cancelLinks,
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
         ]);
+    }
+
+    public function showReschedule(Request $request, string $slug, string $entryId): View|RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $entry = CalendarEntry::query()
+            ->with(['instructor'])
+            ->where('client_id', $client->id)
+            ->find($entryId);
+        if (! $entry || $entry->status !== CalendarEntryStatus::Confirmed) {
+            abort(404);
+        }
+
+        $instructor = $entry->instructor;
+        $datesWithSlots = $instructor && $instructor->is_active
+            ? $this->availability->datesWithSlots($tenant, $instructor)
+            : collect();
+
+        $selectedDate = $request->query('date');
+        $slots = collect();
+        if ($selectedDate && $instructor && $instructor->is_active) {
+            try {
+                $date = Carbon::parse((string) $selectedDate)->startOfDay();
+                $slots = $this->availability->slotsFor($tenant, $instructor, $date);
+            } catch (\Throwable) {
+                $slots = collect();
+            }
+        }
+
+        return view('public.portal.reschedule', [
+            'tenant' => $tenant,
+            'client' => $client,
+            'entry' => $entry,
+            'dates_with_slots' => $datesWithSlots,
+            'selected_date' => $selectedDate,
+            'slots' => $slots,
+            'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
+        ]);
+    }
+
+    public function submitReschedule(Request $request, string $slug, string $entryId): View|RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $entry = CalendarEntry::query()->find($entryId);
+        if (! $entry) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'starts_at' => ['required', 'date'],
+        ]);
+        $newStart = Carbon::parse($data['starts_at']);
+        $oldStart = $entry->starts_at->copy();
+
+        try {
+            $entry = $this->reschedule->execute($tenant, $entry, $client, $newStart);
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        $this->audit->record('client_portal.reschedule', 'CalendarEntry', (string) $entry->id, [
+            'from' => $oldStart->toIso8601String(),
+            'to' => $newStart->toIso8601String(),
+        ]);
+
+        if ($client->email) {
+            Notification::route('mail', $client->email)->notify(new BookingRescheduledClientNotification(
+                tenantName: $tenant->name,
+                oldStartsAt: $oldStart,
+                newStartsAt: $entry->starts_at,
+                durationMinutes: (int) $entry->starts_at->diffInMinutes($entry->ends_at),
+                instructorName: $entry->instructor?->name ?? '—',
+                cancelUrl: $this->cancelLinks->for($entry, $tenant->slug),
+                portalUrl: route('client_portal.login.show', ['slug' => $tenant->slug]),
+            ));
+        }
+
+        return redirect()
+            ->route('client_portal.dashboard', ['slug' => $slug])
+            ->with('reschedule_success', $entry->id);
     }
 
     private function resolveAndActivate(string $slug): Tenant
