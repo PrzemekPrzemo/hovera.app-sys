@@ -40,6 +40,11 @@
         .use { display: flex; justify-content: space-between; padding: .35rem 0; font-size: .85rem; }
         .muted { color: #6b7280; }
         .flash { background: #d1fae5; color: #065f46; padding: .65rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
+        .horse-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid #f3f4f6; text-decoration: none; color: inherit; }
+        .horse-row:last-of-type { border-bottom: 0; }
+        .horse-row:hover { background: #f9fafb; margin: 0 -.5rem; padding: .8rem .5rem; border-radius: 8px; }
+        .horse-row .meta { display: block; color: #9ca3af; font-size: .8rem; margin-top: .15rem; }
+        .horse-alerts { display: flex; gap: .35rem; }
         .pill { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
         .pill.req { background: #fef3c7; color: #92400e; }
         .pill.conf { background: #d1fae5; color: #065f46; }
@@ -203,6 +208,39 @@
                 <div class="empty">Brak historii rezerwacji.</div>
             @endforelse
         </section>
+
+        @if ($horses->isNotEmpty())
+            <section class="section">
+                <h2>Twoje konie</h2>
+                @foreach ($horses as $horse)
+                    @php
+                        $alerts = $horse_alerts->get($horse->id);
+                        $overdue = (int) ($alerts->overdue ?? 0);
+                        $upcoming30 = (int) ($alerts->upcoming ?? 0);
+                    @endphp
+                    <a class="horse-row" href="{{ route('client_portal.horses.show', ['slug' => $tenant->slug, 'horse' => $horse->id]) }}">
+                        <div>
+                            <strong>{{ $horse->name }}</strong>
+                            <span class="meta">
+                                @if ($horse->breed){{ $horse->breed }}@endif
+                                @if ($horse->birth_date) · {{ (int) $horse->birth_date->diffInYears(now()) }} l. @endif
+                            </span>
+                        </div>
+                        <div class="horse-alerts">
+                            @if ($overdue > 0)
+                                <span class="pill cancel">{{ $overdue }} przeterm.</span>
+                            @endif
+                            @if ($upcoming30 > 0)
+                                <span class="pill conf">{{ $upcoming30 }} w 30 dni</span>
+                            @endif
+                            @if ($overdue === 0 && $upcoming30 === 0)
+                                <span class="pill complete">OK</span>
+                            @endif
+                        </div>
+                    </a>
+                @endforeach
+            </section>
+        @endif
     </div>
 </body>
 </html>

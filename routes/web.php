@@ -115,4 +115,5 @@ Route::middleware(['web', 'throttle:30,1'])
             ->name('reschedule.show');
         Route::post('/bookings/{entry}/reschedule', [ClientPortalController::class, 'submitReschedule'])
             ->name('reschedule.submit');
+        Route::get('/horses/{horse}', [ClientPortalController::class, 'showHorse'])->name('horses.show');
     });
