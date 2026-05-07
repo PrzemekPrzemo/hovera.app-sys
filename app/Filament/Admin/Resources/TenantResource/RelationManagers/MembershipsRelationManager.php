@@ -70,8 +70,8 @@ class MembershipsRelationManager extends RelationManager
                     ->trueLabel('Tylko cofnięte')
                     ->falseLabel('Tylko aktywne')
                     ->queries(
-                        true: fn ($q) => $q->whereNotNull('revoked_at'),
-                        false: fn ($q) => $q->whereNull('revoked_at'),
+                        true: fn ($query) => $query->whereNotNull('revoked_at'),
+                        false: fn ($query) => $query->whereNull('revoked_at'),
                     ),
             ])
             ->headerActions([

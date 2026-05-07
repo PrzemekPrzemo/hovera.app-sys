@@ -120,10 +120,10 @@ class HealthRecordResource extends Resource
                     ->searchable(),
                 Tables\Filters\Filter::make('overdue')
                     ->label('Przeterminowane (next due in past)')
-                    ->query(fn ($q) => $q->overdue()),
+                    ->query(fn ($query) => $query->overdue()),
                 Tables\Filters\Filter::make('due_30')
                     ->label('Następny w 30 dni')
-                    ->query(fn ($q) => $q->dueWithin(30)),
+                    ->query(fn ($query) => $query->dueWithin(30)),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([

@@ -194,7 +194,7 @@ class InvoiceResource extends Resource
                 Tables\Filters\SelectFilter::make('status')->options(InvoiceStatus::options()),
                 Tables\Filters\Filter::make('overdue')
                     ->label('Po terminie')
-                    ->query(fn ($q) => $q->overdue()),
+                    ->query(fn ($query) => $query->overdue()),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
