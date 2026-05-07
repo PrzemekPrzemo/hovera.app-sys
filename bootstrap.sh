@@ -31,8 +31,34 @@ fail() { printf '%s %s\n' "$(c_red '[fail]')" "$*" >&2; exit 1; }
 # ── pre-flight ──────────────────────────────────────────────────────
 log "Sprawdzam wymagania bootstrap…"
 command -v git >/dev/null 2>&1 || fail "Brak gita. Zainstaluj: apt install git (Debian/Ubuntu) lub yum install git."
-command -v php >/dev/null 2>&1 || fail "Brak PHP CLI 8.3+ — zainstaluj PHP zanim ruszysz."
 ok "git $(git --version | awk '{print $3}')"
+
+# Wstępne sprawdzenie czy GDZIEKOLWIEK jest PHP 8.2+ (przed klonem,
+# żeby nie zaśmiecać dysku jeśli i tak zaraz padnie). Pełne wykrycie
+# robi install.sh przez scripts/detect-php.sh.
+_have_php=false
+for cmd in php php8.5 php8.4 php8.3 php8.2; do
+    if command -v "$cmd" >/dev/null 2>&1; then
+        v="$("$cmd" -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || true)"
+        if [[ "$v" =~ ^8\.[2-9]$ ]] || [[ "$v" =~ ^[9-9]\. ]]; then
+            _have_php=true
+            log "PHP $v wykryty jako: $(command -v $cmd)"
+            break
+        fi
+    fi
+done
+if ! $_have_php; then
+    for v in 8.5 8.4 8.3 8.2; do
+        for p in "/opt/plesk/php/$v/bin/php" "/usr/local/php$v/bin/php" "/usr/bin/php$v"; do
+            if [[ -x "$p" ]]; then
+                _have_php=true
+                log "PHP $v wykryty jako: $p"
+                break 2
+            fi
+        done
+    done
+fi
+$_have_php || fail "Brak PHP 8.2+ na serwerze (sprawdziłem PATH + /opt/plesk/php/8.X/bin/php). Zainstaluj PHP."
 
 # ── katalog docelowy ────────────────────────────────────────────────
 if [[ -z "$INSTALL_DIR" ]]; then

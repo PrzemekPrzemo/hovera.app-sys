@@ -123,30 +123,28 @@ escape_env() {
 # ── 1. Pre-flight ───────────────────────────────────────────────────
 log "Sprawdzam wymagania…"
 
-command -v php >/dev/null 2>&1 || fail "PHP CLI nie znaleziony. Zainstaluj PHP 8.3+."
-PHP_VERSION="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')"
-PHP_MAJOR="${PHP_VERSION%%.*}"
-PHP_MINOR="${PHP_VERSION##*.}"
-if [[ "$PHP_MAJOR" -lt 8 ]] || { [[ "$PHP_MAJOR" -eq 8 ]] && [[ "$PHP_MINOR" -lt 3 ]]; }; then
-    fail "Wymagane PHP 8.3+, masz $PHP_VERSION"
-fi
-ok "PHP $PHP_VERSION"
+# Auto-detect najnowszego PHP (Plesk-aware) i ustaw shim w PATH
+[[ -f scripts/detect-php.sh ]] || fail "Brak scripts/detect-php.sh w repo."
+# shellcheck source=scripts/detect-php.sh
+. scripts/detect-php.sh
+HOVERA_MIN_PHP=8.3 hovera_setup_php || fail "Wymagane PHP 8.3+ nie znalezione (sprawdź /opt/plesk/php/8.X/bin/php)."
+ok "PHP $PHP_VERSION ($PHP_BIN)"
 
 REQUIRED_EXT=(pdo_mysql mbstring openssl tokenizer xml ctype json)
 RECOMMENDED_EXT=(bcmath gd intl curl fileinfo)
 for ext in "${REQUIRED_EXT[@]}"; do
-    php -r "exit(extension_loaded('$ext') ? 0 : 1);" \
+    "$PHP_BIN" -r "exit(extension_loaded('$ext') ? 0 : 1);" \
         || fail "Brakuje wymaganego rozszerzenia PHP: $ext"
 done
 for ext in "${RECOMMENDED_EXT[@]}"; do
-    php -r "exit(extension_loaded('$ext') ? 0 : 1);" \
+    "$PHP_BIN" -r "exit(extension_loaded('$ext') ? 0 : 1);" \
         || warn "Zalecane rozszerzenie PHP nie jest załadowane: $ext (faktury / KSeF / GUS mogą działać niepoprawnie)"
 done
 ok "Rozszerzenia PHP OK"
 
 if ! $SKIP_DEPS; then
-    command -v composer >/dev/null 2>&1 || fail "Composer nie znaleziony."
-    ok "Composer $(composer --version --no-ansi | head -1)"
+    hovera_detect_composer || fail "Composer nie znaleziony."
+    ok "Composer: $COMPOSER_BIN"
 fi
 
 [[ -f composer.json ]] || fail "Brak composer.json — uruchom skrypt z katalogu projektu."
@@ -342,9 +340,9 @@ if ! $SKIP_DEPS; then
     echo
     log "Instaluję zależności (composer install)…"
     if [[ "$HOVERA_APP_ENV" = "production" ]]; then
-        run "composer install --no-dev --optimize-autoloader --no-interaction"
+        run "$COMPOSER_BIN install --no-dev --optimize-autoloader --no-interaction"
     else
-        run "composer install --no-interaction"
+        run "$COMPOSER_BIN install --no-interaction"
     fi
     ok "Zależności zainstalowane"
 fi
@@ -353,20 +351,20 @@ fi
 if ! $DRY_RUN && [[ -z "$(grep '^APP_KEY=' .env | cut -d= -f2-)" ]]; then
     echo
     log "Generuję APP_KEY…"
-    run "php artisan key:generate --force"
+    run "$PHP_BIN artisan key:generate --force"
     ok "APP_KEY ustawiony"
 fi
 
 # ── 6. Migrations ───────────────────────────────────────────────────
 echo
 log "Uruchamiam migracje (centralna baza)…"
-run "php artisan migrate --force"
+run "$PHP_BIN artisan migrate --force"
 ok "Migracje zakończone"
 
 # ── 7. Storage link ─────────────────────────────────────────────────
 if [[ ! -L public/storage ]]; then
     log "Tworzę symlink public/storage…"
-    run "php artisan storage:link" || warn "Nie udało się — utwórz ręcznie."
+    run "$PHP_BIN artisan storage:link" || warn "Nie udało się — utwórz ręcznie."
 fi
 
 # ── 8. Master admin ─────────────────────────────────────────────────
@@ -375,7 +373,7 @@ log "Tworzę master admina…"
 if $DRY_RUN; then
     log "[dry] php artisan hovera:admin:create $HOVERA_ADMIN_EMAIL ... --update"
 else
-    php artisan hovera:admin:create \
+    "$PHP_BIN" artisan hovera:admin:create \
         "$HOVERA_ADMIN_EMAIL" \
         "$HOVERA_ADMIN_NAME" \
         --password="$HOVERA_ADMIN_PASS" \
@@ -387,10 +385,10 @@ fi
 if [[ "$HOVERA_APP_ENV" = "production" ]] || [[ "$HOVERA_APP_ENV" = "staging" ]]; then
     echo
     log "Buduję cache…"
-    run "php artisan config:cache"
-    run "php artisan route:cache"
-    run "php artisan view:cache"
-    run "php artisan event:cache"
+    run "$PHP_BIN artisan config:cache"
+    run "$PHP_BIN artisan route:cache"
+    run "$PHP_BIN artisan view:cache"
+    run "$PHP_BIN artisan event:cache"
     ok "Cache gotowy"
 fi
 

@@ -60,37 +60,25 @@ run()  {
 # ── Pre-flight ──────────────────────────────────────────────────────
 log "Hovera deploy startuje w $SCRIPT_DIR"
 
-[[ "$(id -u)" == "0" ]] && fail "Nie uruchamiaj skryptu jako root (użyj usera domeny w Plesku)."
 [[ -f .env ]] || fail "Brakuje .env — skopiuj .env.example, uzupełnij i ponów (Plesk → File Manager → Edit)."
 
-# Composer często bywa zainstalowany jako extension Plesku w nietypowej ścieżce.
-# Jeśli `composer` nie jest w PATH, spróbuj typowych Plesk locations.
-if ! command -v composer >/dev/null; then
-    for c in /opt/plesk/composer/composer.phar /usr/local/psa/admin/sbin/composer /usr/local/bin/composer.phar; do
-        if [[ -x "$c" ]]; then
-            COMPOSER="$c"
-            log "Composer znaleziony jako: $COMPOSER (Plesk extension)"
-            break
-        fi
-    done
-    [[ -z "${COMPOSER:-}" ]] && fail "Brak composer w PATH. Plesk → Tools & Settings → Plesk Extensions → Composer (zainstaluj)."
-else
-    COMPOSER="composer"
-fi
+# Auto-detect najnowszego PHP (Plesk-aware, /opt/plesk/php/8.X/bin/php) +
+# composera. Wstawia shim w PATH żeby `php` w subprocesach był 8.3+.
+[[ -f scripts/detect-php.sh ]] || fail "Brak scripts/detect-php.sh."
+# shellcheck source=scripts/detect-php.sh
+. scripts/detect-php.sh
+HOVERA_MIN_PHP=8.2 hovera_setup_php || fail "Wymagany PHP 8.2+ — sprawdź /opt/plesk/php/8.X/bin/php."
+hovera_detect_composer || fail "Brak composera (PATH ani /opt/plesk/composer/composer.phar)."
+COMPOSER="$COMPOSER_BIN"
+log "Composer: $COMPOSER"
 
-command -v php >/dev/null || fail "Brak PHP w PATH. Plesk → Domain → PHP Settings → ustaw PHP-CLI 8.3."
 command -v git >/dev/null || fail "Brak git w PATH (eskaluj do hostingu — apt install git)."
-
-php_version=$(php -r 'echo PHP_VERSION;')
-log "PHP: $php_version"
-php -r 'exit(version_compare(PHP_VERSION, "8.2", ">=") ? 0 : 1);' \
-    || fail "Wymagany PHP 8.2+. Skonfiguruj odpowiednią wersję w Plesku (Domain → PHP Settings)."
 
 # ── Maintenance mode ────────────────────────────────────────────────
 log "→ Maintenance mode ON"
-run "php artisan down --render='errors::503' --retry=15 || true"
+run "$PHP_BIN artisan down --render='errors::503' --retry=15 || true"
 
-trap 'log "→ Maintenance mode OFF (cleanup)"; php artisan up || true' EXIT
+trap 'log "→ Maintenance mode OFF (cleanup)"; "$PHP_BIN" artisan up || true' EXIT
 
 # ── Git ─────────────────────────────────────────────────────────────
 if ! $NO_PULL; then
@@ -118,23 +106,23 @@ run "chmod -R ug+rw storage bootstrap/cache"
 
 # ── Cache wipe + warm ───────────────────────────────────────────────
 log "→ Cache config + routes + views"
-run "php artisan config:clear"
-run "php artisan route:clear"
-run "php artisan view:clear"
-run "php artisan event:clear || true"
-run "php artisan cache:clear || true"
-run "php artisan config:cache"
-run "php artisan route:cache"
-run "php artisan view:cache"
-run "php artisan event:cache || true"
+run "$PHP_BIN artisan config:clear"
+run "$PHP_BIN artisan route:clear"
+run "$PHP_BIN artisan view:clear"
+run "$PHP_BIN artisan event:clear || true"
+run "$PHP_BIN artisan cache:clear || true"
+run "$PHP_BIN artisan config:cache"
+run "$PHP_BIN artisan route:cache"
+run "$PHP_BIN artisan view:cache"
+run "$PHP_BIN artisan event:cache || true"
 
 # ── Migracje ───────────────────────────────────────────────────────
 log "→ Migracje central"
-run "php artisan migrate --force"
+run "$PHP_BIN artisan migrate --force"
 
 if ! $SKIP_TENANTS; then
     log "→ Migracje tenantów (wszystkie aktywne)"
-    run "php artisan tenants:migrate"
+    run "$PHP_BIN artisan tenants:migrate"
 else
     warn "Pominięto migracje tenantów (--skip-tenants)"
 fi
@@ -142,25 +130,25 @@ fi
 # ── Storage symlink ────────────────────────────────────────────────
 if [[ ! -L public/storage ]]; then
     log "→ storage:link (pierwszy raz)"
-    run "php artisan storage:link"
+    run "$PHP_BIN artisan storage:link"
 fi
 
 # ── Filament assets ─────────────────────────────────────────────────
 log "→ filament:assets"
-run "php artisan filament:assets"
+run "$PHP_BIN artisan filament:assets"
 
 # ── Restart workerów (jeśli queue worker jest uruchomiony) ──────────
 log "→ queue:restart (sygnał do running workerów)"
-run "php artisan queue:restart"
+run "$PHP_BIN artisan queue:restart"
 
 # ── Maintenance OFF ─────────────────────────────────────────────────
 trap - EXIT
 log "→ Maintenance mode OFF"
-run "php artisan up"
+run "$PHP_BIN artisan up"
 
 # ── Smoke test ──────────────────────────────────────────────────────
 log "→ Smoke test"
-run "php artisan about --only=environment"
+run "$PHP_BIN artisan about --only=environment"
 
 log "✓ Deploy OK — rewizja $CURRENT_REV"
 log "Sprawdź ręcznie:"
