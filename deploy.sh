@@ -67,7 +67,7 @@ log "Hovera deploy startuje w $SCRIPT_DIR"
 [[ -f scripts/detect-php.sh ]] || fail "Brak scripts/detect-php.sh."
 # shellcheck source=scripts/detect-php.sh
 . scripts/detect-php.sh
-HOVERA_MIN_PHP=8.2 hovera_setup_php || fail "Wymagany PHP 8.2+ — sprawdź /opt/plesk/php/8.X/bin/php."
+HOVERA_MIN_PHP=8.4 hovera_setup_php || fail "Wymagany PHP 8.4+ — sprawdź /opt/plesk/php/8.X/bin/php (composer.lock wymaga 8.4)."
 hovera_detect_composer || fail "Brak composera (PATH ani /opt/plesk/composer/composer.phar)."
 COMPOSER="$COMPOSER_BIN"
 log "Composer: $COMPOSER"
