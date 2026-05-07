@@ -26,8 +26,20 @@
         .booking .when .duration { display: block; font-size: .8rem; color: #6b7280; font-weight: 400; }
         .booking .what { font-size: .9rem; color: #4b5563; }
         .booking .what .meta { display: block; color: #9ca3af; font-size: .8rem; margin-top: .15rem; }
-        .booking .actions a { display: inline-block; padding: .35rem .7rem; border: 1px solid #e5e7eb; border-radius: 6px; color: #b91c1c; font-size: .8rem; text-decoration: none; }
+        .booking .actions a { display: inline-block; padding: .35rem .7rem; border: 1px solid #e5e7eb; border-radius: 6px; color: #b91c1c; font-size: .8rem; text-decoration: none; margin-left: .35rem; }
         .booking .actions a:hover { background: #fef2f2; }
+        .booking .actions a.reschedule { color: var(--primary); }
+        .booking .actions a.reschedule:hover { background: color-mix(in srgb, var(--primary) 8%, transparent); }
+        .pass { padding: .8rem 0; border-bottom: 1px solid #f3f4f6; }
+        .pass:last-of-type { border-bottom: 0; }
+        .pass-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+        .pass-meta { color: #6b7280; font-size: .85rem; margin-top: .25rem; }
+        .pass-bar { height: 6px; border-radius: 999px; background: #f3f4f6; margin-top: .5rem; overflow: hidden; }
+        .pass-bar > span { display: block; height: 100%; background: var(--primary); transition: width .2s ease; }
+        h3.muted { font-size: .85rem; color: #6b7280; margin: 1rem 0 .35rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+        .use { display: flex; justify-content: space-between; padding: .35rem 0; font-size: .85rem; }
+        .muted { color: #6b7280; }
+        .flash { background: #d1fae5; color: #065f46; padding: .65rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
         .pill { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
         .pill.req { background: #fef3c7; color: #92400e; }
         .pill.conf { background: #d1fae5; color: #065f46; }
@@ -65,6 +77,10 @@
             </form>
         </header>
 
+        @if (session('reschedule_success'))
+            <div class="flash">✓ Rezerwacja przesunięta. Wysłaliśmy potwierdzenie mailem.</div>
+        @endif
+
         <section class="section">
             <h2>Nadchodzące rezerwacje</h2>
             @forelse ($upcoming as $entry)
@@ -89,6 +105,9 @@
                         </span>
                     </div>
                     <div class="actions">
+                        @if ($entry->status === \App\Enums\CalendarEntryStatus::Confirmed)
+                            <a class="reschedule" href="{{ route('client_portal.reschedule.show', ['slug' => $tenant->slug, 'entry' => $entry->id]) }}">Przesuń</a>
+                        @endif
                         @if ($cancel_links->has($entry->id))
                             <a href="{{ $cancel_links->get($entry->id) }}">Odwołaj</a>
                         @endif
@@ -98,6 +117,59 @@
                 <div class="empty">Brak nadchodzących rezerwacji.</div>
             @endforelse
         </section>
+
+        @if ($passes->isNotEmpty())
+            <section class="section">
+                <h2>Twoje karnety</h2>
+                @foreach ($passes as $pass)
+                    @php
+                        $remaining = (int) $pass->remaining_uses;
+                        $total = (int) $pass->total_uses;
+                        $percent = $total > 0 ? round(min(100, max(0, $remaining / $total * 100))) : 0;
+                    @endphp
+                    <div class="pass">
+                        <div class="pass-head">
+                            <strong>{{ $pass->name }}</strong>
+                            @switch($pass->status->value)
+                                @case('active')
+                                    <span class="pill conf">{{ $pass->status->label() }}</span>
+                                    @break
+                                @case('exhausted')
+                                    <span class="pill complete">{{ $pass->status->label() }}</span>
+                                    @break
+                                @case('expired')
+                                    @case('cancelled')
+                                    <span class="pill cancel">{{ $pass->status->label() }}</span>
+                                    @break
+                                @default
+                                    <span class="pill complete">{{ $pass->status->label() }}</span>
+                            @endswitch
+                        </div>
+                        <div class="pass-meta">
+                            {{ $remaining }} / {{ $total }} pozostało
+                            @if ($pass->valid_until)
+                                · ważny do {{ $pass->valid_until->format('d.m.Y') }}
+                            @endif
+                        </div>
+                        <div class="pass-bar"><span style="width: {{ $percent }}%"></span></div>
+                    </div>
+                @endforeach
+
+                @if ($recent_uses->isNotEmpty())
+                    <h3 class="muted">Ostatnio użyte</h3>
+                    @foreach ($recent_uses as $use)
+                        <div class="use">
+                            <span>{{ $use->consumed_at?->format('d.m.Y H:i') }}</span>
+                            <span class="muted">
+                                @if ($use->calendarEntry)
+                                    Lekcja {{ $use->calendarEntry->starts_at->format('d.m.Y') }}
+                                @endif
+                            </span>
+                        </div>
+                    @endforeach
+                @endif
+            </section>
+        @endif
 
         <section class="section">
             <h2>Historia</h2>
