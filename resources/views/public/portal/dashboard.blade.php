@@ -45,6 +45,12 @@
         .horse-row:hover { background: #f9fafb; margin: 0 -.5rem; padding: .8rem .5rem; border-radius: 8px; }
         .horse-row .meta { display: block; color: #9ca3af; font-size: .8rem; margin-top: .15rem; }
         .horse-alerts { display: flex; gap: .35rem; }
+        .invoice-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid #f3f4f6; text-decoration: none; color: inherit; }
+        .invoice-row:last-of-type { border-bottom: 0; }
+        .invoice-row:hover { background: #f9fafb; margin: 0 -.5rem; padding: .8rem .5rem; border-radius: 8px; }
+        .invoice-row .meta { display: block; color: #9ca3af; font-size: .8rem; margin-top: .15rem; }
+        .invoice-row .meta .overdue { color: #b91c1c; font-weight: 600; }
+        .invoice-amount { font-weight: 700; color: var(--primary); white-space: nowrap; }
         .more { float: right; font-size: .75rem; font-weight: 500; color: var(--primary); text-decoration: none; }
         .more:hover { text-decoration: underline; }
         .message { padding: .65rem 0; border-bottom: 1px solid #f3f4f6; font-size: .9rem; }
@@ -213,6 +219,27 @@
                 <div class="empty">Brak historii rezerwacji.</div>
             @endforelse
         </section>
+
+        @if ($unpaid_invoices->isNotEmpty())
+            <section class="section">
+                <h2>Faktury do opłacenia</h2>
+                @foreach ($unpaid_invoices as $invoice)
+                    <a class="invoice-row" href="{{ $invoice_links->get($invoice->id) }}">
+                        <div>
+                            <strong>{{ $invoice->kind->shortLabel() }} {{ $invoice->number }}</strong>
+                            <span class="meta">
+                                Wystawiona: {{ $invoice->issued_at?->format('d.m.Y') }}
+                                @if ($invoice->due_at)
+                                    @php $overdue = $invoice->due_at->isPast(); @endphp
+                                    · Termin: <span class="{{ $overdue ? 'overdue' : '' }}">{{ $invoice->due_at->format('d.m.Y') }}</span>
+                                @endif
+                            </span>
+                        </div>
+                        <div class="invoice-amount">{{ $invoice->totalFormatted() }} →</div>
+                    </a>
+                @endforeach
+            </section>
+        @endif
 
         @if ($recent_messages->isNotEmpty())
             <section class="section">

@@ -12,7 +12,10 @@ use App\Filament\App\Resources\InvoiceResource\Pages;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\InvoiceItem;
+use App\Notifications\InvoiceIssuedClientNotification;
+use App\Services\Invoicing\InvoicePublicLink;
 use App\Services\Ksef\KsefClient;
+use App\Services\Portal\ClientMessageJournal;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -23,6 +26,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Notification as MailFacade;
 use Illuminate\Validation\ValidationException;
 
 class InvoiceResource extends Resource
@@ -267,6 +271,51 @@ class InvoiceResource extends Resource
                                 ->danger()
                                 ->send();
                         }
+                    }),
+                Tables\Actions\Action::make('email')
+                    ->label('Wyślij na e-mail')
+                    ->icon('heroicon-m-envelope')
+                    ->color('primary')
+                    ->visible(fn (Invoice $r) => $r->status->isPosted())
+                    ->requiresConfirmation()
+                    ->modalDescription('Wyślemy link do faktury na e-mail klienta. Link działa do 90 dni (lub 14 dni po terminie płatności).')
+                    ->action(function (Invoice $record) {
+                        $tenant = app(TenantManager::class)->current();
+                        if (! $tenant) {
+                            return;
+                        }
+                        $client = $record->client;
+                        if (! $client?->email) {
+                            Notification::make()->title('Brak e-maila klienta')->danger()->send();
+
+                            return;
+                        }
+
+                        $url = app(InvoicePublicLink::class)->for($record, $tenant->slug);
+                        $canPay = ((string) (data_get($tenant->settings, 'payments.default_provider') ?? 'none')) !== 'none';
+
+                        MailFacade::route('mail', $client->email)->notify(new InvoiceIssuedClientNotification(
+                            tenantName: $tenant->name,
+                            invoiceNumber: (string) $record->number,
+                            kindLabel: $record->kind->label(),
+                            totalFormatted: $record->totalFormatted(),
+                            issuedAt: $record->issued_at,
+                            dueAt: $record->due_at,
+                            publicUrl: $url,
+                            canPayOnline: $canPay && $record->status === InvoiceStatus::Issued,
+                        ));
+
+                        // Journal entry — pojawi się w portalu klienta "Wiadomości"
+                        app(ClientMessageJournal::class)->record(
+                            $client,
+                            'invoice.issued',
+                            $record->kind->label().' '.$record->number,
+                            ['amount' => $record->totalFormatted()],
+                            'Invoice',
+                            (string) $record->id,
+                        );
+
+                        Notification::make()->title('Wysłano fakturę na e-mail klienta')->success()->send();
                     }),
                 Tables\Actions\EditAction::make()
                     ->visible(fn (Invoice $r) => $r->status === InvoiceStatus::Draft),

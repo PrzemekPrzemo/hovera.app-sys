@@ -6,18 +6,21 @@ namespace App\Http\Controllers\Public;
 
 use App\Actions\Calendar\RescheduleBookingByClient;
 use App\Enums\CalendarEntryStatus;
+use App\Enums\InvoiceStatus;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\CalendarEntry;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\ClientMessage;
 use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
+use App\Models\Tenant\Invoice;
 use App\Models\Tenant\Pass;
 use App\Models\Tenant\PassUse;
 use App\Notifications\BookingRescheduledClientNotification;
 use App\Notifications\ClientPortalMagicLinkNotification;
 use App\Services\Calendar\BookingCancellationLink;
 use App\Services\Calendar\PublicBookingAvailability;
+use App\Services\Invoicing\InvoicePublicLink;
 use App\Services\Portal\ClientMessageJournal;
 use App\Services\Portal\ClientPortalAuth;
 use App\Services\TenantAuditLogger;
@@ -211,6 +214,16 @@ class ClientPortalController extends Controller
             ->limit(5)
             ->get();
 
+        $unpaidInvoices = Invoice::query()
+            ->where('client_id', $client->id)
+            ->where('status', InvoiceStatus::Issued->value)
+            ->orderBy('due_at')
+            ->limit(10)
+            ->get();
+        $invoiceLinks = $unpaidInvoices->mapWithKeys(fn (Invoice $i) => [
+            $i->id => app(InvoicePublicLink::class)->for($i, $tenant->slug),
+        ]);
+
         return view('public.portal.dashboard', [
             'tenant' => $tenant,
             'client' => $client,
@@ -221,6 +234,8 @@ class ClientPortalController extends Controller
             'horses' => $horses,
             'horse_alerts' => $horseAlerts,
             'recent_messages' => $recentMessages,
+            'unpaid_invoices' => $unpaidInvoices,
+            'invoice_links' => $invoiceLinks,
             'cancel_links' => $cancelLinks,
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
         ]);
