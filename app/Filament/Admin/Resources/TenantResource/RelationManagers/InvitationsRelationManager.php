@@ -56,14 +56,14 @@ class InvitationsRelationManager extends RelationManager
             ->filters([
                 Tables\Filters\Filter::make('only_pending')
                     ->label('Tylko oczekujące')
-                    ->query(fn ($q) => $q->pending())
+                    ->query(fn ($query) => $query->pending())
                     ->default(),
                 Tables\Filters\Filter::make('expired')
                     ->label('Tylko wygasłe')
-                    ->query(fn ($q) => $q->expired()),
+                    ->query(fn ($query) => $query->expired()),
                 Tables\Filters\Filter::make('accepted')
                     ->label('Tylko zaakceptowane')
-                    ->query(fn ($q) => $q->accepted()),
+                    ->query(fn ($query) => $query->accepted()),
             ])
             ->actions([
                 Tables\Actions\Action::make('resend')

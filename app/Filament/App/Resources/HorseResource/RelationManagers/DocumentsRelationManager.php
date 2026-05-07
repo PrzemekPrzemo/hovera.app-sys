@@ -116,7 +116,7 @@ class DocumentsRelationManager extends RelationManager
                 ]),
                 Tables\Filters\Filter::make('expiring_soon')
                     ->label('Wygasa w 30 dni')
-                    ->query(fn ($q) => $q->expiringWithin(30)),
+                    ->query(fn ($query) => $query->expiringWithin(30)),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->headerActions([

@@ -150,7 +150,7 @@ class CalendarEntryResource extends Resource
                     ->searchable(),
                 Tables\Filters\Filter::make('upcoming')
                     ->label('Tylko nadchodzące')
-                    ->query(fn ($q) => $q->where('starts_at', '>=', now())),
+                    ->query(fn ($query) => $query->where('starts_at', '>=', now())),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
