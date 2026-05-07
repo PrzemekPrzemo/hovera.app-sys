@@ -118,6 +118,9 @@ Route::middleware(['web', 'throttle:30,1'])
         Route::post('/bookings/{entry}/reschedule', [ClientPortalController::class, 'submitReschedule'])
             ->name('reschedule.submit');
         Route::get('/horses/{horse}', [ClientPortalController::class, 'showHorse'])->name('horses.show');
+        Route::post('/horses/{horse}/messages', [ClientPortalController::class, 'sendHorseMessage'])->name('horses.messages.send');
+        Route::get('/horses/{horse}/messages/{message}/attachment/{index}', [ClientPortalController::class, 'downloadAttachment'])
+            ->name('horses.messages.attachment');
         Route::get('/messages', [ClientPortalController::class, 'showMessages'])->name('messages.show');
     });
 

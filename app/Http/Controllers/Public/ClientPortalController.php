@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Public;
 
 use App\Actions\Calendar\RescheduleBookingByClient;
+use App\Actions\Stable\SendHorseMessage;
 use App\Enums\CalendarEntryStatus;
 use App\Enums\InvoiceStatus;
 use App\Models\Central\Tenant;
@@ -13,6 +14,7 @@ use App\Models\Tenant\Client;
 use App\Models\Tenant\ClientMessage;
 use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
+use App\Models\Tenant\HorseMessage;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\Pass;
 use App\Models\Tenant\PassUse;
@@ -32,8 +34,10 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ClientPortalController extends Controller
 {
@@ -221,6 +225,16 @@ class ClientPortalController extends Controller
             ->orderBy('due_at')
             ->limit(10)
             ->get();
+
+        // Nieprzeczytane wiadomości stajnia → klient (sumaryczne, per wszystkie konie klienta)
+        $unreadHorseMessages = $horses->isNotEmpty()
+            ? (int) HorseMessage::query()
+                ->whereIn('horse_id', $horses->pluck('id'))
+                ->where('client_id', $client->id)
+                ->unreadByClient()
+                ->count()
+            : 0;
+
         $invoiceLinks = $unpaidInvoices->mapWithKeys(fn (Invoice $i) => [
             $i->id => app(InvoicePublicLink::class)->for($i, $tenant->slug),
         ]);
@@ -237,6 +251,7 @@ class ClientPortalController extends Controller
             'recent_messages' => $recentMessages,
             'unpaid_invoices' => $unpaidInvoices,
             'invoice_links' => $invoiceLinks,
+            'unread_horse_messages' => $unreadHorseMessages,
             'cancel_links' => $cancelLinks,
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
         ]);
@@ -291,15 +306,107 @@ class ClientPortalController extends Controller
             ->limit(50)
             ->get();
 
+        $messages = HorseMessage::query()
+            ->where('horse_id', $horse->id)
+            ->orderByDesc('sent_at')
+            ->limit(50)
+            ->get();
+
+        // Mark stable→client messages jako odczytane przy otwarciu strony
+        HorseMessage::query()
+            ->where('horse_id', $horse->id)
+            ->where('direction', 'from_stable')
+            ->whereNull('read_by_client_at')
+            ->update(['read_by_client_at' => now()]);
+
         return view('public.portal.horse', [
             'tenant' => $tenant,
             'client' => $client,
             'horse' => $horse,
             'records' => $records,
             'activities' => $activities,
+            'messages' => $messages,
             'estimated_monthly_cents' => $horse->estimatedMonthlyCostCents(),
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
         ]);
+    }
+
+    public function sendHorseMessage(Request $request, string $slug, string $horseId): RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $horse = Horse::query()
+            ->where('owner_client_id', $client->id)
+            ->find($horseId);
+        if (! $horse) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'subject' => ['nullable', 'string', 'max:200'],
+            'body' => ['required', 'string', 'max:5000'],
+            'attachments' => ['nullable', 'array', 'max:5'],
+            'attachments.*' => ['file', 'max:10240'], // 10 MB
+        ]);
+
+        try {
+            app(SendHorseMessage::class)->fromClient(
+                tenant: $tenant,
+                horse: $horse,
+                clientId: $client->id,
+                body: (string) $data['body'],
+                subject: ($data['subject'] ?? '') !== '' ? (string) $data['subject'] : null,
+                attachments: $request->file('attachments') ?? [],
+            );
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        return redirect()
+            ->route('client_portal.horses.show', ['slug' => $slug, 'horse' => $horseId])
+            ->with('horse_message_sent', true);
+    }
+
+    /**
+     * Pobranie załącznika z wiadomości — auth check że klient ma dostęp
+     * (musi owner-ować konia, którego wiadomość dotyczy).
+     */
+    public function downloadAttachment(Request $request, string $slug, string $horseId, string $messageId, int $index): StreamedResponse|RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $horse = Horse::query()
+            ->where('owner_client_id', $client->id)
+            ->find($horseId);
+        if (! $horse) {
+            abort(404);
+        }
+
+        $message = HorseMessage::query()
+            ->where('horse_id', $horse->id)
+            ->find($messageId);
+        if (! $message) {
+            abort(404);
+        }
+
+        $attachments = (array) ($message->attachments ?? []);
+        $a = $attachments[$index] ?? null;
+        if (! $a || ! Storage::disk('local')->exists((string) $a['path'])) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->download(
+            (string) $a['path'],
+            (string) ($a['original_name'] ?? 'attachment'),
+        );
     }
 
     public function showReschedule(Request $request, string $slug, string $entryId): View|RedirectResponse

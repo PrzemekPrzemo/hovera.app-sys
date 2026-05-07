@@ -397,6 +397,22 @@ class ClientPortalTest extends TestCase
             $t->timestamp('updated_at')->useCurrent();
         });
 
+        Schema::connection('tenant')->create('horse_messages', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('horse_id', 26);
+            $t->string('direction', 32);
+            $t->string('sender_user_id', 26)->nullable();
+            $t->string('client_id', 26);
+            $t->string('subject', 200)->nullable();
+            $t->text('body');
+            $t->json('attachments')->nullable();
+            $t->timestamp('sent_at');
+            $t->timestamp('read_by_client_at')->nullable();
+            $t->timestamp('read_by_stable_at')->nullable();
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+        });
+
         Schema::connection('tenant')->create('invoices', function ($t) {
             $t->string('id', 26)->primary();
             $t->string('number', 64)->nullable();
