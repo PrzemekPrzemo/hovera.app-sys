@@ -16,6 +16,7 @@ use App\Models\Tenant\Horse;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\Pass;
 use App\Models\Tenant\PassUse;
+use App\Models\Tenant\StableActivity;
 use App\Notifications\BookingRescheduledClientNotification;
 use App\Notifications\ClientPortalMagicLinkNotification;
 use App\Services\Calendar\BookingCancellationLink;
@@ -271,6 +272,7 @@ class ClientPortalController extends Controller
         }
 
         $horse = Horse::query()
+            ->with(['box', 'boardingServices'])
             ->where('owner_client_id', $client->id)
             ->find($horseId);
         if (! $horse) {
@@ -283,11 +285,19 @@ class ClientPortalController extends Controller
             ->limit(100)
             ->get();
 
+        $activities = StableActivity::query()
+            ->where('horse_id', $horse->id)
+            ->orderByDesc('performed_at')
+            ->limit(50)
+            ->get();
+
         return view('public.portal.horse', [
             'tenant' => $tenant,
             'client' => $client,
             'horse' => $horse,
             'records' => $records,
+            'activities' => $activities,
+            'estimated_monthly_cents' => $horse->estimatedMonthlyCostCents(),
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
         ]);
     }

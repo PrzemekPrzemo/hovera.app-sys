@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\HorseResource\Pages;
+use App\Models\Tenant\BoardingService;
 use App\Models\Tenant\Box;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
@@ -77,6 +78,23 @@ class HorseResource extends Resource
                     Forms\Components\DatePicker::make('birth_date')->label('Data urodzenia'),
                 ]),
 
+            Forms\Components\Section::make('Pensja — usługi naliczane')
+                ->description('Zaznacz które pozycje cennika dotyczą tego konia. Klient zobaczy je w portalu z miesięczną szacunkową kwotą.')
+                ->collapsed()
+                ->schema([
+                    Forms\Components\Select::make('boardingServices')
+                        ->label('Usługi z cennika')
+                        ->multiple()
+                        ->relationship('boardingServices', 'name')
+                        ->options(fn () => BoardingService::query()
+                            ->where('is_active', true)
+                            ->orderBy('sort_order')
+                            ->pluck('name', 'id'))
+                        ->preload()
+                        ->searchable()
+                        ->helperText('Cennik konfigurujesz w "Stajnia → Cennik pensji". Override ceny per koń (np. zniżka) ustawiasz tam ręcznie po utworzeniu wpisu.'),
+                ]),
+
             Forms\Components\Section::make('Notatki')
                 ->collapsed()
                 ->schema([
@@ -136,6 +154,7 @@ class HorseResource extends Resource
     {
         return [
             HorseResource\RelationManagers\HealthRecordsRelationManager::class,
+            HorseResource\RelationManagers\ActivitiesRelationManager::class,
         ];
     }
 
