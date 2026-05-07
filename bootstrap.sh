@@ -68,8 +68,29 @@ fi
 $_have_php || fail "Brak PHP 8.2+ na serwerze (sprawdziłem PATH + /opt/plesk/php/8.X/bin/php). Zainstaluj PHP."
 
 # ── katalog docelowy ────────────────────────────────────────────────
+# Default detection priorytety:
+#   1. HOVERA_INSTALL_DIR z env
+#   2. Plesk: jeśli pwd jest /var/www/vhosts/<domena>[/httpdocs], sugeruj
+#      /var/www/vhosts/<domena>/httpdocs jako default (Plesk webroot)
+#   3. ~/hovera
+PLESK_VHOST=""
 if [[ -z "$INSTALL_DIR" ]]; then
-    DEFAULT_DIR="$HOME/hovera"
+    pwd_real="$(pwd -P)"
+    if [[ "$pwd_real" =~ ^/var/www/vhosts/([^/]+)(/.*)?$ ]]; then
+        PLESK_VHOST="${BASH_REMATCH[1]}"
+        DEFAULT_DIR="/var/www/vhosts/$PLESK_VHOST/httpdocs"
+        log "Wykryto Plesk vhost: $PLESK_VHOST → sugeruję $DEFAULT_DIR"
+    elif [[ -d /var/www/vhosts && -d /opt/psa ]]; then
+        # Plesk jest, ale nie jesteśmy w żadnym vhoście — pokaż listę
+        DEFAULT_DIR="$HOME/hovera"
+        log "Plesk wykryty. Dostępne vhosty:"
+        for d in /var/www/vhosts/*/httpdocs; do
+            [[ -d "$d" ]] && echo "    - $d"
+        done
+    else
+        DEFAULT_DIR="$HOME/hovera"
+    fi
+
     if [[ -t 0 ]]; then
         read -r -p "$(c_blue '?') Katalog instalacji [$DEFAULT_DIR]: " INSTALL_DIR
         INSTALL_DIR="${INSTALL_DIR:-$DEFAULT_DIR}"
@@ -92,7 +113,41 @@ if [[ -d "$INSTALL_DIR/.git" ]]; then
     git pull --ff-only origin "$GIT_REF" || true
     ok "Kod zaktualizowany do $(git rev-parse --short HEAD)"
 elif [[ -d "$INSTALL_DIR" && -n "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]]; then
-    fail "$INSTALL_DIR istnieje i nie jest puste (ani nie jest repo gita). Zwolnij katalog albo wybierz inny."
+    # Wykryj typowe Plesk welcome-files i zaproponuj cleanup
+    PLESK_DEFAULT_PATTERN='^(index\.html|index\.htm|favicon\.ico|robots\.txt|.*plesk.*|.*\.png|.*\.jpg|.*\.css)$'
+    has_only_default_files=true
+    for f in "$INSTALL_DIR"/* "$INSTALL_DIR"/.[!.]*; do
+        [[ -e "$f" ]] || continue
+        bn="$(basename "$f")"
+        if ! [[ "$bn" =~ $PLESK_DEFAULT_PATTERN ]]; then
+            has_only_default_files=false
+            break
+        fi
+    done
+
+    if $has_only_default_files; then
+        log "$INSTALL_DIR zawiera tylko domyślne pliki Pleska:"
+        ls -la "$INSTALL_DIR" | tail -n +2
+        if [[ -t 0 ]]; then
+            read -r -p "$(c_blue '?') Wyczyścić katalog i zainstalować Hoverę? [y/N]: " __confirm
+            case "${__confirm:-n}" in
+                y|Y|yes|Yes|YES)
+                    log "Czyszczę $INSTALL_DIR…"
+                    find "$INSTALL_DIR" -mindepth 1 -delete
+                    ;;
+                *) fail "Anulowano." ;;
+            esac
+        else
+            fail "$INSTALL_DIR nie jest puste — uruchom interaktywnie żeby wyczyścić, albo `rm -rf $INSTALL_DIR/{*,.[!.]*}` ręcznie."
+        fi
+    else
+        fail "$INSTALL_DIR istnieje i nie jest puste (zawiera nie-Pleskowe pliki). Zwolnij katalog albo wybierz inny."
+    fi
+
+    log "Klonuję $REPO_URL → $INSTALL_DIR"
+    git clone --branch "$GIT_REF" --single-branch "$REPO_URL" "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+    ok "Kod sklonowany ($(git rev-parse --short HEAD))"
 else
     log "Klonuję $REPO_URL → $INSTALL_DIR"
     git clone --branch "$GIT_REF" --single-branch "$REPO_URL" "$INSTALL_DIR"
