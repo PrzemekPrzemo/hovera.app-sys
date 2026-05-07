@@ -226,7 +226,7 @@ class TenantResource extends Resource
                             ->maxLength(500)
                             ->helperText('Wymagane. Sesja jest wpisana do impersonation_sessions + audit_log_master.'),
                     ])
-                    ->action(function (Tenant $record, array $data, StartImpersonation $action) {
+                    ->action(function (Tenant $record, array $data, StartImpersonation $impersonate) {
                         $membership = $record->memberships()
                             ->whereNull('revoked_at')
                             ->whereNotNull('user_id')
@@ -243,7 +243,7 @@ class TenantResource extends Resource
                             return;
                         }
 
-                        $action->execute(
+                        $impersonate->execute(
                             masterAdmin: Auth::user(),
                             tenant: $record,
                             targetUser: $membership->user,

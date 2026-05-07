@@ -91,10 +91,10 @@ class MembershipsRelationManager extends RelationManager
                             ->default('viewer')
                             ->required(),
                     ])
-                    ->action(function (array $data, AttachOrInviteUser $action, MasterAuditLogger $audit) {
+                    ->action(function (array $data, AttachOrInviteUser $attach, MasterAuditLogger $audit) {
                         $tenant = $this->getOwnerRecord();
 
-                        $result = $action->execute([
+                        $result = $attach->execute([
                             'tenant_id' => $tenant->id,
                             'email' => $data['email'],
                             'name' => $data['name'] ?? null,
@@ -153,8 +153,8 @@ class MembershipsRelationManager extends RelationManager
                     ->color('danger')
                     ->visible(fn (TenantMembership $r) => $r->revoked_at === null)
                     ->requiresConfirmation()
-                    ->action(function (TenantMembership $record, RevokeMembership $action, MasterAuditLogger $audit) {
-                        $action->execute($record);
+                    ->action(function (TenantMembership $record, RevokeMembership $revoke, MasterAuditLogger $audit) {
+                        $revoke->execute($record);
                         $audit->record('membership.revoke', 'TenantMembership', $record->id, $record->tenant_id);
                         Notification::make()->success()->title('Dostęp cofnięty')->send();
                     }),
@@ -164,8 +164,8 @@ class MembershipsRelationManager extends RelationManager
                     ->color('success')
                     ->visible(fn (TenantMembership $r) => $r->revoked_at !== null)
                     ->requiresConfirmation()
-                    ->action(function (TenantMembership $record, RevokeMembership $action, MasterAuditLogger $audit) {
-                        $action->reactivate($record);
+                    ->action(function (TenantMembership $record, RevokeMembership $revoke, MasterAuditLogger $audit) {
+                        $revoke->reactivate($record);
                         $audit->record('membership.reactivate', 'TenantMembership', $record->id, $record->tenant_id);
                         Notification::make()->success()->title('Dostęp przywrócony')->send();
                     }),
@@ -182,14 +182,14 @@ class MembershipsRelationManager extends RelationManager
                             ->maxLength(500)
                             ->helperText('Pole wymagane. Każda akcja w trakcie sesji impersonacji jest tagowana w audit_log stajni.'),
                     ])
-                    ->action(function (TenantMembership $record, array $data, StartImpersonation $action) {
+                    ->action(function (TenantMembership $record, array $data, StartImpersonation $impersonate) {
                         /** @var User $master */
                         $master = Auth::user();
                         /** @var Tenant $tenant */
                         $tenant = $record->tenant()->firstOrFail();
                         $target = $record->user()->firstOrFail();
 
-                        $action->execute(
+                        $impersonate->execute(
                             masterAdmin: $master,
                             tenant: $tenant,
                             targetUser: $target,
