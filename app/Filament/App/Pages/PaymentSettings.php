@@ -6,6 +6,7 @@ namespace App\Filament\App\Pages;
 
 use App\Enums\PaymentProvider;
 use App\Services\Payments\Providers\MolliePaymentProvider;
+use App\Services\Payments\Providers\P24PaymentProvider;
 use App\Services\Payments\Providers\StripePaymentProvider;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
@@ -183,8 +184,14 @@ class PaymentSettings extends Page implements HasForms
             Forms\Components\TextInput::make('p24.merchant_id')->label('Merchant ID')->required(),
             Forms\Components\TextInput::make('p24.pos_id')->label('POS ID')->required(),
             Forms\Components\TextInput::make('p24.crc_key')->label('CRC key')->password()->revealable()->required(),
-            Forms\Components\TextInput::make('p24.api_key')->label('API key')->password()->revealable()->required(),
+            Forms\Components\TextInput::make('p24.api_key')->label('API key (REST)')->password()->revealable()->required()
+                ->helperText('Panel P24 → Moja firma → Punkty sprzedaży → Konfiguracja → REST API.'),
             Forms\Components\Toggle::make('p24.sandbox')->label('Sandbox (test)')->default(true),
+            Forms\Components\Select::make('p24.force_method')
+                ->label('Wymuś jedną metodę (opcjonalne)')
+                ->helperText('Pusto = klient zobaczy pełną listę metod w P24 (rekomendowane). Wybierz jedną metodę żeby od razu skierować do np. BLIK.')
+                ->options(P24PaymentProvider::methodOptions())
+                ->placeholder('— Pełna lista metod —'),
         ];
     }
 
