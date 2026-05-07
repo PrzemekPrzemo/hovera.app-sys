@@ -434,5 +434,19 @@ class ClientPortalV2Test extends TestCase
             $t->timestamp('updated_at')->useCurrent();
             $t->timestamp('deleted_at')->nullable();
         });
+
+        Schema::connection('tenant')->create('client_messages', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('client_id', 26);
+            $t->string('type', 64);
+            $t->string('subject', 255);
+            $t->string('to_email', 255);
+            $t->json('preview')->nullable();
+            $t->string('related_type', 60)->nullable();
+            $t->string('related_id', 26)->nullable();
+            $t->timestamp('sent_at');
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+        });
     }
 }

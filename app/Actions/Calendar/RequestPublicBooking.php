@@ -17,6 +17,7 @@ use App\Notifications\NewBookingRequestNotification;
 use App\Services\Calendar\BookingCancellationLink;
 use App\Services\Calendar\ConflictDetector;
 use App\Services\Calendar\PublicBookingAvailability;
+use App\Services\Portal\ClientMessageJournal;
 use App\Services\TenantAuditLogger;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,7 @@ class RequestPublicBooking
         private readonly PublicBookingAvailability $availability,
         private readonly ConflictDetector $conflicts,
         private readonly TenantAuditLogger $audit,
+        private readonly ClientMessageJournal $journal,
     ) {}
 
     /**
@@ -233,5 +235,13 @@ class RequestPublicBooking
             cancellationPolicyHours: (int) (data_get($tenant->settings, 'cancellation_policy.hours') ?? 12),
             portalUrl: route('client_portal.login.show', ['slug' => $tenant->slug]),
         ));
+        $this->journal->record(
+            $client,
+            'booking.requested',
+            "Otrzymaliśmy zgłoszenie — {$tenant->name}",
+            ['starts_at' => $entry->starts_at->toIso8601String(), 'duration' => $duration],
+            'CalendarEntry',
+            (string) $entry->id,
+        );
     }
 }

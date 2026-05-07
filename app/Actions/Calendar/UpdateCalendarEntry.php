@@ -13,6 +13,7 @@ use App\Notifications\BookingConfirmedClientNotification;
 use App\Services\Calendar\BookingCancellationLink;
 use App\Services\Calendar\ConflictDetector;
 use App\Services\Calendar\PassUseManager;
+use App\Services\Portal\ClientMessageJournal;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Illuminate\Support\Carbon;
@@ -27,6 +28,7 @@ class UpdateCalendarEntry
         private readonly PassUseManager $passes,
         private readonly TenantManager $tenants,
         private readonly BookingCancellationLink $cancelLinks,
+        private readonly ClientMessageJournal $journal,
     ) {}
 
     /**
@@ -195,6 +197,14 @@ class UpdateCalendarEntry
                 cancelledBy: 'stable',
                 passRestored: $passWasRestored,
             ));
+            $this->journal->record(
+                $client,
+                'booking.cancelled',
+                "Rezerwacja odwołana — {$tenant->name}",
+                ['starts_at' => $entry->starts_at->toIso8601String(), 'pass_restored' => $passWasRestored],
+                'CalendarEntry',
+                (string) $entry->id,
+            );
         }
     }
 
@@ -216,5 +226,13 @@ class UpdateCalendarEntry
             cancellationPolicyHours: (int) (data_get($tenant->settings, 'cancellation_policy.hours') ?? 12),
             portalUrl: route('client_portal.login.show', ['slug' => $tenant->slug]),
         ));
+        $this->journal->record(
+            $client,
+            'booking.confirmed',
+            "Rezerwacja potwierdzona — {$tenant->name}",
+            ['starts_at' => $entry->starts_at->toIso8601String(), 'duration' => $duration],
+            'CalendarEntry',
+            (string) $entry->id,
+        );
     }
 }

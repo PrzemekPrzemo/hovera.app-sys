@@ -9,6 +9,7 @@ use App\Models\Central\Tenant;
 use App\Models\Tenant\CalendarEntry;
 use App\Notifications\BookingCancelledClientNotification;
 use App\Services\Calendar\PassUseManager;
+use App\Services\Portal\ClientMessageJournal;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Illuminate\Http\RedirectResponse;
@@ -30,6 +31,7 @@ class BookingCancellationController extends Controller
         private readonly TenantManager $tenants,
         private readonly PassUseManager $passes,
         private readonly TenantAuditLogger $audit,
+        private readonly ClientMessageJournal $journal,
     ) {}
 
     public function show(Request $request, string $slug, string $entryId): View|RedirectResponse
@@ -104,6 +106,14 @@ class BookingCancellationController extends Controller
                 cancelledBy: 'client',
                 passRestored: $passRestored,
             ));
+            $this->journal->record(
+                $client,
+                'booking.cancelled',
+                "Rezerwacja odwołana — {$tenant->name}",
+                ['starts_at' => $entry->starts_at->toIso8601String(), 'cancelled_by' => 'client', 'pass_restored' => $passRestored],
+                'CalendarEntry',
+                (string) $entry->id,
+            );
         }
 
         return view('public.booking.cancel-thanks', [
