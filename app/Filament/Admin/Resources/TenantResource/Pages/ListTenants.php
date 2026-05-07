@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\TenantResource\Pages;
 
+use App\Actions\Invitations\SendInvitation;
 use App\Actions\Tenants\CreateTenant;
 use App\Filament\Admin\Resources\TenantResource;
 use App\Services\MasterAuditLogger;
@@ -14,6 +15,7 @@ use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
 
 class ListTenants extends ListRecords
 {
@@ -73,9 +75,24 @@ class ListTenants extends ListRecords
                         $audit->record('tenant.demo_created', 'Tenant', $tenant->id, $tenant->id, [
                             'slug' => $tenant->slug,
                         ]);
+
+                        // Regeneruj invite żeby dostać plaintext_token i pokazać link
+                        // bezpośrednio masterowi (bez konieczności sprawdzania maila/loga).
+                        // Poprzedni token (z CreateTenant) jest tym samym invalidowany —
+                        // bezpieczne, bo to świeży tenant a master jest właścicielem akcji.
+                        $tenant->refresh();
+                        $invite = app(SendInvitation::class)->execute(
+                            email: $data['owner_email'],
+                            tenant: $tenant,
+                            role: 'owner',
+                            name: $data['owner_name'],
+                            invitedBy: Auth::user(),
+                        );
+                        $url = route('invitations.accept', ['token' => $invite['plaintext_token']]);
+
                         Notification::make()->success()
-                            ->title('Demo stajnia utworzona')
-                            ->body("Slug: {$tenant->slug}. Owner ({$data['owner_email']}) dostał link zaproszenia.")
+                            ->title("Demo stajnia '{$tenant->slug}' gotowa")
+                            ->body("Owner: {$data['owner_email']}\n\nLink logowania (skopiuj i wyślij ręcznie):\n{$url}\n\nLink ważny 7 dni. Możesz go zregenerować w zakładce \"Zaproszenia\".")
                             ->persistent()
                             ->send();
                     } catch (\Throwable $e) {
