@@ -396,5 +396,37 @@ class ClientPortalTest extends TestCase
             $t->timestamp('created_at')->useCurrent();
             $t->timestamp('updated_at')->useCurrent();
         });
+
+        Schema::connection('tenant')->create('invoices', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('number', 64)->nullable();
+            $t->string('kind', 32);
+            $t->string('status', 32);
+            $t->string('client_id', 26);
+            $t->string('seller_name');
+            $t->string('seller_nip', 16)->nullable();
+            $t->string('seller_address')->nullable();
+            $t->string('seller_postal_code', 16)->nullable();
+            $t->string('seller_city', 120)->nullable();
+            $t->char('seller_country', 2)->default('PL');
+            $t->string('buyer_name');
+            $t->string('buyer_nip', 16)->nullable();
+            $t->string('buyer_address')->nullable();
+            $t->string('buyer_postal_code', 16)->nullable();
+            $t->string('buyer_city', 120)->nullable();
+            $t->char('buyer_country', 2)->default('PL');
+            $t->date('issued_at')->nullable();
+            $t->date('sale_date')->nullable();
+            $t->date('due_at')->nullable();
+            $t->timestamp('paid_at')->nullable();
+            $t->char('currency', 3)->default('PLN');
+            $t->bigInteger('subtotal_cents')->default(0);
+            $t->bigInteger('vat_cents')->default(0);
+            $t->bigInteger('total_cents')->default(0);
+            $t->json('metadata')->nullable();
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+            $t->timestamp('deleted_at')->nullable();
+        });
     }
 }

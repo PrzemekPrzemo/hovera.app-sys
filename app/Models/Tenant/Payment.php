@@ -17,6 +17,7 @@ class Payment extends TenantModel
         'client_id',
         'calendar_entry_id',
         'pass_id',
+        'invoice_id',
         'amount_cents',
         'currency',
         'provider',
@@ -57,6 +58,11 @@ class Payment extends TenantModel
     public function pass(): BelongsTo
     {
         return $this->belongsTo(Pass::class);
+    }
+
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class);
     }
 
     public function scopeOpen(Builder $query): Builder

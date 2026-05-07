@@ -9,6 +9,7 @@ use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\ClientPortalController;
 use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PublicBookingController;
+use App\Http\Controllers\Public\PublicInvoiceController;
 use App\Http\Controllers\Public\PublicSiteController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
 use Illuminate\Support\Facades\Route;
@@ -118,6 +119,20 @@ Route::middleware(['web', 'throttle:30,1'])
             ->name('reschedule.submit');
         Route::get('/horses/{horse}', [ClientPortalController::class, 'showHorse'])->name('horses.show');
         Route::get('/messages', [ClientPortalController::class, 'showMessages'])->name('messages.show');
+    });
+
+/*
+ * Publiczny widok faktury z signed URL. Klient dostaje link mailem,
+ * widzi fakturę + przycisk "Zapłać teraz" (jeśli stajnia ma payment
+ * providera).
+ */
+Route::middleware(['web', 'throttle:30,1'])
+    ->prefix('/'.$publicPrefix.'/{slug}/invoices')
+    ->where(['slug' => $slugRegex])
+    ->name('public.invoice.')
+    ->group(function () {
+        Route::get('/{invoice}', [PublicInvoiceController::class, 'show'])->name('show');
+        Route::get('/{invoice}/pay', [PublicInvoiceController::class, 'pay'])->name('pay');
     });
 
 /*
