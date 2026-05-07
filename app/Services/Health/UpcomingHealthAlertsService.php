@@ -6,6 +6,7 @@ namespace App\Services\Health;
 
 use App\Enums\HealthRecordType;
 use App\Models\Tenant\HealthRecord;
+use App\Tenancy\TenantManager;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -54,10 +55,22 @@ class UpcomingHealthAlertsService
      */
     public function counts(): array
     {
-        return [
-            'overdue' => HealthRecord::query()->overdue()->count(),
-            'due_within_7_days' => HealthRecord::query()->dueWithin(7)->count(),
-            'due_within_30_days' => HealthRecord::query()->dueWithin(30)->count(),
-        ];
+        // Defensywnie: jeśli tenant connection nie jest ustawiony (np.
+        // Livewire request bez aktywnego tenanta) → zwróć zera zamiast
+        // crashować z "Access denied for user ''@'localhost'".
+        if (! app(TenantManager::class)->hasTenant()) {
+            return ['overdue' => 0, 'due_within_7_days' => 0, 'due_within_30_days' => 0];
+        }
+
+        try {
+            return [
+                'overdue' => HealthRecord::query()->overdue()->count(),
+                'due_within_7_days' => HealthRecord::query()->dueWithin(7)->count(),
+                'due_within_30_days' => HealthRecord::query()->dueWithin(30)->count(),
+            ];
+        } catch (\Throwable) {
+            // Tabela jeszcze nie zmigrowna lub connection broken — schowaj.
+            return ['overdue' => 0, 'due_within_7_days' => 0, 'due_within_30_days' => 0];
+        }
     }
 }
