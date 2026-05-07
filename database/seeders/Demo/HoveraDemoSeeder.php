@@ -114,11 +114,12 @@ class HoveraDemoSeeder
     private function seedBoxes(): array
     {
         $boxes = [];
+        // Box.type enum: indoor / paddock / outdoor / quarantine
         for ($i = 1; $i <= 12; $i++) {
             $boxes[] = Box::create([
                 'name' => sprintf('B-%02d', $i),
                 'label' => 'Box '.$i,
-                'type' => $i <= 8 ? 'standard' : ($i <= 10 ? 'large' : 'foaling'),
+                'type' => $i <= 10 ? 'indoor' : ($i === 11 ? 'paddock' : 'quarantine'),
                 'size_m2' => $i <= 8 ? 12 : 16,
                 'capacity' => 1,
                 'monthly_rate_cents' => $i <= 8 ? 80000 : 95000,
@@ -156,9 +157,10 @@ class HoveraDemoSeeder
     private function seedClients(): array
     {
         $out = [];
+        // Client.type enum: individual / family / organisation
         foreach (self::CLIENTS as $c) {
             $out[] = Client::create([
-                'type' => ($c['is_company'] ?? false) ? 'company' : 'individual',
+                'type' => ($c['is_company'] ?? false) ? 'organisation' : 'individual',
                 'name' => $c['name'],
                 'email' => $c['email'],
                 'phone' => $c['phone'],
@@ -338,13 +340,16 @@ class HoveraDemoSeeder
             }
 
             // Activity log — codzienne zadania (5 wpisów per koń)
+            // StableActivityType: feeding / grooming / turnout / exercise / box_cleaning / transport_event / other
+            $types = ['feeding', 'grooming', 'turnout', 'exercise', 'box_cleaning'];
+            $summaries = ['Karmienie poranne', 'Czesanie i mycie', 'Wybieg na padok', 'Lonża 30 min', 'Sprzątanie boksu'];
             for ($a = 0; $a < 5; $a++) {
                 StableActivity::create([
                     'horse_id' => $horse->id,
-                    'type' => ['feeding', 'cleaning', 'exercise', 'paddock', 'other'][rand(0, 4)],
+                    'type' => $types[$a],
                     'performed_at' => now()->subDays($a)->setTime(rand(7, 19), rand(0, 59)),
                     'performed_by' => 'A. Stajenny',
-                    'summary' => ['Karmienie poranne', 'Sprzątanie boksu', 'Wybieg na padok', 'Mycie kopyt', 'Rozruch'][rand(0, 4)],
+                    'summary' => $summaries[$a],
                     'cost_cents' => 0,
                 ]);
             }
