@@ -1,22 +1,25 @@
 #!/usr/bin/env bash
 # Hovera deploy — bezpieczny, idempotentny rollout dla app.hovera.app.
 #
-# Użycie:
+# Użycie (SSH):
 #   ./deploy.sh                     # pull origin/main + full deploy
 #   ./deploy.sh v1.2.3              # checkout konkretnego tagu
 #   ./deploy.sh --skip-tenants      # pomiń migrate na tenantach
 #   ./deploy.sh --no-pull           # nie pull-uj (np. po manualnym checkout)
 #   ./deploy.sh --dry-run           # tylko wypisz co by się stało
 #
-# Wymagania na serwerze (jednorazowo):
-#   - PHP 8.3+ z rozszerzeniami: pdo_mysql, mbstring, bcmath, intl, openssl, tokenizer, xml, ctype, json, fileinfo, curl, redis (opcjonalne)
-#   - composer 2.x w PATH
-#   - git
-#   - node + npm (tylko jeśli budujemy frontend assets — dziś Filament nie wymaga)
-#   - mysql client (do health check)
-#   - .env z prawidłowymi credentials (patrz docs/DEPLOY.md)
+# Użycie (Plesk Git → "Additional deployment actions"):
+#   bash deploy.sh --no-pull
+#   (Plesk już zrobił git pull przed odpaleniem; dajemy --no-pull żeby nie ścierało
+#    się z ich logiką, oraz --skip-permissions jeśli Plesk już to ogarnął.)
 #
-# Skrypt można uruchamiać jako użytkownik domeny (np. hovera_app) — NIE jako root.
+# Wymagania na serwerze (jednorazowo, patrz docs/DEPLOY.md):
+#   - PHP 8.3 (CLI; Plesk → Tools & Settings → PHP)
+#   - Composer 2.x (Plesk extension lub OS-level)
+#   - Git CLI (zwykle pre-installed na Plesku)
+#   - .env z prawidłowymi credentials
+#
+# Skrypt jest non-destructive — można odpalać wielokrotnie. Każdy krok jest idempotentny.
 
 set -euo pipefail
 
@@ -58,10 +61,25 @@ run()  {
 log "Hovera deploy startuje w $SCRIPT_DIR"
 
 [[ "$(id -u)" == "0" ]] && fail "Nie uruchamiaj skryptu jako root (użyj usera domeny w Plesku)."
-[[ -f .env ]] || fail "Brakuje .env — skopiuj .env.example, uzupełnij i ponów."
-command -v php >/dev/null || fail "Brak PHP w PATH."
-command -v composer >/dev/null || fail "Brak composer w PATH."
-command -v git >/dev/null || fail "Brak git w PATH."
+[[ -f .env ]] || fail "Brakuje .env — skopiuj .env.example, uzupełnij i ponów (Plesk → File Manager → Edit)."
+
+# Composer często bywa zainstalowany jako extension Plesku w nietypowej ścieżce.
+# Jeśli `composer` nie jest w PATH, spróbuj typowych Plesk locations.
+if ! command -v composer >/dev/null; then
+    for c in /opt/plesk/composer/composer.phar /usr/local/psa/admin/sbin/composer /usr/local/bin/composer.phar; do
+        if [[ -x "$c" ]]; then
+            COMPOSER="$c"
+            log "Composer znaleziony jako: $COMPOSER (Plesk extension)"
+            break
+        fi
+    done
+    [[ -z "${COMPOSER:-}" ]] && fail "Brak composer w PATH. Plesk → Tools & Settings → Plesk Extensions → Composer (zainstaluj)."
+else
+    COMPOSER="composer"
+fi
+
+command -v php >/dev/null || fail "Brak PHP w PATH. Plesk → Domain → PHP Settings → ustaw PHP-CLI 8.3."
+command -v git >/dev/null || fail "Brak git w PATH (eskaluj do hostingu — apt install git)."
 
 php_version=$(php -r 'echo PHP_VERSION;')
 log "PHP: $php_version"
@@ -92,7 +110,7 @@ log "Wdrożenie rewizji: $CURRENT_REV"
 
 # ── Composer ────────────────────────────────────────────────────────
 log "→ composer install (production)"
-run "composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader"
+run "$COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader"
 
 # ── Permissions ────────────────────────────────────────────────────
 log "→ Permissions storage + bootstrap/cache"
