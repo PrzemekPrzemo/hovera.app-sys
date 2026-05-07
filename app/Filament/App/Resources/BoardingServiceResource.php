@@ -6,6 +6,7 @@ namespace App\Filament\App\Resources;
 
 use App\Enums\BoardingFrequency;
 use App\Filament\App\Resources\BoardingServiceResource\Pages;
+use App\Filament\Components\PriceInput;
 use App\Models\Tenant\BoardingService;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -55,11 +56,7 @@ class BoardingServiceResource extends Resource
                         ->options(BoardingFrequency::options())
                         ->required()
                         ->default('monthly'),
-                    Forms\Components\TextInput::make('price_cents')
-                        ->label('Cena netto (gr)')
-                        ->helperText('np. 1500 = 15 zł')
-                        ->numeric()
-                        ->minValue(0)
+                    PriceInput::make('price_cents', 'Cena netto')
                         ->required(),
                     Forms\Components\Select::make('vat_rate')
                         ->label('Stawka VAT')

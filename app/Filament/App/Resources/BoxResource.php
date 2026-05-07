@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\BoxResource\Pages;
+use App\Filament\Components\PriceInput;
 use App\Models\Tenant\Box;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -55,10 +56,8 @@ class BoxResource extends Resource
                         ->label('Pojemność')
                         ->helperText('Ile koni może być w tym boksie (zwykle 1; większe boksy grupowe mogą mieć więcej).')
                         ->numeric()->minValue(1)->maxValue(20)->default(1)->required(),
-                    Forms\Components\TextInput::make('monthly_rate_cents')
-                        ->label('Miesięczna cena pensjonatu (gr)')
-                        ->helperText('Domyślna stawka — można jeszcze override per koń lub klient.')
-                        ->numeric()->minValue(0),
+                    PriceInput::make('monthly_rate_cents', 'Miesięczna cena pensjonatu')
+                        ->helperText('Domyślna stawka — można jeszcze override per koń lub klient.'),
                     Forms\Components\Toggle::make('is_active')->label('Aktywny')->default(true),
                     Forms\Components\TextInput::make('sort_order')->label('Kolejność')->numeric()->default(0),
                 ]),

@@ -9,6 +9,7 @@ use App\Actions\Calendar\DeleteRecurringSeries;
 use App\Enums\CalendarEntryType;
 use App\Enums\RecurrencePattern;
 use App\Filament\App\Resources\RecurringCalendarEntryResource\Pages;
+use App\Filament\Components\PriceInput;
 use App\Models\Tenant\Arena;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
@@ -141,7 +142,7 @@ class RecurringCalendarEntryResource extends Resource
                 ->columns(2)
                 ->schema([
                     Forms\Components\TextInput::make('title')->label('Tytuł zajęć')->maxLength(160),
-                    Forms\Components\TextInput::make('price_cents')->label('Cena (gr)')->numeric()->minValue(0),
+                    PriceInput::make('price_cents', 'Cena'),
                     Forms\Components\Toggle::make('is_active')->label('Aktywna seria')->default(true),
                     Forms\Components\Textarea::make('notes')->label('Notatki')->rows(2)->columnSpanFull(),
                 ]),

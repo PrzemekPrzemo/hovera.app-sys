@@ -6,6 +6,7 @@ namespace App\Filament\App\Resources;
 
 use App\Enums\HealthRecordType;
 use App\Filament\App\Resources\HealthRecordResource\Pages;
+use App\Filament\Components\PriceInput;
 use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
 use App\Services\TenantAuditLogger;
@@ -68,10 +69,7 @@ class HealthRecordResource extends Resource
                     Forms\Components\DatePicker::make('next_due_at')
                         ->label('Następny zabieg')
                         ->helperText('Dzięki temu pojawi się alert na dashboardzie.'),
-                    Forms\Components\TextInput::make('cost_cents')
-                        ->label('Koszt (gr)')
-                        ->numeric()
-                        ->minValue(0),
+                    PriceInput::make('cost_cents', 'Koszt'),
                 ]),
             Forms\Components\Section::make('Szczegóły')
                 ->collapsed()

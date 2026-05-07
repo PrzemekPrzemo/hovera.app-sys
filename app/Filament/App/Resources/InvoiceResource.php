@@ -9,6 +9,7 @@ use App\Actions\Invoicing\IssueInvoice;
 use App\Enums\InvoiceKind;
 use App\Enums\InvoiceStatus;
 use App\Filament\App\Resources\InvoiceResource\Pages;
+use App\Filament\Components\PriceInput;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\InvoiceItem;
@@ -133,7 +134,7 @@ class InvoiceResource extends Resource
                             Forms\Components\TextInput::make('name')->label('Nazwa')->required()->columnSpan(2),
                             Forms\Components\TextInput::make('quantity')->label('Ilość')->numeric()->default(1)->required(),
                             Forms\Components\TextInput::make('unit')->label('Jedn.')->default('szt.'),
-                            Forms\Components\TextInput::make('unit_price_cents')->label('Cena j. netto (gr)')->numeric()->required(),
+                            PriceInput::make('unit_price_cents', 'Cena j. netto')->required(),
                             Forms\Components\Select::make('vat_rate')->label('VAT')
                                 ->options(InvoiceItem::vatRateOptions())
                                 ->default('23')

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\InstructorResource\Pages;
+use App\Filament\Components\PriceInput;
 use App\Models\Tenant\Instructor;
 use App\Services\TenantAuditLogger;
 use Filament\Forms;
@@ -41,11 +42,7 @@ class InstructorResource extends Resource
                     Forms\Components\TextInput::make('name')->label('Imię i nazwisko')->required()->maxLength(255),
                     Forms\Components\TextInput::make('email')->email()->maxLength(255),
                     Forms\Components\TextInput::make('phone')->label('Telefon')->tel()->maxLength(40),
-                    Forms\Components\TextInput::make('hourly_rate_cents')
-                        ->label('Stawka za godzinę (gr)')
-                        ->numeric()
-                        ->minValue(0)
-                        ->helperText('W groszach. 8000 = 80 zł.'),
+                    PriceInput::make('hourly_rate_cents', 'Stawka za godzinę'),
                     Forms\Components\ColorPicker::make('color')->label('Kolor w kalendarzu'),
                     Forms\Components\Toggle::make('is_active')->label('Aktywny')->default(true),
                 ]),

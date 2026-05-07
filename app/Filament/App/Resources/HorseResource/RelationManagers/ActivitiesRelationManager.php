@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources\HorseResource\RelationManagers;
 
 use App\Enums\StableActivityType;
+use App\Filament\Components\PriceInput;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -44,9 +45,7 @@ class ActivitiesRelationManager extends RelationManager
                     Forms\Components\TextInput::make('performed_by')
                         ->label('Wykonał (imię stajennego)')
                         ->maxLength(120),
-                    Forms\Components\TextInput::make('cost_cents')
-                        ->label('Dodatkowy koszt (gr, opcjonalnie)')
-                        ->numeric()->minValue(0)
+                    PriceInput::make('cost_cents', 'Dodatkowy koszt (opcjonalnie)')
                         ->helperText('Wpisz tylko gdy aktywność naliczyła koszt poza ryczałtem (np. dodatkowe siano, transport).'),
                 ]),
             Forms\Components\TextInput::make('summary')

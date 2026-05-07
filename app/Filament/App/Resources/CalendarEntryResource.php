@@ -7,6 +7,7 @@ namespace App\Filament\App\Resources;
 use App\Enums\CalendarEntryStatus;
 use App\Enums\CalendarEntryType;
 use App\Filament\App\Resources\CalendarEntryResource\Pages;
+use App\Filament\Components\PriceInput;
 use App\Models\Tenant\Arena;
 use App\Models\Tenant\CalendarEntry;
 use App\Models\Tenant\Client;
@@ -94,10 +95,7 @@ class CalendarEntryResource extends Resource
                         ->options(CalendarEntryStatus::options())
                         ->default(CalendarEntryStatus::Confirmed->value)
                         ->required(),
-                    Forms\Components\TextInput::make('price_cents')
-                        ->label('Cena (gr)')
-                        ->numeric()
-                        ->minValue(0),
+                    PriceInput::make('price_cents', 'Cena'),
                     Forms\Components\Textarea::make('notes')
                         ->label('Notatki')
                         ->rows(3)

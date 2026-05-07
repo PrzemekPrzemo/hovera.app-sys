@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\PlanResource\Pages;
+use App\Filament\Components\PriceInput;
 use App\Models\Central\Plan;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -54,16 +55,9 @@ class PlanResource extends Resource
             Forms\Components\Section::make('Cennik')
                 ->columns(2)
                 ->schema([
-                    Forms\Components\TextInput::make('price_monthly_cents')
-                        ->label('Cena miesięczna (grosze)')
-                        ->numeric()
-                        ->default(0)
-                        ->helperText('249 PLN = 24900'),
-                    Forms\Components\TextInput::make('price_yearly_cents')
-                        ->label('Cena roczna (grosze)')
-                        ->numeric()
-                        ->default(0)
-                        ->helperText('Najczęściej 10× miesięczna (10-30% zniżka). 2490 PLN = 249000'),
+                    PriceInput::make('price_monthly_cents', 'Cena miesięczna'),
+                    PriceInput::make('price_yearly_cents', 'Cena roczna')
+                        ->helperText('Zwykle 10× miesięczna minus 10-30% zniżki rocznej.'),
                 ]),
             Forms\Components\Section::make('Limity')
                 ->description('Twarde limity planu — egzekwowane w aplikacji (CreateTenant blokuje gdy plan przekroczony).')

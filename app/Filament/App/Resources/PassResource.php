@@ -6,6 +6,7 @@ namespace App\Filament\App\Resources;
 
 use App\Enums\PassStatus;
 use App\Filament\App\Resources\PassResource\Pages;
+use App\Filament\Components\PriceInput;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Pass;
 use App\Services\TenantAuditLogger;
@@ -67,11 +68,7 @@ class PassResource extends Resource
                         ->helperText('Auto-aktualizowane przez system; ręczna zmiana tylko w wyjątkowych sytuacjach.'),
                     Forms\Components\DatePicker::make('valid_from')->label('Ważny od'),
                     Forms\Components\DatePicker::make('valid_until')->label('Ważny do'),
-                    Forms\Components\TextInput::make('price_cents')
-                        ->label('Cena (gr)')
-                        ->numeric()
-                        ->minValue(0)
-                        ->helperText('W groszach — 32000 = 320 zł.'),
+                    PriceInput::make('price_cents', 'Cena karnetu'),
                     Forms\Components\TextInput::make('cancellation_policy_hours')
                         ->label('Polityka odwołania (h)')
                         ->numeric()
