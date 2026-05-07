@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources;
 
+use App\Actions\Impersonation\StartImpersonation;
 use App\Actions\Tenants\DeleteTenant;
 use App\Filament\Admin\Resources\TenantResource\Pages;
 use App\Models\Central\Plan;
@@ -20,6 +21,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
 
 class TenantResource extends Resource
 {
@@ -209,6 +211,49 @@ class TenantResource extends Resource
                     ->after(function (Tenant $record, MasterAuditLogger $audit) {
                         $audit->record('tenant.restore', 'Tenant', $record->id, $record->id);
                     }),
+                Tables\Actions\Action::make('login_as_owner')
+                    ->label('Zaloguj jako stajnia')
+                    ->icon('heroicon-o-eye')
+                    ->color('success')
+                    ->visible(fn (Tenant $r) => ! $r->trashed()
+                        && $r->status === 'active'
+                        && $r->memberships()->whereNull('revoked_at')->whereNotNull('user_id')->exists())
+                    ->form([
+                        Forms\Components\Textarea::make('reason')
+                            ->label('Powód impersonacji (audit RODO)')
+                            ->required()
+                            ->minLength(5)
+                            ->maxLength(500)
+                            ->helperText('Wymagane. Sesja jest wpisana do impersonation_sessions + audit_log_master.'),
+                    ])
+                    ->action(function (Tenant $record, array $data, StartImpersonation $action) {
+                        $membership = $record->memberships()
+                            ->whereNull('revoked_at')
+                            ->whereNotNull('user_id')
+                            ->orderBy('created_at')
+                            ->with('user')
+                            ->first();
+
+                        if (! $membership || ! $membership->user) {
+                            Notification::make()->danger()
+                                ->title('Brak aktywnego usera dla tej stajni')
+                                ->body('Najpierw dodaj członka zespołu lub zaproś ownera.')
+                                ->send();
+
+                            return;
+                        }
+
+                        $action->execute(
+                            masterAdmin: Auth::user(),
+                            tenant: $record,
+                            targetUser: $membership->user,
+                            reason: (string) $data['reason'],
+                            session: request()->session(),
+                        );
+
+                        return redirect('/app');
+                    })
+                    ->modalSubmitActionLabel('Rozpocznij impersonację'),
                 Tables\Actions\Action::make('seed_demo')
                     ->label('Wgraj demo dane')
                     ->icon('heroicon-o-sparkles')

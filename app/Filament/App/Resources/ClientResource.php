@@ -8,7 +8,9 @@ use App\Filament\App\Resources\ClientResource\Pages;
 use App\Models\Tenant\Client;
 use App\Services\CompanyLookup\CompanyLookupService;
 use App\Services\CompanyLookup\GusApiService;
+use App\Services\Portal\ClientPortalAuth;
 use App\Services\TenantAuditLogger;
+use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -158,6 +160,29 @@ class ClientResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->after(self::auditCallback('client.update')),
+                Tables\Actions\Action::make('issue_portal_link')
+                    ->label('Wygeneruj link portalu')
+                    ->icon('heroicon-o-link')
+                    ->color('primary')
+                    ->visible(fn (Client $r) => ! $r->trashed())
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Client $r) => "Wygenerować link logowania dla {$r->name}?")
+                    ->modalDescription('Tworzy jednorazowy magic link (TTL 30 min). Możesz go skopiować i wysłać klientowi ręcznie, np. SMS-em lub Messengerem. Nie wymaga maila.')
+                    ->action(function (Client $record, ClientPortalAuth $auth, TenantManager $tm) {
+                        $tenant = $tm->tenantOrFail();
+                        $url = $auth->issueMagicLink($record, $tenant->slug);
+
+                        app(TenantAuditLogger::class)->record('client.portal_link_issued', 'Client', $record->id, [
+                            'name' => $record->name,
+                        ]);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Link logowania utworzony')
+                            ->body($url)
+                            ->persistent()
+                            ->send();
+                    }),
                 Tables\Actions\DeleteAction::make()->after(self::auditCallback('client.delete')),
                 Tables\Actions\RestoreAction::make()->after(self::auditCallback('client.restore')),
             ]);
