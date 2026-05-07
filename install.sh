@@ -2,7 +2,7 @@
 # Hovera installer — interaktywne wdrożenie świeżej instancji.
 #
 # Co robi (idempotentne):
-#   1. Pre-flight: PHP 8.3+, Composer, ext-pdo_mysql, ext-bcmath
+#   1. Pre-flight: PHP 8.4+, Composer, ext-pdo_mysql, ext-bcmath
 #   2. Pyta o domenę, bazy, mail, master admina
 #   3. Generuje .env (jeśli istnieje — robi backup .env.{timestamp})
 #   4. composer install --no-dev --optimize-autoloader (chyba że --skip-deps)
@@ -138,7 +138,7 @@ log "Sprawdzam wymagania…"
 [[ -f scripts/detect-php.sh ]] || fail "Brak scripts/detect-php.sh w repo."
 # shellcheck source=scripts/detect-php.sh
 . scripts/detect-php.sh
-HOVERA_MIN_PHP=8.3 hovera_setup_php || fail "Wymagane PHP 8.3+ nie znalezione (sprawdź /opt/plesk/php/8.X/bin/php)."
+HOVERA_MIN_PHP=8.4 hovera_setup_php || fail "Wymagane PHP 8.4+ nie znalezione (sprawdź /opt/plesk/php/8.X/bin/php). composer.lock zawiera deps wymagające 8.4 (symfony/clock)."
 ok "PHP $PHP_VERSION ($PHP_BIN)"
 
 REQUIRED_EXT=(pdo_mysql mbstring openssl tokenizer xml ctype json)
@@ -156,10 +156,48 @@ ok "Rozszerzenia PHP OK"
 if ! $SKIP_DEPS; then
     hovera_detect_composer || fail "Composer nie znaleziony."
     ok "Composer: $COMPOSER_BIN"
+else
+    # Best-effort detection nawet z --skip-deps — żeby zapisać bin/composer wrapper
+    hovera_detect_composer 2>/dev/null || true
 fi
 
 [[ -f composer.json ]] || fail "Brak composer.json — uruchom skrypt z katalogu projektu."
 [[ -f .env.example ]] || fail "Brak .env.example."
+
+# ── Wrappery bin/php + bin/composer (zapisane wcześnie żeby były ─────
+# dostępne nawet jeśli migrate później padnie). Domyślny `php` w PATH
+# na hostingach (np. Plesk) bywa stary (7.4/8.0). composer.lock wymaga
+# 8.4, więc każde `php artisan` z systemowym PHP wybucha na platform_check.
+log "Zapisuję wrappery bin/php + bin/composer (PHP $PHP_VERSION → $PHP_BIN)…"
+if ! $DRY_RUN; then
+    mkdir -p bin/php-shim
+    # Persistent shim — symlink żyje w repo, nie w /tmp jak HOVERA_PHP_SHIM_DIR
+    ln -sf "$PHP_BIN" bin/php-shim/php
+    cat > bin/php <<EOF
+#!/usr/bin/env bash
+# Auto-generowany przez install.sh — używa wykrytego PHP $PHP_VERSION.
+exec "$PHP_BIN" "\$@"
+EOF
+    chmod +x bin/php
+    if [[ -n "${COMPOSER_BIN:-}" ]]; then
+        if [[ "$COMPOSER_BIN" = "composer" ]]; then
+            cat > bin/composer <<'EOF'
+#!/usr/bin/env bash
+# Auto-generowany — odpala composer z naszym shim'em PHP w PATH.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PATH="$SCRIPT_DIR/php-shim:$PATH" exec composer "$@"
+EOF
+        else
+            cat > bin/composer <<EOF
+#!/usr/bin/env bash
+# Auto-generowany — composer.phar uruchamiany z PHP $PHP_VERSION.
+exec $COMPOSER_BIN "\$@"
+EOF
+        fi
+        chmod +x bin/composer
+    fi
+    ok "bin/php + bin/composer zapisane (shim: bin/php-shim/php → $PHP_BIN)"
+fi
 
 # ── 2. Pytania ──────────────────────────────────────────────────────
 echo
@@ -450,13 +488,18 @@ fi
 echo
 ok "Instalacja zakończona."
 echo
+echo "$(c_yel '⚠ Ważne:') systemowe \`php\` na hostingach często to PHP 7.4."
+echo "  Używaj wrapperów z bin/ zamiast \`php\` / \`composer\`:"
+echo "      ./bin/php artisan ...        # = $PHP_BIN"
+echo "      ./bin/composer install       # composer z właściwym PHP"
+echo
 echo "Następne kroki:"
 echo "  1. Zaloguj się: ${HOVERA_APP_URL}/admin (login: ${HOVERA_ADMIN_EMAIL})"
 echo "  2. Włącz 2FA na koncie master admina."
-echo "  3. Utwórz pierwszą stajnię: php artisan tenant:create <slug> \"Nazwa\" --owner-email=…"
-echo "  4. Po dodaniu stajni odpal migracje tenantów: php artisan tenants:migrate"
+echo "  3. Utwórz pierwszą stajnię: ./bin/php artisan tenant:create <slug> \"Nazwa\" --owner-email=…"
+echo "  4. Po dodaniu stajni: ./bin/php artisan tenants:migrate"
 echo "  5. Skonfiguruj cron (kolejka + cyklicze zadania):"
-echo "     * * * * * cd $SCRIPT_DIR && php artisan schedule:run >> /dev/null 2>&1"
+echo "     * * * * * cd $SCRIPT_DIR && ./bin/php artisan schedule:run >> /dev/null 2>&1"
 echo
 echo "Aktualizacje (pull z gita + migracje + cache):"
 echo "  ./update.sh                  # pull main + pełen rollout"
