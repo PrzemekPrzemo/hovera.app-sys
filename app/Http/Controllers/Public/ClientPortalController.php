@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Public;
 use App\Actions\Calendar\RescheduleBookingByClient;
 use App\Actions\Stable\SendHorseMessage;
 use App\Enums\CalendarEntryStatus;
+use App\Enums\HorseDocumentKind;
 use App\Enums\InvoiceStatus;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\CalendarEntry;
@@ -14,6 +15,7 @@ use App\Models\Tenant\Client;
 use App\Models\Tenant\ClientMessage;
 use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
+use App\Models\Tenant\HorseDocument;
 use App\Models\Tenant\HorseMessage;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\Pass;
@@ -26,6 +28,7 @@ use App\Services\Calendar\PublicBookingAvailability;
 use App\Services\Invoicing\InvoicePublicLink;
 use App\Services\Portal\ClientMessageJournal;
 use App\Services\Portal\ClientPortalAuth;
+use App\Services\Stable\HorseDocumentService;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Illuminate\Http\RedirectResponse;
@@ -319,6 +322,12 @@ class ClientPortalController extends Controller
             ->whereNull('read_by_client_at')
             ->update(['read_by_client_at' => now()]);
 
+        $documents = HorseDocument::query()
+            ->where('horse_id', $horse->id)
+            ->orderBy('kind')
+            ->orderByDesc('created_at')
+            ->get();
+
         return view('public.portal.horse', [
             'tenant' => $tenant,
             'client' => $client,
@@ -326,6 +335,7 @@ class ClientPortalController extends Controller
             'records' => $records,
             'activities' => $activities,
             'messages' => $messages,
+            'documents' => $documents,
             'estimated_monthly_cents' => $horse->estimatedMonthlyCostCents(),
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
         ]);
@@ -407,6 +417,104 @@ class ClientPortalController extends Controller
             (string) $a['path'],
             (string) ($a['original_name'] ?? 'attachment'),
         );
+    }
+
+    public function uploadHorseDocument(Request $request, string $slug, string $horseId): RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $horse = Horse::query()
+            ->where('owner_client_id', $client->id)
+            ->find($horseId);
+        if (! $horse) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:200'],
+            'kind' => ['required', 'string'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'file' => ['required', 'file', 'max:25600'], // 25 MB
+        ]);
+
+        try {
+            app(HorseDocumentService::class)->uploadByClient(
+                tenant: $tenant,
+                horse: $horse,
+                clientId: $client->id,
+                file: $request->file('file'),
+                name: (string) $data['name'],
+                kind: HorseDocumentKind::from((string) $data['kind']),
+                description: ($data['description'] ?? '') !== '' ? (string) $data['description'] : null,
+            );
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        return redirect()
+            ->route('client_portal.horses.show', ['slug' => $slug, 'horse' => $horseId])
+            ->with('horse_document_uploaded', true);
+    }
+
+    public function downloadHorseDocument(Request $request, string $slug, string $horseId, string $documentId): StreamedResponse|RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $horse = Horse::query()
+            ->where('owner_client_id', $client->id)
+            ->find($horseId);
+        if (! $horse) {
+            abort(404);
+        }
+
+        $doc = HorseDocument::query()
+            ->where('horse_id', $horse->id)
+            ->find($documentId);
+        if (! $doc || ! Storage::disk('local')->exists($doc->file_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->download($doc->file_path, $doc->original_name);
+    }
+
+    public function deleteHorseDocument(Request $request, string $slug, string $horseId, string $documentId): RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $horse = Horse::query()
+            ->where('owner_client_id', $client->id)
+            ->find($horseId);
+        if (! $horse) {
+            abort(404);
+        }
+
+        $doc = HorseDocument::query()
+            ->where('horse_id', $horse->id)
+            ->find($documentId);
+        if (! $doc) {
+            abort(404);
+        }
+
+        try {
+            app(HorseDocumentService::class)->delete($doc, byClientId: $client->id);
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors());
+        }
+
+        return redirect()->route('client_portal.horses.show', ['slug' => $slug, 'horse' => $horseId])
+            ->with('horse_document_deleted', true);
     }
 
     public function showReschedule(Request $request, string $slug, string $entryId): View|RedirectResponse

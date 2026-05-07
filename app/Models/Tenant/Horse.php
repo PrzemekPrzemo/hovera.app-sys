@@ -72,6 +72,11 @@ class Horse extends TenantModel
         return $this->hasMany(HorseMessage::class)->orderByDesc('sent_at');
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(HorseDocument::class)->orderBy('kind')->orderByDesc('created_at');
+    }
+
     /**
      * Estymowany miesięczny koszt pensji = pensjonat boxa + suma usług
      * naliczanych miesięcznie i dziennie. Per-use / once usługi nie wchodzą,

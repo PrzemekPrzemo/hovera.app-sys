@@ -76,6 +76,29 @@
         .msg-attachments a { font-size: .85rem; padding: .2rem .55rem; background: #f3f4f6; border-radius: 4px; text-decoration: none; color: var(--primary); }
         .msg-attachments a:hover { background: #e5e7eb; }
         .msg-from_stable { background: color-mix(in srgb, var(--primary) 5%, white); margin: 0 -.5rem; padding-left: .5rem; padding-right: .5rem; border-radius: 8px; }
+        .doc-form { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; padding: 1rem; background: #f9fafb; border-radius: 8px; margin-bottom: 1rem; }
+        .doc-form input[type=text], .doc-form select { padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: 6px; font: inherit; }
+        .doc-form input[type=file] { font-size: .85rem; grid-column: 1 / -1; }
+        .doc-form button { grid-column: 1 / -1; padding: .65rem 1rem; background: var(--primary); color: white; border: 0; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .doc-form button:hover { filter: brightness(0.95); }
+        .doc-form .error { grid-column: 1 / -1; color: #b91c1c; font-size: .85rem; }
+        .doc { display: flex; align-items: center; gap: .8rem; padding: .75rem 0; border-bottom: 1px solid #f3f4f6; }
+        .doc:last-of-type { border-bottom: 0; }
+        .doc-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .doc-body { flex: 1; min-width: 0; }
+        .doc-body strong { display: block; }
+        .doc-body .doc-meta { display: block; color: #6b7280; font-size: .85rem; margin-top: .15rem; }
+        .doc-body .doc-meta .overdue { color: #b91c1c; font-weight: 600; }
+        .doc-body .doc-meta .soon { color: #b45309; font-weight: 600; }
+        .doc-actions { display: flex; gap: .5rem; flex-shrink: 0; }
+        .btn-link { font-size: .85rem; padding: .35rem .7rem; background: var(--primary); color: white; border-radius: 6px; text-decoration: none; }
+        .btn-link:hover { filter: brightness(0.95); }
+        .btn-delete { font-size: .85rem; padding: .35rem .7rem; background: transparent; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 6px; cursor: pointer; }
+        .btn-delete:hover { background: #fee2e2; }
+        @media (max-width: 540px) {
+            .doc-form { grid-template-columns: 1fr; }
+            .doc { flex-direction: column; align-items: flex-start; }
+        }
         @media (prefers-color-scheme: dark) {
             body { background: #0f172a; color: #e5e7eb; }
             .card { background: #1e293b; }
@@ -246,6 +269,65 @@
                 </div>
             @empty
                 <div class="empty">Brak wiadomości — napisz pierwszą.</div>
+            @endforelse
+        </div>
+
+        <div class="card">
+            <h2>Dokumenty</h2>
+            @if (session('horse_document_uploaded'))
+                <div class="flash">✓ Dokument wgrany.</div>
+            @endif
+            @if (session('horse_document_deleted'))
+                <div class="flash">✓ Dokument usunięty.</div>
+            @endif
+
+            <form method="post" enctype="multipart/form-data"
+                  action="{{ route('client_portal.horses.documents.upload', ['slug' => $tenant->slug, 'horse' => $horse->id]) }}"
+                  class="doc-form">
+                @csrf
+                <input type="text" name="name" placeholder="Nazwa dokumentu" required maxlength="200" value="{{ old('name') }}">
+                <select name="kind" required>
+                    @foreach (\App\Enums\HorseDocumentKind::cases() as $kind)
+                        <option value="{{ $kind->value }}" {{ old('kind') === $kind->value ? 'selected' : '' }}>{{ $kind->icon() }} {{ $kind->label() }}</option>
+                    @endforeach
+                </select>
+                <input type="text" name="description" placeholder="Opis (opcjonalnie)" maxlength="500" value="{{ old('description') }}">
+                <input type="file" name="file" required accept="application/pdf,image/*,.doc,.docx">
+                @error('file')<div class="error">{{ $message }}</div>@enderror
+                @error('name')<div class="error">{{ $message }}</div>@enderror
+                <button type="submit">Wgraj dokument</button>
+            </form>
+
+            @forelse ($documents as $doc)
+                <div class="doc">
+                    <div class="doc-icon">{{ $doc->kind->icon() }}</div>
+                    <div class="doc-body">
+                        <strong>{{ $doc->name }}</strong>
+                        <span class="doc-meta">
+                            {{ $doc->kind->label() }} · {{ $doc->sizeFormatted() }}
+                            · {{ $doc->uploadedByStable() ? 'Stajnia' : 'Ty' }}
+                            @if ($doc->valid_until)
+                                · ważny do: <span class="{{ $doc->isExpired() ? 'overdue' : ($doc->isExpiringSoon(30) ? 'soon' : '') }}">
+                                    {{ $doc->valid_until->format('d.m.Y') }}
+                                </span>
+                            @endif
+                        </span>
+                        @if ($doc->description)<div class="muted small">{{ $doc->description }}</div>@endif
+                    </div>
+                    <div class="doc-actions">
+                        <a href="{{ route('client_portal.horses.documents.download', ['slug' => $tenant->slug, 'horse' => $horse->id, 'document' => $doc->id]) }}"
+                           class="btn-link">📥 Pobierz</a>
+                        @if ($doc->uploadedByClient() && $doc->uploaded_by_client_id === $client->id)
+                            <form method="post" action="{{ route('client_portal.horses.documents.delete', ['slug' => $tenant->slug, 'horse' => $horse->id, 'document' => $doc->id]) }}" style="display:inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-delete" onclick="return confirm('Usunąć dokument?')">Usuń</button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="empty">Brak dokumentów. Wgraj pierwszy.</div>
             @endforelse
         </div>
 
