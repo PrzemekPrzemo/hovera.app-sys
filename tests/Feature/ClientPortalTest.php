@@ -367,5 +367,20 @@ class ClientPortalTest extends TestCase
             $t->timestamp('created_at')->useCurrent();
             $t->timestamp('updated_at')->useCurrent();
         });
+
+        Schema::connection('tenant')->create('health_records', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('horse_id', 26);
+            $t->string('type', 32);
+            $t->dateTime('performed_at');
+            $t->string('performed_by', 255)->nullable();
+            $t->string('summary', 255);
+            $t->text('details')->nullable();
+            $t->date('next_due_at')->nullable();
+            $t->unsignedInteger('cost_cents')->nullable();
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+            $t->timestamp('deleted_at')->nullable();
+        });
     }
 }

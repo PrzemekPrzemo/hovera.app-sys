@@ -9,6 +9,8 @@ use App\Enums\CalendarEntryStatus;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\CalendarEntry;
 use App\Models\Tenant\Client;
+use App\Models\Tenant\HealthRecord;
+use App\Models\Tenant\Horse;
 use App\Models\Tenant\Pass;
 use App\Models\Tenant\PassUse;
 use App\Notifications\BookingRescheduledClientNotification;
@@ -171,6 +173,29 @@ class ClientPortalController extends Controller
             ->limit(5)
             ->get();
 
+        $horses = Horse::query()
+            ->where('owner_client_id', $client->id)
+            ->orderBy('name')
+            ->get();
+
+        // Pre-aggregate per-horse counts so the dashboard view doesn't
+        // run N queries inside @foreach.
+        $horseAlerts = collect();
+        if ($horses->isNotEmpty()) {
+            $horseAlerts = HealthRecord::query()
+                ->selectRaw('horse_id, SUM(CASE WHEN next_due_at < ? THEN 1 ELSE 0 END) as overdue, '
+                    .'SUM(CASE WHEN next_due_at >= ? AND next_due_at <= ? THEN 1 ELSE 0 END) as upcoming', [
+                        now()->toDateString(),
+                        now()->toDateString(),
+                        now()->addDays(30)->toDateString(),
+                    ])
+                ->whereIn('horse_id', $horses->pluck('id'))
+                ->whereNotNull('next_due_at')
+                ->groupBy('horse_id')
+                ->get()
+                ->keyBy('horse_id');
+        }
+
         return view('public.portal.dashboard', [
             'tenant' => $tenant,
             'client' => $client,
@@ -178,7 +203,39 @@ class ClientPortalController extends Controller
             'past' => $past,
             'passes' => $passes,
             'recent_uses' => $recentUses,
+            'horses' => $horses,
+            'horse_alerts' => $horseAlerts,
             'cancel_links' => $cancelLinks,
+            'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
+        ]);
+    }
+
+    public function showHorse(Request $request, string $slug, string $horseId): View|RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $horse = Horse::query()
+            ->where('owner_client_id', $client->id)
+            ->find($horseId);
+        if (! $horse) {
+            abort(404);
+        }
+
+        $records = HealthRecord::query()
+            ->where('horse_id', $horse->id)
+            ->orderByDesc('performed_at')
+            ->limit(100)
+            ->get();
+
+        return view('public.portal.horse', [
+            'tenant' => $tenant,
+            'client' => $client,
+            'horse' => $horse,
+            'records' => $records,
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
         ]);
     }
