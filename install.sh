@@ -416,3 +416,13 @@ echo "  ./update.sh                  # pull main + pełen rollout"
 echo "  ./update.sh v1.2.3           # konkretny tag"
 echo "  ./update.sh --dry-run        # zobacz co by się stało"
 echo
+
+# Hint dla Plesk-style instalacji (httpdocs jako project root)
+if [[ "$SCRIPT_DIR" =~ ^/var/www/vhosts/([^/]+)/httpdocs$ ]]; then
+    PLESK_VHOST="${BASH_REMATCH[1]}"
+    echo "$(c_yel '⚠ Plesk:') Document root musi wskazywać na public/, NIE httpdocs/."
+    echo "  Plesk panel → Domains → $PLESK_VHOST → Hosting Settings → Document root:"
+    echo "      httpdocs/public"
+    echo "  (alternatywa: ln -s $SCRIPT_DIR/public/* $SCRIPT_DIR/  — ale brzydsze)"
+    echo
+fi
