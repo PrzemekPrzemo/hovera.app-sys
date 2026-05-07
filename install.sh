@@ -36,10 +36,11 @@ for arg in "$@"; do
     esac
 done
 
-# Gdy skrypt jest pipowany (`curl ... | bash` albo `exec`-iony z bootstrapa),
-# stdin nie jest terminalem — `read` zwraca EOF i prompty się nie pokazują.
-# Przekieruj stdin na /dev/tty żeby pytania działały.
-if ! $NON_INTERACTIVE && [[ ! -t 0 ]] && [[ -r /dev/tty ]]; then
+# Gdy skrypt jest pipowany (`exec`-iony z bootstrapa po klonie), stdin
+# nie jest terminalem — `read` zwraca EOF i prompty się nie pokazują.
+# Przekieruj stdin na /dev/tty żeby pytania działały. Test przez subshell
+# (samo `[[ -r /dev/tty ]]` kłamie bez controlling terminala — np. CI).
+if ! $NON_INTERACTIVE && [[ ! -t 0 ]] && (exec </dev/tty) 2>/dev/null; then
     exec < /dev/tty
 fi
 

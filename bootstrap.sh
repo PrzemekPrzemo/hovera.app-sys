@@ -20,12 +20,29 @@ REPO_URL="${HOVERA_REPO_URL:-https://github.com/PrzemekPrzemo/hovera.app-sys.git
 INSTALL_DIR="${HOVERA_INSTALL_DIR:-}"
 GIT_REF="${HOVERA_GIT_REF:-main}"
 
-# `curl ... | bash` pipuje skrypt przez stdin, więc `read` nie ma do czego
-# zaglądać. Otwórz stdin na /dev/tty żeby prompty działały (i exec do
-# install.sh dziedziczył działający stdin).
-if [[ ! -t 0 ]] && [[ -r /dev/tty ]]; then
-    exec < /dev/tty
+# `curl ... | bash` — bash czyta CIAŁO SKRYPTU ze stdin (z pipe), więc
+# globalne `exec < /dev/tty` zerwałoby dostęp do reszty skryptu (bash
+# zaczynałby czytać komendy z klawiatury).
+# Zamiast tego używamy `read ... < /dev/tty` per-prompt — pod warunkiem,
+# że tty rzeczywiście da się otworzyć (samo `[[ -r /dev/tty ]]` kłamie
+# w środowiskach bez controlling terminala — np. CI / cron).
+TTY_INPUT=""
+if (exec </dev/tty) 2>/dev/null; then
+    TTY_INPUT="/dev/tty"
 fi
+
+# read_tty VAR "prompt"  — `read` z tty (nie ze stdin, bo tam leci kod skryptu)
+read_tty() {
+    local __var="$1" __prompt="$2"
+    if [[ -n "$TTY_INPUT" ]]; then
+        read -r -p "$__prompt" "$__var" < "$TTY_INPUT" 2>/dev/null || eval "$__var=\"\""
+    elif [[ -t 0 ]]; then
+        read -r -p "$__prompt" "$__var" || eval "$__var=\"\""
+    else
+        # Brak tty i stdin to pipe — nie ma jak pytać, użyj defaultów
+        eval "$__var=\"\""
+    fi
+}
 
 # ── kolory ──────────────────────────────────────────────────────────
 c_blue()  { printf '\033[36m%s\033[0m' "$*"; }
@@ -91,12 +108,8 @@ if [[ -z "$INSTALL_DIR" ]]; then
         DEFAULT_DIR="$HOME/hovera"
     fi
 
-    if [[ -t 0 ]]; then
-        read -r -p "$(c_blue '?') Katalog instalacji [$DEFAULT_DIR]: " INSTALL_DIR
-        INSTALL_DIR="${INSTALL_DIR:-$DEFAULT_DIR}"
-    else
-        INSTALL_DIR="$DEFAULT_DIR"
-    fi
+    read_tty INSTALL_DIR "$(c_blue '?') Katalog instalacji [$DEFAULT_DIR]: "
+    INSTALL_DIR="${INSTALL_DIR:-$DEFAULT_DIR}"
 fi
 
 # Rozwiń ~ jeśli ktoś podał z tyldą
@@ -128,18 +141,14 @@ elif [[ -d "$INSTALL_DIR" && -n "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]]; then
     if $has_only_default_files; then
         log "$INSTALL_DIR zawiera tylko domyślne pliki Pleska:"
         ls -la "$INSTALL_DIR" | tail -n +2
-        if [[ -t 0 ]]; then
-            read -r -p "$(c_blue '?') Wyczyścić katalog i zainstalować Hoverę? [y/N]: " __confirm
-            case "${__confirm:-n}" in
-                y|Y|yes|Yes|YES)
-                    log "Czyszczę $INSTALL_DIR…"
-                    find "$INSTALL_DIR" -mindepth 1 -delete
-                    ;;
-                *) fail "Anulowano." ;;
-            esac
-        else
-            fail "$INSTALL_DIR nie jest puste — uruchom interaktywnie żeby wyczyścić, albo `rm -rf $INSTALL_DIR/{*,.[!.]*}` ręcznie."
-        fi
+        read_tty __confirm "$(c_blue '?') Wyczyścić katalog i zainstalować Hoverę? [y/N]: "
+        case "${__confirm:-n}" in
+            y|Y|yes|Yes|YES)
+                log "Czyszczę $INSTALL_DIR…"
+                find "$INSTALL_DIR" -mindepth 1 -delete
+                ;;
+            *) fail "Anulowano. Wyczyść katalog ręcznie: rm -rf $INSTALL_DIR/{*,.[!.]*}" ;;
+        esac
     else
         fail "$INSTALL_DIR istnieje i nie jest puste (zawiera nie-Pleskowe pliki). Zwolnij katalog albo wybierz inny."
     fi
