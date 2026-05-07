@@ -52,7 +52,7 @@
         </div>
 
         <div class="ml-auto">
-            {{ ($this->createEntryAction)() }}
+            {{ $this->createEntryAction }}
         </div>
     </div>
 
