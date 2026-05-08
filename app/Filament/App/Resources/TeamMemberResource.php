@@ -17,6 +17,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 
 /**
  * Pracownicy stajni — owner-side member management. Pokazuje TYLKO
@@ -187,6 +188,38 @@ class TeamMemberResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->mutateRecordDataUsing(fn (array $data) => ['role' => $data['role'] ?? null]),
+                Tables\Actions\Action::make('send_password_reset')
+                    ->label(__('app/team.action.send_password_reset.label'))
+                    ->icon('heroicon-o-key')
+                    ->color('gray')
+                    ->visible(fn (TenantMembership $r) => $r->revoked_at === null && $r->user?->email)
+                    ->requiresConfirmation()
+                    ->modalDescription(fn (TenantMembership $r) => __('app/team.action.send_password_reset.modal_description', ['email' => $r->user?->email ?? '']))
+                    ->action(function (TenantMembership $record) {
+                        $email = $record->user?->email;
+                        if (! $email) {
+                            Notification::make()->danger()
+                                ->title(__('app/team.action.send_password_reset.failure_no_email'))
+                                ->send();
+
+                            return;
+                        }
+
+                        $status = Password::broker('users')
+                            ->sendResetLink(['email' => $email]);
+
+                        if ($status === Password::RESET_LINK_SENT) {
+                            Notification::make()->success()
+                                ->title(__('app/team.action.send_password_reset.success_title'))
+                                ->body(__('app/team.action.send_password_reset.success_body', ['email' => $email]))
+                                ->send();
+                        } else {
+                            Notification::make()->danger()
+                                ->title(__('app/team.action.send_password_reset.failure_title'))
+                                ->body(__($status))
+                                ->send();
+                        }
+                    }),
                 Tables\Actions\Action::make('revoke')
                     ->label(__('admin/membership.action.revoke.label'))
                     ->icon('heroicon-o-no-symbol')
