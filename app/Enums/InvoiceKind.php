@@ -12,11 +12,7 @@ enum InvoiceKind: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Fv => 'Faktura VAT',
-            self::FvProforma => 'Faktura Proforma',
-            self::FvKorekta => 'Faktura Korygująca',
-        };
+        return __('enums.invoice_kind.'.$this->value);
     }
 
     public function shortLabel(): string

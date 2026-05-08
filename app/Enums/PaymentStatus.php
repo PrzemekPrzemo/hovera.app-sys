@@ -28,13 +28,7 @@ enum PaymentStatus: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Pending => 'Oczekująca',
-            self::Processing => 'Przetwarzanie',
-            self::Succeeded => 'Opłacona',
-            self::Failed => 'Nieudana',
-            self::Refunded => 'Zwrócona',
-        };
+        return __('enums.payment_status.'.$this->value);
     }
 
     public function isTerminal(): bool

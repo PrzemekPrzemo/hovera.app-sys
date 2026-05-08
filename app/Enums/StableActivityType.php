@@ -20,15 +20,7 @@ enum StableActivityType: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Feeding => 'Karmienie',
-            self::Grooming => 'Czyszczenie / pielęgnacja',
-            self::Turnout => 'Wypuszczenie na padok',
-            self::Exercise => 'Praca z koniem',
-            self::BoxCleaning => 'Sprzątanie boksu',
-            self::TransportEvent => 'Wyjazd / event',
-            self::Other => 'Inne',
-        };
+        return __('enums.stable_activity_type.'.$this->value);
     }
 
     public function icon(): string

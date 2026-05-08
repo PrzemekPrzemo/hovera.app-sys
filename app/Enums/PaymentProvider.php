@@ -23,14 +23,7 @@ enum PaymentProvider: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::None => 'Brak (płatność offline)',
-            self::Stub => 'Test (developer)',
-            self::P24 => 'Przelewy24',
-            self::PayU => 'PayU',
-            self::Stripe => 'Stripe',
-            self::Mollie => 'Mollie',
-        };
+        return __('enums.payment_provider.'.$this->value);
     }
 
     /**

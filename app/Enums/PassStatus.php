@@ -13,12 +13,7 @@ enum PassStatus: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Active => 'Aktywny',
-            self::Exhausted => 'Wykorzystany',
-            self::Expired => 'Wygasły',
-            self::Cancelled => 'Anulowany',
-        };
+        return __('enums.pass_status.'.$this->value);
     }
 
     /**

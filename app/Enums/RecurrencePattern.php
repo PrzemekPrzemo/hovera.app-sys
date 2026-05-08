@@ -12,11 +12,7 @@ enum RecurrencePattern: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Daily => 'Codziennie',
-            self::Weekly => 'Co tydzień',
-            self::Monthly => 'Co miesiąc',
-        };
+        return __('enums.recurrence_pattern.'.$this->value);
     }
 
     /**
