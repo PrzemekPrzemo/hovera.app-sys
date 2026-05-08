@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\HydrateTenantConnectionFromSession;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // /livewire/update) miały tenant connection — bez tego pluck()
         // na BoardingService etc. wybucha z "Access denied for ''@'localhost'".
         $middleware->web(append: [
+            SetLocale::class,
             HydrateTenantConnectionFromSession::class,
         ]);
     })

@@ -26,13 +26,25 @@ class HealthRecordResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-heart';
 
-    protected static ?string $navigationGroup = 'Stajnia';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.stable');
+    }
 
-    protected static ?string $navigationLabel = 'Opieka i zdrowie';
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.health_records');
+    }
 
-    protected static ?string $modelLabel = 'wpis zdrowotny';
+    public static function getModelLabel(): string
+    {
+        return __('models.health_record');
+    }
 
-    protected static ?string $pluralModelLabel = 'Opieka i zdrowie';
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.health_records');
+    }
 
     protected static ?int $navigationSort = 25;
 

@@ -30,13 +30,25 @@ class RecurringCalendarEntryResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-arrow-path';
 
-    protected static ?string $navigationGroup = 'Kalendarz';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.calendar');
+    }
 
-    protected static ?string $navigationLabel = 'Cykliczne zajęcia';
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.recurring_entries');
+    }
 
-    protected static ?string $modelLabel = 'cykliczne zajęcie';
+    public static function getModelLabel(): string
+    {
+        return __('models.recurring_entry');
+    }
 
-    protected static ?string $pluralModelLabel = 'Cykliczne zajęcia';
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.recurring_entries');
+    }
 
     protected static ?int $navigationSort = 35;
 

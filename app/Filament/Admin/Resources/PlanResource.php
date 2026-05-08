@@ -20,15 +20,27 @@ class PlanResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
 
-    protected static ?string $navigationLabel = 'Plany';
-
-    protected static ?string $navigationGroup = 'Konfiguracja';
-
-    protected static ?string $modelLabel = 'Plan';
-
-    protected static ?string $pluralModelLabel = 'Plany';
-
     protected static ?int $navigationSort = 30;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.plans');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.configuration');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('models.plan');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.plans');
+    }
 
     public static function form(Form $form): Form
     {

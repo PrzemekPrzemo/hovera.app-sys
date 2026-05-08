@@ -21,13 +21,25 @@ class BoxResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Stajnia';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.stable');
+    }
 
-    protected static ?string $navigationLabel = 'Boksy';
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.boxes');
+    }
 
-    protected static ?string $modelLabel = 'box';
+    public static function getModelLabel(): string
+    {
+        return __('models.box');
+    }
 
-    protected static ?string $pluralModelLabel = 'Boksy';
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.boxes');
+    }
 
     protected static ?int $navigationSort = 35;
 

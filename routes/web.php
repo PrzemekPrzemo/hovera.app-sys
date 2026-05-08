@@ -60,6 +60,12 @@ Route::middleware(['web', 'auth'])->prefix('impersonation')->name('impersonation
     Route::post('/stop', [ImpersonationController::class, 'stop'])->name('stop');
 });
 
+// Language switcher — redirects back to where the user came from.
+Route::middleware('web')
+    ->get('/locale/{locale}', \App\Http\Controllers\LocaleController::class)
+    ->where('locale', 'pl|en')
+    ->name('locale.set');
+
 /*
  * Public invitation acceptance — the token IS the credential, no auth
  * middleware. Intentionally rate-limited to slow down brute force on
