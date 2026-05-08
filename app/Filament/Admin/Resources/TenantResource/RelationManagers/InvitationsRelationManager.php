@@ -39,9 +39,11 @@ class InvitationsRelationManager extends RelationManager
             ->recordTitleAttribute('email')
             ->columns([
                 Tables\Columns\TextColumn::make('email')->searchable()->sortable(),
-                Tables\Columns\BadgeColumn::make('role')->label('Rola')->placeholder('—'),
+                Tables\Columns\BadgeColumn::make('role')
+                    ->label(__('admin/invitation.table.column.role'))
+                    ->placeholder('—'),
                 Tables\Columns\BadgeColumn::make('status')
-                    ->label('Status')
+                    ->label(__('admin/invitation.table.column.status'))
                     ->getStateUsing(fn (UserInvitation $r) => $r->status())
                     ->colors([
                         'warning' => 'pending',
@@ -49,40 +51,46 @@ class InvitationsRelationManager extends RelationManager
                         'gray' => 'expired',
                     ])
                     ->formatStateUsing(fn (string $state) => match ($state) {
-                        'pending' => 'Oczekuje',
-                        'accepted' => 'Zaakceptowane',
-                        'expired' => 'Wygasłe',
+                        'pending' => __('admin/invitation.table.status.pending'),
+                        'accepted' => __('admin/invitation.table.status.accepted'),
+                        'expired' => __('admin/invitation.table.status.expired'),
                         default => $state,
                     }),
                 Tables\Columns\TextColumn::make('invited_by_user_id')
-                    ->label('Zapraszający')
+                    ->label(__('admin/invitation.table.column.invited_by'))
                     ->getStateUsing(fn (UserInvitation $r) => $r->invitedBy?->email ?? '—')
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('expires_at')->label('Wygasa')->dateTime()->sortable(),
-                Tables\Columns\TextColumn::make('accepted_at')->label('Zaakceptowane')->dateTime()->placeholder('—')->toggleable(),
-                Tables\Columns\TextColumn::make('created_at')->label('Wysłane')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('expires_at')
+                    ->label(__('admin/invitation.table.column.expires_at'))
+                    ->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('accepted_at')
+                    ->label(__('admin/invitation.table.column.accepted_at'))
+                    ->dateTime()->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('admin/invitation.table.column.created_at'))
+                    ->dateTime()->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\Filter::make('only_pending')
-                    ->label('Tylko oczekujące')
+                    ->label(__('admin/invitation.table.filter.only_pending'))
                     ->query(fn ($query) => $query->pending())
                     ->default(),
                 Tables\Filters\Filter::make('expired')
-                    ->label('Tylko wygasłe')
+                    ->label(__('admin/invitation.table.filter.expired'))
                     ->query(fn ($query) => $query->expired()),
                 Tables\Filters\Filter::make('accepted')
-                    ->label('Tylko zaakceptowane')
+                    ->label(__('admin/invitation.table.filter.accepted'))
                     ->query(fn ($query) => $query->accepted()),
             ])
             ->actions([
                 Tables\Actions\Action::make('show_url')
-                    ->label('Pokaż link logowania')
+                    ->label(__('admin/invitation.action.show_url.label'))
                     ->icon('heroicon-o-link')
                     ->color('primary')
                     ->visible(fn (UserInvitation $r) => ! $r->isAccepted())
-                    ->modalHeading(fn (UserInvitation $r) => "Link logowania dla {$r->email}")
-                    ->modalDescription('Każde wywołanie generuje NOWY token (poprzedni jest unieważniany). Token surowy nie jest zapisany w DB — pojawia się tylko tutaj raz.')
+                    ->modalHeading(fn (UserInvitation $r) => __('admin/invitation.action.show_url.modal_heading', ['email' => $r->email]))
+                    ->modalDescription(__('admin/invitation.action.show_url.modal_description'))
                     ->action(function (UserInvitation $record, SendInvitation $send, MasterAuditLogger $audit) {
                         $result = $send->execute(
                             email: $record->email,
@@ -104,13 +112,13 @@ class InvitationsRelationManager extends RelationManager
 
                         Notification::make()
                             ->success()
-                            ->title('Link wygenerowany — skopiuj poniżej:')
+                            ->title(__('admin/invitation.action.show_url.success_title'))
                             ->body($url)
                             ->persistent()
                             ->send();
                     }),
                 Tables\Actions\Action::make('resend')
-                    ->label('Wyślij mailem')
+                    ->label(__('admin/invitation.action.resend_email.label'))
                     ->icon('heroicon-o-paper-airplane')
                     ->color('gray')
                     ->visible(fn (UserInvitation $r) => ! $r->isAccepted())
@@ -136,14 +144,14 @@ class InvitationsRelationManager extends RelationManager
 
                         Notification::make()
                             ->success()
-                            ->title("Zaproszenie wysłane na {$record->email}")
-                            ->body("Link (do skopiowania jeśli mail nie dojdzie):\n{$url}")
+                            ->title(__('admin/invitation.action.resend_email.success_title', ['email' => $record->email]))
+                            ->body(__('admin/invitation.action.resend_email.success_body', ['url' => $url]))
                             ->persistent()
                             ->send();
                     }),
 
                 Tables\Actions\Action::make('revoke')
-                    ->label('Unieważnij')
+                    ->label(__('admin/invitation.action.revoke.label'))
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn (UserInvitation $r) => $r->isUsable())
@@ -161,7 +169,7 @@ class InvitationsRelationManager extends RelationManager
 
                         Notification::make()
                             ->success()
-                            ->title('Zaproszenie unieważnione')
+                            ->title(__('admin/invitation.action.revoke.success'))
                             ->send();
                     }),
             ]);

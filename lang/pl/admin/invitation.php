@@ -34,5 +34,16 @@ return [
             'label' => 'Unieważnij',
             'success' => 'Zaproszenie unieważnione',
         ],
+        'show_url' => [
+            'label' => 'Pokaż link logowania',
+            'modal_heading' => 'Link logowania dla :email',
+            'modal_description' => 'Każde wywołanie generuje NOWY token (poprzedni jest unieważniany). Token surowy nie jest zapisany w DB — pojawia się tylko tutaj raz.',
+            'success_title' => 'Link wygenerowany — skopiuj poniżej:',
+        ],
+        'resend_email' => [
+            'label' => 'Wyślij mailem',
+            'success_title' => 'Zaproszenie wysłane na :email',
+            'success_body' => "Link (do skopiowania jeśli mail nie dojdzie):\n:url",
+        ],
     ],
 ];

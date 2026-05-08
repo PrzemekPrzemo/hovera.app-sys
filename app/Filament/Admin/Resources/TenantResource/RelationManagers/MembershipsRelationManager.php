@@ -42,18 +42,18 @@ class MembershipsRelationManager extends RelationManager
     {
         return $form->schema([
             Forms\Components\TextInput::make('email')
-                ->label('Email użytkownika')
+                ->label(__('admin/membership.form.label.email'))
                 ->email()
                 ->required()
                 ->disabledOn('edit')
-                ->helperText('Jeśli użytkownik nie istnieje, zostanie utworzony i otrzyma wygenerowane hasło.'),
+                ->helperText(__('admin/membership.form.helper.email')),
 
             Forms\Components\TextInput::make('name')
-                ->label('Imię i nazwisko (opcjonalne, tylko przy nowym użytkowniku)')
+                ->label(__('admin/membership.form.label.name'))
                 ->disabledOn('edit'),
 
             Forms\Components\Select::make('role')
-                ->label('Rola w stajni')
+                ->label(__('admin/membership.form.label.role'))
                 ->options(self::roleOptions())
                 ->default('viewer')
                 ->required(),
@@ -65,19 +65,28 @@ class MembershipsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('id')
             ->columns([
-                Tables\Columns\TextColumn::make('user.email')->label('Email')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('user.name')->label('Imię')->searchable()->toggleable(),
-                Tables\Columns\BadgeColumn::make('role')->label('Rola')
+                Tables\Columns\TextColumn::make('user.email')
+                    ->label(__('admin/membership.table.column.email'))
+                    ->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label(__('admin/membership.table.column.name'))
+                    ->searchable()->toggleable(),
+                Tables\Columns\BadgeColumn::make('role')
+                    ->label(__('admin/membership.table.column.role'))
                     ->formatStateUsing(fn (string $state) => self::roleOptions()[$state] ?? $state),
-                Tables\Columns\TextColumn::make('joined_at')->label('Dołączył')->date()->sortable(),
-                Tables\Columns\TextColumn::make('revoked_at')->label('Cofnięto')->date()->placeholder('—'),
+                Tables\Columns\TextColumn::make('joined_at')
+                    ->label(__('admin/membership.table.column.joined_at'))
+                    ->date()->sortable(),
+                Tables\Columns\TextColumn::make('revoked_at')
+                    ->label(__('admin/membership.table.column.revoked_at'))
+                    ->date()->placeholder('—'),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('revoked_at')
-                    ->label('Status')
-                    ->placeholder('Aktywne i cofnięte')
-                    ->trueLabel('Tylko cofnięte')
-                    ->falseLabel('Tylko aktywne')
+                    ->label(__('admin/membership.table.filter.status_label'))
+                    ->placeholder(__('admin/membership.table.filter.status_placeholder'))
+                    ->trueLabel(__('admin/membership.table.filter.status_true'))
+                    ->falseLabel(__('admin/membership.table.filter.status_false'))
                     ->queries(
                         true: fn ($query) => $query->whereNotNull('revoked_at'),
                         false: fn ($query) => $query->whereNull('revoked_at'),
@@ -85,17 +94,17 @@ class MembershipsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\Action::make('attach')
-                    ->label('Dodaj członka')
+                    ->label(__('admin/membership.action.attach.label'))
                     ->icon('heroicon-o-user-plus')
                     ->form([
                         Forms\Components\TextInput::make('email')
-                            ->label('Email')
+                            ->label(__('admin/membership.form.label.attach_email'))
                             ->email()
                             ->required(),
                         Forms\Components\TextInput::make('name')
-                            ->label('Imię i nazwisko (jeśli nowy użytkownik)'),
+                            ->label(__('admin/membership.form.label.attach_name')),
                         Forms\Components\Select::make('role')
-                            ->label('Rola')
+                            ->label(__('admin/membership.form.label.attach_role'))
                             ->options(self::roleOptions())
                             ->default('viewer')
                             ->required(),
@@ -121,8 +130,8 @@ class MembershipsRelationManager extends RelationManager
 
                             Notification::make()
                                 ->success()
-                                ->title('Członek dodany')
-                                ->body("Dodano {$result['user']->email} do stajni.")
+                                ->title(__('admin/membership.action.attach.success_attached_title'))
+                                ->body(__('admin/membership.action.attach.success_attached_body', ['email' => $result['user']->email]))
                                 ->send();
 
                             return;
@@ -139,9 +148,11 @@ class MembershipsRelationManager extends RelationManager
 
                         Notification::make()
                             ->success()
-                            ->title('Zaproszenie wysłane')
-                            ->body("Wysłano zaproszenie do {$result['invitation']->email}. Link wygasa "
-                                .$result['invitation']->expires_at->format('Y-m-d H:i').'.')
+                            ->title(__('admin/membership.action.attach.success_invited_title'))
+                            ->body(__('admin/membership.action.attach.success_invited_body', [
+                                'email' => $result['invitation']->email,
+                                'expires' => $result['invitation']->expires_at->format('Y-m-d H:i'),
+                            ]))
                             ->persistent()
                             ->send();
                     }),
@@ -157,7 +168,7 @@ class MembershipsRelationManager extends RelationManager
                         ]);
                     }),
                 Tables\Actions\Action::make('revoke')
-                    ->label('Cofnij dostęp')
+                    ->label(__('admin/membership.action.revoke.label'))
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
                     ->visible(fn (TenantMembership $r) => $r->revoked_at === null)
@@ -165,10 +176,12 @@ class MembershipsRelationManager extends RelationManager
                     ->action(function (TenantMembership $record, RevokeMembership $revoke, MasterAuditLogger $audit) {
                         $revoke->execute($record);
                         $audit->record('membership.revoke', 'TenantMembership', $record->id, $record->tenant_id);
-                        Notification::make()->success()->title('Dostęp cofnięty')->send();
+                        Notification::make()->success()
+                            ->title(__('admin/membership.action.revoke.success'))
+                            ->send();
                     }),
                 Tables\Actions\Action::make('reactivate')
-                    ->label('Przywróć')
+                    ->label(__('admin/membership.action.reactivate.label'))
                     ->icon('heroicon-o-arrow-path-rounded-square')
                     ->color('success')
                     ->visible(fn (TenantMembership $r) => $r->revoked_at !== null)
@@ -176,20 +189,22 @@ class MembershipsRelationManager extends RelationManager
                     ->action(function (TenantMembership $record, RevokeMembership $revoke, MasterAuditLogger $audit) {
                         $revoke->reactivate($record);
                         $audit->record('membership.reactivate', 'TenantMembership', $record->id, $record->tenant_id);
-                        Notification::make()->success()->title('Dostęp przywrócony')->send();
+                        Notification::make()->success()
+                            ->title(__('admin/membership.action.reactivate.success'))
+                            ->send();
                     }),
                 Tables\Actions\Action::make('impersonate')
-                    ->label('Zaloguj jako')
+                    ->label(__('admin/membership.action.impersonate.label'))
                     ->icon('heroicon-o-eye')
                     ->color('warning')
                     ->visible(fn (TenantMembership $r) => $r->revoked_at === null && $r->user !== null)
                     ->form([
                         Forms\Components\Textarea::make('reason')
-                            ->label('Powód impersonacji (audit RODO)')
+                            ->label(__('admin/membership.form.label.impersonate_reason'))
                             ->required()
                             ->minLength(5)
                             ->maxLength(500)
-                            ->helperText('Pole wymagane. Każda akcja w trakcie sesji impersonacji jest tagowana w audit_log stajni.'),
+                            ->helperText(__('admin/membership.form.helper.impersonate_reason')),
                     ])
                     ->action(function (TenantMembership $record, array $data, StartImpersonation $impersonate) {
                         /** @var Tenant $tenant */
@@ -205,7 +220,7 @@ class MembershipsRelationManager extends RelationManager
                         );
                     })
                     ->successRedirectUrl('/app')
-                    ->modalSubmitActionLabel('Rozpocznij impersonację'),
+                    ->modalSubmitActionLabel(__('admin/membership.action.impersonate.submit')),
             ]);
     }
 
@@ -215,13 +230,13 @@ class MembershipsRelationManager extends RelationManager
     public static function roleOptions(): array
     {
         return [
-            'owner' => 'Właściciel',
-            'admin' => 'Admin',
-            'manager' => 'Manager',
-            'instructor' => 'Instruktor',
-            'employee' => 'Pracownik',
-            'vet' => 'Weterynarz',
-            'viewer' => 'Tylko podgląd',
+            'owner' => __('admin/membership.roles.owner'),
+            'admin' => __('admin/membership.roles.admin'),
+            'manager' => __('admin/membership.roles.manager'),
+            'instructor' => __('admin/membership.roles.instructor'),
+            'employee' => __('admin/membership.roles.employee'),
+            'vet' => __('admin/membership.roles.vet'),
+            'viewer' => __('admin/membership.roles.viewer'),
         ];
     }
 
