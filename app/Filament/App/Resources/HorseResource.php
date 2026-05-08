@@ -47,55 +47,76 @@ class HorseResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
+    /** @return array<string,string> */
+    private static function sexOptions(): array
+    {
+        return [
+            'mare' => __('app/horse.sex.mare'),
+            'stallion' => __('app/horse.sex.stallion'),
+            'gelding' => __('app/horse.sex.gelding'),
+            'filly' => __('app/horse.sex.filly'),
+            'colt' => __('app/horse.sex.colt'),
+            'foal' => __('app/horse.sex.foal'),
+        ];
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Identyfikacja')
+            Forms\Components\Section::make(__('app/horse.form.section.identification'))
                 ->columns(2)
                 ->schema([
-                    Forms\Components\TextInput::make('name')->label('Imię')->required()->maxLength(120),
+                    Forms\Components\TextInput::make('name')
+                        ->label(__('app/horse.form.label.name'))
+                        ->required()->maxLength(120),
                     Forms\Components\Select::make('owner_client_id')
-                        ->label('Właściciel')
+                        ->label(__('app/horse.form.label.owner'))
                         ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id'))
                         ->searchable()
-                        ->placeholder('— stajnia —'),
+                        ->placeholder(__('app/horse.form.label.owner_placeholder')),
                     Forms\Components\Select::make('box_id')
-                        ->label('Box')
+                        ->label(__('app/horse.form.label.box'))
                         ->options(fn () => Box::query()
                             ->where('is_active', true)
                             ->orderBy('sort_order')
                             ->pluck('name', 'id'))
                         ->searchable()
-                        ->placeholder('— bez przypisania —')
-                        ->helperText('Zmiana boxa zarejestruje historię w "Boxy → Historia przypisań".'),
-                    Forms\Components\TextInput::make('microchip')->maxLength(32),
-                    Forms\Components\TextInput::make('passport_number')->label('Nr paszportu')->maxLength(64),
-                    Forms\Components\TextInput::make('ueln')->label('UELN')->maxLength(15)
-                        ->helperText('Universal Equine Life Number'),
+                        ->placeholder(__('app/horse.form.label.box_placeholder'))
+                        ->helperText(__('app/horse.form.helper.box')),
+                    Forms\Components\TextInput::make('microchip')
+                        ->label(__('app/horse.form.label.microchip'))
+                        ->maxLength(32),
+                    Forms\Components\TextInput::make('passport_number')
+                        ->label(__('app/horse.form.label.passport_number'))
+                        ->maxLength(64),
+                    Forms\Components\TextInput::make('ueln')
+                        ->label(__('app/horse.form.label.ueln'))
+                        ->maxLength(15)
+                        ->helperText(__('app/horse.form.helper.ueln')),
                 ]),
 
-            Forms\Components\Section::make('Charakterystyka')
+            Forms\Components\Section::make(__('app/horse.form.section.characteristics'))
                 ->columns(4)
                 ->schema([
-                    Forms\Components\Select::make('sex')->label('Płeć')->options([
-                        'mare' => 'Klacz',
-                        'stallion' => 'Ogier',
-                        'gelding' => 'Wałach',
-                        'filly' => 'Klaczka',
-                        'colt' => 'Ogierek',
-                        'foal' => 'Źrebię',
-                    ]),
-                    Forms\Components\TextInput::make('breed')->label('Rasa')->maxLength(120),
-                    Forms\Components\TextInput::make('color')->label('Maść')->maxLength(60),
-                    Forms\Components\DatePicker::make('birth_date')->label('Data urodzenia'),
+                    Forms\Components\Select::make('sex')
+                        ->label(__('app/horse.form.label.sex'))
+                        ->options(self::sexOptions()),
+                    Forms\Components\TextInput::make('breed')
+                        ->label(__('app/horse.form.label.breed'))
+                        ->maxLength(120),
+                    Forms\Components\TextInput::make('color')
+                        ->label(__('app/horse.form.label.color'))
+                        ->maxLength(60),
+                    Forms\Components\DatePicker::make('birth_date')
+                        ->label(__('app/horse.form.label.birth_date')),
                 ]),
 
-            Forms\Components\Section::make('Pensja — usługi naliczane')
-                ->description('Zaznacz które pozycje cennika dotyczą tego konia. Klient zobaczy je w portalu z miesięczną szacunkową kwotą.')
+            Forms\Components\Section::make(__('app/horse.form.section.boarding'))
+                ->description(__('app/horse.form.section.boarding_description'))
                 ->collapsed()
                 ->schema([
                     Forms\Components\Select::make('boardingServices')
-                        ->label('Usługi z cennika')
+                        ->label(__('app/horse.form.label.boarding_services'))
                         ->multiple()
                         ->relationship('boardingServices', 'name')
                         ->options(fn () => BoardingService::query()
@@ -104,10 +125,10 @@ class HorseResource extends Resource
                             ->pluck('name', 'id'))
                         ->preload()
                         ->searchable()
-                        ->helperText('Cennik konfigurujesz w "Stajnia → Cennik pensji". Override ceny per koń (np. zniżka) ustawiasz tam ręcznie po utworzeniu wpisu.'),
+                        ->helperText(__('app/horse.form.helper.boarding_services')),
                 ]),
 
-            Forms\Components\Section::make('Notatki')
+            Forms\Components\Section::make(__('app/horse.form.section.notes'))
                 ->collapsed()
                 ->schema([
                     Forms\Components\Textarea::make('notes')->rows(4),
@@ -119,35 +140,34 @@ class HorseResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Imię')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('breed')->label('Rasa')->toggleable()->searchable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->label(__('app/horse.table.column.name'))
+                    ->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('breed')
+                    ->label(__('app/horse.table.column.breed'))
+                    ->toggleable()->searchable(),
                 Tables\Columns\BadgeColumn::make('sex')
-                    ->label('Płeć')
-                    ->formatStateUsing(fn (?string $state) => match ($state) {
-                        'mare' => 'Klacz',
-                        'stallion' => 'Ogier',
-                        'gelding' => 'Wałach',
-                        'filly' => 'Klaczka',
-                        'colt' => 'Ogierek',
-                        'foal' => 'Źrebię',
-                        default => '—',
-                    }),
-                Tables\Columns\TextColumn::make('color')->label('Maść')->toggleable(),
-                Tables\Columns\TextColumn::make('birth_date')->label('Ur.')->date()->sortable(),
-                Tables\Columns\TextColumn::make('owner.name')->label('Właściciel')->placeholder('— stajnia —')->toggleable(),
-                Tables\Columns\TextColumn::make('microchip')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('created_at')->label('Dodany')->date()->sortable(),
+                    ->label(__('app/horse.table.column.sex'))
+                    ->formatStateUsing(fn (?string $state) => $state === null ? '—' : (self::sexOptions()[$state] ?? $state)),
+                Tables\Columns\TextColumn::make('color')
+                    ->label(__('app/horse.table.column.color'))
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('birth_date')
+                    ->label(__('app/horse.table.column.birth_date'))
+                    ->date()->sortable(),
+                Tables\Columns\TextColumn::make('owner.name')
+                    ->label(__('app/horse.table.column.owner'))
+                    ->placeholder(__('app/horse.table.column.owner_placeholder'))
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('microchip')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('app/horse.table.column.created_at'))
+                    ->date()->sortable(),
             ])
             ->defaultSort('name')
             ->filters([
-                Tables\Filters\SelectFilter::make('sex')->options([
-                    'mare' => 'Klacz',
-                    'stallion' => 'Ogier',
-                    'gelding' => 'Wałach',
-                    'filly' => 'Klaczka',
-                    'colt' => 'Ogierek',
-                    'foal' => 'Źrebię',
-                ]),
+                Tables\Filters\SelectFilter::make('sex')->options(self::sexOptions()),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
