@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Przesuń rezerwację — {{ $tenant->name }}</title>
+    <title>{{ __('portal/reschedule.title', ['tenant' => $tenant->name]) }}</title>
     <meta name="robots" content="noindex">
     <style>
         :root { --primary: {{ $primary_color }}; }
@@ -39,10 +39,10 @@
 <body>
     <div class="container">
         <div class="card">
-            <h1>Przesuń rezerwację</h1>
+            <h1>{{ __('portal/reschedule.heading') }}</h1>
             <div class="meta">
-                Obecny termin: <strong>{{ $entry->starts_at->translatedFormat('l, d MMMM yyyy · H:i') }}</strong><br>
-                Instruktor: {{ $entry->instructor?->name ?? '—' }}
+                {{ __('portal/reschedule.current_term') }} <strong>{{ $entry->starts_at->translatedFormat('l, d MMMM yyyy · H:i') }}</strong><br>
+                {{ __('portal/reschedule.instructor') }} {{ $entry->instructor?->name ?? '—' }}
             </div>
 
             @if ($errors->any())
@@ -53,9 +53,9 @@
                 </div>
             @endif
 
-            <div class="step-label">1. Wybierz dzień</div>
+            <div class="step-label">{{ __('portal/reschedule.step_pick_day') }}</div>
             @if ($dates_with_slots->isEmpty())
-                <div class="empty">Brak wolnych terminów dla tego instruktora.</div>
+                <div class="empty">{{ __('portal/reschedule.no_slots') }}</div>
             @else
                 <div class="dates">
                     @foreach ($dates_with_slots as $date)
@@ -70,9 +70,9 @@
             @endif
 
             @if ($selected_date)
-                <div class="step-label">2. Wybierz godzinę — {{ \Illuminate\Support\Carbon::parse($selected_date)->translatedFormat('d MMMM yyyy') }}</div>
+                <div class="step-label">{{ __('portal/reschedule.step_pick_hour', ['date' => \Illuminate\Support\Carbon::parse($selected_date)->translatedFormat('d MMMM yyyy')]) }}</div>
                 @if ($slots->isEmpty())
-                    <div class="empty">Brak wolnych godzin tego dnia.</div>
+                    <div class="empty">{{ __('portal/reschedule.no_hours') }}</div>
                 @else
                     <div class="slots">
                         @foreach ($slots as $slot)
@@ -87,7 +87,7 @@
                 @endif
             @endif
 
-            <a class="back" href="{{ route('client_portal.dashboard', ['slug' => $tenant->slug]) }}">← Wróć do panelu</a>
+            <a class="back" href="{{ route('client_portal.dashboard', ['slug' => $tenant->slug]) }}">{{ __('portal/reschedule.back') }}</a>
         </div>
     </div>
 </body>
