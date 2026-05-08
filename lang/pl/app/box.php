@@ -22,6 +22,8 @@ return [
             'notes' => 'Notatki',
         ],
         'label' => [
+            'building' => 'Budynek',
+            'building_placeholder' => '— bez budynku —',
             'name' => 'Nazwa / numer',
             'label_short' => 'Krótki kod (np. "12")',
             'type' => 'Typ',
@@ -40,6 +42,8 @@ return [
 
     'table' => [
         'column' => [
+            'building' => 'Budynek',
+            'building_none' => '— bez budynku —',
             'name' => 'Nazwa',
             'type' => 'Typ',
             'size_m2' => 'm²',
@@ -53,6 +57,7 @@ return [
             'occupied' => 'Zajęty',
         ],
         'filter' => [
+            'building' => 'Budynek',
             'vacant' => 'Tylko wolne',
             'only_active' => 'Tylko aktywne',
         ],

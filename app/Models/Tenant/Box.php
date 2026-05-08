@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Tenant;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -15,6 +16,7 @@ class Box extends TenantModel
     protected $table = 'boxes';
 
     protected $fillable = [
+        'building_id',
         'name', 'label', 'type', 'size_m2', 'capacity',
         'monthly_rate_cents', 'is_active', 'sort_order',
         'notes', 'metadata',
@@ -30,6 +32,11 @@ class Box extends TenantModel
             'monthly_rate_cents' => 'integer',
             'metadata' => 'array',
         ];
+    }
+
+    public function building(): BelongsTo
+    {
+        return $this->belongsTo(Building::class);
     }
 
     public function horses(): HasMany

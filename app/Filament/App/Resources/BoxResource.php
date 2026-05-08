@@ -7,6 +7,7 @@ namespace App\Filament\App\Resources;
 use App\Filament\App\Resources\BoxResource\Pages;
 use App\Filament\Components\PriceInput;
 use App\Models\Tenant\Box;
+use App\Models\Tenant\Building;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -71,6 +72,15 @@ class BoxResource extends Resource
             Forms\Components\Section::make(__('app/box.form.section.box'))
                 ->columns(2)
                 ->schema([
+                    Forms\Components\Select::make('building_id')
+                        ->label(__('app/box.form.label.building'))
+                        ->options(fn () => Building::query()
+                            ->where('is_active', true)
+                            ->orderBy('sort_order')->orderBy('name')
+                            ->pluck('name', 'id'))
+                        ->placeholder(__('app/box.form.label.building_placeholder'))
+                        ->searchable()
+                        ->preload(),
                     Forms\Components\TextInput::make('name')
                         ->label(__('app/box.form.label.name'))
                         ->required()->maxLength(60),
@@ -109,6 +119,10 @@ class BoxResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('building.name')
+                    ->label(__('app/box.table.column.building'))
+                    ->placeholder(__('app/box.table.column.building_none'))
+                    ->sortable()->toggleable(),
                 Tables\Columns\TextColumn::make('name')
                     ->label(__('app/box.table.column.name'))
                     ->searchable()->sortable()->weight('bold'),
@@ -152,7 +166,16 @@ class BoxResource extends Resource
                     ->boolean(),
             ])
             ->defaultSort('sort_order')
+            ->groups([
+                Tables\Grouping\Group::make('building.name')
+                    ->label(__('app/box.table.column.building'))
+                    ->collapsible(),
+            ])
             ->filters([
+                Tables\Filters\SelectFilter::make('building_id')
+                    ->label(__('app/box.table.filter.building'))
+                    ->relationship('building', 'name')
+                    ->searchable()->preload(),
                 Tables\Filters\SelectFilter::make('type')->options(self::typeOptionsShort()),
                 Tables\Filters\Filter::make('vacant')
                     ->label(__('app/box.table.filter.vacant'))
@@ -174,7 +197,10 @@ class BoxResource extends Resource
     {
         return parent::getEloquentQuery()
             ->withoutGlobalScopes([SoftDeletingScope::class])
-            ->with(['horses' => fn ($q) => $q->select('id', 'box_id', 'sex')]);
+            ->with([
+                'building:id,name',
+                'horses' => fn ($q) => $q->select('id', 'box_id', 'sex'),
+            ]);
     }
 
     public static function getPages(): array
