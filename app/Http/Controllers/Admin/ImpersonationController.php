@@ -8,6 +8,7 @@ use App\Actions\Impersonation\StartImpersonation;
 use App\Actions\Impersonation\StopImpersonation;
 use App\Models\Central\Tenant;
 use App\Models\Central\User;
+use App\Support\ImpersonationDebug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -25,6 +26,10 @@ class ImpersonationController extends Controller
      */
     public function start(Request $request, StartImpersonation $action): RedirectResponse
     {
+        ImpersonationDebug::snap('2_controller_start_entry', [
+            'intent_present' => $request->session()->has('impersonation.intent'),
+        ]);
+
         $intent = $request->session()->pull('impersonation.intent');
 
         abort_unless(is_array($intent), 400, 'Brak intencji impersonacji w sesji.');
@@ -53,6 +58,10 @@ class ImpersonationController extends Controller
             reason: (string) $intent['reason'],
             session: $request->session(),
         );
+
+        ImpersonationDebug::snap('4_controller_after_action_redirecting', [
+            'redirect_to' => '/app',
+        ]);
 
         return redirect('/app');
     }

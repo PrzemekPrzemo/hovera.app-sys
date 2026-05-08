@@ -67,6 +67,15 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Dedykowany kanał diagnostyczny dla impersonacji "Zaloguj jako…".
+        // Włączany przez HOVERA_IMPERSONATION_DEBUG=true.
+        'impersonation' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/impersonation.log'),
+            'level' => 'debug',
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
