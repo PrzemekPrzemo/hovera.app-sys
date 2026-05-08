@@ -39,4 +39,9 @@ class Plan extends Model
     {
         return $this->hasMany(Tenant::class);
     }
+
+    public function addons(): HasMany
+    {
+        return $this->hasMany(PlanAddon::class)->orderBy('sort_order');
+    }
 }
