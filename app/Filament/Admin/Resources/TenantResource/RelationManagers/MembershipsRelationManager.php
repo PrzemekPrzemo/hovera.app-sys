@@ -10,7 +10,6 @@ use App\Actions\Memberships\RevokeMembership;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Services\MasterAuditLogger;
-use App\Support\ImpersonationDebug;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -187,11 +186,6 @@ class MembershipsRelationManager extends RelationManager
                         $tenant = $record->tenant()->firstOrFail();
                         $target = $record->user()->firstOrFail();
 
-                        ImpersonationDebug::snap('1_membership_action_before_execute', [
-                            'tenant_id' => $tenant->id,
-                            'target_user_id' => $target->id,
-                        ]);
-
                         $impersonate->execute(
                             masterAdmin: Auth::user(),
                             tenant: $tenant,
@@ -199,8 +193,6 @@ class MembershipsRelationManager extends RelationManager
                             reason: (string) $data['reason'],
                             session: request()->session(),
                         );
-
-                        ImpersonationDebug::snap('1_membership_action_after_execute');
                     })
                     ->successRedirectUrl('/app')
                     ->modalSubmitActionLabel('Rozpocznij impersonację'),

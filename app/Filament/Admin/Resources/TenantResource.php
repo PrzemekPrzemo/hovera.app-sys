@@ -10,7 +10,6 @@ use App\Filament\Admin\Resources\TenantResource\Pages;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
 use App\Services\MasterAuditLogger;
-use App\Support\ImpersonationDebug;
 use App\Tenancy\TenantManager;
 use Database\Seeders\Demo\HoveraDemoSeeder;
 use Filament\Forms;
@@ -244,11 +243,6 @@ class TenantResource extends Resource
                             return;
                         }
 
-                        ImpersonationDebug::snap('1_tenant_action_before_execute', [
-                            'tenant_id' => $record->id,
-                            'target_user_id' => $membership->user->id,
-                        ]);
-
                         $impersonate->execute(
                             masterAdmin: Auth::user(),
                             tenant: $record,
@@ -256,8 +250,6 @@ class TenantResource extends Resource
                             reason: (string) $data['reason'],
                             session: request()->session(),
                         );
-
-                        ImpersonationDebug::snap('1_tenant_action_after_execute');
                     })
                     ->successRedirectUrl('/app')
                     ->modalSubmitActionLabel('Rozpocznij impersonację'),
