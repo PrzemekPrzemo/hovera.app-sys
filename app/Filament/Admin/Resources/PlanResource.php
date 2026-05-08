@@ -127,6 +127,13 @@ class PlanResource extends Resource
             ]);
     }
 
+    public static function getRelations(): array
+    {
+        return [
+            PlanResource\RelationManagers\AddonsRelationManager::class,
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
