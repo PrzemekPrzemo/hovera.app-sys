@@ -23,6 +23,8 @@ return [
     'boxes' => 'Boksy',
     'building' => 'budynek',
     'buildings' => 'Budynki',
+    'team_member' => 'pracownik',
+    'team_members' => 'Pracownicy stajni',
     'arena' => 'arena',
     'arenas' => 'Areny',
     'invoice' => 'faktura',

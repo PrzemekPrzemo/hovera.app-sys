@@ -17,6 +17,8 @@ return [
     'boxes' => 'Boxes',
     'building' => 'building',
     'buildings' => 'Buildings',
+    'team_member' => 'team member',
+    'team_members' => 'Team members',
     'arena' => 'arena',
     'arenas' => 'Arenas',
     'invoice' => 'invoice',
