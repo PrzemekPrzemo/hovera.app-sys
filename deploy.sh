@@ -123,8 +123,13 @@ run "$PHP_BIN artisan migrate --force"
 if ! $SKIP_TENANTS; then
     log "→ Migracje tenantów (wszystkie aktywne)"
     run "$PHP_BIN artisan tenants:migrate"
+
+    # Regeneruj schema dump po migracjach — Provisioner użyje tego pliku
+    # zamiast biegać przez migracje przy tworzeniu nowego tenanta (5min → 5s).
+    log "→ Regeneruję database/tenant-schema.sql (dla szybkiego provisioning)"
+    run "$PHP_BIN artisan hovera:tenant:dump-schema || true"
 else
-    warn "Pominięto migracje tenantów (--skip-tenants)"
+    warn "Pominięto migracje tenantów + schema dump (--skip-tenants)"
 fi
 
 # ── Storage symlink ────────────────────────────────────────────────

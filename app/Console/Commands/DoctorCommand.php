@@ -51,6 +51,7 @@ class DoctorCommand extends Command
         $this->checkBootstrapAppPhp();
         $this->checkFilamentClosureParams();
         $this->checkProvisionerGrants();
+        $this->checkTenantSchemaDump();
         $this->checkOrphanTenants();
         $this->checkMigrationsStatus();
 
@@ -228,6 +229,34 @@ class DoctorCommand extends Command
             }
         } catch (Throwable $e) {
             $this->flagFail("Provisioner connection failed: {$e->getMessage()}");
+        }
+    }
+
+    private function checkTenantSchemaDump(): void
+    {
+        $dump = base_path('database/tenant-schema.sql');
+        if (! File::exists($dump)) {
+            $this->flagWarn('Brak database/tenant-schema.sql — Provisioner tworzy tenanty przez 22 migracje (5 min na slow MySQL). Wygeneruj: php artisan hovera:tenant:dump-schema');
+
+            return;
+        }
+
+        // Czy dump nie jest starszy niż najnowsza tenant migracja
+        $dumpMtime = File::lastModified($dump);
+        $newestMigration = 0;
+        $migrationsDir = base_path('database/migrations/tenant');
+        if (File::isDirectory($migrationsDir)) {
+            foreach (File::files($migrationsDir) as $f) {
+                $newestMigration = max($newestMigration, $f->getMTime());
+            }
+        }
+
+        if ($dumpMtime < $newestMigration) {
+            $age = round(($newestMigration - $dumpMtime) / 86400, 1);
+            $this->flagWarn("database/tenant-schema.sql jest starszy niż najnowsza migracja ({$age} dni). Zregeneruj: php artisan hovera:tenant:dump-schema");
+        } else {
+            $size = round(File::size($dump) / 1024, 1);
+            $this->ok("Schema dump: {$size} KB, świeży");
         }
     }
 

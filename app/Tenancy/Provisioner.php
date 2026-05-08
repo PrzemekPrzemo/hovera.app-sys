@@ -9,6 +9,7 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -34,11 +35,22 @@ class Provisioner
         $this->createDatabase($tenant);
         $this->createDatabaseUser($tenant);
         $this->grantPrivileges($tenant);
-        $this->runTenantMigrations($tenant);
+
+        // Schema setup: jeśli mamy zdumpowany SQL → ładuj go (~5s),
+        // inaczej fallback na klasyczny `migrate` (~5min na slow MySQL).
+        // Dump generowany przez `php artisan hovera:tenant:dump-schema`
+        // (uruchamiany ręcznie po nowych migracjach lub przez update.sh).
+        $schemaDump = base_path('database/tenant-schema.sql');
+        if (File::exists($schemaDump)) {
+            $this->loadTenantSchemaDump($tenant, $schemaDump);
+        } else {
+            $this->runTenantMigrations($tenant);
+        }
 
         Log::info('Tenant provisioned', [
             'tenant_id' => $tenant->id,
             'db_name' => $tenant->db_name,
+            'method' => File::exists($schemaDump) ? 'schema-dump' : 'migrate',
         ]);
     }
 
@@ -141,6 +153,23 @@ class Provisioner
                 '--realpath' => false,
                 '--force' => true,
             ]);
+        });
+    }
+
+    /**
+     * Load pre-dumped schema (CREATE TABLE x N + INSERT migrations) zamiast
+     * uruchamiać sekwencyjnie wszystkie tenant migrations. Skraca tenant
+     * provisioning z ~5 minut do ~5 sekund na slow MySQL (Plesk).
+     */
+    private function loadTenantSchemaDump(Tenant $tenant, string $sqlFile): void
+    {
+        $sql = File::get($sqlFile);
+
+        $this->tenants->execute($tenant, function () use ($sql) {
+            $conn = DB::connection('tenant');
+            // unprepared() obsługuje multi-statement SQL; pre-disable FK
+            // checks jest już w samym dumpie (na początku pliku).
+            $conn->unprepared($sql);
         });
     }
 
