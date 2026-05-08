@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources\TenantResource\RelationManagers;
 
+use App\Actions\Impersonation\StartImpersonation;
 use App\Actions\Memberships\AttachOrInviteUser;
 use App\Actions\Memberships\RevokeMembership;
 use App\Models\Central\Tenant;
@@ -16,6 +17,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class MembershipsRelationManager extends RelationManager
 {
@@ -180,26 +182,27 @@ class MembershipsRelationManager extends RelationManager
                             ->maxLength(500)
                             ->helperText('Pole wymagane. Każda akcja w trakcie sesji impersonacji jest tagowana w audit_log stajni.'),
                     ])
-                    ->action(function (TenantMembership $record, array $data) {
+                    ->action(function (TenantMembership $record, array $data, StartImpersonation $impersonate) {
                         /** @var Tenant $tenant */
                         $tenant = $record->tenant()->firstOrFail();
                         $target = $record->user()->firstOrFail();
 
-                        // Auth switch happens in ImpersonationController@start.
-                        // See controller docblock for why we don't loginUsingId here.
-                        request()->session()->put('impersonation.intent', [
+                        ImpersonationDebug::snap('1_membership_action_before_execute', [
                             'tenant_id' => $tenant->id,
                             'target_user_id' => $target->id,
-                            'reason' => (string) $data['reason'],
-                            'issued_at' => now()->timestamp,
                         ]);
 
-                        ImpersonationDebug::snap('1_membership_action_stashed_intent', [
-                            'tenant_id' => $tenant->id,
-                            'target_user_id' => $target->id,
-                        ]);
+                        $impersonate->execute(
+                            masterAdmin: Auth::user(),
+                            tenant: $tenant,
+                            targetUser: $target,
+                            reason: (string) $data['reason'],
+                            session: request()->session(),
+                        );
+
+                        ImpersonationDebug::snap('1_membership_action_after_execute');
                     })
-                    ->successRedirectUrl(fn () => route('impersonation.start'))
+                    ->successRedirectUrl('/app')
                     ->modalSubmitActionLabel('Rozpocznij impersonację'),
             ]);
     }
