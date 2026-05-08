@@ -38,7 +38,7 @@ class HealthRecordsRelationManager extends RelationManager
         return $form->schema([
             Forms\Components\Grid::make(2)->schema([
                 Forms\Components\Select::make('type')
-                    ->label('Typ')
+                    ->label(__('app/horse_health.form.label.type'))
                     ->options(HealthRecordType::options())
                     ->required()
                     ->reactive()
@@ -50,21 +50,24 @@ class HealthRecordsRelationManager extends RelationManager
                         }
                     }),
                 Forms\Components\DateTimePicker::make('performed_at')
-                    ->label('Data zabiegu')
+                    ->label(__('app/horse_health.form.label.performed_at'))
                     ->seconds(false)
                     ->required()
                     ->default(now()),
             ]),
             Forms\Components\TextInput::make('summary')
-                ->label('Krótki opis')
+                ->label(__('app/horse_health.form.label.summary'))
                 ->required()
                 ->maxLength(255),
             Forms\Components\Grid::make(2)->schema([
-                Forms\Components\TextInput::make('performed_by')->label('Wykonał')->maxLength(255),
-                Forms\Components\DatePicker::make('next_due_at')->label('Następny zabieg'),
-                PriceInput::make('cost_cents', 'Koszt'),
+                Forms\Components\TextInput::make('performed_by')
+                    ->label(__('app/horse_health.form.label.performed_by'))->maxLength(255),
+                Forms\Components\DatePicker::make('next_due_at')
+                    ->label(__('app/horse_health.form.label.next_due_at')),
+                PriceInput::make('cost_cents', __('app/horse_health.form.label.cost')),
             ]),
-            Forms\Components\Textarea::make('details')->label('Notatki')->rows(3),
+            Forms\Components\Textarea::make('details')
+                ->label(__('app/horse_health.form.label.details'))->rows(3),
         ]);
     }
 
@@ -73,14 +76,17 @@ class HealthRecordsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('summary')
             ->columns([
-                Tables\Columns\TextColumn::make('performed_at')->label('Data')->date()->sortable(),
+                Tables\Columns\TextColumn::make('performed_at')
+                    ->label(__('app/horse_health.table.column.performed_at'))->date()->sortable(),
                 Tables\Columns\BadgeColumn::make('type')
-                    ->label('Typ')
+                    ->label(__('app/horse_health.table.column.type'))
                     ->formatStateUsing(fn (HealthRecordType $state) => $state->label()),
-                Tables\Columns\TextColumn::make('summary')->label('Opis')->limit(60),
-                Tables\Columns\TextColumn::make('performed_by')->label('Wykonał')->toggleable(),
+                Tables\Columns\TextColumn::make('summary')
+                    ->label(__('app/horse_health.table.column.summary'))->limit(60),
+                Tables\Columns\TextColumn::make('performed_by')
+                    ->label(__('app/horse_health.table.column.performed_by'))->toggleable(),
                 Tables\Columns\TextColumn::make('next_due_at')
-                    ->label('Następny')
+                    ->label(__('app/horse_health.table.column.next_due_at'))
                     ->date()
                     ->placeholder('—')
                     ->color(fn (?Carbon $state) => match (true) {
