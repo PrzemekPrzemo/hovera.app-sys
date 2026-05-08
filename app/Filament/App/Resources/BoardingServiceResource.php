@@ -44,46 +44,55 @@ class BoardingServiceResource extends Resource
 
     protected static ?int $navigationSort = 36;
 
+    /** @return array<string,string> */
+    private static function vatRateOptions(): array
+    {
+        return [
+            '23' => __('app/boarding.vat_rates.23'),
+            '8' => __('app/boarding.vat_rates.8'),
+            '5' => __('app/boarding.vat_rates.5'),
+            '0' => __('app/boarding.vat_rates.0'),
+            'zw' => __('app/boarding.vat_rates.zw'),
+            'np' => __('app/boarding.vat_rates.np'),
+        ];
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Usługa w cenniku')
-                ->description('Te usługi wybierasz przy każdym koniu (zakładka "Pensja" na karcie konia). Pojawią się w portalu klienta — właściciel widzi za co płaci.')
+            Forms\Components\Section::make(__('app/boarding.form.section.service'))
+                ->description(__('app/boarding.form.section.service_description'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\TextInput::make('name')
-                        ->label('Nazwa')
-                        ->placeholder('np. Siano, Sprzątanie boksu, Transport na zawody')
+                        ->label(__('app/boarding.form.label.name'))
+                        ->placeholder(__('app/boarding.form.label.name_placeholder'))
                         ->required()
                         ->maxLength(120),
-                    Forms\Components\TextInput::make('description')->label('Opis (opcjonalnie)')->maxLength(500),
+                    Forms\Components\TextInput::make('description')
+                        ->label(__('app/boarding.form.label.description'))->maxLength(500),
                     Forms\Components\TextInput::make('unit')
-                        ->label('Jednostka')
-                        ->placeholder('szt. / kg / godz. / m-c')
+                        ->label(__('app/boarding.form.label.unit'))
+                        ->placeholder(__('app/boarding.form.label.unit_placeholder'))
                         ->default('szt.')
                         ->required()
                         ->maxLength(32),
                     Forms\Components\Select::make('frequency')
-                        ->label('Częstotliwość naliczania')
+                        ->label(__('app/boarding.form.label.frequency'))
                         ->options(BoardingFrequency::options())
                         ->required()
                         ->default('monthly'),
-                    PriceInput::make('price_cents', 'Cena netto')
+                    PriceInput::make('price_cents', __('app/boarding.form.label.price_net'))
                         ->required(),
                     Forms\Components\Select::make('vat_rate')
-                        ->label('Stawka VAT')
-                        ->options([
-                            '23' => '23%',
-                            '8' => '8%',
-                            '5' => '5%',
-                            '0' => '0%',
-                            'zw' => 'zw. (zwolniona)',
-                            'np' => 'np. (nie podlega)',
-                        ])
+                        ->label(__('app/boarding.form.label.vat_rate'))
+                        ->options(self::vatRateOptions())
                         ->default('23')
                         ->required(),
-                    Forms\Components\Toggle::make('is_active')->label('Aktywna')->default(true),
-                    Forms\Components\TextInput::make('sort_order')->label('Kolejność')->numeric()->default(0),
+                    Forms\Components\Toggle::make('is_active')
+                        ->label(__('app/boarding.form.label.is_active'))->default(true),
+                    Forms\Components\TextInput::make('sort_order')
+                        ->label(__('app/boarding.form.label.sort_order'))->numeric()->default(0),
                 ]),
         ]);
     }
@@ -92,23 +101,27 @@ class BoardingServiceResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Nazwa')->searchable()->sortable()->weight('bold'),
+                Tables\Columns\TextColumn::make('name')
+                    ->label(__('app/boarding.table.column.name'))
+                    ->searchable()->sortable()->weight('bold'),
                 Tables\Columns\TextColumn::make('frequency')
-                    ->label('Częstotliwość')
+                    ->label(__('app/boarding.table.column.frequency'))
                     ->formatStateUsing(fn (BoardingFrequency $state) => $state->label())
                     ->badge(),
                 Tables\Columns\TextColumn::make('price_cents')
-                    ->label('Cena netto')
+                    ->label(__('app/boarding.table.column.price_net'))
                     ->formatStateUsing(fn (int $state) => number_format($state / 100, 2, ',', ' ').' zł')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('vat_rate')
-                    ->label('VAT')
+                    ->label(__('app/boarding.table.column.vat'))
                     ->formatStateUsing(fn (string $state) => is_numeric($state) ? $state.'%' : $state),
                 Tables\Columns\TextColumn::make('horses_count')
-                    ->label('Konie')
+                    ->label(__('app/boarding.table.column.horses_count'))
                     ->counts('horses')
                     ->sortable(),
-                Tables\Columns\IconColumn::make('is_active')->boolean()->label('Aktywna'),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->boolean()
+                    ->label(__('app/boarding.table.column.is_active')),
             ])
             ->defaultSort('sort_order')
             ->filters([
