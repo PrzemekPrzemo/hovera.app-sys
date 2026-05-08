@@ -9,6 +9,7 @@ use App\Filament\Admin\Resources\TenantResource\Pages;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
 use App\Services\MasterAuditLogger;
+use App\Support\ImpersonationDebug;
 use App\Tenancy\TenantManager;
 use Database\Seeders\Demo\HoveraDemoSeeder;
 use Filament\Forms;
@@ -249,6 +250,11 @@ class TenantResource extends Resource
                             'target_user_id' => $membership->user->id,
                             'reason' => (string) $data['reason'],
                             'issued_at' => now()->timestamp,
+                        ]);
+
+                        ImpersonationDebug::snap('1_tenant_action_stashed_intent', [
+                            'tenant_id' => $record->id,
+                            'target_user_id' => $membership->user->id,
                         ]);
                     })
                     ->successRedirectUrl(fn () => route('impersonation.start'))

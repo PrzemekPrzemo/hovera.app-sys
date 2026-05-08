@@ -9,6 +9,7 @@ use App\Actions\Memberships\RevokeMembership;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Services\MasterAuditLogger;
+use App\Support\ImpersonationDebug;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -191,6 +192,11 @@ class MembershipsRelationManager extends RelationManager
                             'target_user_id' => $target->id,
                             'reason' => (string) $data['reason'],
                             'issued_at' => now()->timestamp,
+                        ]);
+
+                        ImpersonationDebug::snap('1_membership_action_stashed_intent', [
+                            'tenant_id' => $tenant->id,
+                            'target_user_id' => $target->id,
                         ]);
                     })
                     ->successRedirectUrl(fn () => route('impersonation.start'))
