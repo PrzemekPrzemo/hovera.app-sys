@@ -1,7 +1,7 @@
-<x-auth-layout title="Wybierz stajnię — Hovera">
-    <h1>Wybierz stajnię</h1>
+<x-auth-layout :title="__('auth.tenant_select.title')">
+    <h1>{{ __('auth.tenant_select.heading') }}</h1>
     <p class="muted">
-        Twoje konto ma dostęp do {{ $memberships->count() }} stajni. Wybierz, do której chcesz się zalogować.
+        {{ __('auth.tenant_select.intro', ['count' => $memberships->count()]) }}
     </p>
 
     <form method="post" action="{{ route('tenant.select.choose') }}">
@@ -12,12 +12,12 @@
                     <input type="radio" name="tenant_id" value="{{ $m->tenant_id }}" @checked($loop->first) required>
                     <div>
                         <div style="font-weight: 600;">{{ $m->tenant->name }}</div>
-                        <div style="font-size: .8rem; color: #94a3b8;">{{ $m->tenant->slug }} · rola: {{ $m->role }}</div>
+                        <div style="font-size: .8rem; color: #94a3b8;">{{ __('auth.tenant_select.role_label', ['slug' => $m->tenant->slug, 'role' => $m->role]) }}</div>
                     </div>
                 </label>
             @endforeach
         </div>
         @error('tenant_id')<div class="error">{{ $message }}</div>@enderror
-        <button type="submit">Przejdź do stajni</button>
+        <button type="submit">{{ __('auth.tenant_select.submit') }}</button>
     </form>
 </x-auth-layout>

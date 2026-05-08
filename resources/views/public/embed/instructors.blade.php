@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $tenant->name }} — instruktorzy</title>
+    <title>{{ __('embed.instructors.title', ['tenant' => $tenant->name]) }}</title>
     <style>
         :root { --primary: {{ $primary_color }}; }
         html, body { margin: 0; padding: 0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
@@ -27,7 +27,7 @@
 </head>
 <body>
     <div class="wrap">
-        <h2>Nasi instruktorzy</h2>
+        <h2>{{ __('embed.instructors.heading') }}</h2>
         @if (! empty($instructors))
             <ul>
                 @foreach ($instructors as $i)
@@ -35,7 +35,7 @@
                 @endforeach
             </ul>
         @else
-            <p style="color: #6b7280;">Brak listy instruktorów.</p>
+            <p style="color: #6b7280;">{{ __('embed.instructors.empty') }}</p>
         @endif
     </div>
 </body>

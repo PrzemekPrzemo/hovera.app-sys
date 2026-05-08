@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $tenant->name }} — wolne boksy</title>
+    <title>{{ __('embed.box_availability.title', ['tenant' => $tenant->name]) }}</title>
     <style>
         :root { --primary: {{ $primary_color }}; }
         html, body { margin: 0; padding: 0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
@@ -39,23 +39,30 @@
 <body>
     <div class="wrap">
         @if ($box_availability && $box_availability['free'] > 0)
-            <div class="pill free">{{ $box_availability['free'] }}</div>
+            @php
+                // Polish has 3 plural forms (1 / 2-4 / 5+); EN degrades to singular/many.
+                $count = (int) $box_availability['free'];
+                $key = $count === 1
+                    ? 'embed.box_availability.free_singular'
+                    : ($count < 5 ? 'embed.box_availability.free_few' : 'embed.box_availability.free_many');
+            @endphp
+            <div class="pill free">{{ $count }}</div>
             <div class="body">
-                <strong>Mamy {{ $box_availability['free'] }} {{ $box_availability['free'] === 1 ? 'wolny box' : ($box_availability['free'] < 5 ? 'wolne boksy' : 'wolnych boksów') }}</strong>
-                <span>{{ $tenant->name }} · czeka na Ciebie</span>
-                <a class="cta" href="{{ url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug) }}" target="_blank" rel="noopener">Zobacz szczegóły →</a>
+                <strong>{{ __($key, ['count' => $count]) }}</strong>
+                <span>{{ __('embed.box_availability.free_subtitle', ['tenant' => $tenant->name]) }}</span>
+                <a class="cta" href="{{ url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug) }}" target="_blank" rel="noopener">{{ __('embed.box_availability.cta_details') }}</a>
             </div>
         @elseif ($box_availability)
             <div class="pill full">0</div>
             <div class="body">
-                <strong>Wszystkie boksy zajęte</strong>
-                <span>{{ $tenant->name }} · zostaw kontakt — wpiszemy na listę</span>
-                <a class="cta" href="{{ url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug) }}" target="_blank" rel="noopener">Skontaktuj się →</a>
+                <strong>{{ __('embed.box_availability.full_heading') }}</strong>
+                <span>{{ __('embed.box_availability.full_subtitle', ['tenant' => $tenant->name]) }}</span>
+                <a class="cta" href="{{ url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug) }}" target="_blank" rel="noopener">{{ __('embed.box_availability.cta_contact') }}</a>
             </div>
         @else
             <div class="body">
                 <strong>{{ $tenant->name }}</strong>
-                <a class="cta" href="{{ url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug) }}" target="_blank" rel="noopener">Otwórz stronę stajni →</a>
+                <a class="cta" href="{{ url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug) }}" target="_blank" rel="noopener">{{ __('embed.box_availability.cta_open') }}</a>
             </div>
         @endif
     </div>

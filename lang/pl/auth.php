@@ -48,4 +48,30 @@ return [
         'reset_title' => 'Ustaw nowe hasło',
         'reset_button' => 'Zresetuj hasło',
     ],
+
+    'tenant_select' => [
+        'title' => 'Wybierz stajnię — Hovera',
+        'heading' => 'Wybierz stajnię',
+        'intro' => 'Twoje konto ma dostęp do :count stajni. Wybierz, do której chcesz się zalogować.',
+        'role_label' => ':slug · rola: :role',
+        'submit' => 'Przejdź do stajni',
+    ],
+
+    'no_tenants' => [
+        'title' => 'Brak dostępnych stajni — Hovera',
+        'heading' => 'Brak dostępnych stajni',
+        'intro' => 'Twoje konto nie jest jeszcze przypisane do żadnej stajni, lub Twój dostęp został cofnięty. Skontaktuj się z administratorem stajni, aby uzyskać dostęp.',
+        'logout' => 'Wyloguj się',
+    ],
+
+    'invitation_accept' => [
+        'title' => 'Aktywuj konto — Hovera',
+        'heading' => 'Ustaw hasło',
+        'intro_with_tenant' => 'Dołączasz do stajni <strong>:tenant</strong>.',
+        'intro_account' => 'Konto: <strong>:email</strong>.',
+        'intro_pwd' => 'Wybierz hasło (min. 12 znaków), aby aktywować konto.',
+        'password' => 'Nowe hasło',
+        'password_confirmation' => 'Powtórz hasło',
+        'submit' => 'Aktywuj konto i zaloguj',
+    ],
 ];
