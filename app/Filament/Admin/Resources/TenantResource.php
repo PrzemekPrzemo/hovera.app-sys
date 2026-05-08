@@ -250,9 +250,8 @@ class TenantResource extends Resource
                             reason: (string) $data['reason'],
                             session: request()->session(),
                         );
-
-                        return redirect('/app');
                     })
+                    ->successRedirectUrl('/app')
                     ->modalSubmitActionLabel('Rozpocznij impersonację'),
                 Tables\Actions\Action::make('seed_demo')
                     ->label('Wgraj demo dane')

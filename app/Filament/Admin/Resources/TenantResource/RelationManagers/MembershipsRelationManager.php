@@ -196,9 +196,8 @@ class MembershipsRelationManager extends RelationManager
                             reason: (string) $data['reason'],
                             session: request()->session(),
                         );
-
-                        return redirect('/app');
                     })
+                    ->successRedirectUrl('/app')
                     ->modalSubmitActionLabel('Rozpocznij impersonację'),
             ]);
     }
