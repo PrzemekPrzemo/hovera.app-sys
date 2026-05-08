@@ -56,6 +56,7 @@ Route::middleware(['web', 'auth'])->prefix('tenant')->name('tenant.')->group(fun
 });
 
 Route::middleware(['web', 'auth'])->prefix('impersonation')->name('impersonation.')->group(function () {
+    Route::get('/start', [ImpersonationController::class, 'start'])->name('start');
     Route::post('/stop', [ImpersonationController::class, 'stop'])->name('stop');
 });
 

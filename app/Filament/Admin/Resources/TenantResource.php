@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources;
 
-use App\Actions\Impersonation\StartImpersonation;
 use App\Actions\Tenants\DeleteTenant;
 use App\Filament\Admin\Resources\TenantResource\Pages;
 use App\Models\Central\Plan;
@@ -21,7 +20,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Auth;
 
 class TenantResource extends Resource
 {
@@ -226,7 +224,7 @@ class TenantResource extends Resource
                             ->maxLength(500)
                             ->helperText('Wymagane. Sesja jest wpisana do impersonation_sessions + audit_log_master.'),
                     ])
-                    ->action(function (Tenant $record, array $data, StartImpersonation $impersonate) {
+                    ->action(function (Tenant $record, array $data) {
                         $membership = $record->memberships()
                             ->whereNull('revoked_at')
                             ->whereNotNull('user_id')
@@ -243,15 +241,17 @@ class TenantResource extends Resource
                             return;
                         }
 
-                        $impersonate->execute(
-                            masterAdmin: Auth::user(),
-                            tenant: $record,
-                            targetUser: $membership->user,
-                            reason: (string) $data['reason'],
-                            session: request()->session(),
-                        );
+                        // Stash intent — the actual Auth::loginUsingId() runs in
+                        // ImpersonationController@start (fresh request), which
+                        // avoids fighting AuthenticateSession middleware mid-Livewire.
+                        request()->session()->put('impersonation.intent', [
+                            'tenant_id' => $record->id,
+                            'target_user_id' => $membership->user->id,
+                            'reason' => (string) $data['reason'],
+                            'issued_at' => now()->timestamp,
+                        ]);
                     })
-                    ->successRedirectUrl('/app')
+                    ->successRedirectUrl(fn () => route('impersonation.start'))
                     ->modalSubmitActionLabel('Rozpocznij impersonację'),
                 Tables\Actions\Action::make('seed_demo')
                     ->label('Wgraj demo dane')

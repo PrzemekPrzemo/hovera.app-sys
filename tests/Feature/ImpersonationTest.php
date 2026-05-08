@@ -161,6 +161,55 @@ class ImpersonationTest extends TestCase
         $response->assertRedirect('/'.config('hovera.admin.path'));
     }
 
+    public function test_start_route_consumes_session_intent_and_logs_in_target(): void
+    {
+        [$master, $tenant, $target] = $this->scenario();
+
+        $response = $this->actingAs($master)
+            ->withSession([
+                'impersonation.intent' => [
+                    'tenant_id' => $tenant->id,
+                    'target_user_id' => $target->id,
+                    'reason' => 'Diagnostyka problemu z konfiguracją stajni.',
+                    'issued_at' => now()->timestamp,
+                ],
+            ])
+            ->get('/impersonation/start');
+
+        $response->assertRedirect('/app');
+        $this->assertSame($target->id, Auth::id());
+        $this->assertNull(session('impersonation.intent'), 'intent should be pulled');
+        $this->assertSame($master->id, session('impersonation.original_user_id'));
+    }
+
+    public function test_start_route_rejects_expired_intent(): void
+    {
+        [$master, $tenant, $target] = $this->scenario();
+
+        $this->actingAs($master)
+            ->withSession([
+                'impersonation.intent' => [
+                    'tenant_id' => $tenant->id,
+                    'target_user_id' => $target->id,
+                    'reason' => 'Coś tam coś tam co najmniej pięć znaków.',
+                    'issued_at' => now()->subMinutes(5)->timestamp,
+                ],
+            ])
+            ->get('/impersonation/start')
+            ->assertStatus(400);
+
+        $this->assertSame($master->id, Auth::id());
+    }
+
+    public function test_start_route_aborts_when_no_intent_in_session(): void
+    {
+        [$master] = $this->scenario();
+
+        $this->actingAs($master)
+            ->get('/impersonation/start')
+            ->assertStatus(400);
+    }
+
     /**
      * @return array{0:User,1:Tenant,2:User,3:TenantMembership}
      */
