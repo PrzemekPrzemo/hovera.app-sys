@@ -54,4 +54,9 @@ return [
         'overdue_by_days' => '{1} przeterminowane o 1 dzień|[2,4] przeterminowane o :days dni|[5,*] przeterminowane o :days dni',
         'in_days' => '{0} dziś|{1} jutro|[2,*] za :days dni',
     ],
+
+    'help' => [
+        'navigation' => 'Pomoc',
+        'title' => 'Instrukcja obsługi',
+    ],
 ];
