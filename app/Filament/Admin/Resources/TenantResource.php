@@ -29,15 +29,27 @@ class TenantResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
 
-    protected static ?string $navigationLabel = 'Stajnie';
-
-    protected static ?string $navigationGroup = 'Stajnie';
-
-    protected static ?string $modelLabel = 'Stajnia';
-
-    protected static ?string $pluralModelLabel = 'Stajnie';
-
     protected static ?int $navigationSort = 10;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.tenants');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.stables');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('models.tenant');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.tenants');
+    }
 
     public static function form(Form $form): Form
     {

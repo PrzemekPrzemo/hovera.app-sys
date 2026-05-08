@@ -36,13 +36,25 @@ class InvoiceResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static ?string $navigationGroup = 'Finanse';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.finances');
+    }
 
-    protected static ?string $navigationLabel = 'Faktury';
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.invoices');
+    }
 
-    protected static ?string $modelLabel = 'faktura';
+    public static function getModelLabel(): string
+    {
+        return __('models.invoice');
+    }
 
-    protected static ?string $pluralModelLabel = 'Faktury';
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.invoices');
+    }
 
     protected static ?int $navigationSort = 10;
 

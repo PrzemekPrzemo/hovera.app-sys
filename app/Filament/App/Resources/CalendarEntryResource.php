@@ -27,13 +27,25 @@ class CalendarEntryResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
 
-    protected static ?string $navigationGroup = 'Kalendarz';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.calendar');
+    }
 
-    protected static ?string $navigationLabel = 'Rezerwacje';
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.calendar_entries');
+    }
 
-    protected static ?string $modelLabel = 'rezerwacja';
+    public static function getModelLabel(): string
+    {
+        return __('models.calendar_entry');
+    }
 
-    protected static ?string $pluralModelLabel = 'Rezerwacje';
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.calendar_entries');
+    }
 
     protected static ?int $navigationSort = 40;
 

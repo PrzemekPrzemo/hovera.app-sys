@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    // Admin panel groups
+    'group' => [
+        'stables' => 'Stajnie',
+        'configuration' => 'Konfiguracja',
+        'finances' => 'Finanse',
+        'calendar' => 'Kalendarz',
+        'stable' => 'Stajnia',
+        'settings' => 'Ustawienia',
+    ],
+
+    // Resource labels
+    'tenants' => 'Stajnie',
+    'plans' => 'Plany',
+    'invitations' => 'Zaproszenia',
+    'horses' => 'Konie',
+    'clients' => 'Klienci',
+    'boxes' => 'Boksy',
+    'arenas' => 'Ujeżdżalnie',
+    'calendar_entries' => 'Rezerwacje',
+    'recurring_entries' => 'Cykliczne zajęcia',
+    'invoices' => 'Faktury',
+    'payments' => 'Płatności',
+    'passes' => 'Karnety',
+    'boarding_services' => 'Cennik pensji',
+    'instructors' => 'Instruktorzy',
+    'employees' => 'Pracownicy',
+    'health_records' => 'Opieka i zdrowie',
+];

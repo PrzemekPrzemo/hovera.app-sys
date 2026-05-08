@@ -25,13 +25,25 @@ class HorseResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-bolt';
 
-    protected static ?string $navigationGroup = 'Stajnia';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.stable');
+    }
 
-    protected static ?string $navigationLabel = 'Konie';
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.horses');
+    }
 
-    protected static ?string $modelLabel = 'koń';
+    public static function getModelLabel(): string
+    {
+        return __('models.horse');
+    }
 
-    protected static ?string $pluralModelLabel = 'Konie';
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.horses');
+    }
 
     protected static ?int $navigationSort = 10;
 

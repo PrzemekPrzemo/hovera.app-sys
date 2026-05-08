@@ -23,13 +23,25 @@ class InstructorResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user';
 
-    protected static ?string $navigationGroup = 'Kalendarz';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.calendar');
+    }
 
-    protected static ?string $navigationLabel = 'Instruktorzy';
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.instructors');
+    }
 
-    protected static ?string $modelLabel = 'instruktor';
+    public static function getModelLabel(): string
+    {
+        return __('models.instructor');
+    }
 
-    protected static ?string $pluralModelLabel = 'Instruktorzy';
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.instructors');
+    }
 
     protected static ?int $navigationSort = 60;
 

@@ -10,6 +10,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
@@ -59,8 +60,20 @@ class AdminPanelProvider extends PanelProvider
             // Sidebar groups w master adminie. Filament wymaga ikon
             // albo na grupie albo na itemach — wybieramy ikony per-resource.
             ->navigationGroups([
-                NavigationGroup::make('Stajnie')->collapsible(),
-                NavigationGroup::make('Konfiguracja')->collapsed()->collapsible(),
+                NavigationGroup::make(fn () => __('navigation.group.stables'))->collapsible(),
+                NavigationGroup::make(fn () => __('navigation.group.configuration'))->collapsed()->collapsible(),
+            ])
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label(fn () => __('common.language.pl'))
+                    ->icon('heroicon-o-language')
+                    ->url(fn () => route('locale.set', ['locale' => 'pl']))
+                    ->visible(fn () => app()->getLocale() !== 'pl'),
+                MenuItem::make()
+                    ->label(fn () => __('common.language.en'))
+                    ->icon('heroicon-o-language')
+                    ->url(fn () => route('locale.set', ['locale' => 'en']))
+                    ->visible(fn () => app()->getLocale() !== 'en'),
             ])
             ->middleware([
                 EncryptCookies::class,

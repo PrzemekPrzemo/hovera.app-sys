@@ -22,13 +22,25 @@ class BoardingServiceResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';
 
-    protected static ?string $navigationGroup = 'Stajnia';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.stable');
+    }
 
-    protected static ?string $navigationLabel = 'Cennik pensji';
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.boarding_services');
+    }
 
-    protected static ?string $modelLabel = 'usługa pensji';
+    public static function getModelLabel(): string
+    {
+        return __('models.boarding_service');
+    }
 
-    protected static ?string $pluralModelLabel = 'Cennik pensji';
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.boarding_services');
+    }
 
     protected static ?int $navigationSort = 36;
 

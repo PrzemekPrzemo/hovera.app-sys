@@ -20,15 +20,27 @@ class InvitationResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
 
-    protected static ?string $navigationLabel = 'Zaproszenia';
-
-    protected static ?string $navigationGroup = 'Stajnie';
-
-    protected static ?string $modelLabel = 'zaproszenie';
-
-    protected static ?string $pluralModelLabel = 'Zaproszenia';
-
     protected static ?int $navigationSort = 20;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.invitations');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.stables');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('models.invitation');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.invitations');
+    }
 
     public static function table(Table $table): Table
     {

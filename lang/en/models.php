@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'tenant' => 'stable',
+    'tenants' => 'Stables',
+    'plan' => 'plan',
+    'plans' => 'Plans',
+    'invitation' => 'invitation',
+    'invitations' => 'Invitations',
+    'horse' => 'horse',
+    'horses' => 'Horses',
+    'client' => 'client',
+    'clients' => 'Clients',
+    'box' => 'box',
+    'boxes' => 'Boxes',
+    'arena' => 'arena',
+    'arenas' => 'Arenas',
+    'invoice' => 'invoice',
+    'invoices' => 'Invoices',
+    'payment' => 'payment',
+    'payments' => 'Payments',
+    'pass' => 'pass',
+    'passes' => 'Passes',
+    'boarding_service' => 'boarding service',
+    'boarding_services' => 'Boarding services',
+    'instructor' => 'instructor',
+    'instructors' => 'Instructors',
+    'health_record' => 'health record',
+    'health_records' => 'Care & health',
+    'calendar_entry' => 'booking',
+    'calendar_entries' => 'Bookings',
+    'recurring_entry' => 'recurring session',
+    'recurring_entries' => 'Recurring sessions',
+];

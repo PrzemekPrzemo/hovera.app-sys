@@ -61,19 +61,29 @@ class AppPanelProvider extends PanelProvider
             // zostawiamy ikony per-resource (lepsza czytelność niż wspólna
             // ikona grupy). Kolejność tutaj wyznacza kolejność na sidebarze.
             ->navigationGroups([
-                NavigationGroup::make('Stajnia')->collapsible(),
-                NavigationGroup::make('Kalendarz')->collapsible(),
-                NavigationGroup::make('Finanse')->collapsible(),
-                NavigationGroup::make('Ustawienia')->collapsed()->collapsible(),
+                NavigationGroup::make(fn () => __('navigation.group.stable'))->collapsible(),
+                NavigationGroup::make(fn () => __('navigation.group.calendar'))->collapsible(),
+                NavigationGroup::make(fn () => __('navigation.group.finances'))->collapsible(),
+                NavigationGroup::make(fn () => __('navigation.group.settings'))->collapsed()->collapsible(),
             ])
             ->userMenuItems([
                 MenuItem::make()
-                    ->label('Master admin')
+                    ->label(fn () => __('common.language.pl'))
+                    ->icon('heroicon-o-language')
+                    ->url(fn () => route('locale.set', ['locale' => 'pl']))
+                    ->visible(fn () => app()->getLocale() !== 'pl'),
+                MenuItem::make()
+                    ->label(fn () => __('common.language.en'))
+                    ->icon('heroicon-o-language')
+                    ->url(fn () => route('locale.set', ['locale' => 'en']))
+                    ->visible(fn () => app()->getLocale() !== 'en'),
+                MenuItem::make()
+                    ->label(fn () => app()->getLocale() === 'pl' ? 'Master admin' : 'Master admin')
                     ->icon('heroicon-o-shield-check')
                     ->url(fn () => '/'.config('hovera.admin.path', 'admin'))
                     ->visible(fn () => Auth::user()?->is_master_admin === true),
                 MenuItem::make()
-                    ->label('Zmień stajnię')
+                    ->label(fn () => app()->getLocale() === 'pl' ? 'Zmień stajnię' : 'Switch stable')
                     ->icon('heroicon-o-arrows-right-left')
                     ->url(fn () => route('tenant.switch')),
             ])

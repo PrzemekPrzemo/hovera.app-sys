@@ -27,13 +27,25 @@ class ClientResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
-    protected static ?string $navigationGroup = 'Stajnia';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.stable');
+    }
 
-    protected static ?string $navigationLabel = 'Klienci';
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.clients');
+    }
 
-    protected static ?string $modelLabel = 'klient';
+    public static function getModelLabel(): string
+    {
+        return __('models.client');
+    }
 
-    protected static ?string $pluralModelLabel = 'Klienci';
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.clients');
+    }
 
     protected static ?int $navigationSort = 20;
 

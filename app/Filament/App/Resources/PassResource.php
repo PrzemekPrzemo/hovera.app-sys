@@ -25,13 +25,25 @@ class PassResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
 
-    protected static ?string $navigationGroup = 'Stajnia';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.stable');
+    }
 
-    protected static ?string $navigationLabel = 'Karnety';
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.passes');
+    }
 
-    protected static ?string $modelLabel = 'karnet';
+    public static function getModelLabel(): string
+    {
+        return __('models.pass');
+    }
 
-    protected static ?string $pluralModelLabel = 'Karnety';
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.passes');
+    }
 
     protected static ?int $navigationSort = 30;
 

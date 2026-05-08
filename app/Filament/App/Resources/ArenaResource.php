@@ -22,13 +22,25 @@ class ArenaResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-square-3-stack-3d';
 
-    protected static ?string $navigationGroup = 'Kalendarz';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.calendar');
+    }
 
-    protected static ?string $navigationLabel = 'Ujeżdżalnie';
+    public static function getNavigationLabel(): string
+    {
+        return __('navigation.arenas');
+    }
 
-    protected static ?string $modelLabel = 'ujeżdżalnia';
+    public static function getModelLabel(): string
+    {
+        return __('models.arena');
+    }
 
-    protected static ?string $pluralModelLabel = 'Ujeżdżalnie';
+    public static function getPluralModelLabel(): string
+    {
+        return __('models.arenas');
+    }
 
     protected static ?int $navigationSort = 50;
 

@@ -1,9 +1,6 @@
-<x-auth-layout title="Kody odzyskiwania — Hovera">
-    <h1>Zapisz kody odzyskiwania</h1>
-    <p class="muted">
-        To są jednorazowe kody na wypadek utraty dostępu do aplikacji 2FA.
-        <strong>Zapisz je teraz</strong> — nie zobaczysz ich ponownie.
-    </p>
+<x-auth-layout :title="__('auth.two_factor.recovery_codes_title')">
+    <h1>{{ __('auth.two_factor.recovery_codes_heading') }}</h1>
+    <p class="muted">{{ __('auth.two_factor.recovery_codes_intro') }}</p>
 
     <div class="codes">
         @foreach ($codes as $c)
@@ -12,6 +9,6 @@
     </div>
 
     <form method="get" action="{{ $return_to ?? url('/app') }}">
-        <button type="submit">Mam zapisane — wróć do aplikacji</button>
+        <button type="submit">{{ __('auth.two_factor.recovery_codes_continue') }}</button>
     </form>
 </x-auth-layout>
