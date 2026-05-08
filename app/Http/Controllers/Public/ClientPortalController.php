@@ -38,6 +38,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -277,6 +278,31 @@ class ClientPortalController extends Controller
             'tenant' => $tenant,
             'client' => $client,
             'messages' => $messages,
+            'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
+        ]);
+    }
+
+    public function showHelp(Request $request, string $slug): View|RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $locale = app()->getLocale();
+        $supported = ['pl', 'en', 'de', 'fr'];
+        $useLocale = in_array($locale, $supported, true) ? $locale : 'pl';
+
+        $path = resource_path("help/{$useLocale}/client.md");
+        if (! file_exists($path)) {
+            $path = resource_path('help/pl/client.md');
+        }
+
+        return view('public.portal.help', [
+            'tenant' => $tenant,
+            'client' => $client,
+            'help_html' => Str::markdown((string) file_get_contents($path), ['html_input' => 'allow']),
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
         ]);
     }
