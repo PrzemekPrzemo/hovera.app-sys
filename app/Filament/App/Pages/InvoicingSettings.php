@@ -14,6 +14,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -26,11 +27,20 @@ class InvoicingSettings extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static ?string $navigationLabel = 'Faktury i rozliczenia';
+    public static function getNavigationLabel(): string
+    {
+        return __('pages.invoicing_settings.navigation');
+    }
 
-    protected static ?string $title = 'Faktury i rozliczenia';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.settings');
+    }
 
-    protected static ?string $navigationGroup = 'Ustawienia';
+    public function getTitle(): string|Htmlable
+    {
+        return __('pages.invoicing_settings.title');
+    }
 
     protected static ?int $navigationSort = 30;
 

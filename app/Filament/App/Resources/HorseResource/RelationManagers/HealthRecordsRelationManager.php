@@ -11,17 +11,27 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 class HealthRecordsRelationManager extends RelationManager
 {
     protected static string $relationship = 'healthRecords';
 
-    protected static ?string $title = 'Opieka i zdrowie';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('navigation.health_records');
+    }
 
-    protected static ?string $modelLabel = 'wpis';
+    public static function getModelLabel(): ?string
+    {
+        return __('models.health_entry');
+    }
 
-    protected static ?string $pluralModelLabel = 'Wpisy zdrowotne';
+    public static function getPluralModelLabel(): ?string
+    {
+        return __('models.health_entries');
+    }
 
     public function form(Form $form): Form
     {

@@ -39,4 +39,18 @@ return [
     'calendar_entries' => 'Rezerwacje',
     'recurring_entry' => 'cykliczne zajęcie',
     'recurring_entries' => 'Cykliczne zajęcia',
+
+    // Relation manager labels
+    'membership' => 'członek',
+    'memberships' => 'Członkowie',
+    'addon' => 'dodatek',
+    'addons' => 'Dodatki',
+    'message' => 'wiadomość',
+    'messages' => 'Wiadomości',
+    'document' => 'dokument',
+    'documents' => 'Dokumenty',
+    'health_entry' => 'wpis',
+    'health_entries' => 'Wpisy zdrowotne',
+    'activity' => 'aktywność',
+    'activities' => 'Aktywności',
 ];

@@ -11,16 +11,26 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class AddonsRelationManager extends RelationManager
 {
     protected static string $relationship = 'addons';
 
-    protected static ?string $title = 'Dodatki';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('models.addons');
+    }
 
-    protected static ?string $modelLabel = 'dodatek';
+    public static function getModelLabel(): ?string
+    {
+        return __('models.addon');
+    }
 
-    protected static ?string $pluralModelLabel = 'Dodatki';
+    public static function getPluralModelLabel(): ?string
+    {
+        return __('models.addons');
+    }
 
     public function form(Form $form): Form
     {

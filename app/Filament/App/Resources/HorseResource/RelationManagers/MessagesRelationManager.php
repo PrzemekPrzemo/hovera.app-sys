@@ -14,6 +14,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -34,11 +35,20 @@ class MessagesRelationManager extends RelationManager
 {
     protected static string $relationship = 'messages';
 
-    protected static ?string $title = 'Wiadomości';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('models.messages');
+    }
 
-    protected static ?string $modelLabel = 'wiadomość';
+    public static function getModelLabel(): ?string
+    {
+        return __('models.message');
+    }
 
-    protected static ?string $pluralModelLabel = 'Wiadomości';
+    public static function getPluralModelLabel(): ?string
+    {
+        return __('models.messages');
+    }
 
     public function form(Form $form): Form
     {

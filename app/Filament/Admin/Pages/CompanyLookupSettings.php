@@ -11,6 +11,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
 
 /**
  * Master-admin: GUS / KRS configuration. KRS is public and works without
@@ -26,11 +27,20 @@ class CompanyLookupSettings extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-magnifying-glass';
 
-    protected static ?string $navigationLabel = 'GUS / KRS';
+    public static function getNavigationLabel(): string
+    {
+        return __('pages.company_lookup.navigation');
+    }
 
-    protected static ?string $title = 'Weryfikacja firm — GUS / KRS';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.configuration');
+    }
 
-    protected static ?string $navigationGroup = 'Konfiguracja';
+    public function getTitle(): string|Htmlable
+    {
+        return __('pages.company_lookup.title');
+    }
 
     protected static ?int $navigationSort = 10;
 

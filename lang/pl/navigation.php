@@ -30,4 +30,15 @@ return [
     'instructors' => 'Instruktorzy',
     'employees' => 'Pracownicy',
     'health_records' => 'Opieka i zdrowie',
+
+    // Pages (non-resource)
+    'pages' => [
+        'profile' => 'Profil',
+        'calendar' => 'Plan dnia',
+        'tenant_settings' => 'Ustawienia stajni',
+        'invoicing_settings' => 'Faktury i rozliczenia',
+        'payment_settings' => 'Płatności online',
+        'ksef_settings' => 'KSeF (e-faktury)',
+        'company_lookup' => 'GUS / KRS',
+    ],
 ];
