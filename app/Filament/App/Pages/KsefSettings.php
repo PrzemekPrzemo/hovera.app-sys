@@ -100,101 +100,101 @@ class KsefSettings extends Page implements HasForms
         return $form
             ->statePath('data')
             ->schema([
-                Forms\Components\Section::make('Środowisko KSeF')
+                Forms\Components\Section::make(__('app/ksef_settings.form.section.env'))
                     ->columns(2)
                     ->schema([
                         Forms\Components\Radio::make('env')
-                            ->label('Środowisko')
+                            ->label(__('app/ksef_settings.form.label.env'))
                             ->options([
-                                'test' => 'Test (ksef-test.mf.gov.pl)',
-                                'demo' => 'Demo (ksef-demo.mf.gov.pl)',
-                                'prod' => 'Produkcyjne (ksef.mf.gov.pl)',
+                                'test' => __('app/ksef_settings.form.env_options.test'),
+                                'demo' => __('app/ksef_settings.form.env_options.demo'),
+                                'prod' => __('app/ksef_settings.form.env_options.prod'),
                             ])
                             ->default('test')
                             ->required(),
                         Forms\Components\TextInput::make('context_nip')
-                            ->label('NIP stajni (kontekst)')
+                            ->label(__('app/ksef_settings.form.label.context_nip'))
                             ->required()
                             ->maxLength(16)
-                            ->helperText('NIP używany przy uwierzytelnianiu w KSeF — ten sam co na fakturach.'),
+                            ->helperText(__('app/ksef_settings.form.label.context_nip_helper')),
                         Forms\Components\Radio::make('identifier_type')
-                            ->label('Typ identyfikatora podpisującego')
+                            ->label(__('app/ksef_settings.form.label.identifier_type'))
                             ->options([
-                                'certificateSubject' => 'Subject certyfikatu (zwykle dla PFX)',
-                                'certificateFingerprint' => 'Fingerprint (dla certyfikatów KSeF)',
+                                'certificateSubject' => __('app/ksef_settings.form.identifier_options.subject'),
+                                'certificateFingerprint' => __('app/ksef_settings.form.identifier_options.fingerprint'),
                             ])
                             ->default('certificateSubject')
                             ->required(),
                     ]),
 
-                Forms\Components\Section::make('Certyfikat — upload')
-                    ->description('Jednorazowo wgrywasz certyfikat. Klucz prywatny + hasło są zaszyfrowane na poziomie aplikacji (Laravel Crypt + AES-256).')
+                Forms\Components\Section::make(__('app/ksef_settings.form.section.cert_upload'))
+                    ->description(__('app/ksef_settings.form.section.cert_upload_description'))
                     ->schema([
                         Forms\Components\Tabs::make('cert_tabs')
                             ->tabs([
-                                Forms\Components\Tabs\Tab::make('PFX / P12')
+                                Forms\Components\Tabs\Tab::make(__('app/ksef_settings.form.label.tab_pfx'))
                                     ->schema([
                                         Forms\Components\FileUpload::make('cert_pfx')
-                                            ->label('Plik certyfikatu (.pfx / .p12)')
+                                            ->label(__('app/ksef_settings.form.label.cert_pfx_file'))
                                             ->acceptedFileTypes(['application/x-pkcs12', 'application/octet-stream', 'application/pkcs12'])
                                             ->maxSize(50)
                                             ->disk('local')
                                             ->visibility('private')
                                             ->storeFiles(false), // przekażemy raw bytes do save()
                                         Forms\Components\TextInput::make('cert_pfx_password')
-                                            ->label('Hasło PFX')
+                                            ->label(__('app/ksef_settings.form.label.cert_pfx_password'))
                                             ->password()
                                             ->revealable()
-                                            ->helperText('Hasło używane TYLKO przy parsowaniu — NIE jest zapisywane w plain text.'),
+                                            ->helperText(__('app/ksef_settings.form.label.cert_pfx_password_helper')),
                                     ]),
-                                Forms\Components\Tabs\Tab::make('PEM (.crt + .key)')
+                                Forms\Components\Tabs\Tab::make(__('app/ksef_settings.form.label.tab_pem'))
                                     ->schema([
                                         Forms\Components\FileUpload::make('cert_pem_crt')
-                                            ->label('Certyfikat (.crt / .pem)')
+                                            ->label(__('app/ksef_settings.form.label.cert_pem_crt'))
                                             ->acceptedFileTypes(['application/x-x509-ca-cert', 'application/octet-stream', 'text/plain'])
                                             ->maxSize(50)
                                             ->disk('local')
                                             ->visibility('private')
                                             ->storeFiles(false),
                                         Forms\Components\FileUpload::make('cert_pem_key')
-                                            ->label('Klucz prywatny (.key / .pem)')
+                                            ->label(__('app/ksef_settings.form.label.cert_pem_key'))
                                             ->acceptedFileTypes(['application/octet-stream', 'application/x-pem-file', 'text/plain'])
                                             ->maxSize(50)
                                             ->disk('local')
                                             ->visibility('private')
                                             ->storeFiles(false),
                                         Forms\Components\TextInput::make('cert_pem_password')
-                                            ->label('Hasło klucza (jeśli zaszyfrowany)')
+                                            ->label(__('app/ksef_settings.form.label.cert_pem_password'))
                                             ->password()
                                             ->revealable(),
                                     ]),
                             ]),
                     ]),
 
-                Forms\Components\Section::make('Aktualnie zapisany certyfikat')
+                Forms\Components\Section::make(__('app/ksef_settings.form.section.cert_current'))
                     ->visible($hasCert)
                     ->schema([
                         Forms\Components\Placeholder::make('cert_subject_cn')
-                            ->label('Podmiot')
+                            ->label(__('app/ksef_settings.form.label.cert_subject_cn'))
                             ->content(fn () => $cert['subject_cn'] ?? '—'),
                         Forms\Components\Placeholder::make('cert_subject_nip')
-                            ->label('NIP w certyfikacie')
+                            ->label(__('app/ksef_settings.form.label.cert_subject_nip'))
                             ->content(fn () => $cert['subject_nip'] ?? '—'),
                         Forms\Components\Placeholder::make('cert_issuer')
-                            ->label('Wystawca')
+                            ->label(__('app/ksef_settings.form.label.cert_issuer'))
                             ->content(fn () => $cert['issuer'] ?? '—'),
                         Forms\Components\Placeholder::make('cert_fingerprint')
-                            ->label('Fingerprint SHA-256')
+                            ->label(__('app/ksef_settings.form.label.cert_fingerprint'))
                             ->content(fn () => $cert['fingerprint'] ?? '—'),
                         Forms\Components\Placeholder::make('cert_valid_to')
-                            ->label('Ważny do')
+                            ->label(__('app/ksef_settings.form.label.cert_valid_to'))
                             ->content(fn () => $cert['valid_to'] ?? '—'),
                         Forms\Components\Placeholder::make('cert_type')
-                            ->label('Typ')
+                            ->label(__('app/ksef_settings.form.label.cert_type'))
                             ->content(fn () => match ($cert['cert_type'] ?? null) {
-                                'personal' => 'Podpis kwalifikowany (osobowy)',
-                                'seal' => 'Pieczęć elektroniczna',
-                                'ksef' => 'Certyfikat KSeF',
+                                'personal' => __('app/ksef_settings.form.cert_types.personal'),
+                                'seal' => __('app/ksef_settings.form.cert_types.seal'),
+                                'ksef' => __('app/ksef_settings.form.cert_types.ksef'),
                                 default => '—',
                             }),
                     ]),
@@ -227,9 +227,9 @@ class KsefSettings extends Page implements HasForms
                 $ksef['cert_password_encrypted'] = Crypt::encryptString($pfxPassword);
                 $ksef['cert_metadata'] = $meta;
 
-                Notification::make()->title('Certyfikat PFX zapisany.')->success()->send();
+                Notification::make()->title(__('app/ksef_settings.action.pfx_saved'))->success()->send();
             } catch (\Throwable $e) {
-                Notification::make()->title('Błąd certyfikatu PFX')->body($e->getMessage())->danger()->send();
+                Notification::make()->title(__('app/ksef_settings.action.pfx_error_title'))->body($e->getMessage())->danger()->send();
 
                 return;
             }
@@ -251,9 +251,9 @@ class KsefSettings extends Page implements HasForms
                 $ksef['cert_password_encrypted'] = $pemPassword !== '' ? Crypt::encryptString($pemPassword) : null;
                 $ksef['cert_metadata'] = $meta;
 
-                Notification::make()->title('Certyfikat PEM zapisany.')->success()->send();
+                Notification::make()->title(__('app/ksef_settings.action.pem_saved'))->success()->send();
             } catch (\Throwable $e) {
-                Notification::make()->title('Błąd certyfikatu PEM')->body($e->getMessage())->danger()->send();
+                Notification::make()->title(__('app/ksef_settings.action.pem_error_title'))->body($e->getMessage())->danger()->send();
 
                 return;
             }
@@ -267,7 +267,7 @@ class KsefSettings extends Page implements HasForms
             'has_cert' => isset($ksef['cert_format']),
         ]);
 
-        Notification::make()->title('Zapisano ustawienia KSeF')->success()->send();
+        Notification::make()->title(__('app/ksef_settings.action.saved'))->success()->send();
     }
 
     /**
@@ -291,6 +291,6 @@ class KsefSettings extends Page implements HasForms
             return (string) file_get_contents($file['path']);
         }
 
-        throw new \RuntimeException('Nie można odczytać przesłanego pliku certyfikatu.');
+        throw new \RuntimeException(__('app/ksef_settings.action.cant_read_file'));
     }
 }

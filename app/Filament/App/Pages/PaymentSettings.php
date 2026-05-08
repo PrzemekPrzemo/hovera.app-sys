@@ -123,33 +123,33 @@ class PaymentSettings extends Page implements HasForms
         return $form
             ->statePath('data')
             ->schema([
-                Forms\Components\Section::make('Domyślny dostawca')
-                    ->description('Wybierz, przez którą bramkę klienci mają płacić online. "Brak" = wszystko offline (przelew tradycyjny / gotówka).')
+                Forms\Components\Section::make(__('app/payment_settings.form.section.default_provider'))
+                    ->description(__('app/payment_settings.form.section.default_provider_description'))
                     ->schema([
                         Forms\Components\Select::make('default_provider')
-                            ->label('Domyślna bramka')
+                            ->label(__('app/payment_settings.form.label.default_provider'))
                             ->options(PaymentProvider::tenantOptions())
                             ->required()
                             ->reactive()
                             ->default('none'),
                     ]),
 
-                Forms\Components\Section::make('Przelewy24')
+                Forms\Components\Section::make(__('app/payment_settings.form.section.p24'))
                     ->visible(fn (Forms\Get $get) => $get('default_provider') === 'p24')
                     ->collapsed(false)
                     ->schema($this->p24Schema()),
 
-                Forms\Components\Section::make('PayU')
+                Forms\Components\Section::make(__('app/payment_settings.form.section.payu'))
                     ->visible(fn (Forms\Get $get) => $get('default_provider') === 'payu')
                     ->collapsed(false)
                     ->schema($this->payuSchema()),
 
-                Forms\Components\Section::make('Stripe')
+                Forms\Components\Section::make(__('app/payment_settings.form.section.stripe'))
                     ->visible(fn (Forms\Get $get) => $get('default_provider') === 'stripe')
                     ->collapsed(false)
                     ->schema($this->stripeSchema()),
 
-                Forms\Components\Section::make('Mollie')
+                Forms\Components\Section::make(__('app/payment_settings.form.section.mollie'))
                     ->visible(fn (Forms\Get $get) => $get('default_provider') === 'mollie')
                     ->collapsed(false)
                     ->schema($this->mollieSchema()),
@@ -185,24 +185,29 @@ class PaymentSettings extends Page implements HasForms
             'default_provider' => $persisted['default_provider'],
         ]);
 
-        Notification::make()->title('Zapisano ustawienia płatności')->success()->send();
+        Notification::make()->title(__('app/payment_settings.action.saved'))->success()->send();
     }
 
     /** @return array<int, Forms\Components\Component> */
     private function p24Schema(): array
     {
         return [
-            Forms\Components\TextInput::make('p24.merchant_id')->label('Merchant ID')->required(),
-            Forms\Components\TextInput::make('p24.pos_id')->label('POS ID')->required(),
-            Forms\Components\TextInput::make('p24.crc_key')->label('CRC key')->password()->revealable()->required(),
-            Forms\Components\TextInput::make('p24.api_key')->label('API key (REST)')->password()->revealable()->required()
-                ->helperText('Panel P24 → Moja firma → Punkty sprzedaży → Konfiguracja → REST API.'),
-            Forms\Components\Toggle::make('p24.sandbox')->label('Sandbox (test)')->default(true),
+            Forms\Components\TextInput::make('p24.merchant_id')
+                ->label(__('app/payment_settings.form.label.p24_merchant_id'))->required(),
+            Forms\Components\TextInput::make('p24.pos_id')
+                ->label(__('app/payment_settings.form.label.p24_pos_id'))->required(),
+            Forms\Components\TextInput::make('p24.crc_key')
+                ->label(__('app/payment_settings.form.label.p24_crc_key'))->password()->revealable()->required(),
+            Forms\Components\TextInput::make('p24.api_key')
+                ->label(__('app/payment_settings.form.label.p24_api_key'))->password()->revealable()->required()
+                ->helperText(__('app/payment_settings.form.label.p24_api_key_helper')),
+            Forms\Components\Toggle::make('p24.sandbox')
+                ->label(__('app/payment_settings.form.label.p24_sandbox'))->default(true),
             Forms\Components\Select::make('p24.force_method')
-                ->label('Wymuś jedną metodę (opcjonalne)')
-                ->helperText('Pusto = klient zobaczy pełną listę metod w P24 (rekomendowane). Wybierz jedną metodę żeby od razu skierować do np. BLIK.')
+                ->label(__('app/payment_settings.form.label.p24_force_method'))
+                ->helperText(__('app/payment_settings.form.label.p24_force_method_helper'))
                 ->options(P24PaymentProvider::methodOptions())
-                ->placeholder('— Pełna lista metod —'),
+                ->placeholder(__('app/payment_settings.form.label.force_method_placeholder')),
         ];
     }
 
@@ -210,17 +215,22 @@ class PaymentSettings extends Page implements HasForms
     private function payuSchema(): array
     {
         return [
-            Forms\Components\TextInput::make('payu.pos_id')->label('POS ID (merchantPosId)')->required(),
-            Forms\Components\TextInput::make('payu.client_id')->label('OAuth client_id')->required(),
-            Forms\Components\TextInput::make('payu.client_secret')->label('OAuth client_secret')->password()->revealable()->required(),
-            Forms\Components\TextInput::make('payu.md5_key')->label('Klucz drugi (MD5)')->password()->revealable()->required()
-                ->helperText('Panel PayU → Punkty płatności → Twój POS → "drugi klucz (MD5)".'),
-            Forms\Components\Toggle::make('payu.sandbox')->label('Sandbox (test)')->default(true),
+            Forms\Components\TextInput::make('payu.pos_id')
+                ->label(__('app/payment_settings.form.label.payu_pos_id'))->required(),
+            Forms\Components\TextInput::make('payu.client_id')
+                ->label(__('app/payment_settings.form.label.payu_client_id'))->required(),
+            Forms\Components\TextInput::make('payu.client_secret')
+                ->label(__('app/payment_settings.form.label.payu_client_secret'))->password()->revealable()->required(),
+            Forms\Components\TextInput::make('payu.md5_key')
+                ->label(__('app/payment_settings.form.label.payu_md5_key'))->password()->revealable()->required()
+                ->helperText(__('app/payment_settings.form.label.payu_md5_key_helper')),
+            Forms\Components\Toggle::make('payu.sandbox')
+                ->label(__('app/payment_settings.form.label.payu_sandbox'))->default(true),
             Forms\Components\Select::make('payu.force_method')
-                ->label('Wymuś jedną metodę (opcjonalne)')
-                ->helperText('Pusto = klient zobaczy pełną listę metod w PayU (rekomendowane). Wybierz np. BLIK żeby od razu skierować do tej metody.')
+                ->label(__('app/payment_settings.form.label.payu_force_method'))
+                ->helperText(__('app/payment_settings.form.label.payu_force_method_helper'))
                 ->options(PayUPaymentProvider::methodOptions())
-                ->placeholder('— Pełna lista metod —'),
+                ->placeholder(__('app/payment_settings.form.label.force_method_placeholder')),
         ];
     }
 
@@ -228,13 +238,16 @@ class PaymentSettings extends Page implements HasForms
     private function stripeSchema(): array
     {
         return [
-            Forms\Components\TextInput::make('stripe.publishable_key')->label('Publishable key (pk_...)'),
-            Forms\Components\TextInput::make('stripe.secret_key')->label('Secret key (sk_...)')->password()->revealable()->required(),
-            Forms\Components\TextInput::make('stripe.webhook_secret')->label('Webhook secret (whsec_...)')->password()->revealable()->required()
-                ->helperText('Skopiuj ze Stripe Dashboard → Developers → Webhooks → endpoint → Signing secret.'),
+            Forms\Components\TextInput::make('stripe.publishable_key')
+                ->label(__('app/payment_settings.form.label.stripe_publishable_key')),
+            Forms\Components\TextInput::make('stripe.secret_key')
+                ->label(__('app/payment_settings.form.label.stripe_secret_key'))->password()->revealable()->required(),
+            Forms\Components\TextInput::make('stripe.webhook_secret')
+                ->label(__('app/payment_settings.form.label.stripe_webhook_secret'))->password()->revealable()->required()
+                ->helperText(__('app/payment_settings.form.label.stripe_webhook_secret_helper')),
             Forms\Components\CheckboxList::make('stripe.enabled_methods')
-                ->label('Pokazywane metody płatności')
-                ->helperText('Wybierz, które opcje klient zobaczy w Stripe Checkout. Domyślnie tylko karty.')
+                ->label(__('app/payment_settings.form.label.stripe_enabled_methods'))
+                ->helperText(__('app/payment_settings.form.label.stripe_enabled_methods_helper'))
                 ->options(StripePaymentProvider::methodOptions())
                 ->columns(2)
                 ->default(['card']),
@@ -245,11 +258,12 @@ class PaymentSettings extends Page implements HasForms
     private function mollieSchema(): array
     {
         return [
-            Forms\Components\TextInput::make('mollie.api_key')->label('API key (live_... lub test_...)')->password()->revealable()->required()
-                ->helperText('Pobierz z Mollie Dashboard → Developers → API keys.'),
+            Forms\Components\TextInput::make('mollie.api_key')
+                ->label(__('app/payment_settings.form.label.mollie_api_key'))->password()->revealable()->required()
+                ->helperText(__('app/payment_settings.form.label.mollie_api_key_helper')),
             Forms\Components\CheckboxList::make('mollie.enabled_methods')
-                ->label('Pokazywane metody płatności')
-                ->helperText('Pusta lista = Mollie pokaże wszystkie metody aktywne na Twoim koncie. Pojedyncza metoda = klient idzie od razu do tej metody (np. od razu BLIK).')
+                ->label(__('app/payment_settings.form.label.mollie_enabled_methods'))
+                ->helperText(__('app/payment_settings.form.label.mollie_enabled_methods_helper'))
                 ->options(MolliePaymentProvider::methodOptions())
                 ->columns(2),
         ];
