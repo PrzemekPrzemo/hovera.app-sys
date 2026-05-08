@@ -1,12 +1,9 @@
-<x-auth-layout title="Brak dostępnych stajni — Hovera">
-    <h1>Brak dostępnych stajni</h1>
-    <p class="muted">
-        Twoje konto nie jest jeszcze przypisane do żadnej stajni, lub Twój dostęp został cofnięty.
-        Skontaktuj się z administratorem stajni, aby uzyskać dostęp.
-    </p>
+<x-auth-layout :title="__('auth.no_tenants.title')">
+    <h1>{{ __('auth.no_tenants.heading') }}</h1>
+    <p class="muted">{{ __('auth.no_tenants.intro') }}</p>
 
     <form method="post" action="{{ url('/app/logout') }}">
         @csrf
-        <button type="submit">Wyloguj się</button>
+        <button type="submit">{{ __('auth.no_tenants.logout') }}</button>
     </form>
 </x-auth-layout>

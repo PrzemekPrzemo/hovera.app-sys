@@ -46,4 +46,30 @@ return [
         'reset_title' => 'Set a new password',
         'reset_button' => 'Reset password',
     ],
+
+    'tenant_select' => [
+        'title' => 'Pick a stable — Hovera',
+        'heading' => 'Pick a stable',
+        'intro' => 'Your account has access to :count stables. Pick which one to sign in to.',
+        'role_label' => ':slug · role: :role',
+        'submit' => 'Continue to stable',
+    ],
+
+    'no_tenants' => [
+        'title' => 'No stables available — Hovera',
+        'heading' => 'No stables available',
+        'intro' => 'Your account is not yet assigned to any stable, or your access has been revoked. Contact the stable administrator to get access.',
+        'logout' => 'Sign out',
+    ],
+
+    'invitation_accept' => [
+        'title' => 'Activate account — Hovera',
+        'heading' => 'Set a password',
+        'intro_with_tenant' => "You're joining <strong>:tenant</strong>.",
+        'intro_account' => 'Account: <strong>:email</strong>.',
+        'intro_pwd' => 'Choose a password (min. 12 characters) to activate your account.',
+        'password' => 'New password',
+        'password_confirmation' => 'Confirm password',
+        'submit' => 'Activate account and sign in',
+    ],
 ];

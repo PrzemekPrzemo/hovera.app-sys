@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $tenant->name }} — cennik</title>
+    <title>{{ __('embed.pricing.title', ['tenant' => $tenant->name]) }}</title>
     <style>
         :root { --primary: {{ $primary_color }}; }
         html, body { margin: 0; padding: 0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
@@ -30,11 +30,11 @@
 </head>
 <body>
     <div class="wrap">
-        <h2>Cennik</h2>
+        <h2>{{ __('embed.pricing.heading') }}</h2>
         @if (! empty($pricing))
             <table>
                 <thead>
-                    <tr><th>Pozycja</th><th></th><th>Cena</th></tr>
+                    <tr><th>{{ __('embed.pricing.col_item') }}</th><th></th><th>{{ __('embed.pricing.col_price') }}</th></tr>
                 </thead>
                 <tbody>
                     @foreach ($pricing as $p)
@@ -46,9 +46,9 @@
                     @endforeach
                 </tbody>
             </table>
-            <p class="note">Ceny netto. Skontaktuj się ze stajnią po szczegółowy zakres usług.</p>
+            <p class="note">{{ __('embed.pricing.note') }}</p>
         @else
-            <p style="color: #6b7280;">Cennik niedostępny.</p>
+            <p style="color: #6b7280;">{{ __('embed.pricing.empty') }}</p>
         @endif
     </div>
 </body>

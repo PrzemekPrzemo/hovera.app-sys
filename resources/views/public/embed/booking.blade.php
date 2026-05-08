@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $tenant->name }} — rezerwacja</title>
+    <title>{{ __('embed.booking.title', ['tenant' => $tenant->name]) }}</title>
     <style>
         :root { --primary: {{ $primary_color }}; }
         html, body { margin: 0; padding: 0; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
@@ -30,10 +30,10 @@
 </head>
 <body>
     <div class="card">
-        <h2>Zarezerwuj lekcję w {{ $tenant->name }}</h2>
-        <p>{{ $tagline ?? 'Wybierz instruktora i termin online — bez telefonowania.' }}</p>
+        <h2>{{ __('embed.booking.heading', ['tenant' => $tenant->name]) }}</h2>
+        <p>{{ $tagline ?? __('embed.booking.tagline_default') }}</p>
         <a class="cta" href="{{ url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug . '/book') }}" target="_blank" rel="noopener">
-            Zarezerwuj online →
+            {{ __('embed.booking.cta') }}
         </a>
     </div>
 </body>
