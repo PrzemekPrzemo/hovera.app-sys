@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\Controllers\Auth\TwoFactorController;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,9 +39,46 @@ class EnsureMasterAdmin
         }
 
         if ($require2fa && $user->hasTwoFactorEnabled() && ! $request->session()->get('two_factor_passed')) {
+            if ($this->hasValidRememberCookie($request, (string) $user->id)) {
+                $request->session()->put('two_factor_passed', true);
+
+                return $next($request);
+            }
+
             return redirect()->route('two-factor.challenge');
         }
 
         return $next($request);
+    }
+
+    /**
+     * Validate the encrypted "remember this device" cookie set after a
+     * successful 2FA challenge. Cookie payload: {user_id, issued_at}.
+     * EncryptCookies middleware decrypts the value before we see it here.
+     */
+    private function hasValidRememberCookie(Request $request, string $userId): bool
+    {
+        $raw = $request->cookie(TwoFactorController::REMEMBER_COOKIE_NAME);
+        if (! is_string($raw) || $raw === '') {
+            return false;
+        }
+
+        $payload = json_decode($raw, true);
+        if (! is_array($payload)) {
+            return false;
+        }
+
+        if (($payload['user_id'] ?? null) !== $userId) {
+            return false;
+        }
+
+        $issuedAt = (int) ($payload['issued_at'] ?? 0);
+        if ($issuedAt <= 0) {
+            return false;
+        }
+
+        $maxAge = TwoFactorController::REMEMBER_DAYS * 24 * 60 * 60;
+
+        return (now()->timestamp - $issuedAt) <= $maxAge;
     }
 }
