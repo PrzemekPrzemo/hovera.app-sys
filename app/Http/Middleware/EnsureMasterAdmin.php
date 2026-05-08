@@ -29,7 +29,10 @@ class EnsureMasterAdmin
         }
 
         if (! $user->is_master_admin) {
-            abort(403, 'Forbidden');
+            // Tenant user landed on /admin (stale tab, or "intended URL"
+            // captured before they logged in). Bounce them to the client
+            // panel instead of the unfriendly 403 page.
+            return redirect('/app');
         }
 
         $require2fa = (bool) config('hovera.admin.require_2fa', true);

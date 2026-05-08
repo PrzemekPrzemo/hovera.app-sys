@@ -34,7 +34,7 @@ class AdminAccessControlTest extends TestCase
         $response->assertRedirect();
     }
 
-    public function test_non_admin_user_cannot_reach_admin(): void
+    public function test_non_admin_user_is_redirected_to_app_panel(): void
     {
         $user = User::create([
             'email' => 'user@example.com',
@@ -45,7 +45,7 @@ class AdminAccessControlTest extends TestCase
 
         $this->actingAs($user)
             ->get('/admin')
-            ->assertForbidden();
+            ->assertRedirect('/app');
     }
 
     public function test_master_admin_can_reach_admin_when_2fa_disabled(): void

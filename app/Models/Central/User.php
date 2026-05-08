@@ -64,7 +64,11 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         return match ($panel->getId()) {
-            'admin' => $this->is_master_admin,
+            // /admin: any authenticated user passes Filament's gate; the
+            // EnsureMasterAdmin middleware that runs right after redirects
+            // non-master users to /app instead of throwing 403 (friendlier
+            // when an "intended URL" sends a tenant user there post-login).
+            'admin' => true,
             // Master admin może wejść na /app — bez tego nie mógłby
             // się zalogować (po PR #65 wszyscy logują się przez /app/login).
             // Master nie ma membership, ale powinien mieć access do panelu
