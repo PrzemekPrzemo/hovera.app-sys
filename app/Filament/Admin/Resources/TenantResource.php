@@ -54,7 +54,7 @@ class TenantResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Identyfikacja')
+            Forms\Components\Section::make(__('admin/tenant.form.section.identification'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\TextInput::make('slug')
@@ -62,13 +62,15 @@ class TenantResource extends Resource
                         ->maxLength(63)
                         ->regex('/^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/')
                         ->disabledOn('edit')
-                        ->helperText('Niezmienne. Używane w adresach i nazwie bazy.'),
+                        ->helperText(__('admin/tenant.form.helper.slug')),
                     Forms\Components\TextInput::make('name')->required()->maxLength(255),
                     Forms\Components\TextInput::make('legal_name')->maxLength(255),
-                    Forms\Components\TextInput::make('tax_id')->label('NIP / VAT ID')->maxLength(32),
+                    Forms\Components\TextInput::make('tax_id')
+                        ->label(__('admin/tenant.form.label.tax_id'))
+                        ->maxLength(32),
                 ]),
 
-            Forms\Components\Section::make('Lokalizacja')
+            Forms\Components\Section::make(__('admin/tenant.form.section.location'))
                 ->columns(4)
                 ->schema([
                     Forms\Components\TextInput::make('country')->default('PL')->maxLength(2)->required(),
@@ -77,11 +79,11 @@ class TenantResource extends Resource
                     Forms\Components\TextInput::make('currency')->default('PLN')->maxLength(3)->required(),
                 ]),
 
-            Forms\Components\Section::make('Subskrypcja')
+            Forms\Components\Section::make(__('admin/tenant.form.section.subscription'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\Select::make('plan_id')
-                        ->label('Plan')
+                        ->label(__('admin/tenant.form.label.plan'))
                         ->options(fn () => Plan::query()->orderBy('sort_order')->pluck('name', 'id'))
                         ->searchable(),
                     Forms\Components\Select::make('status')
@@ -96,49 +98,49 @@ class TenantResource extends Resource
                         ->disabledOn('create'),
                 ]),
 
-            Forms\Components\Section::make('Branding')
-                ->description('Używane na publicznej stronie /s/{slug} i w mailach.')
+            Forms\Components\Section::make(__('admin/tenant.form.section.branding'))
+                ->description(__('admin/tenant.form.section.branding_description'))
                 ->collapsed()
                 ->columns(2)
                 ->schema([
                     Forms\Components\ColorPicker::make('branding.primary_color')
-                        ->label('Kolor wiodący')
+                        ->label(__('admin/tenant.form.label.primary_color'))
                         ->default('#10b981'),
                     Forms\Components\TextInput::make('branding.logo_url')
-                        ->label('URL logo')
+                        ->label(__('admin/tenant.form.label.logo_url'))
                         ->url()
                         ->maxLength(500),
                 ]),
 
-            Forms\Components\Section::make('Profil publiczny')
-                ->description('Dane wyświetlane na publicznej stronie stajni /s/{slug}.')
+            Forms\Components\Section::make(__('admin/tenant.form.section.public_profile'))
+                ->description(__('admin/tenant.form.section.public_profile_description'))
                 ->collapsed()
                 ->columns(2)
                 ->schema([
                     Forms\Components\Textarea::make('settings.public_profile.description')
-                        ->label('Opis stajni')
+                        ->label(__('admin/tenant.form.label.public_description'))
                         ->rows(3)
                         ->maxLength(2000)
                         ->columnSpanFull(),
                     Forms\Components\TextInput::make('settings.public_profile.email')
-                        ->label('Email kontaktowy (publiczny)')
+                        ->label(__('admin/tenant.form.label.public_email'))
                         ->email()
                         ->maxLength(255),
                     Forms\Components\TextInput::make('settings.public_profile.phone')
-                        ->label('Telefon kontaktowy')
+                        ->label(__('admin/tenant.form.label.public_phone'))
                         ->tel()
                         ->maxLength(40),
                     Forms\Components\TextInput::make('settings.public_profile.address')
-                        ->label('Adres')
+                        ->label(__('admin/tenant.form.label.public_address'))
                         ->maxLength(255)
                         ->columnSpanFull(),
                     Forms\Components\TextInput::make('settings.public_profile.website')
-                        ->label('Strona WWW')
+                        ->label(__('admin/tenant.form.label.public_website'))
                         ->url()
                         ->maxLength(500),
                 ]),
 
-            Forms\Components\Section::make('Baza danych')
+            Forms\Components\Section::make(__('admin/tenant.form.section.database'))
                 ->columns(3)
                 ->visibleOn('edit')
                 ->schema([
@@ -155,8 +157,12 @@ class TenantResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('slug')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('country')->label('Kraj')->sortable(),
-                Tables\Columns\TextColumn::make('plan.name')->label('Plan')->sortable(),
+                Tables\Columns\TextColumn::make('country')
+                    ->label(__('admin/tenant.table.column.country'))
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('plan.name')
+                    ->label(__('admin/tenant.table.column.plan'))
+                    ->sortable(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
                         'gray' => fn ($state) => in_array($state, ['provisioning', 'churned'], true),
@@ -164,8 +170,13 @@ class TenantResource extends Resource
                         'success' => 'active',
                         'danger' => fn ($state) => in_array($state, ['suspended', 'deleted'], true),
                     ]),
-                Tables\Columns\TextColumn::make('db_name')->label('Baza')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('created_at')->label('Utworzona')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('db_name')
+                    ->label(__('admin/tenant.table.column.db_name'))
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('admin/tenant.table.column.created_at'))
+                    ->dateTime()
+                    ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -182,7 +193,7 @@ class TenantResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('suspend')
-                    ->label('Suspend')
+                    ->label(__('admin/tenant.action.suspend.label'))
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
                     ->visible(fn (Tenant $r) => $r->status !== 'suspended')
@@ -197,10 +208,12 @@ class TenantResource extends Resource
                             'suspended_reason' => $data['reason'],
                         ])->save();
                         $audit->record('tenant.suspend', 'Tenant', $record->id, $record->id, $data);
-                        Notification::make()->success()->title('Stajnia zawieszona')->send();
+                        Notification::make()->success()
+                            ->title(__('admin/tenant.action.suspend.notification_title'))
+                            ->send();
                     }),
                 Tables\Actions\Action::make('reactivate')
-                    ->label('Reactivate')
+                    ->label(__('admin/tenant.action.reactivate.label'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn (Tenant $r) => $r->status === 'suspended')
@@ -212,10 +225,12 @@ class TenantResource extends Resource
                             'suspended_reason' => null,
                         ])->save();
                         $audit->record('tenant.reactivate', 'Tenant', $record->id, $record->id);
-                        Notification::make()->success()->title('Stajnia ponownie aktywna')->send();
+                        Notification::make()->success()
+                            ->title(__('admin/tenant.action.reactivate.notification_title'))
+                            ->send();
                     }),
                 Tables\Actions\DeleteAction::make()
-                    ->label('Soft delete')
+                    ->label(__('admin/tenant.action.soft_delete.label'))
                     ->after(function (Tenant $record, MasterAuditLogger $audit) {
                         $audit->record('tenant.soft_delete', 'Tenant', $record->id, $record->id);
                     }),
@@ -224,7 +239,7 @@ class TenantResource extends Resource
                         $audit->record('tenant.restore', 'Tenant', $record->id, $record->id);
                     }),
                 Tables\Actions\Action::make('login_as_owner')
-                    ->label('Zaloguj jako stajnia')
+                    ->label(__('admin/tenant.action.login_as_owner.label'))
                     ->icon('heroicon-o-eye')
                     ->color('success')
                     ->visible(fn (Tenant $r) => ! $r->trashed()
@@ -232,11 +247,11 @@ class TenantResource extends Resource
                         && $r->memberships()->whereNull('revoked_at')->whereNotNull('user_id')->exists())
                     ->form([
                         Forms\Components\Textarea::make('reason')
-                            ->label('Powód impersonacji (audit RODO)')
+                            ->label(__('admin/tenant.action.login_as_owner.reason_label'))
                             ->required()
                             ->minLength(5)
                             ->maxLength(500)
-                            ->helperText('Wymagane. Sesja jest wpisana do impersonation_sessions + audit_log_master.'),
+                            ->helperText(__('admin/tenant.action.login_as_owner.reason_helper')),
                     ])
                     ->action(function (Tenant $record, array $data, StartImpersonation $impersonate) {
                         $membership = $record->memberships()
@@ -248,8 +263,8 @@ class TenantResource extends Resource
 
                         if (! $membership || ! $membership->user) {
                             Notification::make()->danger()
-                                ->title('Brak aktywnego usera dla tej stajni')
-                                ->body('Najpierw dodaj członka zespołu lub zaproś ownera.')
+                                ->title(__('admin/tenant.action.login_as_owner.no_user_title'))
+                                ->body(__('admin/tenant.action.login_as_owner.no_user_body'))
                                 ->send();
 
                             return;
@@ -264,20 +279,20 @@ class TenantResource extends Resource
                         );
                     })
                     ->successRedirectUrl('/app')
-                    ->modalSubmitActionLabel('Rozpocznij impersonację'),
+                    ->modalSubmitActionLabel(__('admin/tenant.action.login_as_owner.submit')),
                 Tables\Actions\Action::make('seed_demo')
-                    ->label('Wgraj demo dane')
+                    ->label(__('admin/tenant.action.seed_demo.label'))
                     ->icon('heroicon-o-sparkles')
                     ->color('warning')
                     ->visible(fn (Tenant $r) => ! $r->trashed() && $r->status === 'active')
                     ->requiresConfirmation()
-                    ->modalHeading(fn (Tenant $r) => "Wgrać demo dane do {$r->name}?")
-                    ->modalDescription('Doda 14 koni, 6 klientów, 12 boxów, kalendarz, faktury i resztę zestawu pokazowego. Działa na bazie tenanta.')
+                    ->modalHeading(fn (Tenant $r) => __('admin/tenant.action.seed_demo.modal_heading', ['name' => $r->name]))
+                    ->modalDescription(__('admin/tenant.action.seed_demo.modal_description'))
                     ->form([
                         Forms\Components\Toggle::make('fresh')
-                            ->label('Wyczyść istniejące dane (DROP all tables)')
+                            ->label(__('admin/tenant.action.seed_demo.fresh_label'))
                             ->default(false)
-                            ->helperText('UWAGA: usunie wszystkie obecne dane stajni przed seed.'),
+                            ->helperText(__('admin/tenant.action.seed_demo.fresh_helper')),
                     ])
                     ->action(function (Tenant $record, array $data, TenantManager $tm, HoveraDemoSeeder $seeder, MasterAuditLogger $audit) {
                         $tm->setCurrent($record);
@@ -300,32 +315,37 @@ class TenantResource extends Resource
                                 'fresh' => $data['fresh'] ?? false,
                             ]);
                             Notification::make()->success()
-                                ->title('Demo dane wgrane')
-                                ->body("Stajnia {$record->name} ma teraz pełen zestaw pokazowy.")
+                                ->title(__('admin/tenant.action.seed_demo.success_title'))
+                                ->body(__('admin/tenant.action.seed_demo.success_body', ['name' => $record->name]))
                                 ->send();
                         } catch (\Throwable $e) {
                             Notification::make()->danger()
-                                ->title('Nie udało się wgrać demo')
+                                ->title(__('admin/tenant.action.seed_demo.failure_title'))
                                 ->body($e->getMessage())
                                 ->send();
                         }
                     }),
                 Tables\Actions\Action::make('destroy')
-                    ->label('Drop database')
+                    ->label(__('admin/tenant.action.destroy.label'))
                     ->icon('heroicon-o-trash')
                     ->color('danger')
                     ->visible(fn (Tenant $r) => $r->trashed())
                     ->requiresConfirmation()
-                    ->modalHeading('Trwale usuń stajnię')
-                    ->modalDescription(fn (Tenant $r) => "Tej operacji NIE można cofnąć. Bazy {$r->db_name} oraz konto MySQL {$r->db_username} zostaną usunięte fizycznie.")
+                    ->modalHeading(__('admin/tenant.action.destroy.modal_heading'))
+                    ->modalDescription(fn (Tenant $r) => __('admin/tenant.action.destroy.modal_description', [
+                        'db' => $r->db_name,
+                        'user' => $r->db_username,
+                    ]))
                     ->form([
                         Forms\Components\TextInput::make('confirm_slug')
-                            ->label('Wpisz slug stajni, aby potwierdzić')
+                            ->label(__('admin/tenant.action.destroy.confirm_slug_label'))
                             ->required(),
                     ])
                     ->action(function (Tenant $record, array $data, DeleteTenant $deleter, MasterAuditLogger $audit) {
                         if ($data['confirm_slug'] !== $record->slug) {
-                            Notification::make()->danger()->title('Slug się nie zgadza.')->send();
+                            Notification::make()->danger()
+                                ->title(__('admin/tenant.action.destroy.slug_mismatch'))
+                                ->send();
 
                             return;
                         }
@@ -334,7 +354,9 @@ class TenantResource extends Resource
                             'slug' => $record->slug,
                         ]);
                         $deleter->destroy($record);
-                        Notification::make()->success()->title('Stajnia trwale usunięta')->send();
+                        Notification::make()->success()
+                            ->title(__('admin/tenant.action.destroy.success_title'))
+                            ->send();
                     }),
             ]);
     }
