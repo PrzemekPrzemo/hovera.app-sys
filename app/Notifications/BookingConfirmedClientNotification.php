@@ -40,37 +40,38 @@ class BookingConfirmedClientNotification extends Notification
 
     public function toMail(mixed $notifiable): MailMessage
     {
+        $duration = __('notifications.common.duration_minutes', ['minutes' => $this->durationMinutes]);
+
         $message = (new MailMessage)
-            ->subject("Rezerwacja potwierdzona — {$this->tenantName}")
-            ->greeting('Cześć!')
-            ->line("Twoja rezerwacja w **{$this->tenantName}** została potwierdzona.")
-            ->line("**Termin:** {$this->startsAt->format('Y-m-d H:i')} · {$this->durationMinutes} min")
-            ->line("**Instruktor:** {$this->instructorName}");
+            ->subject(__('notifications.booking_confirmed.subject', ['tenant' => $this->tenantName]))
+            ->greeting(__('notifications.common.greeting'))
+            ->line(__('notifications.booking_confirmed.line_intro', ['tenant' => $this->tenantName]))
+            ->line('**'.__('notifications.common.field.term').':** '.$this->startsAt->format('Y-m-d H:i').' · '.$duration)
+            ->line('**'.__('notifications.common.field.instructor').':** '.$this->instructorName);
 
         if ($this->horseName) {
-            $message->line("**Koń:** {$this->horseName}");
+            $message->line('**'.__('notifications.common.field.horse').':** '.$this->horseName);
         }
         if ($this->arenaName) {
-            $message->line("**Ujeżdżalnia:** {$this->arenaName}");
+            $message->line('**'.__('notifications.common.field.arena').':** '.$this->arenaName);
         }
         if ($this->stableAddress) {
-            $message->line("**Adres:** {$this->stableAddress}");
+            $message->line('**'.__('notifications.common.field.address').':** '.$this->stableAddress);
         }
         if ($this->stablePhone) {
-            $message->line("**Telefon do stajni:** {$this->stablePhone}");
+            $message->line('**'.__('notifications.common.field.phone').':** '.$this->stablePhone);
         }
 
         $message
-            ->line('Jeśli musisz odwołać, kliknij poniżej. '
-                .'Odwołanie minimum '.$this->cancellationPolicyHours.' godzin przed lekcją jest bez kosztu.')
-            ->action('Odwołaj rezerwację', $this->cancelUrl);
+            ->line(__('notifications.common.cancel_policy', ['hours' => $this->cancellationPolicyHours]))
+            ->action(__('notifications.common.cancel_action'), $this->cancelUrl);
 
         if ($this->portalUrl) {
-            $message->line("Wszystkie rezerwacje znajdziesz w panelu klienta: [{$this->portalUrl}]({$this->portalUrl})");
+            $message->line(__('notifications.common.portal_link', ['url' => $this->portalUrl]));
         }
 
         return $message
-            ->line('Do zobaczenia!')
-            ->salutation("— {$this->tenantName}");
+            ->line(__('notifications.booking_confirmed.line_signoff'))
+            ->salutation(__('notifications.common.salutation_prefix').$this->tenantName);
     }
 }

@@ -35,22 +35,23 @@ class BookingRequestedClientNotification extends Notification
 
     public function toMail(mixed $notifiable): MailMessage
     {
+        $duration = __('notifications.common.duration_minutes', ['minutes' => $this->durationMinutes]);
+
         $message = (new MailMessage)
-            ->subject("Otrzymaliśmy zgłoszenie — {$this->tenantName}")
-            ->greeting('Cześć!')
-            ->line("Dziękujemy za zgłoszenie rezerwacji w stajni **{$this->tenantName}**.")
-            ->line("**Termin:** {$this->startsAt->format('Y-m-d H:i')} · {$this->durationMinutes} min")
-            ->line("**Instruktor:** {$this->instructorName}")
-            ->line('Stajnia potwierdzi rezerwację mailem (zwykle w ciągu kilku godzin) i przydzieli konia.')
-            ->line('Jeśli musisz odwołać, kliknij poniżej. '
-                .'Odwołanie minimum '.$this->cancellationPolicyHours.' godzin przed lekcją jest bez kosztu.')
-            ->action('Odwołaj rezerwację', $this->cancelUrl)
-            ->line('Jeśli nie odwołasz w terminie, karnet (jeśli używany) zostanie zużyty.');
+            ->subject(__('notifications.booking_requested.subject', ['tenant' => $this->tenantName]))
+            ->greeting(__('notifications.common.greeting'))
+            ->line(__('notifications.booking_requested.line_intro', ['tenant' => $this->tenantName]))
+            ->line('**'.__('notifications.common.field.term').':** '.$this->startsAt->format('Y-m-d H:i').' · '.$duration)
+            ->line('**'.__('notifications.common.field.instructor').':** '.$this->instructorName)
+            ->line(__('notifications.booking_requested.line_processing'))
+            ->line(__('notifications.common.cancel_policy', ['hours' => $this->cancellationPolicyHours]))
+            ->action(__('notifications.common.cancel_action'), $this->cancelUrl)
+            ->line(__('notifications.booking_requested.line_pass_warning'));
 
         if ($this->portalUrl) {
-            $message->line("Wszystkie rezerwacje znajdziesz w panelu klienta: [{$this->portalUrl}]({$this->portalUrl})");
+            $message->line(__('notifications.common.portal_link', ['url' => $this->portalUrl]));
         }
 
-        return $message->salutation("— {$this->tenantName}");
+        return $message->salutation(__('notifications.common.salutation_prefix').$this->tenantName);
     }
 }

@@ -35,28 +35,37 @@ class HorseMessageNotification extends Notification
     public function toMail(mixed $notifiable): MailMessage
     {
         $subject = $this->subject
-            ? "{$this->subject} ({$this->horseName})"
-            : "Nowa wiadomość — {$this->horseName} — {$this->tenantName}";
+            ? __('notifications.horse_message.subject_with_subject', [
+                'subject' => $this->subject,
+                'horse' => $this->horseName,
+            ])
+            : __('notifications.horse_message.subject_default', [
+                'horse' => $this->horseName,
+                'tenant' => $this->tenantName,
+            ]);
 
         $msg = (new MailMessage)
             ->subject($subject)
-            ->greeting('Cześć!')
-            ->line("Otrzymałeś nową wiadomość dotyczącą konia **{$this->horseName}** ({$this->tenantName}).")
-            ->line('**Od:** '.$this->fromLabel);
+            ->greeting(__('notifications.common.greeting'))
+            ->line(__('notifications.horse_message.line_intro', [
+                'horse' => $this->horseName,
+                'tenant' => $this->tenantName,
+            ]))
+            ->line('**'.__('notifications.common.field.from').':** '.$this->fromLabel);
 
         if ($this->subject) {
-            $msg->line('**Temat:** '.$this->subject);
+            $msg->line('**'.__('notifications.common.field.subject').':** '.$this->subject);
         }
         $msg->line('> '.$this->bodyPreview);
 
         if ($this->attachmentCount > 0) {
             $msg->line($this->attachmentCount === 1
-                ? '📎 1 załącznik'
-                : "📎 {$this->attachmentCount} załączniki");
+                ? __('notifications.horse_message.attachments_one')
+                : __('notifications.horse_message.attachments_many', ['count' => $this->attachmentCount]));
         }
 
         return $msg
-            ->action('Otwórz wiadomość', $this->portalUrl)
-            ->salutation("— {$this->tenantName}");
+            ->action(__('notifications.horse_message.action'), $this->portalUrl)
+            ->salutation(__('notifications.common.salutation_prefix').$this->tenantName);
     }
 }

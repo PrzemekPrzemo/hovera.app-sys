@@ -35,12 +35,12 @@ class ClientPortalMagicLinkNotification extends Notification
     public function toMail(mixed $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("Logowanie do panelu — {$this->tenantName}")
-            ->greeting('Cześć!')
-            ->line("Klikinij poniżej, aby zalogować się do panelu klienta **{$this->tenantName}**.")
-            ->action('Zaloguj się', $this->magicLinkUrl)
-            ->line("Link działa przez {$this->ttlMinutes} minut i można użyć go tylko raz.")
-            ->line('Jeśli to nie Ty próbujesz się zalogować — zignoruj tę wiadomość.')
-            ->salutation("— {$this->tenantName}");
+            ->subject(__('notifications.client_portal_magic_link.subject', ['tenant' => $this->tenantName]))
+            ->greeting(__('notifications.common.greeting'))
+            ->line(__('notifications.client_portal_magic_link.line_intro', ['tenant' => $this->tenantName]))
+            ->action(__('notifications.client_portal_magic_link.action'), $this->magicLinkUrl)
+            ->line(__('notifications.client_portal_magic_link.line_ttl', ['minutes' => $this->ttlMinutes]))
+            ->line(__('notifications.client_portal_magic_link.line_security'))
+            ->salutation(__('notifications.common.salutation_prefix').$this->tenantName);
     }
 }

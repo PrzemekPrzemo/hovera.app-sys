@@ -35,24 +35,22 @@ class BookingCancelledClientNotification extends Notification
     public function toMail(mixed $notifiable): MailMessage
     {
         $message = (new MailMessage)
-            ->subject("Rezerwacja odwołana — {$this->tenantName}")
-            ->greeting('Cześć!');
+            ->subject(__('notifications.booking_cancelled.subject', ['tenant' => $this->tenantName]))
+            ->greeting(__('notifications.common.greeting'));
 
         if ($this->cancelledBy === 'client') {
-            $message->line("Twoja rezerwacja w **{$this->tenantName}** została odwołana zgodnie z Twoim wnioskiem.");
+            $message->line(__('notifications.booking_cancelled.line_by_client', ['tenant' => $this->tenantName]));
         } else {
-            $message->line("Stajnia **{$this->tenantName}** odwołała Twoją rezerwację. Skontaktuj się ze stajnią po szczegóły.");
+            $message->line(__('notifications.booking_cancelled.line_by_stable', ['tenant' => $this->tenantName]));
         }
 
-        $message->line("**Anulowany termin:** {$this->startsAt->format('Y-m-d H:i')}")
-            ->line("**Instruktor:** {$this->instructorName}");
+        $message->line('**'.__('notifications.common.field.cancelled_term').':** '.$this->startsAt->format('Y-m-d H:i'))
+            ->line('**'.__('notifications.common.field.instructor').':** '.$this->instructorName);
 
-        if ($this->passRestored) {
-            $message->line('Karnet został zwrócony — możesz go wykorzystać przy kolejnej rezerwacji.');
-        } else {
-            $message->line('Karnet (jeśli był używany) nie został zwrócony — odwołanie po terminie polityki.');
-        }
+        $message->line($this->passRestored
+            ? __('notifications.booking_cancelled.pass_restored')
+            : __('notifications.booking_cancelled.pass_not_restored'));
 
-        return $message->salutation("— {$this->tenantName}");
+        return $message->salutation(__('notifications.common.salutation_prefix').$this->tenantName);
     }
 }

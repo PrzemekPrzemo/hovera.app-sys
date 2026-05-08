@@ -33,26 +33,29 @@ class UserInvitationNotification extends Notification
 
         $message = (new MailMessage)
             ->subject($tenantName
-                ? "Zaproszenie do stajni {$tenantName} — Hovera"
-                : 'Zaproszenie do Hovera')
+                ? __('notifications.user_invitation.subject_with_tenant', ['tenant' => $tenantName])
+                : __('notifications.user_invitation.subject_default'))
             ->greeting($this->invitation->name
-                ? "Cześć {$this->invitation->name}!"
-                : 'Cześć!');
+                ? __('notifications.common.greeting_named', ['name' => $this->invitation->name])
+                : __('notifications.common.greeting'));
 
         if ($tenantName) {
-            $message->line("Zostałeś dodany do stajni **{$tenantName}** w systemie Hovera"
-                .($this->invitation->role
-                    ? " z rolą *{$this->invitation->role}*."
-                    : '.'));
+            $rolePart = $this->invitation->role
+                ? __('notifications.user_invitation.line_with_tenant_role', ['role' => $this->invitation->role])
+                : '';
+            $message->line(__('notifications.user_invitation.line_with_tenant', [
+                'tenant' => $tenantName,
+                'role' => $rolePart,
+            ]));
         } else {
-            $message->line('Otrzymałeś zaproszenie do systemu Hovera.');
+            $message->line(__('notifications.user_invitation.line_default'));
         }
 
         return $message
-            ->line('Aby aktywować konto i ustawić hasło, kliknij poniżej.')
-            ->action('Ustaw hasło i zaloguj się', $url)
-            ->line('Link wygasa '.$this->invitation->expires_at->format('Y-m-d H:i').' (UTC).')
-            ->line('Jeśli to nie Ty, możesz zignorować tę wiadomość — bez kliknięcia konto nie zostanie aktywowane.')
-            ->salutation('— Hovera');
+            ->line(__('notifications.user_invitation.line_setup'))
+            ->action(__('notifications.user_invitation.action'), $url)
+            ->line(__('notifications.user_invitation.line_expires', ['date' => $this->invitation->expires_at->format('Y-m-d H:i')]))
+            ->line(__('notifications.user_invitation.line_security'))
+            ->salutation(__('notifications.user_invitation.salutation'));
     }
 }
