@@ -91,7 +91,7 @@ class BoardingServiceResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('vat_rate')
                     ->label('VAT')
-                    ->formatStateUsing(fn (string $s) => is_numeric($s) ? $s.'%' : $s),
+                    ->formatStateUsing(fn (string $state) => is_numeric($state) ? $state.'%' : $state),
                 Tables\Columns\TextColumn::make('horses_count')
                     ->label('Konie')
                     ->counts('horses')
