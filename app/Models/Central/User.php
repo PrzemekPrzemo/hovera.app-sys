@@ -65,7 +65,11 @@ class User extends Authenticatable implements FilamentUser
     {
         return match ($panel->getId()) {
             'admin' => $this->is_master_admin,
-            'app' => $this->activeMemberships()->exists(),
+            // Master admin może wejść na /app — bez tego nie mógłby
+            // się zalogować (po PR #65 wszyscy logują się przez /app/login).
+            // Master nie ma membership, ale powinien mieć access do panelu
+            // klienta (np. żeby zobaczyć perspektywę stajni / debugować).
+            'app' => $this->is_master_admin || $this->activeMemberships()->exists(),
             default => false,
         };
     }
