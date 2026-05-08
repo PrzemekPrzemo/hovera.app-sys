@@ -6,6 +6,8 @@ namespace App\Filament\App\Resources\HorseResource\RelationManagers;
 
 use App\Enums\HealthRecordType;
 use App\Filament\Components\PriceInput;
+use App\Models\Tenant\HealthRecord;
+use App\Models\Tenant\Specialist;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -60,8 +62,24 @@ class HealthRecordsRelationManager extends RelationManager
                 ->required()
                 ->maxLength(255),
             Forms\Components\Grid::make(2)->schema([
+                Forms\Components\Select::make('specialist_id')
+                    ->label(__('app/horse_health.form.label.specialist'))
+                    ->options(fn (Forms\Get $get) => Specialist::query()
+                        ->where('is_active', true)
+                        ->when(
+                            HealthRecordType::tryFrom((string) $get('type'))?->value === 'farrier',
+                            fn ($q) => $q->where('type', Specialist::TYPE_FARRIER),
+                            fn ($q) => $q->where('type', Specialist::TYPE_VET),
+                        )
+                        ->orderBy('name')
+                        ->pluck('name', 'id'))
+                    ->reactive()
+                    ->searchable()
+                    ->placeholder(__('app/horse_health.form.label.specialist_placeholder')),
                 Forms\Components\TextInput::make('performed_by')
-                    ->label(__('app/horse_health.form.label.performed_by'))->maxLength(255),
+                    ->label(__('app/horse_health.form.label.performed_by'))
+                    ->placeholder(__('app/horse_health.form.label.performed_by_placeholder'))
+                    ->maxLength(255),
                 Forms\Components\DatePicker::make('next_due_at')
                     ->label(__('app/horse_health.form.label.next_due_at')),
                 PriceInput::make('cost_cents', __('app/horse_health.form.label.cost')),
@@ -84,7 +102,9 @@ class HealthRecordsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('summary')
                     ->label(__('app/horse_health.table.column.summary'))->limit(60),
                 Tables\Columns\TextColumn::make('performed_by')
-                    ->label(__('app/horse_health.table.column.performed_by'))->toggleable(),
+                    ->label(__('app/horse_health.table.column.performed_by'))
+                    ->getStateUsing(fn (HealthRecord $r) => $r->performedByLabel())
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('next_due_at')
                     ->label(__('app/horse_health.table.column.next_due_at'))
                     ->date()
