@@ -43,40 +43,67 @@ class BoxResource extends Resource
 
     protected static ?int $navigationSort = 35;
 
+    /** @return array<string,string> */
+    private static function typeOptions(): array
+    {
+        return [
+            'indoor' => __('app/box.types.indoor'),
+            'paddock' => __('app/box.types.paddock'),
+            'outdoor' => __('app/box.types.outdoor'),
+            'quarantine' => __('app/box.types.quarantine'),
+        ];
+    }
+
+    /** @return array<string,string> */
+    private static function typeOptionsShort(): array
+    {
+        return [
+            'indoor' => __('app/box.types_short.indoor'),
+            'paddock' => __('app/box.types_short.paddock'),
+            'outdoor' => __('app/box.types_short.outdoor'),
+            'quarantine' => __('app/box.types_short.quarantine'),
+        ];
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Box')
+            Forms\Components\Section::make(__('app/box.form.section.box'))
                 ->columns(2)
                 ->schema([
-                    Forms\Components\TextInput::make('name')->label('Nazwa / numer')->required()->maxLength(60),
-                    Forms\Components\TextInput::make('label')->label('Krótki kod (np. "12")')->maxLength(20),
+                    Forms\Components\TextInput::make('name')
+                        ->label(__('app/box.form.label.name'))
+                        ->required()->maxLength(60),
+                    Forms\Components\TextInput::make('label')
+                        ->label(__('app/box.form.label.label_short'))
+                        ->maxLength(20),
                     Forms\Components\Select::make('type')
-                        ->label('Typ')
-                        ->options([
-                            'indoor' => 'Box wewnętrzny',
-                            'paddock' => 'Padok',
-                            'outdoor' => 'Box zewnętrzny',
-                            'quarantine' => 'Kwarantanna',
-                        ])
+                        ->label(__('app/box.form.label.type'))
+                        ->options(self::typeOptions())
                         ->default('indoor')
                         ->required(),
                     Forms\Components\TextInput::make('size_m2')
-                        ->label('Rozmiar (m²)')
+                        ->label(__('app/box.form.label.size_m2'))
                         ->numeric()->minValue(1)->maxValue(500),
                     Forms\Components\TextInput::make('capacity')
-                        ->label('Pojemność')
-                        ->helperText('Ile koni może być w tym boksie (zwykle 1; większe boksy grupowe mogą mieć więcej).')
+                        ->label(__('app/box.form.label.capacity'))
+                        ->helperText(__('app/box.form.helper.capacity'))
                         ->numeric()->minValue(1)->maxValue(20)->default(1)->required(),
-                    PriceInput::make('monthly_rate_cents', 'Miesięczna cena pensjonatu')
-                        ->helperText('Domyślna stawka — można jeszcze override per koń lub klient.'),
-                    Forms\Components\Toggle::make('is_active')->label('Aktywny')->default(true),
-                    Forms\Components\TextInput::make('sort_order')->label('Kolejność')->numeric()->default(0),
+                    PriceInput::make('monthly_rate_cents', __('app/box.form.label.monthly_rate'))
+                        ->helperText(__('app/box.form.helper.monthly_rate')),
+                    Forms\Components\Toggle::make('is_active')
+                        ->label(__('app/box.form.label.is_active'))
+                        ->default(true),
+                    Forms\Components\TextInput::make('sort_order')
+                        ->label(__('app/box.form.label.sort_order'))
+                        ->numeric()->default(0),
                 ]),
-            Forms\Components\Section::make('Notatki')
+            Forms\Components\Section::make(__('app/box.form.section.notes'))
                 ->collapsed()
                 ->schema([
-                    Forms\Components\Textarea::make('notes')->label('Notatki')->rows(3),
+                    Forms\Components\Textarea::make('notes')
+                        ->label(__('app/box.form.label.notes'))
+                        ->rows(3),
                 ]),
         ]);
     }
@@ -85,47 +112,44 @@ class BoxResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Nazwa')->searchable()->sortable()->weight('bold'),
+                Tables\Columns\TextColumn::make('name')
+                    ->label(__('app/box.table.column.name'))
+                    ->searchable()->sortable()->weight('bold'),
                 Tables\Columns\BadgeColumn::make('type')
-                    ->label('Typ')
-                    ->formatStateUsing(fn (string $state) => match ($state) {
-                        'indoor' => 'Wewnętrzny',
-                        'paddock' => 'Padok',
-                        'outdoor' => 'Zewnętrzny',
-                        'quarantine' => 'Kwarantanna',
-                        default => $state,
-                    })
+                    ->label(__('app/box.table.column.type'))
+                    ->formatStateUsing(fn (string $state) => self::typeOptionsShort()[$state] ?? $state)
                     ->colors([
                         'primary' => 'indoor',
                         'success' => 'paddock',
                         'gray' => 'outdoor',
                         'warning' => 'quarantine',
                     ]),
-                Tables\Columns\TextColumn::make('size_m2')->label('m²')->placeholder('—')->sortable()->toggleable(),
+                Tables\Columns\TextColumn::make('size_m2')
+                    ->label(__('app/box.table.column.size_m2'))
+                    ->placeholder('—')->sortable()->toggleable(),
                 Tables\Columns\TextColumn::make('horses_count')
-                    ->label('Konie')
+                    ->label(__('app/box.table.column.horses_count'))
                     ->counts('horses')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('capacity')->label('Poj.')->sortable(),
+                Tables\Columns\TextColumn::make('capacity')
+                    ->label(__('app/box.table.column.capacity_short'))
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('monthly_rate_cents')
-                    ->label('Pensjonat')
+                    ->label(__('app/box.table.column.monthly_rate'))
                     ->formatStateUsing(fn (?int $state) => $state !== null ? number_format($state / 100, 2, ',', ' ').' zł' : '—')
                     ->sortable(),
-                Tables\Columns\IconColumn::make('is_active')->label('Aktywny')->boolean(),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label(__('app/box.table.column.is_active'))
+                    ->boolean(),
             ])
             ->defaultSort('sort_order')
             ->filters([
-                Tables\Filters\SelectFilter::make('type')->options([
-                    'indoor' => 'Wewnętrzny',
-                    'paddock' => 'Padok',
-                    'outdoor' => 'Zewnętrzny',
-                    'quarantine' => 'Kwarantanna',
-                ]),
+                Tables\Filters\SelectFilter::make('type')->options(self::typeOptionsShort()),
                 Tables\Filters\Filter::make('vacant')
-                    ->label('Wolne (≥1 miejsce)')
+                    ->label(__('app/box.table.filter.vacant'))
                     ->query(fn (Builder $q) => $q->whereDoesntHave('horses')),
                 Tables\Filters\Filter::make('only_active')
-                    ->label('Tylko aktywne')
+                    ->label(__('app/box.table.filter.only_active'))
                     ->query(fn (Builder $q) => $q->where('is_active', true))
                     ->default(),
                 Tables\Filters\TrashedFilter::make(),
