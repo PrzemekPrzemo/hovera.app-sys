@@ -52,64 +52,64 @@ class CalendarEntryResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Czas i typ')
+            Forms\Components\Section::make(__('app/calendar.form.section.time_type'))
                 ->columns(3)
                 ->schema([
                     Forms\Components\Select::make('type')
-                        ->label('Typ')
+                        ->label(__('app/calendar.form.label.type'))
                         ->options(CalendarEntryType::options())
                         ->default(CalendarEntryType::LessonIndividual->value)
                         ->required()
                         ->reactive(),
                     Forms\Components\DateTimePicker::make('starts_at')
-                        ->label('Początek')
+                        ->label(__('app/calendar.form.label.starts_at'))
                         ->required()
                         ->seconds(false),
                     Forms\Components\DateTimePicker::make('ends_at')
-                        ->label('Koniec')
+                        ->label(__('app/calendar.form.label.ends_at'))
                         ->required()
                         ->seconds(false)
                         ->after('starts_at'),
                 ]),
 
-            Forms\Components\Section::make('Zasoby')
+            Forms\Components\Section::make(__('app/calendar.form.section.resources'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\Select::make('horse_id')
-                        ->label('Koń')
+                        ->label(__('app/calendar.form.label.horse'))
                         ->options(fn () => Horse::query()->orderBy('name')->pluck('name', 'id'))
                         ->searchable()
                         ->required(fn (Forms\Get $get) => CalendarEntryType::tryFrom((string) $get('type'))?->requiresHorse() ?? false),
                     Forms\Components\Select::make('instructor_id')
-                        ->label('Instruktor')
+                        ->label(__('app/calendar.form.label.instructor'))
                         ->options(fn () => Instructor::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
                         ->searchable()
                         ->required(fn (Forms\Get $get) => CalendarEntryType::tryFrom((string) $get('type'))?->requiresInstructor() ?? false),
                     Forms\Components\Select::make('arena_id')
-                        ->label('Ujeżdżalnia')
+                        ->label(__('app/calendar.form.label.arena'))
                         ->options(fn () => Arena::query()->where('is_active', true)->orderBy('sort_order')->pluck('name', 'id'))
                         ->searchable(),
                     Forms\Components\Select::make('client_id')
-                        ->label('Klient')
+                        ->label(__('app/calendar.form.label.client'))
                         ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id'))
                         ->searchable(),
                 ]),
 
-            Forms\Components\Section::make('Szczegóły')
+            Forms\Components\Section::make(__('app/calendar.form.section.details'))
                 ->collapsed()
                 ->columns(2)
                 ->schema([
                     Forms\Components\TextInput::make('title')
-                        ->label('Tytuł (dla wydarzeń / blokad)')
+                        ->label(__('app/calendar.form.label.title'))
                         ->maxLength(160),
                     Forms\Components\Select::make('status')
-                        ->label('Status')
+                        ->label(__('app/calendar.form.label.status'))
                         ->options(CalendarEntryStatus::options())
                         ->default(CalendarEntryStatus::Confirmed->value)
                         ->required(),
-                    PriceInput::make('price_cents', 'Cena'),
+                    PriceInput::make('price_cents', __('app/calendar.form.label.price')),
                     Forms\Components\Textarea::make('notes')
-                        ->label('Notatki')
+                        ->label(__('app/calendar.form.label.notes'))
                         ->rows(3)
                         ->columnSpanFull(),
                 ]),
@@ -121,22 +121,26 @@ class CalendarEntryResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('starts_at')
-                    ->label('Początek')
+                    ->label(__('app/calendar.table.column.starts_at'))
                     ->dateTime('Y-m-d H:i')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('ends_at')
-                    ->label('Koniec')
+                    ->label(__('app/calendar.table.column.ends_at'))
                     ->dateTime('Y-m-d H:i')
                     ->toggleable(),
                 Tables\Columns\BadgeColumn::make('type')
-                    ->label('Typ')
+                    ->label(__('app/calendar.table.column.type'))
                     ->formatStateUsing(fn (CalendarEntryType $state) => $state->label()),
-                Tables\Columns\TextColumn::make('horse.name')->label('Koń')->placeholder('—')->toggleable(),
-                Tables\Columns\TextColumn::make('instructor.name')->label('Instruktor')->placeholder('—')->toggleable(),
-                Tables\Columns\TextColumn::make('arena.name')->label('Ujeżdżalnia')->placeholder('—')->toggleable(),
-                Tables\Columns\TextColumn::make('client.name')->label('Klient')->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('horse.name')
+                    ->label(__('app/calendar.table.column.horse'))->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('instructor.name')
+                    ->label(__('app/calendar.table.column.instructor'))->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('arena.name')
+                    ->label(__('app/calendar.table.column.arena'))->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('client.name')
+                    ->label(__('app/calendar.table.column.client'))->placeholder('—')->toggleable(),
                 Tables\Columns\BadgeColumn::make('status')
-                    ->label('Status')
+                    ->label(__('app/calendar.table.column.status'))
                     ->formatStateUsing(fn (CalendarEntryStatus $state) => $state->label())
                     ->colors([
                         'warning' => fn ($state) => $state === CalendarEntryStatus::Requested->value,
@@ -151,15 +155,15 @@ class CalendarEntryResource extends Resource
                 Tables\Filters\SelectFilter::make('type')->options(CalendarEntryType::options()),
                 Tables\Filters\SelectFilter::make('status')->options(CalendarEntryStatus::options()),
                 Tables\Filters\SelectFilter::make('horse_id')
-                    ->label('Koń')
+                    ->label(__('app/calendar.table.filter.horse'))
                     ->relationship('horse', 'name')
                     ->searchable(),
                 Tables\Filters\SelectFilter::make('instructor_id')
-                    ->label('Instruktor')
+                    ->label(__('app/calendar.table.filter.instructor'))
                     ->relationship('instructor', 'name')
                     ->searchable(),
                 Tables\Filters\Filter::make('upcoming')
-                    ->label('Tylko nadchodzące')
+                    ->label(__('app/calendar.table.filter.upcoming'))
                     ->query(fn ($query) => $query->where('starts_at', '>=', now())),
                 Tables\Filters\TrashedFilter::make(),
             ])

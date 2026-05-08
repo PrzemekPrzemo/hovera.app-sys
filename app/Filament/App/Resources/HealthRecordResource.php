@@ -51,43 +51,43 @@ class HealthRecordResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Wpis')
+            Forms\Components\Section::make(__('app/health.form.section.entry'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\Select::make('horse_id')
-                        ->label('Koń')
+                        ->label(__('app/health.form.label.horse'))
                         ->options(fn () => Horse::query()->orderBy('name')->pluck('name', 'id'))
                         ->required()
                         ->searchable(),
                     Forms\Components\Select::make('type')
-                        ->label('Typ')
+                        ->label(__('app/health.form.label.type'))
                         ->options(HealthRecordType::options())
                         ->required()
                         ->reactive()
                         ->afterStateUpdated(self::suggestNextDue()),
                     Forms\Components\DateTimePicker::make('performed_at')
-                        ->label('Data zabiegu')
+                        ->label(__('app/health.form.label.performed_at'))
                         ->seconds(false)
                         ->required()
                         ->default(now()),
                     Forms\Components\TextInput::make('performed_by')
-                        ->label('Wykonał (lekarz / kowal / firma)')
+                        ->label(__('app/health.form.label.performed_by'))
                         ->maxLength(255),
                     Forms\Components\TextInput::make('summary')
-                        ->label('Krótki opis')
+                        ->label(__('app/health.form.label.summary'))
                         ->required()
                         ->maxLength(255)
-                        ->placeholder('Szczepienie tężec + grypa'),
+                        ->placeholder(__('app/health.form.label.summary_placeholder')),
                     Forms\Components\DatePicker::make('next_due_at')
-                        ->label('Następny zabieg')
-                        ->helperText('Dzięki temu pojawi się alert na dashboardzie.'),
-                    PriceInput::make('cost_cents', 'Koszt'),
+                        ->label(__('app/health.form.label.next_due_at'))
+                        ->helperText(__('app/health.form.helper.next_due_at')),
+                    PriceInput::make('cost_cents', __('app/health.form.label.cost')),
                 ]),
-            Forms\Components\Section::make('Szczegóły')
+            Forms\Components\Section::make(__('app/health.form.section.details'))
                 ->collapsed()
                 ->schema([
                     Forms\Components\Textarea::make('details')
-                        ->label('Notatki / leki / zalecenia')
+                        ->label(__('app/health.form.label.details'))
                         ->rows(4),
                 ]),
         ]);
@@ -97,15 +97,19 @@ class HealthRecordResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('performed_at')->label('Data')->dateTime('Y-m-d')->sortable(),
-                Tables\Columns\TextColumn::make('horse.name')->label('Koń')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('performed_at')
+                    ->label(__('app/health.table.column.performed_at'))->dateTime('Y-m-d')->sortable(),
+                Tables\Columns\TextColumn::make('horse.name')
+                    ->label(__('app/health.table.column.horse'))->searchable()->sortable(),
                 Tables\Columns\BadgeColumn::make('type')
-                    ->label('Typ')
+                    ->label(__('app/health.table.column.type'))
                     ->formatStateUsing(fn (HealthRecordType $state) => $state->label()),
-                Tables\Columns\TextColumn::make('summary')->label('Opis')->limit(50)->searchable(),
-                Tables\Columns\TextColumn::make('performed_by')->label('Wykonał')->toggleable(),
+                Tables\Columns\TextColumn::make('summary')
+                    ->label(__('app/health.table.column.summary'))->limit(50)->searchable(),
+                Tables\Columns\TextColumn::make('performed_by')
+                    ->label(__('app/health.table.column.performed_by'))->toggleable(),
                 Tables\Columns\TextColumn::make('next_due_at')
-                    ->label('Następny')
+                    ->label(__('app/health.table.column.next_due_at'))
                     ->date()
                     ->placeholder('—')
                     ->color(fn (?Carbon $state) => match (true) {
@@ -117,7 +121,7 @@ class HealthRecordResource extends Resource
                     })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('cost_cents')
-                    ->label('Koszt')
+                    ->label(__('app/health.table.column.cost'))
                     ->formatStateUsing(fn (?int $state) => $state !== null ? number_format($state / 100, 2, ',', ' ').' zł' : '—')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -125,14 +129,14 @@ class HealthRecordResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('type')->options(HealthRecordType::options()),
                 Tables\Filters\SelectFilter::make('horse_id')
-                    ->label('Koń')
+                    ->label(__('app/health.table.filter.horse'))
                     ->relationship('horse', 'name')
                     ->searchable(),
                 Tables\Filters\Filter::make('overdue')
-                    ->label('Przeterminowane (next due in past)')
+                    ->label(__('app/health.table.filter.overdue'))
                     ->query(fn ($query) => $query->overdue()),
                 Tables\Filters\Filter::make('due_30')
-                    ->label('Następny w 30 dni')
+                    ->label(__('app/health.table.filter.due_30'))
                     ->query(fn ($query) => $query->dueWithin(30)),
                 Tables\Filters\TrashedFilter::make(),
             ])
