@@ -116,28 +116,37 @@ class TenantSettings extends Page implements HasForms
 
     public function form(Form $form): Form
     {
+        $slug = app(TenantManager::class)->current()?->slug ?? '';
+
         return $form
             ->schema([
-                Forms\Components\Section::make('Identyfikacja')
+                Forms\Components\Section::make(__('app/tenant_settings.form.section.identification'))
                     ->columns(2)
                     ->schema([
-                        Forms\Components\TextInput::make('name')->label('Nazwa stajni')->required()->maxLength(255),
-                        Forms\Components\TextInput::make('legal_name')->label('Nazwa prawna (na faktury)')->maxLength(255),
-                        Forms\Components\TextInput::make('tax_id')->label('NIP / VAT ID')->maxLength(32),
+                        Forms\Components\TextInput::make('name')
+                            ->label(__('app/tenant_settings.form.label.name'))->required()->maxLength(255),
+                        Forms\Components\TextInput::make('legal_name')
+                            ->label(__('app/tenant_settings.form.label.legal_name'))->maxLength(255),
+                        Forms\Components\TextInput::make('tax_id')
+                            ->label(__('app/tenant_settings.form.label.tax_id'))->maxLength(32),
                     ]),
 
-                Forms\Components\Section::make('Lokalizacja')
+                Forms\Components\Section::make(__('app/tenant_settings.form.section.location'))
                     ->columns(4)
                     ->schema([
-                        Forms\Components\TextInput::make('country')->label('Kraj')->required()->maxLength(2),
-                        Forms\Components\Select::make('locale')->label('Język domyślny')
+                        Forms\Components\TextInput::make('country')
+                            ->label(__('app/tenant_settings.form.label.country'))->required()->maxLength(2),
+                        Forms\Components\Select::make('locale')
+                            ->label(__('app/tenant_settings.form.label.locale'))
                             ->options([
                                 'pl' => 'Polski', 'en' => 'English', 'de' => 'Deutsch',
                                 'nl' => 'Nederlands', 'fr' => 'Français', 'it' => 'Italiano', 'es' => 'Español',
                             ])
                             ->required(),
-                        Forms\Components\TextInput::make('timezone')->label('Strefa czasowa')->required()->maxLength(64),
-                        Forms\Components\Select::make('currency')->label('Waluta')
+                        Forms\Components\TextInput::make('timezone')
+                            ->label(__('app/tenant_settings.form.label.timezone'))->required()->maxLength(64),
+                        Forms\Components\Select::make('currency')
+                            ->label(__('app/tenant_settings.form.label.currency'))
                             ->options([
                                 'PLN' => 'PLN', 'EUR' => 'EUR', 'CHF' => 'CHF',
                                 'CZK' => 'CZK', 'HUF' => 'HUF', 'GBP' => 'GBP', 'USD' => 'USD',
@@ -145,115 +154,127 @@ class TenantSettings extends Page implements HasForms
                             ->required(),
                     ]),
 
-                Forms\Components\Section::make('Branding')
-                    ->description('Logo, kolor i hero image są używane w panelu klienta + na publicznej stronie /s/{slug}.')
+                Forms\Components\Section::make(__('app/tenant_settings.form.section.branding'))
+                    ->description(__('app/tenant_settings.form.section.branding_description'))
                     ->columns(2)
                     ->schema([
-                        Forms\Components\ColorPicker::make('primary_color')->label('Kolor wiodący'),
+                        Forms\Components\ColorPicker::make('primary_color')
+                            ->label(__('app/tenant_settings.form.label.primary_color')),
                         Forms\Components\FileUpload::make('logo_path')
-                            ->label('Logo stajni')
+                            ->label(__('app/tenant_settings.form.label.logo_path'))
                             ->image()
                             ->maxSize(2048)
                             ->disk('public')
                             ->directory('branding')
                             ->visibility('public')
-                            ->helperText('PNG / JPG / WebP / SVG, max 2 MB. Kwadratowe lub poziome (~400×100 px).'),
+                            ->helperText(__('app/tenant_settings.form.label.logo_helper')),
                         Forms\Components\FileUpload::make('hero_image_path')
-                            ->label('Hero image (zdjęcie nagłówka)')
+                            ->label(__('app/tenant_settings.form.label.hero_image_path'))
                             ->image()
                             ->maxSize(5120)
                             ->disk('public')
                             ->directory('branding')
                             ->visibility('public')
                             ->columnSpanFull()
-                            ->helperText('JPG / WebP, max 5 MB, zalecane 1600×600 px. Zostanie nałożony delikatny gradient z nazwą stajni.'),
+                            ->helperText(__('app/tenant_settings.form.label.hero_image_helper')),
                     ]),
 
-                Forms\Components\Section::make('Strona publiczna /s/'.app(TenantManager::class)->current()?->slug)
-                    ->description('Treść widoczna dla klientów odwiedzających waszą publiczną stronę. Wszystko opcjonalne.')
+                Forms\Components\Section::make(__('app/tenant_settings.form.section.public_site', ['slug' => $slug]))
+                    ->description(__('app/tenant_settings.form.section.public_site_description'))
                     ->columns(2)
                     ->schema([
-                        Forms\Components\TextInput::make('pp_tagline')->label('Tagline')
+                        Forms\Components\TextInput::make('pp_tagline')
+                            ->label(__('app/tenant_settings.form.label.pp_tagline'))
                             ->maxLength(120)
-                            ->placeholder('np. "Stajnia z duszą — pensjonat, lekcje, rekreacja"'),
-                        Forms\Components\TextInput::make('pp_opening_hours')->label('Godziny otwarcia')
+                            ->placeholder(__('app/tenant_settings.form.label.pp_tagline_placeholder')),
+                        Forms\Components\TextInput::make('pp_opening_hours')
+                            ->label(__('app/tenant_settings.form.label.pp_opening_hours'))
                             ->maxLength(120)
-                            ->placeholder('np. "Pn–Pt: 9:00–20:00 · Sob–Nd: 8:00–18:00"'),
-                        Forms\Components\Textarea::make('pp_description')->label('O stajni')
+                            ->placeholder(__('app/tenant_settings.form.label.pp_opening_hours_placeholder')),
+                        Forms\Components\Textarea::make('pp_description')
+                            ->label(__('app/tenant_settings.form.label.pp_description'))
                             ->rows(4)
                             ->columnSpanFull()
                             ->maxLength(2000),
-                        Forms\Components\TextInput::make('pp_email')->label('Email kontaktowy')
+                        Forms\Components\TextInput::make('pp_email')
+                            ->label(__('app/tenant_settings.form.label.pp_email'))
                             ->email()->maxLength(255),
-                        Forms\Components\TextInput::make('pp_phone')->label('Telefon')
+                        Forms\Components\TextInput::make('pp_phone')
+                            ->label(__('app/tenant_settings.form.label.pp_phone'))
                             ->tel()->maxLength(40),
-                        Forms\Components\TextInput::make('pp_address')->label('Adres')
+                        Forms\Components\TextInput::make('pp_address')
+                            ->label(__('app/tenant_settings.form.label.pp_address'))
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('pp_website')->label('Strona WWW')
+                        Forms\Components\TextInput::make('pp_website')
+                            ->label(__('app/tenant_settings.form.label.pp_website'))
                             ->url()->maxLength(255),
                         Forms\Components\Toggle::make('pp_show_box_availability')
-                            ->label('Pokaż "Mamy X wolnych boksów"')
+                            ->label(__('app/tenant_settings.form.label.pp_show_box_availability'))
                             ->default(true),
                         Forms\Components\Toggle::make('pp_show_instructors')
-                            ->label('Pokaż listę instruktorów')
+                            ->label(__('app/tenant_settings.form.label.pp_show_instructors'))
                             ->default(false),
                         Forms\Components\Toggle::make('pp_show_pricing')
-                            ->label('Pokaż cennik pensjonatu')
+                            ->label(__('app/tenant_settings.form.label.pp_show_pricing'))
                             ->default(false)
-                            ->helperText('Wyświetla aktywne usługi z "Stajnia → Cennik pensji" wraz z cenami brutto.'),
+                            ->helperText(__('app/tenant_settings.form.label.pp_show_pricing_helper')),
                     ]),
 
-                Forms\Components\Section::make('Social media')
-                    ->description('Linki widoczne pod nazwą stajni na publicznej stronie /s/{slug}. Pozostaw puste żeby ukryć.')
+                Forms\Components\Section::make(__('app/tenant_settings.form.section.social'))
+                    ->description(__('app/tenant_settings.form.section.social_description'))
                     ->columns(2)
                     ->collapsed()
                     ->schema([
-                        Forms\Components\TextInput::make('pp_social_facebook')->label('Facebook URL')->url()->placeholder('https://facebook.com/twoja-stajnia'),
-                        Forms\Components\TextInput::make('pp_social_instagram')->label('Instagram URL')->url()->placeholder('https://instagram.com/twoja-stajnia'),
-                        Forms\Components\TextInput::make('pp_social_youtube')->label('YouTube URL')->url()->placeholder('https://youtube.com/@twoja-stajnia'),
-                        Forms\Components\TextInput::make('pp_social_tiktok')->label('TikTok URL')->url()->placeholder('https://tiktok.com/@twoja-stajnia'),
+                        Forms\Components\TextInput::make('pp_social_facebook')
+                            ->label(__('app/tenant_settings.form.label.pp_social_facebook'))->url()->placeholder('https://facebook.com/twoja-stajnia'),
+                        Forms\Components\TextInput::make('pp_social_instagram')
+                            ->label(__('app/tenant_settings.form.label.pp_social_instagram'))->url()->placeholder('https://instagram.com/twoja-stajnia'),
+                        Forms\Components\TextInput::make('pp_social_youtube')
+                            ->label(__('app/tenant_settings.form.label.pp_social_youtube'))->url()->placeholder('https://youtube.com/@twoja-stajnia'),
+                        Forms\Components\TextInput::make('pp_social_tiktok')
+                            ->label(__('app/tenant_settings.form.label.pp_social_tiktok'))->url()->placeholder('https://tiktok.com/@twoja-stajnia'),
                     ]),
 
-                Forms\Components\Section::make('Widgety do wstawienia na własną stronę WWW')
-                    ->description('Każdy widget to iframe — skopiuj kod HTML i wklej w swoim Wordpressie / Squarespace / wherever.')
+                Forms\Components\Section::make(__('app/tenant_settings.form.section.embeds'))
+                    ->description(__('app/tenant_settings.form.section.embeds_description'))
                     ->collapsed()
                     ->schema([
                         Forms\Components\Placeholder::make('embed_box_availability')
-                            ->label('Wolne boksy ("Mamy X wolnych boksów")')
+                            ->label(__('app/tenant_settings.form.label.embed_box_availability'))
                             ->content(fn () => self::embedSnippet('box-availability', 220)),
                         Forms\Components\Placeholder::make('embed_booking')
-                            ->label('Zarezerwuj online (CTA do booking flow)')
+                            ->label(__('app/tenant_settings.form.label.embed_booking'))
                             ->content(fn () => self::embedSnippet('booking', 280)),
                         Forms\Components\Placeholder::make('embed_pricing')
-                            ->label('Cennik pensjonatu')
+                            ->label(__('app/tenant_settings.form.label.embed_pricing'))
                             ->content(fn () => self::embedSnippet('pricing', 480)),
                         Forms\Components\Placeholder::make('embed_instructors')
-                            ->label('Lista instruktorów')
+                            ->label(__('app/tenant_settings.form.label.embed_instructors'))
                             ->content(fn () => self::embedSnippet('instructors', 320)),
                     ]),
 
-                Forms\Components\Section::make('Online booking')
-                    ->description('Klienci rezerwują lekcje przez /s/{slug}/book. Stajnia potwierdza zgłoszenia ręcznie i przydziela konia.')
+                Forms\Components\Section::make(__('app/tenant_settings.form.section.online_booking'))
+                    ->description(__('app/tenant_settings.form.section.online_booking_description'))
                     ->columns(3)
                     ->schema([
                         Forms\Components\Toggle::make('pb_enabled')
-                            ->label('Włącz online booking')
+                            ->label(__('app/tenant_settings.form.label.pb_enabled'))
                             ->columnSpanFull(),
                         Forms\Components\TextInput::make('pb_lesson_duration_minutes')
-                            ->label('Długość lekcji (min)')
+                            ->label(__('app/tenant_settings.form.label.pb_lesson_duration_minutes'))
                             ->numeric()->minValue(15)->maxValue(240)->default(60),
                         Forms\Components\TimePicker::make('pb_working_hours_start')
-                            ->label('Godziny pracy od')->seconds(false)->default('09:00'),
+                            ->label(__('app/tenant_settings.form.label.pb_working_hours_start'))->seconds(false)->default('09:00'),
                         Forms\Components\TimePicker::make('pb_working_hours_end')
-                            ->label('Godziny pracy do')->seconds(false)->default('19:00'),
+                            ->label(__('app/tenant_settings.form.label.pb_working_hours_end'))->seconds(false)->default('19:00'),
                         Forms\Components\TextInput::make('pb_advance_min_hours')
-                            ->label('Min. wyprzedzenie (h)')
+                            ->label(__('app/tenant_settings.form.label.pb_advance_min_hours'))
                             ->numeric()->minValue(0)->maxValue(168)->default(4)
-                            ->helperText('Klient nie może rezerwować na czas bliższy niż X godzin.'),
+                            ->helperText(__('app/tenant_settings.form.label.pb_advance_min_hours_helper')),
                         Forms\Components\TextInput::make('pb_advance_max_days')
-                            ->label('Max horyzont (dni)')
+                            ->label(__('app/tenant_settings.form.label.pb_advance_max_days'))
                             ->numeric()->minValue(1)->maxValue(180)->default(30)
-                            ->helperText('Klient nie widzi terminów odleglejszych niż X dni.'),
+                            ->helperText(__('app/tenant_settings.form.label.pb_advance_max_days_helper')),
                     ]),
             ])
             ->statePath('data')
@@ -338,8 +359,8 @@ class TenantSettings extends Page implements HasForms
 
         Notification::make()
             ->success()
-            ->title('Ustawienia zapisane')
-            ->body('Zmiany na publicznej stronie /s/'.$tenant->slug.' są od razu widoczne.')
+            ->title(__('app/tenant_settings.action.saved_title'))
+            ->body(__('app/tenant_settings.action.saved_body', ['slug' => $tenant->slug]))
             ->send();
     }
 
@@ -365,7 +386,7 @@ class TenantSettings extends Page implements HasForms
     {
         $tenant = app(TenantManager::class)->current();
         if (! $tenant) {
-            return new HtmlString('<em>Brak aktywnego tenanta.</em>');
+            return new HtmlString('<em>'.e(__('app/tenant_settings.embed.no_tenant')).'</em>');
         }
 
         $url = url('/'.config('hovera.public_site.prefix', 's').'/'.$tenant->slug.'/embed/'.$widget);
@@ -375,7 +396,7 @@ class TenantSettings extends Page implements HasForms
             .'<textarea readonly onclick="this.select()" rows="2" style="width:100%; padding:.5rem .75rem; font-family:ui-monospace,monospace; font-size:.85rem; border:1px solid #e5e7eb; border-radius:6px; background:#f9fafb; resize:vertical;">'
             .e($iframe)
             .'</textarea>'
-            .'<div style="font-size:.8rem; color:#6b7280;">Kliknij w pole żeby zaznaczyć całość → Ctrl+C → wklej w edytor swojej strony WWW.</div>'
+            .'<div style="font-size:.8rem; color:#6b7280;">'.e(__('app/tenant_settings.embed.help')).'</div>'
             .'</div>';
 
         return new HtmlString($html);
