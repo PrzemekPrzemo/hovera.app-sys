@@ -24,6 +24,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
@@ -66,6 +67,11 @@ class AppPanelProvider extends PanelProvider
                 NavigationGroup::make('Ustawienia')->collapsed()->collapsible(),
             ])
             ->userMenuItems([
+                MenuItem::make()
+                    ->label('Master admin')
+                    ->icon('heroicon-o-shield-check')
+                    ->url(fn () => '/'.config('hovera.admin.path', 'admin'))
+                    ->visible(fn () => Auth::user()?->is_master_admin === true),
                 MenuItem::make()
                     ->label('Zmień stajnię')
                     ->icon('heroicon-o-arrows-right-left')

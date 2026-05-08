@@ -30,14 +30,21 @@ class InitialiseTenantFromSession
             return redirect()->route('login');
         }
 
-        $tenantId = $request->session()->get('current_tenant_id');
-
-        if (! $tenantId) {
-            return redirect()->route('tenant.select');
-        }
-
         /** @var User $user */
         $user = Auth::user();
+        $tenantId = $request->session()->get('current_tenant_id');
+
+        // Master admin bez aktywnego tenanta — redirectuj na /admin
+        // zamiast tenant.select (master nie ma membership ani nie potrzebuje
+        // wybierać stajni; logując się przez /app/login powinien wpaść do
+        // panelu master admina).
+        if (! $tenantId) {
+            if ($user->is_master_admin) {
+                return redirect('/'.config('hovera.admin.path', 'admin'));
+            }
+
+            return redirect()->route('tenant.select');
+        }
 
         $membership = TenantMembership::query()
             ->where('tenant_id', $tenantId)
@@ -46,6 +53,22 @@ class InitialiseTenantFromSession
             ->first();
 
         if (! $membership) {
+            // Master admin może wejść na /app jako "viewer" tenanta
+            // bez membership (np. po impersonacji lub przez direct URL
+            // do tenant settings). Tenant musi istnieć i być active.
+            if ($user->is_master_admin) {
+                $tenant = Tenant::query()
+                    ->where('id', $tenantId)
+                    ->whereIn('status', ['active', 'trialing', 'past_due'])
+                    ->first();
+                if ($tenant) {
+                    $this->tenants->setCurrent($tenant);
+                    $request->attributes->set('tenant', $tenant);
+
+                    return $next($request);
+                }
+            }
+
             $request->session()->forget('current_tenant_id');
 
             return redirect()->route('tenant.select')
