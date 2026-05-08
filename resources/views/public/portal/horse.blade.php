@@ -214,7 +214,7 @@
                         @if ($activity->summary)<div class="activity-summary">{{ $activity->summary }}</div>@endif
                         @if ($activity->details)<div class="muted small">{{ $activity->details }}</div>@endif
                         <div class="activity-meta">
-                            @if ($activity->performed_by) {{ $activity->performed_by }} @endif
+                            @if ($activity->performedByLabel()) {{ $activity->performedByLabel() }} @endif
                             @if ($activity->cost_cents) · <strong>{{ $activity->costFormatted() }}</strong> @endif
                         </div>
                     </div>
@@ -350,7 +350,7 @@
                         <div class="summary">{{ $record->details }}</div>
                     @endif
                     <div class="meta">
-                        @if ($record->performed_by) {{ __('portal/horse.health.performed_by_label', ['name' => $record->performed_by]) }} @endif
+                        @if ($record->performedByLabel()) {{ __('portal/horse.health.performed_by_label', ['name' => $record->performedByLabel()]) }} @endif
                         @if ($record->next_due_at)
                             · {{ __('portal/horse.health.next_due_label', ['date' => $record->next_due_at->format('d.m.Y')]) }}
                             @if ($isOverdue)

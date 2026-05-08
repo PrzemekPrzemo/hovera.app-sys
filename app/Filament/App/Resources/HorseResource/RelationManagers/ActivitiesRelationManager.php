@@ -6,6 +6,8 @@ namespace App\Filament\App\Resources\HorseResource\RelationManagers;
 
 use App\Enums\StableActivityType;
 use App\Filament\Components\PriceInput;
+use App\Models\Tenant\Specialist;
+use App\Models\Tenant\StableActivity;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -52,8 +54,22 @@ class ActivitiesRelationManager extends RelationManager
                         ->seconds(false)
                         ->default(now())
                         ->required(),
+                    Forms\Components\Select::make('specialist_id')
+                        ->label(__('app/horse_activity.form.label.specialist'))
+                        ->options(fn () => Specialist::query()
+                            ->where('is_active', true)
+                            ->orderBy('type')->orderBy('name')
+                            ->get()
+                            ->mapWithKeys(fn ($s) => [
+                                $s->id => $s->name.' ('.($s->isVet() ? __('app/specialist.types.vet') : __('app/specialist.types.farrier')).')',
+                            ])
+                            ->all())
+                        ->placeholder(__('app/horse_activity.form.label.specialist_placeholder'))
+                        ->searchable()
+                        ->helperText(__('app/horse_activity.form.helper.specialist')),
                     Forms\Components\TextInput::make('performed_by')
                         ->label(__('app/horse_activity.form.label.performed_by'))
+                        ->placeholder(__('app/horse_activity.form.label.performed_by_placeholder'))
                         ->maxLength(120),
                     PriceInput::make('cost_cents', __('app/horse_activity.form.label.cost'))
                         ->helperText(__('app/horse_activity.form.helper.cost')),
@@ -87,7 +103,9 @@ class ActivitiesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('summary')
                     ->label(__('app/horse_activity.table.column.summary'))->limit(60),
                 Tables\Columns\TextColumn::make('performed_by')
-                    ->label(__('app/horse_activity.table.column.performed_by'))->toggleable(),
+                    ->label(__('app/horse_activity.table.column.performed_by'))
+                    ->getStateUsing(fn (StableActivity $r) => $r->performedByLabel())
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('cost_cents')
                     ->label(__('app/horse_activity.table.column.cost'))
                     ->placeholder('—')

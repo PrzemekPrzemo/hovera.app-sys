@@ -299,12 +299,14 @@ class ClientPortalController extends Controller
 
         $records = HealthRecord::query()
             ->where('horse_id', $horse->id)
+            ->with('specialist:id,name,type')
             ->orderByDesc('performed_at')
             ->limit(100)
             ->get();
 
         $activities = StableActivity::query()
             ->where('horse_id', $horse->id)
+            ->with('specialist:id,name,type')
             ->orderByDesc('performed_at')
             ->limit(50)
             ->get();
