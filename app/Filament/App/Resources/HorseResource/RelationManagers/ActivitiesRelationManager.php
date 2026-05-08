@@ -11,6 +11,7 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Activity log per koń: karmienia, sprzątania boksu, padoki, transport.
@@ -21,11 +22,20 @@ class ActivitiesRelationManager extends RelationManager
 {
     protected static string $relationship = 'activities';
 
-    protected static ?string $title = 'Aktywności';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('models.activities');
+    }
 
-    protected static ?string $modelLabel = 'aktywność';
+    public static function getModelLabel(): ?string
+    {
+        return __('models.activity');
+    }
 
-    protected static ?string $pluralModelLabel = 'Aktywności';
+    public static function getPluralModelLabel(): ?string
+    {
+        return __('models.activities');
+    }
 
     public function form(Form $form): Form
     {

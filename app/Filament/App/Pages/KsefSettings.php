@@ -13,6 +13,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -36,13 +37,22 @@ class KsefSettings extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static ?string $navigationLabel = 'KSeF (e-faktury)';
-
-    protected static ?string $title = 'KSeF — krajowy system e-faktur';
-
-    protected static ?string $navigationGroup = 'Ustawienia';
-
     protected static ?int $navigationSort = 40;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('pages.ksef_settings.navigation');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.settings');
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return __('pages.ksef_settings.title');
+    }
 
     protected static string $view = 'filament.pages.ksef-settings';
 

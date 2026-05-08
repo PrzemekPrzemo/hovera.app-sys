@@ -33,4 +33,17 @@ return [
     'calendar_entries' => 'Bookings',
     'recurring_entry' => 'recurring session',
     'recurring_entries' => 'Recurring sessions',
+
+    'membership' => 'member',
+    'memberships' => 'Members',
+    'addon' => 'add-on',
+    'addons' => 'Add-ons',
+    'message' => 'message',
+    'messages' => 'Messages',
+    'document' => 'document',
+    'documents' => 'Documents',
+    'health_entry' => 'entry',
+    'health_entries' => 'Health entries',
+    'activity' => 'activity',
+    'activities' => 'Activities',
 ];

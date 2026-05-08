@@ -15,6 +15,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -28,11 +29,17 @@ class Profile extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-user-circle';
 
-    protected static ?string $navigationLabel = 'Profil';
-
-    protected static ?string $title = 'Twój profil';
-
     protected static ?int $navigationSort = 99;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('pages.profile.navigation');
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return __('pages.profile.title');
+    }
 
     protected static string $view = 'filament.pages.profile';
 

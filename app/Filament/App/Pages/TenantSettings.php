@@ -13,6 +13,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -29,11 +30,20 @@ class TenantSettings extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static ?string $navigationLabel = 'Ustawienia stajni';
+    public static function getNavigationLabel(): string
+    {
+        return __('pages.tenant_settings.navigation');
+    }
 
-    protected static ?string $title = 'Ustawienia stajni';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.settings');
+    }
 
-    protected static ?string $navigationGroup = 'Ustawienia';
+    public function getTitle(): string|Htmlable
+    {
+        return __('pages.tenant_settings.title');
+    }
 
     protected static ?int $navigationSort = 10;
 

@@ -11,17 +11,27 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class InvitationsRelationManager extends RelationManager
 {
     protected static string $relationship = 'invitations';
 
-    protected static ?string $title = 'Zaproszenia';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('models.invitations');
+    }
 
-    protected static ?string $modelLabel = 'zaproszenie';
+    public static function getModelLabel(): ?string
+    {
+        return __('models.invitation');
+    }
 
-    protected static ?string $pluralModelLabel = 'Zaproszenia';
+    public static function getPluralModelLabel(): ?string
+    {
+        return __('models.invitations');
+    }
 
     public function table(Table $table): Table
     {

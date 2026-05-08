@@ -16,17 +16,27 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class MembershipsRelationManager extends RelationManager
 {
     protected static string $relationship = 'memberships';
 
-    protected static ?string $title = 'Członkostwa';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('models.memberships');
+    }
 
-    protected static ?string $modelLabel = 'członek';
+    public static function getModelLabel(): ?string
+    {
+        return __('models.membership');
+    }
 
-    protected static ?string $pluralModelLabel = 'Członkowie';
+    public static function getPluralModelLabel(): ?string
+    {
+        return __('models.memberships');
+    }
 
     public function form(Form $form): Form
     {

@@ -28,4 +28,14 @@ return [
     'instructors' => 'Instructors',
     'employees' => 'Employees',
     'health_records' => 'Care & health',
+
+    'pages' => [
+        'profile' => 'Profile',
+        'calendar' => "Today's plan",
+        'tenant_settings' => 'Stable settings',
+        'invoicing_settings' => 'Invoicing & billing',
+        'payment_settings' => 'Online payments',
+        'ksef_settings' => 'KSeF (e-invoices)',
+        'company_lookup' => 'GUS / KRS',
+    ],
 ];

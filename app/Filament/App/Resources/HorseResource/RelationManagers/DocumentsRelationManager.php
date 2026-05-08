@@ -15,6 +15,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -32,11 +33,20 @@ class DocumentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'documents';
 
-    protected static ?string $title = 'Dokumenty';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('models.documents');
+    }
 
-    protected static ?string $modelLabel = 'dokument';
+    public static function getModelLabel(): ?string
+    {
+        return __('models.document');
+    }
 
-    protected static ?string $pluralModelLabel = 'Dokumenty';
+    public static function getPluralModelLabel(): ?string
+    {
+        return __('models.documents');
+    }
 
     public function form(Form $form): Form
     {

@@ -17,6 +17,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 
@@ -37,13 +38,22 @@ class PaymentSettings extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
 
-    protected static ?string $navigationLabel = 'Płatności online';
-
-    protected static ?string $title = 'Płatności online';
-
-    protected static ?string $navigationGroup = 'Ustawienia';
-
     protected static ?int $navigationSort = 20;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('pages.payment_settings.navigation');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.settings');
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return __('pages.payment_settings.title');
+    }
 
     protected static string $view = 'filament.pages.payment-settings';
 

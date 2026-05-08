@@ -24,6 +24,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Carbon;
 
 class Calendar extends Page implements HasActions, HasForms
@@ -33,13 +34,22 @@ class Calendar extends Page implements HasActions, HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
 
-    protected static ?string $navigationGroup = 'Kalendarz';
-
-    protected static ?string $navigationLabel = 'Plan dnia';
-
-    protected static ?string $title = 'Plan dnia';
-
     protected static ?int $navigationSort = 30;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.calendar');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('pages.calendar.navigation');
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return __('pages.calendar.navigation');
+    }
 
     protected static string $view = 'filament.app.pages.calendar';
 
