@@ -94,34 +94,43 @@ class InvoicingSettings extends Page implements HasForms
         return $form
             ->statePath('data')
             ->schema([
-                Forms\Components\Section::make('Numeracja faktur')
-                    ->description('Placeholdery: {seq}, {seq:NN} (np. {seq:4} → 0001), {YYYY}, {YY}, {MM}, {M}, {DD}, {prefix}.')
+                Forms\Components\Section::make(__('app/invoicing_settings.form.section.numbering'))
+                    ->description(__('app/invoicing_settings.form.section.numbering_description'))
                     ->columns(2)
                     ->schema([
-                        Forms\Components\TextInput::make('template_fv')->label('Wzór FV')->required(),
-                        Forms\Components\TextInput::make('template_pro')->label('Wzór Proforma')->required(),
-                        Forms\Components\TextInput::make('template_kor')->label('Wzór Korekta')->required(),
-                        Forms\Components\TextInput::make('prefix')->label('Prefiks (placeholder {prefix})')
-                            ->placeholder('np. STW')->maxLength(16),
+                        Forms\Components\TextInput::make('template_fv')
+                            ->label(__('app/invoicing_settings.form.label.template_fv'))->required(),
+                        Forms\Components\TextInput::make('template_pro')
+                            ->label(__('app/invoicing_settings.form.label.template_pro'))->required(),
+                        Forms\Components\TextInput::make('template_kor')
+                            ->label(__('app/invoicing_settings.form.label.template_kor'))->required(),
+                        Forms\Components\TextInput::make('prefix')
+                            ->label(__('app/invoicing_settings.form.label.prefix'))
+                            ->placeholder(__('app/invoicing_settings.form.label.prefix_placeholder'))->maxLength(16),
                         Forms\Components\Radio::make('reset_interval')
-                            ->label('Reset numeracji')
+                            ->label(__('app/invoicing_settings.form.label.reset_interval'))
                             ->options(InvoiceNumberGenerator::RESET_OPTIONS)
                             ->default('yearly')
                             ->required(),
                         Forms\Components\TextInput::make('default_due_days')
-                            ->label('Domyślny termin płatności (dni)')
+                            ->label(__('app/invoicing_settings.form.label.default_due_days'))
                             ->numeric()->minValue(0)->maxValue(180)->default(7),
                     ]),
 
-                Forms\Components\Section::make('Dane sprzedawcy (snapshot na fakturach)')
-                    ->description('Te dane zostaną zapisane na każdej nowej fakturze w momencie utworzenia. Edycja danych stajni nie zmieni już wystawionych FV.')
+                Forms\Components\Section::make(__('app/invoicing_settings.form.section.seller'))
+                    ->description(__('app/invoicing_settings.form.section.seller_description'))
                     ->columns(2)
                     ->schema([
-                        Forms\Components\TextInput::make('seller_name')->label('Nazwa sprzedawcy')->required(),
-                        Forms\Components\TextInput::make('seller_nip')->label('NIP sprzedawcy')->maxLength(16),
-                        Forms\Components\TextInput::make('seller_address')->label('Adres')->maxLength(255),
-                        Forms\Components\TextInput::make('seller_postal_code')->label('Kod pocztowy')->maxLength(16),
-                        Forms\Components\TextInput::make('seller_city')->label('Miasto')->maxLength(120),
+                        Forms\Components\TextInput::make('seller_name')
+                            ->label(__('app/invoicing_settings.form.label.seller_name'))->required(),
+                        Forms\Components\TextInput::make('seller_nip')
+                            ->label(__('app/invoicing_settings.form.label.seller_nip'))->maxLength(16),
+                        Forms\Components\TextInput::make('seller_address')
+                            ->label(__('app/invoicing_settings.form.label.seller_address'))->maxLength(255),
+                        Forms\Components\TextInput::make('seller_postal_code')
+                            ->label(__('app/invoicing_settings.form.label.seller_postal_code'))->maxLength(16),
+                        Forms\Components\TextInput::make('seller_city')
+                            ->label(__('app/invoicing_settings.form.label.seller_city'))->maxLength(120),
                     ]),
             ]);
     }
@@ -153,7 +162,7 @@ class InvoicingSettings extends Page implements HasForms
 
         app(TenantAuditLogger::class)->record('invoicing.settings_updated', 'Tenant', (string) $tenant->id);
 
-        Notification::make()->title('Zapisano ustawienia faktur')->success()->send();
+        Notification::make()->title(__('app/invoicing_settings.action.saved'))->success()->send();
     }
 
     /**
