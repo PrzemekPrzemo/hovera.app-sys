@@ -30,6 +30,7 @@ return [
     'instructors' => 'Instruktorzy',
     'employees' => 'Pracownicy',
     'health_records' => 'Opieka i zdrowie',
+    'specialists' => 'Specjaliści',
 
     // Pages (non-resource)
     'pages' => [

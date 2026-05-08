@@ -28,6 +28,7 @@ return [
     'instructors' => 'Instructors',
     'employees' => 'Employees',
     'health_records' => 'Care & health',
+    'specialists' => 'Specialists',
 
     'pages' => [
         'profile' => 'Profile',

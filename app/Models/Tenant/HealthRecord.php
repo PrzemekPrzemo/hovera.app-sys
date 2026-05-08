@@ -18,6 +18,7 @@ class HealthRecord extends TenantModel
     protected $fillable = [
         'horse_id', 'type',
         'performed_at', 'performed_by',
+        'specialist_id',
         'summary', 'details',
         'next_due_at', 'cost_cents',
         'attachments', 'metadata',
@@ -39,6 +40,21 @@ class HealthRecord extends TenantModel
     public function horse(): BelongsTo
     {
         return $this->belongsTo(Horse::class);
+    }
+
+    public function specialist(): BelongsTo
+    {
+        return $this->belongsTo(Specialist::class);
+    }
+
+    /**
+     * Display name of who performed the procedure — prefer the linked
+     * Specialist's name, fall back to free-text `performed_by` for
+     * legacy entries or one-off contractors.
+     */
+    public function performedByLabel(): ?string
+    {
+        return $this->specialist?->name ?? ($this->performed_by ?: null);
     }
 
     /**

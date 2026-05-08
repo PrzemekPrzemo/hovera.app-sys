@@ -13,6 +13,9 @@ return [
             'type' => 'Typ',
             'performed_at' => 'Data zabiegu',
             'performed_by' => 'Wykonał (lekarz / kowal / firma)',
+            'performed_by_placeholder' => 'np. asystent kowala (jeśli inna osoba niż wybrana wyżej)',
+            'specialist' => 'Specjalista',
+            'specialist_placeholder' => '— wybierz z listy specjalistów —',
             'summary' => 'Krótki opis',
             'summary_placeholder' => 'Szczepienie tężec + grypa',
             'next_due_at' => 'Następny zabieg',
@@ -21,6 +24,7 @@ return [
         ],
         'helper' => [
             'next_due_at' => 'Dzięki temu pojawi się alert na dashboardzie.',
+            'specialist' => 'Lista filtrowana wg typu wpisu — kowale dla "Kowal", weterynarze dla pozostałych typów. Skonfiguruj listę w Stajnia → Specjaliści.',
         ],
     ],
 

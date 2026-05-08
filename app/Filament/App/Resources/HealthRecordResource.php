@@ -9,6 +9,7 @@ use App\Filament\App\Resources\HealthRecordResource\Pages;
 use App\Filament\Components\PriceInput;
 use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
+use App\Models\Tenant\Specialist;
 use App\Services\TenantAuditLogger;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -70,8 +71,24 @@ class HealthRecordResource extends Resource
                         ->seconds(false)
                         ->required()
                         ->default(now()),
+                    Forms\Components\Select::make('specialist_id')
+                        ->label(__('app/health.form.label.specialist'))
+                        ->options(fn (Forms\Get $get) => Specialist::query()
+                            ->where('is_active', true)
+                            ->when(
+                                HealthRecordType::tryFrom((string) $get('type'))?->value === 'farrier',
+                                fn ($q) => $q->where('type', Specialist::TYPE_FARRIER),
+                                fn ($q) => $q->where('type', Specialist::TYPE_VET),
+                            )
+                            ->orderBy('name')
+                            ->pluck('name', 'id'))
+                        ->reactive()
+                        ->searchable()
+                        ->placeholder(__('app/health.form.label.specialist_placeholder'))
+                        ->helperText(__('app/health.form.helper.specialist')),
                     Forms\Components\TextInput::make('performed_by')
                         ->label(__('app/health.form.label.performed_by'))
+                        ->placeholder(__('app/health.form.label.performed_by_placeholder'))
                         ->maxLength(255),
                     Forms\Components\TextInput::make('summary')
                         ->label(__('app/health.form.label.summary'))
@@ -107,7 +124,9 @@ class HealthRecordResource extends Resource
                 Tables\Columns\TextColumn::make('summary')
                     ->label(__('app/health.table.column.summary'))->limit(50)->searchable(),
                 Tables\Columns\TextColumn::make('performed_by')
-                    ->label(__('app/health.table.column.performed_by'))->toggleable(),
+                    ->label(__('app/health.table.column.performed_by'))
+                    ->getStateUsing(fn (HealthRecord $r) => $r->performedByLabel())
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('next_due_at')
                     ->label(__('app/health.table.column.next_due_at'))
                     ->date()

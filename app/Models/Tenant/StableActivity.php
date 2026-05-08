@@ -17,6 +17,7 @@ class StableActivity extends TenantModel
 
     protected $fillable = [
         'horse_id', 'type', 'performed_at', 'performed_by',
+        'specialist_id',
         'summary', 'details', 'cost_cents', 'metadata',
         'created_by_central_user_id',
     ];
@@ -34,6 +35,16 @@ class StableActivity extends TenantModel
     public function horse(): BelongsTo
     {
         return $this->belongsTo(Horse::class);
+    }
+
+    public function specialist(): BelongsTo
+    {
+        return $this->belongsTo(Specialist::class);
+    }
+
+    public function performedByLabel(): ?string
+    {
+        return $this->specialist?->name ?? ($this->performed_by ?: null);
     }
 
     public function scopeForHorse(Builder $query, string $horseId): Builder

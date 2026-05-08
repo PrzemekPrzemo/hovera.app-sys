@@ -39,6 +39,8 @@ return [
     'calendar_entries' => 'Rezerwacje',
     'recurring_entry' => 'cykliczne zajęcie',
     'recurring_entries' => 'Cykliczne zajęcia',
+    'specialist' => 'specjalista',
+    'specialists' => 'Specjaliści',
 
     // Relation manager labels
     'membership' => 'członek',
