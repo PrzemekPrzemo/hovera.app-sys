@@ -45,6 +45,12 @@ class StopImpersonation
         }
 
         Auth::loginUsingId($original->id);
+        // Mirror StartImpersonation: refresh password_hash_<guard> so
+        // AuthenticateSession on /admin doesn't kick the master back out
+        // when they land back on the panel.
+        $guard = config('auth.defaults.guard', 'web');
+        $session->put('password_hash_'.$guard, $original->getAuthPassword());
+
         // Drop tenant context — master admin shouldn't sit in /app.
         $session->forget('current_tenant_id');
 

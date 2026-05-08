@@ -42,6 +42,13 @@ class ImpersonationTest extends TestCase
         $this->assertSame($tenant->id, $session->get('current_tenant_id'));
         $this->assertSame($result['session_id'], $session->get('impersonation_session_id'));
 
+        // password_hash_web must match the *target* user, otherwise
+        // AuthenticateSession on /app would log them out on first hit.
+        $this->assertSame(
+            $target->getAuthPassword(),
+            $session->get('password_hash_'.config('auth.defaults.guard')),
+        );
+
         // Persisted record
         $row = DB::connection('central')->table('impersonation_sessions')->where('id', $result['session_id'])->first();
         $this->assertNotNull($row);
@@ -125,6 +132,12 @@ class ImpersonationTest extends TestCase
         $this->assertNull($session->get('impersonation.session_id'));
         $this->assertNull($session->get('current_tenant_id'));
         $this->assertNull($session->get('impersonation_session_id'));
+        // Hash flipped back so the master can land on /admin without
+        // AuthenticateSession kicking them.
+        $this->assertSame(
+            $master->getAuthPassword(),
+            $session->get('password_hash_'.config('auth.defaults.guard')),
+        );
 
         $row = DB::connection('central')->table('impersonation_sessions')->where('id', $start['session_id'])->first();
         $this->assertNotNull($row->ended_at);
