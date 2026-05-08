@@ -104,8 +104,8 @@ class Calendar extends Page implements HasActions, HasForms
     public function createEntryAction(): Action
     {
         return Action::make('createEntry')
-            ->label('Dodaj rezerwację')
-            ->modalHeading('Nowa rezerwacja')
+            ->label(__('app/calendar_widget.action.create.label'))
+            ->modalHeading(__('app/calendar_widget.action.create.modal_heading'))
             ->form($this->entryFormSchema())
             ->fillForm(fn (array $arguments) => array_merge([
                 'type' => CalendarEntryType::LessonIndividual->value,
@@ -120,9 +120,9 @@ class Calendar extends Page implements HasActions, HasForms
             ->action(function (array $data) {
                 try {
                     app(CreateCalendarEntry::class)->execute($data);
-                    Notification::make()->success()->title('Rezerwacja dodana')->send();
+                    Notification::make()->success()->title(__('app/calendar_widget.action.create.success'))->send();
                 } catch (CalendarConflictException $e) {
-                    Notification::make()->danger()->title('Konflikt')->body($e->getMessage())->persistent()->send();
+                    Notification::make()->danger()->title(__('app/calendar_widget.action.create.conflict_title'))->body($e->getMessage())->persistent()->send();
                 }
             });
     }
@@ -133,8 +133,8 @@ class Calendar extends Page implements HasActions, HasForms
     public function editEntryAction(): Action
     {
         return Action::make('editEntry')
-            ->label('Edytuj rezerwację')
-            ->modalHeading('Edycja rezerwacji')
+            ->label(__('app/calendar_widget.action.edit.label'))
+            ->modalHeading(__('app/calendar_widget.action.edit.modal_heading'))
             ->form($this->entryFormSchema())
             ->fillForm(function (array $arguments) {
                 $entry = CalendarEntry::findOrFail($arguments['entry_id']);
@@ -158,9 +158,9 @@ class Calendar extends Page implements HasActions, HasForms
 
                 try {
                     app(UpdateCalendarEntry::class)->execute($entry, $data);
-                    Notification::make()->success()->title('Rezerwacja zaktualizowana')->send();
+                    Notification::make()->success()->title(__('app/calendar_widget.action.edit.success'))->send();
                 } catch (CalendarConflictException $e) {
-                    Notification::make()->danger()->title('Konflikt')->body($e->getMessage())->persistent()->send();
+                    Notification::make()->danger()->title(__('app/calendar_widget.action.create.conflict_title'))->body($e->getMessage())->persistent()->send();
                 }
             });
     }
@@ -171,13 +171,13 @@ class Calendar extends Page implements HasActions, HasForms
     public function deleteEntryAction(): Action
     {
         return Action::make('deleteEntry')
-            ->label('Usuń rezerwację')
+            ->label(__('app/calendar_widget.action.delete.label'))
             ->color('danger')
             ->requiresConfirmation()
             ->action(function (array $arguments) {
                 $entry = CalendarEntry::findOrFail($arguments['entry_id']);
                 $entry->delete();
-                Notification::make()->success()->title('Rezerwacja usunięta')->send();
+                Notification::make()->success()->title(__('app/calendar_widget.action.delete.success'))->send();
             });
     }
 
@@ -192,43 +192,47 @@ class Calendar extends Page implements HasActions, HasForms
         return [
             Forms\Components\Grid::make(3)->schema([
                 Forms\Components\Select::make('type')
-                    ->label('Typ')
+                    ->label(__('app/calendar_widget.form.label.type'))
                     ->options(CalendarEntryType::options())
                     ->default(CalendarEntryType::LessonIndividual->value)
                     ->required()
                     ->reactive(),
-                Forms\Components\DateTimePicker::make('starts_at')->label('Początek')->required()->seconds(false),
-                Forms\Components\DateTimePicker::make('ends_at')->label('Koniec')->required()->seconds(false)->after('starts_at'),
+                Forms\Components\DateTimePicker::make('starts_at')
+                    ->label(__('app/calendar_widget.form.label.starts_at'))->required()->seconds(false),
+                Forms\Components\DateTimePicker::make('ends_at')
+                    ->label(__('app/calendar_widget.form.label.ends_at'))->required()->seconds(false)->after('starts_at'),
             ]),
             Forms\Components\Grid::make(2)->schema([
                 Forms\Components\Select::make('horse_id')
-                    ->label('Koń')
+                    ->label(__('app/calendar_widget.form.label.horse'))
                     ->options(fn () => Horse::query()->orderBy('name')->pluck('name', 'id'))
                     ->searchable()
                     ->required(fn (Forms\Get $get) => CalendarEntryType::tryFrom((string) $get('type'))?->requiresHorse() ?? false),
                 Forms\Components\Select::make('instructor_id')
-                    ->label('Instruktor')
+                    ->label(__('app/calendar_widget.form.label.instructor'))
                     ->options(fn () => Instructor::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
                     ->searchable()
                     ->required(fn (Forms\Get $get) => CalendarEntryType::tryFrom((string) $get('type'))?->requiresInstructor() ?? false),
                 Forms\Components\Select::make('arena_id')
-                    ->label('Ujeżdżalnia')
+                    ->label(__('app/calendar_widget.form.label.arena'))
                     ->options(fn () => Arena::query()->where('is_active', true)->orderBy('sort_order')->pluck('name', 'id'))
                     ->searchable(),
                 Forms\Components\Select::make('client_id')
-                    ->label('Klient')
+                    ->label(__('app/calendar_widget.form.label.client'))
                     ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id'))
                     ->searchable(),
             ]),
             Forms\Components\Grid::make(2)->schema([
-                Forms\Components\TextInput::make('title')->label('Tytuł'),
+                Forms\Components\TextInput::make('title')
+                    ->label(__('app/calendar_widget.form.label.title')),
                 Forms\Components\Select::make('status')
-                    ->label('Status')
+                    ->label(__('app/calendar_widget.form.label.status'))
                     ->options(CalendarEntryStatus::options())
                     ->default(CalendarEntryStatus::Confirmed->value)
                     ->required(),
             ]),
-            Forms\Components\Textarea::make('notes')->label('Notatki')->rows(2),
+            Forms\Components\Textarea::make('notes')
+                ->label(__('app/calendar_widget.form.label.notes'))->rows(2),
         ];
     }
 }
