@@ -17,6 +17,8 @@ return [
     'form' => [
         'section' => [
             'data' => 'Client data',
+            'armir' => 'Horse owner identification (ARMiR)',
+            'armir_description' => 'Required for owners of horses registered in the Polish Equine Central Database. EP (ARMiR producer ID) — if not assigned, enter PESEL.',
             'address' => 'Address',
             'rodo' => 'GDPR',
             'notes' => 'Notes',
@@ -26,6 +28,9 @@ return [
             'name' => 'Full name / Company name',
             'phone' => 'Phone',
             'tax_id' => 'Tax ID / VAT ID',
+            'armir_producer_id' => 'EP no. (ARMiR producer ID)',
+            'armir_producer_id_placeholder' => 'e.g. 026123456789',
+            'pesel' => 'PESEL',
             'street' => 'Street and number',
             'postal_code' => 'Postal code',
             'city' => 'City',
@@ -33,6 +38,10 @@ return [
             'rodo_consent_at' => 'GDPR consent given',
             'rodo_consent_source' => 'Consent source',
             'notes' => 'Internal notes',
+        ],
+        'helper' => [
+            'armir_producer_id' => 'Producer ID assigned by ARMiR when registering a horse.',
+            'pesel' => 'Only if the owner does not have an EP assigned by ARMiR.',
         ],
         'gus' => [
             'lookup_label' => 'Fetch from GUS',

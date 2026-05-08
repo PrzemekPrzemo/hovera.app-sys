@@ -15,6 +15,7 @@ class Client extends TenantModel
 
     protected $fillable = [
         'type', 'name', 'email', 'phone', 'tax_id',
+        'armir_producer_id', 'pesel',
         'street', 'postal_code', 'city', 'country',
         'rodo_consent_at', 'rodo_consent_source',
         'central_user_id', 'notes', 'metadata',

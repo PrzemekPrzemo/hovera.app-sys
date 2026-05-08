@@ -17,6 +17,8 @@ return [
     'form' => [
         'section' => [
             'data' => 'Dane klienta',
+            'armir' => 'Identyfikacja właściciela konia (ARMiR)',
+            'armir_description' => 'Wymagane dla właścicieli koni zarejestrowanych w Centralnej Bazie Koniowatych. EP (numer producenta nadany przez ARMiR) — jeśli nie ma, wpisz PESEL.',
             'address' => 'Adres',
             'rodo' => 'RODO',
             'notes' => 'Notatki',
@@ -26,6 +28,9 @@ return [
             'name' => 'Imię i nazwisko / Nazwa',
             'phone' => 'Telefon',
             'tax_id' => 'NIP / VAT ID',
+            'armir_producer_id' => 'Nr EP (numer producenta ARMiR)',
+            'armir_producer_id_placeholder' => 'np. 026123456789',
+            'pesel' => 'PESEL',
             'street' => 'Ulica i numer',
             'postal_code' => 'Kod pocztowy',
             'city' => 'Miasto',
@@ -33,6 +38,10 @@ return [
             'rodo_consent_at' => 'Zgoda RODO udzielona',
             'rodo_consent_source' => 'Źródło zgody',
             'notes' => 'Notatki wewnętrzne',
+        ],
+        'helper' => [
+            'armir_producer_id' => 'Numer producenta nadany w ARMiR przy rejestracji konia.',
+            'pesel' => 'Wpisz tylko jeśli właściciel nie ma nadanego EP w ARMiR.',
         ],
         'gus' => [
             'lookup_label' => 'Pobierz z GUS',
