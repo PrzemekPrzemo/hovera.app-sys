@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Moje rezerwacje — {{ $tenant->name }}</title>
+    <title>{{ __('portal/dashboard.title', ['tenant' => $tenant->name]) }}</title>
     <meta name="robots" content="noindex">
     <style>
         :root { --primary: {{ $primary_color }}; }
@@ -86,58 +86,58 @@
         <header class="bar">
             <div class="who">
                 {{ $client->name }}
-                <span class="stable">Panel klienta · {{ $tenant->name }}</span>
+                <span class="stable">{{ __('portal/dashboard.subtitle', ['tenant' => $tenant->name]) }}</span>
             </div>
             <form method="post" action="{{ route('client_portal.logout', ['slug' => $tenant->slug]) }}">
                 @csrf
-                <button type="submit">Wyloguj</button>
+                <button type="submit">{{ __('portal/dashboard.logout') }}</button>
             </form>
         </header>
 
         @if (session('reschedule_success'))
-            <div class="flash">✓ Rezerwacja przesunięta. Wysłaliśmy potwierdzenie mailem.</div>
+            <div class="flash">{{ __('portal/dashboard.flash.reschedule_success') }}</div>
         @endif
 
         <section class="section">
-            <h2>Nadchodzące rezerwacje</h2>
+            <h2>{{ __('portal/dashboard.sections.upcoming') }}</h2>
             @forelse ($upcoming as $entry)
                 <div class="booking">
                     <div class="when">
                         {{ $entry->starts_at->translatedFormat('d.m.Y · H:i') }}
-                        <span class="duration">{{ (int) $entry->starts_at->diffInMinutes($entry->ends_at) }} min</span>
+                        <span class="duration">{{ __('portal/dashboard.duration_min', ['minutes' => (int) $entry->starts_at->diffInMinutes($entry->ends_at)]) }}</span>
                     </div>
                     <div class="what">
                         @switch($entry->status->value)
                             @case('requested')
-                                <span class="pill req">Oczekuje</span>
+                                <span class="pill req">{{ __('portal/dashboard.status.requested') }}</span>
                                 @break
                             @case('confirmed')
-                                <span class="pill conf">Potwierdzona</span>
+                                <span class="pill conf">{{ __('portal/dashboard.status.confirmed') }}</span>
                                 @break
                         @endswitch
                         <span class="meta">
-                            {{ $entry->instructor?->name ? 'Instruktor: '.$entry->instructor->name : '' }}
-                            @if ($entry->horse) · Koń: {{ $entry->horse->name }} @endif
+                            {{ $entry->instructor?->name ? __('portal/dashboard.instructor_label', ['name' => $entry->instructor->name]) : '' }}
+                            @if ($entry->horse) · {{ __('portal/dashboard.horse_label', ['name' => $entry->horse->name]) }} @endif
                             @if ($entry->arena) · {{ $entry->arena->name }} @endif
                         </span>
                     </div>
                     <div class="actions">
                         @if ($entry->status === \App\Enums\CalendarEntryStatus::Confirmed)
-                            <a class="reschedule" href="{{ route('client_portal.reschedule.show', ['slug' => $tenant->slug, 'entry' => $entry->id]) }}">Przesuń</a>
+                            <a class="reschedule" href="{{ route('client_portal.reschedule.show', ['slug' => $tenant->slug, 'entry' => $entry->id]) }}">{{ __('portal/dashboard.actions.reschedule') }}</a>
                         @endif
                         @if ($cancel_links->has($entry->id))
-                            <a href="{{ $cancel_links->get($entry->id) }}">Odwołaj</a>
+                            <a href="{{ $cancel_links->get($entry->id) }}">{{ __('portal/dashboard.actions.cancel') }}</a>
                         @endif
                     </div>
                 </div>
             @empty
-                <div class="empty">Brak nadchodzących rezerwacji.</div>
+                <div class="empty">{{ __('portal/dashboard.empty.upcoming') }}</div>
             @endforelse
         </section>
 
         @if ($passes->isNotEmpty())
             <section class="section">
-                <h2>Twoje karnety</h2>
+                <h2>{{ __('portal/dashboard.sections.passes') }}</h2>
                 @foreach ($passes as $pass)
                     @php
                         $remaining = (int) $pass->remaining_uses;
@@ -163,9 +163,9 @@
                             @endswitch
                         </div>
                         <div class="pass-meta">
-                            {{ $remaining }} / {{ $total }} pozostało
+                            {{ __('portal/dashboard.pass.remaining', ['remaining' => $remaining, 'total' => $total]) }}
                             @if ($pass->valid_until)
-                                · ważny do {{ $pass->valid_until->format('d.m.Y') }}
+                                · {{ __('portal/dashboard.pass.valid_until', ['date' => $pass->valid_until->format('d.m.Y')]) }}
                             @endif
                         </div>
                         <div class="pass-bar"><span style="width: {{ $percent }}%"></span></div>
@@ -173,13 +173,13 @@
                 @endforeach
 
                 @if ($recent_uses->isNotEmpty())
-                    <h3 class="muted">Ostatnio użyte</h3>
+                    <h3 class="muted">{{ __('portal/dashboard.pass.recent_uses') }}</h3>
                     @foreach ($recent_uses as $use)
                         <div class="use">
                             <span>{{ $use->consumed_at?->format('d.m.Y H:i') }}</span>
                             <span class="muted">
                                 @if ($use->calendarEntry)
-                                    Lekcja {{ $use->calendarEntry->starts_at->format('d.m.Y') }}
+                                    {{ __('portal/dashboard.pass.lesson_label', ['date' => $use->calendarEntry->starts_at->format('d.m.Y')]) }}
                                 @endif
                             </span>
                         </div>
@@ -189,7 +189,7 @@
         @endif
 
         <section class="section">
-            <h2>Historia</h2>
+            <h2>{{ __('portal/dashboard.sections.history') }}</h2>
             @forelse ($past as $entry)
                 <div class="booking">
                     <div class="when">
@@ -198,41 +198,41 @@
                     <div class="what">
                         @switch($entry->status->value)
                             @case('completed')
-                                <span class="pill complete">Zakończona</span>
+                                <span class="pill complete">{{ __('portal/dashboard.status.completed') }}</span>
                                 @break
                             @case('cancelled')
-                                <span class="pill cancel">Odwołana</span>
+                                <span class="pill cancel">{{ __('portal/dashboard.status.cancelled') }}</span>
                                 @break
                             @case('no_show')
-                                <span class="pill no">No-show</span>
+                                <span class="pill no">{{ __('portal/dashboard.status.no_show') }}</span>
                                 @break
                             @default
                                 <span class="pill complete">{{ $entry->status->label() }}</span>
                         @endswitch
                         <span class="meta">
-                            {{ $entry->instructor?->name ? 'Instruktor: '.$entry->instructor->name : '' }}
-                            @if ($entry->horse) · Koń: {{ $entry->horse->name }} @endif
+                            {{ $entry->instructor?->name ? __('portal/dashboard.instructor_label', ['name' => $entry->instructor->name]) : '' }}
+                            @if ($entry->horse) · {{ __('portal/dashboard.horse_label', ['name' => $entry->horse->name]) }} @endif
                         </span>
                     </div>
                     <div class="actions"></div>
                 </div>
             @empty
-                <div class="empty">Brak historii rezerwacji.</div>
+                <div class="empty">{{ __('portal/dashboard.empty.history') }}</div>
             @endforelse
         </section>
 
         @if ($unpaid_invoices->isNotEmpty())
             <section class="section">
-                <h2>Faktury do opłacenia</h2>
+                <h2>{{ __('portal/dashboard.sections.unpaid_invoices') }}</h2>
                 @foreach ($unpaid_invoices as $invoice)
                     <a class="invoice-row" href="{{ $invoice_links->get($invoice->id) }}">
                         <div>
                             <strong>{{ $invoice->kind->shortLabel() }} {{ $invoice->number }}</strong>
                             <span class="meta">
-                                Wystawiona: {{ $invoice->issued_at?->format('d.m.Y') }}
+                                {{ __('portal/dashboard.invoice.issued_at', ['date' => $invoice->issued_at?->format('d.m.Y')]) }}
                                 @if ($invoice->due_at)
                                     @php $overdue = $invoice->due_at->isPast(); @endphp
-                                    · Termin: <span class="{{ $overdue ? 'overdue' : '' }}">{{ $invoice->due_at->format('d.m.Y') }}</span>
+                                    · {{ __('portal/dashboard.invoice.due_at', ['date' => $invoice->due_at->format('d.m.Y')]) }}
                                 @endif
                             </span>
                         </div>
@@ -244,7 +244,7 @@
 
         @if ($recent_messages->isNotEmpty())
             <section class="section">
-                <h2>Wiadomości <a href="{{ route('client_portal.messages.show', ['slug' => $tenant->slug]) }}" class="more">Wszystkie →</a></h2>
+                <h2>{{ __('portal/dashboard.sections.messages') }} <a href="{{ route('client_portal.messages.show', ['slug' => $tenant->slug]) }}" class="more">{{ __('portal/dashboard.actions.view_all') }}</a></h2>
                 @foreach ($recent_messages as $message)
                     <div class="message">
                         <div class="message-head">
@@ -260,9 +260,9 @@
         @if ($horses->isNotEmpty())
             <section class="section">
                 <h2>
-                    Twoje konie
+                    {{ __('portal/dashboard.sections.horses') }}
                     @if (! empty($unread_horse_messages) && $unread_horse_messages > 0)
-                        <span class="unread-badge">📬 {{ $unread_horse_messages }} nowa{{ $unread_horse_messages === 1 ? '' : 'ch' }} {{ $unread_horse_messages === 1 ? 'wiadomość' : 'wiadomości' }}</span>
+                        <span class="unread-badge">{{ trans_choice('portal/dashboard.unread_messages', $unread_horse_messages, ['count' => $unread_horse_messages]) }}</span>
                     @endif
                 </h2>
                 @foreach ($horses as $horse)
@@ -276,18 +276,18 @@
                             <strong>{{ $horse->name }}</strong>
                             <span class="meta">
                                 @if ($horse->breed){{ $horse->breed }}@endif
-                                @if ($horse->birth_date) · {{ (int) $horse->birth_date->diffInYears(now()) }} l. @endif
+                                @if ($horse->birth_date) · {{ (int) $horse->birth_date->diffInYears(now()) }} {{ __('portal/dashboard.horse.years_short') }} @endif
                             </span>
                         </div>
                         <div class="horse-alerts">
                             @if ($overdue > 0)
-                                <span class="pill cancel">{{ $overdue }} przeterm.</span>
+                                <span class="pill cancel">{{ __('portal/dashboard.horse.overdue_pill', ['count' => $overdue]) }}</span>
                             @endif
                             @if ($upcoming30 > 0)
-                                <span class="pill conf">{{ $upcoming30 }} w 30 dni</span>
+                                <span class="pill conf">{{ __('portal/dashboard.horse.upcoming_pill', ['count' => $upcoming30]) }}</span>
                             @endif
                             @if ($overdue === 0 && $upcoming30 === 0)
-                                <span class="pill complete">OK</span>
+                                <span class="pill complete">{{ __('portal/dashboard.horse.ok_pill') }}</span>
                             @endif
                         </div>
                     </a>
