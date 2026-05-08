@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Wiadomości — {{ $tenant->name }}</title>
+    <title>{{ __('portal/messages.title', ['tenant' => $tenant->name]) }}</title>
     <meta name="robots" content="noindex">
     <style>
         :root { --primary: {{ $primary_color }}; }
@@ -40,10 +40,10 @@
 </head>
 <body>
     <div class="container">
-        <a class="back" href="{{ route('client_portal.dashboard', ['slug' => $tenant->slug]) }}">← Wróć do panelu</a>
+        <a class="back" href="{{ route('client_portal.dashboard', ['slug' => $tenant->slug]) }}">{{ __('portal/messages.back') }}</a>
 
         <div class="card">
-            <h1>Wiadomości</h1>
+            <h1>{{ __('portal/messages.heading') }}</h1>
             <div class="subtitle">{{ $tenant->name }}</div>
 
             @forelse ($messages as $message)
@@ -58,7 +58,7 @@
                     <div class="meta">→ {{ $message->to_email }}</div>
                 </div>
             @empty
-                <div class="empty">Brak wiadomości w historii.</div>
+                <div class="empty">{{ __('portal/messages.empty') }}</div>
             @endforelse
 
             @if ($messages->hasPages())
