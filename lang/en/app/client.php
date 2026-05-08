@@ -64,10 +64,18 @@ return [
 
     'action' => [
         'issue_portal_link' => [
-            'label' => 'Generate portal link',
+            'label' => 'Copy portal link',
             'modal_heading' => 'Generate sign-in link for :name?',
             'modal_description' => 'Creates a one-time magic link (TTL 30 min). You can copy and send it to the client manually, e.g. via SMS or Messenger. No email required.',
             'success_title' => 'Sign-in link created',
+        ],
+        'email_portal_link' => [
+            'label' => 'Email portal link',
+            'modal_heading' => 'Email sign-in link to :name?',
+            'modal_description' => "We'll email a sign-in link to :email. The link is valid for 30 minutes, single-use.",
+            'success_title' => 'Link sent',
+            'success_body' => 'Sign-in email sent to :email.',
+            'no_email' => 'The client has no email address on file.',
         ],
     ],
 ];

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Invitations\AcceptInvitationController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\ClientPortalController;
 use App\Http\Controllers\Public\PaymentWebhookController;
@@ -41,6 +42,12 @@ Route::get('/', fn () => redirect('/'.config('hovera.admin.path')));
 Route::get('/login', fn () => redirect('/app/login'))->name('login');
 Route::get('/'.config('hovera.admin.path', 'admin').'/login', fn () => redirect('/app/login'));
 
+// Pretty aliases dla pracowników do flow resetu hasła. Filament
+// hostuje formularze w /app/password-reset/{request,reset}, ale
+// /forgot-password jest krótszy do podyktowania przez telefon.
+Route::get('/forgot-password', fn () => redirect('/app/password-reset/request'));
+Route::get('/reset-password', fn () => redirect('/app/password-reset/request'));
+
 Route::middleware(['web', 'auth'])->prefix('two-factor')->name('two-factor.')->group(function () {
     Route::get('/setup', [TwoFactorController::class, 'showSetup'])->name('setup');
     Route::post('/setup', [TwoFactorController::class, 'confirmSetup'])->name('setup.confirm');
@@ -62,7 +69,7 @@ Route::middleware(['web', 'auth'])->prefix('impersonation')->name('impersonation
 
 // Language switcher — redirects back to where the user came from.
 Route::middleware('web')
-    ->get('/locale/{locale}', \App\Http\Controllers\LocaleController::class)
+    ->get('/locale/{locale}', LocaleController::class)
     ->where('locale', 'pl|en')
     ->name('locale.set');
 
