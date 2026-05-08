@@ -15,6 +15,8 @@ return [
     'clients' => 'Clients',
     'box' => 'box',
     'boxes' => 'Boxes',
+    'building' => 'building',
+    'buildings' => 'Buildings',
     'arena' => 'arena',
     'arenas' => 'Arenas',
     'invoice' => 'invoice',

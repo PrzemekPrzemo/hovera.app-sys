@@ -20,6 +20,7 @@ return [
     'horses' => 'Konie',
     'clients' => 'Klienci',
     'boxes' => 'Boksy',
+    'buildings' => 'Budynki',
     'arenas' => 'Ujeżdżalnie',
     'calendar_entries' => 'Rezerwacje',
     'recurring_entries' => 'Cykliczne zajęcia',

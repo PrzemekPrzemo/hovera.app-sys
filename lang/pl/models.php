@@ -21,6 +21,8 @@ return [
     'clients' => 'Klienci',
     'box' => 'boks',
     'boxes' => 'Boksy',
+    'building' => 'budynek',
+    'buildings' => 'Budynki',
     'arena' => 'arena',
     'arenas' => 'Areny',
     'invoice' => 'faktura',

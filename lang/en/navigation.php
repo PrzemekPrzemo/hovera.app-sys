@@ -18,6 +18,7 @@ return [
     'horses' => 'Horses',
     'clients' => 'Clients',
     'boxes' => 'Boxes',
+    'buildings' => 'Buildings',
     'arenas' => 'Arenas',
     'calendar_entries' => 'Bookings',
     'recurring_entries' => 'Recurring sessions',
