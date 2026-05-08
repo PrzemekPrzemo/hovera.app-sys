@@ -37,23 +37,33 @@ class NewBookingRequestNotification extends Notification
     {
         $url = url('/app/calendar-entries/'.$this->entryId.'/edit');
 
+        $clientFormatted = $this->clientPhone
+            ? __('notifications.new_booking_request.client_format_with_phone', [
+                'name' => $this->clientName,
+                'email' => $this->clientEmail,
+                'phone' => $this->clientPhone,
+            ])
+            : __('notifications.new_booking_request.client_format', [
+                'name' => $this->clientName,
+                'email' => $this->clientEmail,
+            ]);
+
         $message = (new MailMessage)
-            ->subject("Nowe zgłoszenie online — {$this->tenantName}")
-            ->greeting('Cześć!')
-            ->line("Klient zgłosił prośbę o lekcję w stajni **{$this->tenantName}**:")
-            ->line("**Termin:** {$this->startsAt->format('Y-m-d H:i')}")
-            ->line("**Instruktor:** {$this->instructorName}")
-            ->line("**Klient:** {$this->clientName} ({$this->clientEmail}"
-                .($this->clientPhone ? ", tel. {$this->clientPhone}" : '').')');
+            ->subject(__('notifications.new_booking_request.subject', ['tenant' => $this->tenantName]))
+            ->greeting(__('notifications.common.greeting'))
+            ->line(__('notifications.new_booking_request.line_intro', ['tenant' => $this->tenantName]))
+            ->line('**'.__('notifications.common.field.term').':** '.$this->startsAt->format('Y-m-d H:i'))
+            ->line('**'.__('notifications.common.field.instructor').':** '.$this->instructorName)
+            ->line('**'.__('notifications.common.field.client').':** '.$clientFormatted);
 
         if ($this->notes) {
-            $message->line("**Notatka klienta:** {$this->notes}");
+            $message->line('**'.__('notifications.common.field.client_note').':** '.$this->notes);
         }
 
         return $message
-            ->line('Aby zatwierdzić, przejdź do edycji rezerwacji, przypisz konia i zmień status na „Potwierdzone".')
-            ->action('Otwórz rezerwację', $url)
-            ->line('Konia można przypisać dopiero w momencie potwierdzania — system wymaga tego przed zmianą statusu.')
-            ->salutation('— Hovera');
+            ->line(__('notifications.new_booking_request.line_action_required'))
+            ->action(__('notifications.new_booking_request.action'), $url)
+            ->line(__('notifications.new_booking_request.line_horse_assignment'))
+            ->salutation(__('notifications.new_booking_request.salutation'));
     }
 }

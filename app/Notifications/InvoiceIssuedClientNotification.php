@@ -39,27 +39,37 @@ class InvoiceIssuedClientNotification extends Notification
     public function toMail(mixed $notifiable): MailMessage
     {
         $msg = (new MailMessage)
-            ->subject("{$this->kindLabel} {$this->invoiceNumber} — {$this->tenantName}")
-            ->greeting('Cześć!')
-            ->line("Wystawiliśmy {$this->kindLabel} **{$this->invoiceNumber}** ze stajni **{$this->tenantName}**.")
-            ->line('**Data wystawienia:** '.$this->issuedAt->format('Y-m-d'))
-            ->line('**Kwota brutto:** '.$this->totalFormatted);
+            ->subject(__('notifications.invoice_issued.subject', [
+                'kind' => $this->kindLabel,
+                'number' => $this->invoiceNumber,
+                'tenant' => $this->tenantName,
+            ]))
+            ->greeting(__('notifications.common.greeting'))
+            ->line(__('notifications.invoice_issued.line_intro', [
+                'kind' => $this->kindLabel,
+                'number' => $this->invoiceNumber,
+                'tenant' => $this->tenantName,
+            ]))
+            ->line('**'.__('notifications.common.field.issued_at').':** '.$this->issuedAt->format('Y-m-d'))
+            ->line('**'.__('notifications.common.field.gross_amount').':** '.$this->totalFormatted);
 
         if ($this->dueAt) {
-            $msg->line('**Termin płatności:** '.$this->dueAt->format('Y-m-d'));
+            $msg->line('**'.__('notifications.common.field.due_date').':** '.$this->dueAt->format('Y-m-d'));
         }
 
         $msg->action(
-            $this->canPayOnline ? 'Zobacz fakturę i zapłać' : 'Zobacz fakturę',
+            $this->canPayOnline
+                ? __('notifications.invoice_issued.action_pay')
+                : __('notifications.invoice_issued.action_view'),
             $this->publicUrl,
         );
 
         if (! $this->canPayOnline) {
-            $msg->line('Płatność prosimy uregulować przelewem na konto stajni — szczegóły w panelu klienta.');
+            $msg->line(__('notifications.invoice_issued.line_offline_payment'));
         }
 
         return $msg
-            ->line('Dziękujemy!')
-            ->salutation("— {$this->tenantName}");
+            ->line(__('notifications.invoice_issued.line_thanks'))
+            ->salutation(__('notifications.common.salutation_prefix').$this->tenantName);
     }
 }
