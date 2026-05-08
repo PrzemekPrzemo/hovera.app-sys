@@ -48,17 +48,22 @@ class InstructorResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Dane instruktora')
+            Forms\Components\Section::make(__('app/instructor.form.section.data'))
                 ->columns(2)
                 ->schema([
-                    Forms\Components\TextInput::make('name')->label('Imię i nazwisko')->required()->maxLength(255),
+                    Forms\Components\TextInput::make('name')
+                        ->label(__('app/instructor.form.label.name'))->required()->maxLength(255),
                     Forms\Components\TextInput::make('email')->email()->maxLength(255),
-                    Forms\Components\TextInput::make('phone')->label('Telefon')->tel()->maxLength(40),
-                    PriceInput::make('hourly_rate_cents', 'Stawka za godzinę'),
-                    Forms\Components\ColorPicker::make('color')->label('Kolor w kalendarzu'),
-                    Forms\Components\Toggle::make('is_active')->label('Aktywny')->default(true),
+                    Forms\Components\TextInput::make('phone')
+                        ->label(__('app/instructor.form.label.phone'))->tel()->maxLength(40),
+                    PriceInput::make('hourly_rate_cents', __('app/instructor.form.label.hourly_rate')),
+                    Forms\Components\ColorPicker::make('color')
+                        ->label(__('app/instructor.form.label.color')),
+                    Forms\Components\Toggle::make('is_active')
+                        ->label(__('app/instructor.form.label.is_active'))->default(true),
                 ]),
-            Forms\Components\Textarea::make('notes')->label('Notatki')->rows(3),
+            Forms\Components\Textarea::make('notes')
+                ->label(__('app/instructor.form.label.notes'))->rows(3),
         ]);
     }
 
@@ -66,18 +71,23 @@ class InstructorResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Imię i nazwisko')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->label(__('app/instructor.table.column.name'))->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('email')->searchable()->toggleable(),
-                Tables\Columns\TextColumn::make('phone')->label('Telefon')->toggleable(),
+                Tables\Columns\TextColumn::make('phone')
+                    ->label(__('app/instructor.table.column.phone'))->toggleable(),
                 Tables\Columns\TextColumn::make('hourly_rate_cents')
-                    ->label('Stawka')
+                    ->label(__('app/instructor.table.column.hourly_rate'))
                     ->formatStateUsing(fn (?int $state) => $state !== null ? number_format($state / 100, 2, ',', ' ').' zł' : '—'),
-                Tables\Columns\ColorColumn::make('color')->label('Kolor')->toggleable(),
-                Tables\Columns\IconColumn::make('is_active')->label('Aktywny')->boolean(),
+                Tables\Columns\ColorColumn::make('color')
+                    ->label(__('app/instructor.table.column.color'))->toggleable(),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label(__('app/instructor.table.column.is_active'))->boolean(),
             ])
             ->defaultSort('name')
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')->label('Status'),
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label(__('app/instructor.table.filter.status')),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([

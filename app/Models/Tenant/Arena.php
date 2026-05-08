@@ -37,11 +37,11 @@ class Arena extends TenantModel
     public static function typeOptions(): array
     {
         return [
-            'indoor' => 'Hala kryta',
-            'outdoor' => 'Plac otwarty',
-            'paddock' => 'Padok',
-            'lunge' => 'Lonżownik',
-            'field' => 'Teren',
+            'indoor' => __('app/arena.types.indoor'),
+            'outdoor' => __('app/arena.types.outdoor'),
+            'paddock' => __('app/arena.types.paddock'),
+            'lunge' => __('app/arena.types.lunge'),
+            'field' => __('app/arena.types.field'),
         ];
     }
 }

@@ -47,16 +47,21 @@ class ArenaResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\TextInput::make('name')->label('Nazwa')->required()->maxLength(120),
+            Forms\Components\TextInput::make('name')
+                ->label(__('app/arena.form.label.name'))->required()->maxLength(120),
             Forms\Components\Select::make('type')
-                ->label('Typ')
+                ->label(__('app/arena.form.label.type'))
                 ->options(Arena::typeOptions())
                 ->default('indoor')
                 ->required(),
-            Forms\Components\ColorPicker::make('color')->label('Kolor w kalendarzu'),
-            Forms\Components\Toggle::make('is_active')->label('Aktywna')->default(true),
-            Forms\Components\TextInput::make('sort_order')->label('Kolejność')->numeric()->default(0),
-            Forms\Components\Textarea::make('notes')->label('Notatki')->rows(3),
+            Forms\Components\ColorPicker::make('color')
+                ->label(__('app/arena.form.label.color')),
+            Forms\Components\Toggle::make('is_active')
+                ->label(__('app/arena.form.label.is_active'))->default(true),
+            Forms\Components\TextInput::make('sort_order')
+                ->label(__('app/arena.form.label.sort_order'))->numeric()->default(0),
+            Forms\Components\Textarea::make('notes')
+                ->label(__('app/arena.form.label.notes'))->rows(3),
         ]);
     }
 
@@ -64,11 +69,15 @@ class ArenaResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Nazwa')->searchable()->sortable(),
-                Tables\Columns\BadgeColumn::make('type')->label('Typ')
+                Tables\Columns\TextColumn::make('name')
+                    ->label(__('app/arena.table.column.name'))->searchable()->sortable(),
+                Tables\Columns\BadgeColumn::make('type')
+                    ->label(__('app/arena.table.column.type'))
                     ->formatStateUsing(fn (?string $state) => Arena::typeOptions()[$state] ?? $state),
-                Tables\Columns\ColorColumn::make('color')->label('Kolor')->toggleable(),
-                Tables\Columns\IconColumn::make('is_active')->label('Aktywna')->boolean(),
+                Tables\Columns\ColorColumn::make('color')
+                    ->label(__('app/arena.table.column.color'))->toggleable(),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label(__('app/arena.table.column.is_active'))->boolean(),
                 Tables\Columns\TextColumn::make('sort_order')->label('#')->sortable(),
             ])
             ->defaultSort('sort_order')

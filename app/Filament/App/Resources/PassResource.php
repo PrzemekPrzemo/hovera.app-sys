@@ -50,21 +50,21 @@ class PassResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Karnet')
+            Forms\Components\Section::make(__('app/pass.form.section.pass'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\Select::make('client_id')
-                        ->label('Klient')
+                        ->label(__('app/pass.form.label.client'))
                         ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id'))
                         ->required()
                         ->searchable(),
                     Forms\Components\TextInput::make('name')
-                        ->label('Nazwa')
+                        ->label(__('app/pass.form.label.name'))
                         ->required()
                         ->maxLength(120)
-                        ->placeholder('Karnet 8 jazd'),
+                        ->placeholder(__('app/pass.form.label.name_placeholder')),
                     Forms\Components\TextInput::make('total_uses')
-                        ->label('Liczba jazd')
+                        ->label(__('app/pass.form.label.total_uses'))
                         ->numeric()
                         ->minValue(1)
                         ->required()
@@ -73,27 +73,30 @@ class PassResource extends Resource
                             ? $set('remaining_uses', $state)
                             : null),
                     Forms\Components\TextInput::make('remaining_uses')
-                        ->label('Pozostało')
+                        ->label(__('app/pass.form.label.remaining_uses'))
                         ->numeric()
                         ->minValue(0)
                         ->required()
-                        ->helperText('Auto-aktualizowane przez system; ręczna zmiana tylko w wyjątkowych sytuacjach.'),
-                    Forms\Components\DatePicker::make('valid_from')->label('Ważny od'),
-                    Forms\Components\DatePicker::make('valid_until')->label('Ważny do'),
-                    PriceInput::make('price_cents', 'Cena karnetu'),
+                        ->helperText(__('app/pass.form.helper.remaining_uses')),
+                    Forms\Components\DatePicker::make('valid_from')
+                        ->label(__('app/pass.form.label.valid_from')),
+                    Forms\Components\DatePicker::make('valid_until')
+                        ->label(__('app/pass.form.label.valid_until')),
+                    PriceInput::make('price_cents', __('app/pass.form.label.price')),
                     Forms\Components\TextInput::make('cancellation_policy_hours')
-                        ->label('Polityka odwołania (h)')
+                        ->label(__('app/pass.form.label.cancellation_policy_hours'))
                         ->numeric()
                         ->minValue(0)
-                        ->placeholder('użyj domyślnej z ustawień stajni')
-                        ->helperText('Odwołanie X godzin przed jazdą = bez kosztu (karnet wraca).'),
+                        ->placeholder(__('app/pass.form.label.cancellation_policy_placeholder'))
+                        ->helperText(__('app/pass.form.helper.cancellation_policy_hours')),
                     Forms\Components\Select::make('status')
-                        ->label('Status')
+                        ->label(__('app/pass.form.label.status'))
                         ->options(PassStatus::options())
                         ->default(PassStatus::Active->value)
                         ->required(),
                 ]),
-            Forms\Components\Textarea::make('notes')->label('Notatki')->rows(2),
+            Forms\Components\Textarea::make('notes')
+                ->label(__('app/pass.form.label.notes'))->rows(2),
         ]);
     }
 
@@ -101,14 +104,16 @@ class PassResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('client.name')->label('Klient')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('name')->label('Karnet')->searchable(),
+                Tables\Columns\TextColumn::make('client.name')
+                    ->label(__('app/pass.table.column.client'))->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->label(__('app/pass.table.column.name'))->searchable(),
                 Tables\Columns\TextColumn::make('remaining_uses')
-                    ->label('Pozostało')
+                    ->label(__('app/pass.table.column.remaining_uses'))
                     ->formatStateUsing(fn (Pass $r) => "{$r->remaining_uses} / {$r->total_uses}")
                     ->sortable(),
                 Tables\Columns\BadgeColumn::make('status')
-                    ->label('Status')
+                    ->label(__('app/pass.table.column.status'))
                     ->formatStateUsing(fn (PassStatus $state) => $state->label())
                     ->colors([
                         'success' => fn ($state) => $state === PassStatus::Active->value,
@@ -116,22 +121,24 @@ class PassResource extends Resource
                         'warning' => fn ($state) => $state === PassStatus::Expired->value,
                         'danger' => fn ($state) => $state === PassStatus::Cancelled->value,
                     ]),
-                Tables\Columns\TextColumn::make('valid_until')->label('Ważny do')->date()->placeholder('—')->sortable(),
+                Tables\Columns\TextColumn::make('valid_until')
+                    ->label(__('app/pass.table.column.valid_until'))->date()->placeholder('—')->sortable(),
                 Tables\Columns\TextColumn::make('price_cents')
-                    ->label('Cena')
+                    ->label(__('app/pass.table.column.price'))
                     ->formatStateUsing(fn (?int $state) => $state !== null ? number_format($state / 100, 2, ',', ' ').' zł' : '—')
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('cancellation_policy_hours')
-                    ->label('Odwołanie')
-                    ->formatStateUsing(fn (?int $state) => $state !== null ? "{$state} h" : 'wg ustawień stajni')
+                    ->label(__('app/pass.table.column.cancellation_policy'))
+                    ->formatStateUsing(fn (?int $state) => $state !== null ? "{$state} h" : __('app/pass.table.column.cancellation_policy_default'))
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('created_at')->label('Wystawiony')->date()->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('app/pass.table.column.created_at'))->date()->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('status')->options(PassStatus::options()),
                 Tables\Filters\SelectFilter::make('client_id')
-                    ->label('Klient')
+                    ->label(__('app/pass.table.filter.client'))
                     ->relationship('client', 'name')
                     ->searchable(),
                 Tables\Filters\TrashedFilter::make(),
