@@ -104,6 +104,10 @@ class TwoFactorController extends Controller
         return view('auth.two-factor-challenge');
     }
 
+    public const REMEMBER_COOKIE_NAME = 'hovera_2fa_remember';
+
+    public const REMEMBER_DAYS = 14;
+
     public function submitChallenge(Request $request, MasterAuditLogger $audit): RedirectResponse
     {
         $request->validate(['code' => ['required', 'string', 'min:6', 'max:12']]);
@@ -111,12 +115,21 @@ class TwoFactorController extends Controller
         /** @var User $user */
         $user = Auth::user();
         $code = $request->string('code')->toString();
+        $remember = (bool) $request->boolean('remember_device');
 
         if ($this->totp->verify($user->two_factor_secret, $code)) {
             $request->session()->put('two_factor_passed', true);
-            $audit->record('master.two_factor.challenge.passed', 'User', $user->id);
+            $audit->record('master.two_factor.challenge.passed', 'User', $user->id, null, [
+                'remembered' => $remember,
+            ]);
 
-            return redirect()->intended('/'.config('hovera.admin.path'));
+            $response = redirect()->intended('/'.config('hovera.admin.path'));
+
+            if ($remember) {
+                $this->setRememberCookie($response, $user->id);
+            }
+
+            return $response;
         }
 
         // Recovery code branch
@@ -127,9 +140,15 @@ class TwoFactorController extends Controller
             $request->session()->put('two_factor_passed', true);
             $audit->record('master.two_factor.recovery_used', 'User', $user->id, null, [
                 'remaining' => count($remaining),
+                'remembered' => $remember,
             ]);
 
-            return redirect()->intended('/'.config('hovera.admin.path'));
+            $response = redirect()->intended('/'.config('hovera.admin.path'));
+            if ($remember) {
+                $this->setRememberCookie($response, $user->id);
+            }
+
+            return $response;
         }
 
         $audit->record('master.two_factor.challenge.failed', 'User', $user->id);
@@ -137,6 +156,32 @@ class TwoFactorController extends Controller
         throw ValidationException::withMessages([
             'code' => 'Nieprawidłowy kod.',
         ]);
+    }
+
+    /**
+     * Encrypted signed cookie z user_id + timestamp. Ważny REMEMBER_DAYS dni.
+     * Sprawdzany w EnsureMasterAdmin middleware — jeśli valid, omijamy
+     * challenge przy każdym kolejnym wejściu na panel.
+     */
+    private function setRememberCookie(RedirectResponse $response, string $userId): void
+    {
+        $minutes = self::REMEMBER_DAYS * 24 * 60;
+        $payload = json_encode([
+            'user_id' => $userId,
+            'issued_at' => now()->timestamp,
+        ]);
+
+        $response->withCookie(cookie(
+            name: self::REMEMBER_COOKIE_NAME,
+            value: $payload, // EncryptCookies middleware automatycznie szyfruje
+            minutes: $minutes,
+            path: null,
+            domain: null,
+            secure: null, // null = follow session.secure
+            httpOnly: true,
+            raw: false,
+            sameSite: 'lax',
+        ));
     }
 
     /**
