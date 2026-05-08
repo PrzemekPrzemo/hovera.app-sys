@@ -5,11 +5,9 @@ declare(strict_types=1);
 return [
     'sex' => [
         'mare' => 'Klacz',
-        'stallion' => 'Ogier',
         'gelding' => 'Wałach',
-        'filly' => 'Klaczka',
-        'colt' => 'Ogierek',
-        'foal' => 'Źrebię',
+        'stallion' => 'Ogier',
+        'breeding_stallion' => 'Ogier kryjący',
     ],
 
     'form' => [

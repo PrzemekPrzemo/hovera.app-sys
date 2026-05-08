@@ -5,11 +5,9 @@ declare(strict_types=1);
 return [
     'sex' => [
         'mare' => 'Mare',
-        'stallion' => 'Stallion',
         'gelding' => 'Gelding',
-        'filly' => 'Filly',
-        'colt' => 'Colt',
-        'foal' => 'Foal',
+        'stallion' => 'Stallion',
+        'breeding_stallion' => 'Breeding stallion',
     ],
 
     'form' => [
