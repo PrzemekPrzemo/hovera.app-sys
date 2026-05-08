@@ -95,6 +95,5 @@ return [
 
     'impersonation' => [
         'max_minutes' => (int) env('HOVERA_IMPERSONATION_MAX_MINUTES', 60),
-        'debug_log' => (bool) env('HOVERA_IMPERSONATION_DEBUG', true),
     ],
 ];

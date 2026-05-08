@@ -8,7 +8,6 @@ use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Models\Central\User;
 use App\Services\MasterAuditLogger;
-use App\Support\ImpersonationDebug;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -95,14 +94,7 @@ class StartImpersonation
             // Marker used by TenantAuditLogger to tag entries.
             $session->put('impersonation_session_id', $sessionId);
 
-            ImpersonationDebug::snap('3_before_loginUsingId', [
-                'target_user_id' => $targetUser->id,
-                'master_user_id' => $masterAdmin->id,
-            ]);
-
             Auth::loginUsingId($targetUser->id);
-
-            ImpersonationDebug::snap('3_after_loginUsingId');
 
             // Critical for impersonation: AuthenticateSession middleware on
             // the /app panel compares Auth::user()->getAuthPassword() against
