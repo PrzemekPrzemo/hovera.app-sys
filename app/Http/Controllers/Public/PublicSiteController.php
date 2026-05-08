@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Public;
 
 use App\Models\Central\Tenant;
+use App\Models\Tenant\BoardingService;
 use App\Models\Tenant\Box;
 use App\Models\Tenant\Instructor;
 use App\Tenancy\TenantManager;
@@ -63,10 +64,21 @@ class PublicSiteController extends Controller
             );
         }
 
+        // Cennik (boarding services) — opt-in przez show_pricing
+        $pricing = null;
+        if ((bool) ($publicProfile['show_pricing'] ?? false)) {
+            $pricing = Cache::remember(
+                "public_pricing:{$slug}",
+                now()->addMinutes(10),
+                fn () => $this->loadPricing($tenant),
+            );
+        }
+
         return response()->view('public.tenant', [
             'tenant' => $tenant,
             'primary_color' => $branding['primary_color'] ?? '#A8956B',
             'logo_url' => $branding['logo_url'] ?? null,
+            'hero_image_url' => $branding['hero_image_url'] ?? null,
             'tagline' => $publicProfile['tagline'] ?? 'Stajnia jeździecka',
             'description' => $publicProfile['description'] ?? null,
             'contact_email' => $publicProfile['email'] ?? null,
@@ -74,9 +86,47 @@ class PublicSiteController extends Controller
             'address' => $publicProfile['address'] ?? null,
             'website' => $publicProfile['website'] ?? null,
             'opening_hours' => $publicProfile['opening_hours'] ?? null,
+            'social' => [
+                'facebook' => $publicProfile['social_facebook'] ?? null,
+                'instagram' => $publicProfile['social_instagram'] ?? null,
+                'youtube' => $publicProfile['social_youtube'] ?? null,
+                'tiktok' => $publicProfile['social_tiktok'] ?? null,
+            ],
             'box_availability' => $boxAvailability,
             'instructors' => $instructors,
+            'pricing' => $pricing,
         ])->header('Cache-Control', 'public, max-age=60, s-maxage=300');
+    }
+
+    /**
+     * @return array<int, array{name: string, price_pln: string, unit: string, frequency: string}>|null
+     */
+    private function loadPricing(Tenant $tenant): ?array
+    {
+        if ($this->tenants->current()?->id !== $tenant->id) {
+            $this->tenants->setCurrent($tenant);
+        }
+        try {
+            return BoardingService::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get(['name', 'price_cents', 'unit', 'frequency'])
+                ->map(fn ($s) => [
+                    'name' => $s->name,
+                    'price_pln' => number_format($s->price_cents / 100, 2, ',', ' '),
+                    'unit' => $s->unit ?? 'szt.',
+                    'frequency' => match ((string) $s->frequency?->value) {
+                        'monthly' => 'mies.',
+                        'daily' => 'dzień',
+                        'per_use' => 'raz',
+                        'once' => 'jednorazowo',
+                        default => '',
+                    },
+                ])
+                ->all();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**
@@ -129,6 +179,48 @@ class PublicSiteController extends Controller
         $free = max(0, $total - $occupied);
 
         return ['free' => $free, 'total' => $total];
+    }
+
+    /**
+     * Embeddable widget — minimalistyczny render bez chrome (header/footer).
+     * Stajnia wstawia jako <iframe> na swojej stronie WWW. Allow CORS bo
+     * iframe może być na różnym originie.
+     */
+    public function embed(string $slug, string $widget): View|Response
+    {
+        $tenant = $this->resolveTenant($slug);
+        if (! $tenant) {
+            abort(404);
+        }
+
+        $branding = (array) ($tenant->branding ?? []);
+        $publicProfile = (array) (($tenant->settings ?? [])['public_profile'] ?? []);
+
+        $payload = [
+            'tenant' => $tenant,
+            'primary_color' => $branding['primary_color'] ?? '#A8956B',
+            'logo_url' => $branding['logo_url'] ?? null,
+            'tagline' => $publicProfile['tagline'] ?? null,
+        ];
+
+        $payload['box_availability'] = $widget === 'box-availability'
+            ? Cache::remember("public_box_availability:{$slug}", now()->addMinutes(10), fn () => $this->computeBoxAvailability($tenant))
+            : null;
+
+        $payload['instructors'] = $widget === 'instructors'
+            ? Cache::remember("public_instructors:{$slug}", now()->addMinutes(10), fn () => $this->loadInstructors($tenant))
+            : null;
+
+        $payload['pricing'] = $widget === 'pricing'
+            ? Cache::remember("public_pricing:{$slug}", now()->addMinutes(10), fn () => $this->loadPricing($tenant))
+            : null;
+
+        return response()
+            ->view("public.embed.{$widget}", $payload)
+            ->header('Cache-Control', 'public, max-age=300')
+            // Allow embedding na dowolnej stronie (stajnia wkleja iframe)
+            ->header('X-Frame-Options', 'ALLOWALL')
+            ->header('Content-Security-Policy', 'frame-ancestors *');
     }
 
     private function resolveTenant(string $slug): ?Tenant

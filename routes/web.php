@@ -83,6 +83,24 @@ Route::middleware('web')
     ->name('public.tenant');
 
 /*
+ * Embed widgety — pojedyncze sekcje renderowane bez chrome (header/footer)
+ * tak żeby stajnia mogła je wstawić jako <iframe> na swojej stronie WWW.
+ *   /s/{slug}/embed/box-availability  → "X wolnych boksów" pill
+ *   /s/{slug}/embed/booking            → mini-formularz rezerwacji (link do pełnego flow)
+ *   /s/{slug}/embed/instructors        → lista instruktorów
+ *   /s/{slug}/embed/pricing            → cennik
+ */
+Route::middleware('web')
+    ->prefix('/'.$publicPrefix.'/{slug}/embed')
+    ->where(['slug' => $slugRegex])
+    ->name('public.embed.')
+    ->group(function () {
+        Route::get('/{widget}', [PublicSiteController::class, 'embed'])
+            ->where(['widget' => 'box-availability|booking|instructors|pricing'])
+            ->name('show');
+    });
+
+/*
  * Public booking flow — pick instructor / pick slot / contact form / submit.
  * No auth, lightly throttled to slow brute-force scanning.
  */

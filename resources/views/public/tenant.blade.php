@@ -36,7 +36,19 @@
             color: #fff;
             padding: 3rem 1.5rem 4rem;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
+        header.hero.with-image {
+            background-size: cover;
+            background-position: center;
+            min-height: 320px;
+        }
+        header.hero.with-image::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,.55) 100%);
+        }
+        header.hero > * { position: relative; z-index: 1; }
         header.hero img.logo {
             max-height: 88px;
             max-width: 200px;
@@ -45,6 +57,24 @@
             border-radius: 8px;
             padding: 8px;
         }
+        ul.social {
+            list-style: none; padding: 0; margin: 1.25rem 0 0;
+            display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap;
+        }
+        ul.social a {
+            display: inline-flex; align-items: center; gap: .35rem;
+            padding: .4rem .9rem; background: rgba(255,255,255,.18);
+            border-radius: 999px; color: #fff; text-decoration: none;
+            font-size: .85rem; font-weight: 500;
+            transition: background .15s;
+        }
+        ul.social a:hover { background: rgba(255,255,255,.3); text-decoration: none; }
+
+        section.card.pricing table { width: 100%; border-collapse: collapse; }
+        section.card.pricing th { text-align: left; padding: .5rem .25rem; color: #6b7280; font-weight: 500; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; border-bottom: 1px solid #e5e7eb; }
+        section.card.pricing td { padding: .65rem .25rem; border-bottom: 1px solid #f3f4f6; font-size: .95rem; }
+        section.card.pricing td.price { text-align: right; font-weight: 600; color: var(--primary); white-space: nowrap; }
+        section.card.pricing td.unit { text-align: right; color: #6b7280; font-size: .85rem; white-space: nowrap; }
         header.hero h1 {
             font-size: clamp(1.75rem, 4vw, 2.75rem);
             margin: 0 0 .5rem;
@@ -165,12 +195,30 @@
     </style>
 </head>
 <body>
-    <header class="hero">
+    <header class="hero @if ($hero_image_url ?? null) with-image @endif"
+            @if ($hero_image_url ?? null) style="background-image: url('{{ $hero_image_url }}')" @endif>
         @if ($logo_url)
             <img src="{{ $logo_url }}" alt="Logo {{ $tenant->name }}" class="logo">
         @endif
         <h1>{{ $tenant->name }}</h1>
         <p class="tagline">{{ $tagline ?? 'Stajnia jeździecka' }}</p>
+
+        @if (array_filter($social ?? []))
+            <ul class="social">
+                @if ($social['facebook'] ?? null)
+                    <li><a href="{{ $social['facebook'] }}" target="_blank" rel="noopener">Facebook</a></li>
+                @endif
+                @if ($social['instagram'] ?? null)
+                    <li><a href="{{ $social['instagram'] }}" target="_blank" rel="noopener">Instagram</a></li>
+                @endif
+                @if ($social['youtube'] ?? null)
+                    <li><a href="{{ $social['youtube'] }}" target="_blank" rel="noopener">YouTube</a></li>
+                @endif
+                @if ($social['tiktok'] ?? null)
+                    <li><a href="{{ $social['tiktok'] }}" target="_blank" rel="noopener">TikTok</a></li>
+                @endif
+            </ul>
+        @endif
     </header>
 
     <main>
@@ -240,6 +288,26 @@
                         </li>
                     @endforeach
                 </ul>
+            </section>
+        @endif
+
+        @if (! empty($pricing))
+            <section class="card pricing">
+                <h2>Cennik pensjonatu</h2>
+                <table>
+                    <thead>
+                        <tr><th>Pozycja</th><th></th><th>Cena</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($pricing as $p)
+                            <tr>
+                                <td>{{ $p['name'] }}</td>
+                                <td class="unit">{{ $p['unit'] }} / {{ $p['frequency'] }}</td>
+                                <td class="price">{{ $p['price_pln'] }} zł</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </section>
         @endif
 
