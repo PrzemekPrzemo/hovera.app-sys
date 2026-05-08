@@ -54,10 +54,12 @@ class MessagesRelationManager extends RelationManager
     {
         return $form->schema([
             Forms\Components\Hidden::make('direction')->default('from_stable'),
-            Forms\Components\TextInput::make('subject')->label('Temat (opcjonalnie)')->maxLength(200),
-            Forms\Components\Textarea::make('body')->label('Treść')->rows(4)->required(),
+            Forms\Components\TextInput::make('subject')
+                ->label(__('app/horse_message.form.label.subject'))->maxLength(200),
+            Forms\Components\Textarea::make('body')
+                ->label(__('app/horse_message.form.label.body'))->rows(4)->required(),
             Forms\Components\FileUpload::make('attachments_upload')
-                ->label('Załączniki (max 5, do 10 MB każdy)')
+                ->label(__('app/horse_message.form.label.attachments'))
                 ->multiple()
                 ->maxFiles(5)
                 ->maxSize(10 * 1024) // KB
@@ -73,28 +75,34 @@ class MessagesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('subject')
             ->columns([
-                Tables\Columns\TextColumn::make('sent_at')->label('Wysłana')->dateTime('Y-m-d H:i')->sortable(),
+                Tables\Columns\TextColumn::make('sent_at')
+                    ->label(__('app/horse_message.table.column.sent_at'))
+                    ->dateTime('Y-m-d H:i')->sortable(),
                 Tables\Columns\BadgeColumn::make('direction')
-                    ->label('Kierunek')
-                    ->formatStateUsing(fn (string $state) => $state === 'from_stable' ? 'Stajnia → Klient' : 'Klient → Stajnia')
+                    ->label(__('app/horse_message.table.column.direction'))
+                    ->formatStateUsing(fn (string $state) => $state === 'from_stable'
+                        ? __('app/horse_message.directions.from_stable')
+                        : __('app/horse_message.directions.from_client'))
                     ->colors([
                         'primary' => 'from_stable',
                         'warning' => 'from_client',
                     ]),
-                Tables\Columns\TextColumn::make('subject')->label('Temat')->placeholder('—')->limit(40),
-                Tables\Columns\TextColumn::make('body')->label('Fragment')->limit(60),
+                Tables\Columns\TextColumn::make('subject')
+                    ->label(__('app/horse_message.table.column.subject'))->placeholder('—')->limit(40),
+                Tables\Columns\TextColumn::make('body')
+                    ->label(__('app/horse_message.table.column.body'))->limit(60),
                 Tables\Columns\TextColumn::make('attachments')
-                    ->label('Zał.')
+                    ->label(__('app/horse_message.table.column.attachments_short'))
                     ->formatStateUsing(fn ($state) => is_array($state) ? '📎 '.count($state) : ''),
                 Tables\Columns\IconColumn::make('read_by_stable_at')
-                    ->label('Odcz.')
+                    ->label(__('app/horse_message.table.column.read_short'))
                     ->boolean()
                     ->getStateUsing(fn (HorseMessage $r) => ! ($r->isFromClient() && $r->read_by_stable_at === null)),
             ])
             ->defaultSort('sent_at', 'desc')
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->label('Napisz do właściciela')
+                    ->label(__('app/horse_message.action.create.label'))
                     ->icon('heroicon-m-paper-airplane')
                     ->using(function (array $data): HorseMessage {
                         /** @var Horse $horse */
@@ -112,24 +120,24 @@ class MessagesRelationManager extends RelationManager
                                 attachments: $this->normaliseUploadedFiles($files),
                             );
                         } catch (ValidationException $e) {
-                            Notification::make()->title('Nie udało się wysłać')->body(
+                            Notification::make()->title(__('app/horse_message.action.create.failed'))->body(
                                 implode("\n", Arr::flatten($e->errors())),
                             )->danger()->send();
                             throw $e;
                         }
                     })
                     ->successNotification(
-                        Notification::make()->title('Wiadomość wysłana')->success(),
+                        Notification::make()->title(__('app/horse_message.action.create.sent'))->success(),
                     ),
             ])
             ->actions([
                 Tables\Actions\Action::make('mark_read')
-                    ->label('Oznacz jako przeczytaną')
+                    ->label(__('app/horse_message.action.mark_read.label'))
                     ->icon('heroicon-m-check')
                     ->visible(fn (HorseMessage $r) => $r->isUnreadByStable())
                     ->action(function (HorseMessage $record) {
                         $record->forceFill(['read_by_stable_at' => now()])->save();
-                        Notification::make()->title('Oznaczono jako przeczytaną')->success()->send();
+                        Notification::make()->title(__('app/horse_message.action.mark_read.success'))->success()->send();
                     }),
                 Tables\Actions\ViewAction::make()
                     ->after(function (HorseMessage $record) {

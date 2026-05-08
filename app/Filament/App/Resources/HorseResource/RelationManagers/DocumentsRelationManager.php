@@ -54,18 +54,19 @@ class DocumentsRelationManager extends RelationManager
             Forms\Components\Grid::make(2)
                 ->schema([
                     Forms\Components\TextInput::make('name')
-                        ->label('Nazwa dokumentu')
-                        ->placeholder('np. Paszport Bucefała')
+                        ->label(__('app/horse_document.form.label.name'))
+                        ->placeholder(__('app/horse_document.form.label.name_placeholder'))
                         ->required()
                         ->maxLength(200),
                     Forms\Components\Select::make('kind')
-                        ->label('Kategoria')
+                        ->label(__('app/horse_document.form.label.kind'))
                         ->options(HorseDocumentKind::options())
                         ->required(),
                 ]),
-            Forms\Components\Textarea::make('description')->label('Opis (opcjonalnie)')->rows(2),
+            Forms\Components\Textarea::make('description')
+                ->label(__('app/horse_document.form.label.description'))->rows(2),
             Forms\Components\FileUpload::make('file')
-                ->label('Plik (max 25 MB)')
+                ->label(__('app/horse_document.form.label.file'))
                 ->required()
                 ->maxSize(25 * 1024)
                 ->acceptedFileTypes([
@@ -79,8 +80,10 @@ class DocumentsRelationManager extends RelationManager
                 ->storeFiles(false), // przekazujemy raw do uploadByStable
             Forms\Components\Grid::make(2)
                 ->schema([
-                    Forms\Components\DatePicker::make('valid_from')->label('Ważny od (opcjonalne)'),
-                    Forms\Components\DatePicker::make('valid_until')->label('Ważny do (opcjonalne)'),
+                    Forms\Components\DatePicker::make('valid_from')
+                        ->label(__('app/horse_document.form.label.valid_from')),
+                    Forms\Components\DatePicker::make('valid_until')
+                        ->label(__('app/horse_document.form.label.valid_until')),
                 ]),
         ]);
     }
@@ -91,22 +94,27 @@ class DocumentsRelationManager extends RelationManager
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('kind')
-                    ->label('Kategoria')
+                    ->label(__('app/horse_document.table.column.kind'))
                     ->formatStateUsing(fn (HorseDocumentKind $state) => $state->icon().' '.$state->label()),
-                Tables\Columns\TextColumn::make('name')->label('Nazwa')->searchable()->limit(50)->weight('bold'),
-                Tables\Columns\TextColumn::make('original_name')->label('Plik')->limit(40)->toggleable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->label(__('app/horse_document.table.column.name'))
+                    ->searchable()->limit(50)->weight('bold'),
+                Tables\Columns\TextColumn::make('original_name')
+                    ->label(__('app/horse_document.table.column.original_name'))->limit(40)->toggleable(),
                 Tables\Columns\TextColumn::make('size_bytes')
-                    ->label('Rozmiar')
+                    ->label(__('app/horse_document.table.column.size'))
                     ->formatStateUsing(fn (HorseDocument $r) => $r->sizeFormatted()),
                 Tables\Columns\BadgeColumn::make('uploaded_by_role')
-                    ->label('Wgrał')
-                    ->formatStateUsing(fn (string $state) => $state === 'stable' ? 'Stajnia' : 'Klient')
+                    ->label(__('app/horse_document.table.column.uploaded_by'))
+                    ->formatStateUsing(fn (string $state) => $state === 'stable'
+                        ? __('app/horse_document.uploaded_by.stable')
+                        : __('app/horse_document.uploaded_by.client'))
                     ->colors([
                         'primary' => 'stable',
                         'warning' => 'client',
                     ]),
                 Tables\Columns\TextColumn::make('valid_until')
-                    ->label('Ważny do')
+                    ->label(__('app/horse_document.table.column.valid_until'))
                     ->date()
                     ->placeholder('—')
                     ->color(fn (HorseDocument $r): string => match (true) {
@@ -115,23 +123,24 @@ class DocumentsRelationManager extends RelationManager
                         default => 'gray',
                     })
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('created_at')->label('Wgrany')->date()->toggleable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('app/horse_document.table.column.created_at'))->date()->toggleable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('kind')->options(HorseDocumentKind::options()),
                 Tables\Filters\SelectFilter::make('uploaded_by_role')->options([
-                    'stable' => 'Stajnia',
-                    'client' => 'Klient',
+                    'stable' => __('app/horse_document.uploaded_by.stable'),
+                    'client' => __('app/horse_document.uploaded_by.client'),
                 ]),
                 Tables\Filters\Filter::make('expiring_soon')
-                    ->label('Wygasa w 30 dni')
+                    ->label(__('app/horse_document.table.filter.expiring_soon'))
                     ->query(fn ($query) => $query->expiringWithin(30)),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->label('Wgraj dokument')
+                    ->label(__('app/horse_document.action.create.label'))
                     ->icon('heroicon-m-document-arrow-up')
                     ->using(function (array $data): HorseDocument {
                         /** @var Horse $horse */
@@ -140,7 +149,7 @@ class DocumentsRelationManager extends RelationManager
 
                         $file = $this->normaliseUploadedFile($data['file'] ?? null);
                         if (! $file) {
-                            throw ValidationException::withMessages(['file' => 'Brak pliku.']);
+                            throw ValidationException::withMessages(['file' => __('app/horse_document.action.create.no_file')]);
                         }
 
                         try {
@@ -156,7 +165,7 @@ class DocumentsRelationManager extends RelationManager
                                 uploadedByUserId: Auth::id() ? (string) Auth::id() : null,
                             );
                         } catch (ValidationException $e) {
-                            Notification::make()->title('Nie udało się wgrać')->body(
+                            Notification::make()->title(__('app/horse_document.action.create.failed'))->body(
                                 implode("\n", Arr::flatten($e->errors())),
                             )->danger()->send();
                             throw $e;
@@ -165,7 +174,7 @@ class DocumentsRelationManager extends RelationManager
             ])
             ->actions([
                 Tables\Actions\Action::make('download')
-                    ->label('Pobierz')
+                    ->label(__('app/horse_document.action.download.label'))
                     ->icon('heroicon-m-arrow-down-tray')
                     ->action(function (HorseDocument $record) {
                         return Storage::disk('local')->download($record->file_path, $record->original_name);

@@ -43,26 +43,27 @@ class ActivitiesRelationManager extends RelationManager
             Forms\Components\Grid::make(2)
                 ->schema([
                     Forms\Components\Select::make('type')
-                        ->label('Typ')
+                        ->label(__('app/horse_activity.form.label.type'))
                         ->options(StableActivityType::options())
                         ->required()
                         ->default(StableActivityType::Feeding->value),
                     Forms\Components\DateTimePicker::make('performed_at')
-                        ->label('Kiedy')
+                        ->label(__('app/horse_activity.form.label.performed_at'))
                         ->seconds(false)
                         ->default(now())
                         ->required(),
                     Forms\Components\TextInput::make('performed_by')
-                        ->label('Wykonał (imię stajennego)')
+                        ->label(__('app/horse_activity.form.label.performed_by'))
                         ->maxLength(120),
-                    PriceInput::make('cost_cents', 'Dodatkowy koszt (opcjonalnie)')
-                        ->helperText('Wpisz tylko gdy aktywność naliczyła koszt poza ryczałtem (np. dodatkowe siano, transport).'),
+                    PriceInput::make('cost_cents', __('app/horse_activity.form.label.cost'))
+                        ->helperText(__('app/horse_activity.form.helper.cost')),
                 ]),
             Forms\Components\TextInput::make('summary')
-                ->label('Krótki opis')
+                ->label(__('app/horse_activity.form.label.summary'))
                 ->maxLength(200)
-                ->placeholder('np. "Wypuszczenie 9:00-12:00, padok wschodni"'),
-            Forms\Components\Textarea::make('details')->label('Notatki')->rows(3),
+                ->placeholder(__('app/horse_activity.form.label.summary_placeholder')),
+            Forms\Components\Textarea::make('details')
+                ->label(__('app/horse_activity.form.label.details'))->rows(3),
         ]);
     }
 
@@ -71,9 +72,11 @@ class ActivitiesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('summary')
             ->columns([
-                Tables\Columns\TextColumn::make('performed_at')->label('Data')->dateTime('Y-m-d H:i')->sortable(),
+                Tables\Columns\TextColumn::make('performed_at')
+                    ->label(__('app/horse_activity.table.column.performed_at'))
+                    ->dateTime('Y-m-d H:i')->sortable(),
                 Tables\Columns\BadgeColumn::make('type')
-                    ->label('Typ')
+                    ->label(__('app/horse_activity.table.column.type'))
                     ->formatStateUsing(fn (StableActivityType $state) => $state->label())
                     ->colors([
                         'success' => StableActivityType::Feeding->value,
@@ -81,10 +84,12 @@ class ActivitiesRelationManager extends RelationManager
                         'warning' => StableActivityType::Turnout->value,
                         'danger' => StableActivityType::TransportEvent->value,
                     ]),
-                Tables\Columns\TextColumn::make('summary')->label('Opis')->limit(60),
-                Tables\Columns\TextColumn::make('performed_by')->label('Wykonał')->toggleable(),
+                Tables\Columns\TextColumn::make('summary')
+                    ->label(__('app/horse_activity.table.column.summary'))->limit(60),
+                Tables\Columns\TextColumn::make('performed_by')
+                    ->label(__('app/horse_activity.table.column.performed_by'))->toggleable(),
                 Tables\Columns\TextColumn::make('cost_cents')
-                    ->label('Koszt')
+                    ->label(__('app/horse_activity.table.column.cost'))
                     ->placeholder('—')
                     ->formatStateUsing(fn (?int $state) => $state !== null ? number_format($state / 100, 2, ',', ' ').' zł' : '—')
                     ->toggleable(),
