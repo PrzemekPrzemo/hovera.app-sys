@@ -47,10 +47,14 @@ class InvitationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('email')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('tenant.name')->label('Stajnia')->searchable()->sortable(),
-                Tables\Columns\BadgeColumn::make('role')->label('Rola')->placeholder('—'),
+                Tables\Columns\TextColumn::make('tenant.name')
+                    ->label(__('admin/invitation.table.column.tenant'))
+                    ->searchable()->sortable(),
+                Tables\Columns\BadgeColumn::make('role')
+                    ->label(__('admin/invitation.table.column.role'))
+                    ->placeholder('—'),
                 Tables\Columns\BadgeColumn::make('status')
-                    ->label('Status')
+                    ->label(__('admin/invitation.table.column.status'))
                     ->getStateUsing(fn (UserInvitation $r) => $r->status())
                     ->colors([
                         'warning' => 'pending',
@@ -58,36 +62,44 @@ class InvitationResource extends Resource
                         'gray' => 'expired',
                     ])
                     ->formatStateUsing(fn (string $state) => match ($state) {
-                        'pending' => 'Oczekuje',
-                        'accepted' => 'Zaakceptowane',
-                        'expired' => 'Wygasłe',
+                        'pending' => __('admin/invitation.table.status.pending'),
+                        'accepted' => __('admin/invitation.table.status.accepted'),
+                        'expired' => __('admin/invitation.table.status.expired'),
                         default => $state,
                     }),
-                Tables\Columns\TextColumn::make('invitedBy.email')->label('Zapraszający')->placeholder('—')->toggleable(),
-                Tables\Columns\TextColumn::make('expires_at')->label('Wygasa')->dateTime()->sortable(),
-                Tables\Columns\TextColumn::make('accepted_at')->label('Zaakceptowane')->dateTime()->placeholder('—')->toggleable(),
-                Tables\Columns\TextColumn::make('created_at')->label('Wysłane')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('invitedBy.email')
+                    ->label(__('admin/invitation.table.column.invited_by'))
+                    ->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('expires_at')
+                    ->label(__('admin/invitation.table.column.expires_at'))
+                    ->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('accepted_at')
+                    ->label(__('admin/invitation.table.column.accepted_at'))
+                    ->dateTime()->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('admin/invitation.table.column.created_at'))
+                    ->dateTime()->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\Filter::make('only_pending')
-                    ->label('Tylko oczekujące')
+                    ->label(__('admin/invitation.table.filter.only_pending'))
                     ->query(fn ($query) => $query->pending())
                     ->default(),
                 Tables\Filters\Filter::make('expired')
-                    ->label('Tylko wygasłe')
+                    ->label(__('admin/invitation.table.filter.expired'))
                     ->query(fn ($query) => $query->expired()),
                 Tables\Filters\Filter::make('accepted')
-                    ->label('Tylko zaakceptowane')
+                    ->label(__('admin/invitation.table.filter.accepted'))
                     ->query(fn ($query) => $query->accepted()),
                 Tables\Filters\SelectFilter::make('tenant_id')
-                    ->label('Stajnia')
+                    ->label(__('admin/invitation.table.filter.tenant'))
                     ->relationship('tenant', 'name')
                     ->searchable(),
             ])
             ->actions([
                 Tables\Actions\Action::make('resend')
-                    ->label('Wyślij ponownie')
+                    ->label(__('admin/invitation.action.resend.label'))
                     ->icon('heroicon-o-paper-airplane')
                     ->visible(fn (UserInvitation $r) => ! $r->isAccepted())
                     ->requiresConfirmation()
@@ -110,12 +122,12 @@ class InvitationResource extends Resource
 
                         Notification::make()
                             ->success()
-                            ->title('Zaproszenie wysłane ponownie')
+                            ->title(__('admin/invitation.action.resend.success'))
                             ->send();
                     }),
 
                 Tables\Actions\Action::make('revoke')
-                    ->label('Unieważnij')
+                    ->label(__('admin/invitation.action.revoke.label'))
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn (UserInvitation $r) => $r->isUsable())
@@ -131,7 +143,9 @@ class InvitationResource extends Resource
                             ['email' => $record->email],
                         );
 
-                        Notification::make()->success()->title('Zaproszenie unieważnione')->send();
+                        Notification::make()->success()
+                            ->title(__('admin/invitation.action.revoke.success'))
+                            ->send();
                     }),
             ]);
     }

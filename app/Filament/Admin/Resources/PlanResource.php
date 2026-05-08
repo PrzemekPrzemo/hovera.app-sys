@@ -45,7 +45,7 @@ class PlanResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Identyfikacja')
+            Forms\Components\Section::make(__('admin/plan.form.section.identification'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\TextInput::make('code')
@@ -53,7 +53,7 @@ class PlanResource extends Resource
                         ->alphaDash()
                         ->maxLength(32)
                         ->unique(ignoreRecord: true)
-                        ->helperText('Unikalny identyfikator (np. free, stable, pro). Używany w API + linkach.'),
+                        ->helperText(__('admin/plan.form.helper.code')),
                     Forms\Components\TextInput::make('name')->required()->maxLength(120),
                     Forms\Components\Select::make('currency')
                         ->options(['PLN' => 'PLN', 'EUR' => 'EUR', 'USD' => 'USD'])
@@ -62,44 +62,44 @@ class PlanResource extends Resource
                     Forms\Components\TextInput::make('sort_order')
                         ->numeric()
                         ->default(0)
-                        ->helperText('Niższe = wyżej na liście.'),
+                        ->helperText(__('admin/plan.form.helper.sort_order')),
                 ]),
-            Forms\Components\Section::make('Cennik')
+            Forms\Components\Section::make(__('admin/plan.form.section.pricing'))
                 ->columns(2)
                 ->schema([
-                    PriceInput::make('price_monthly_cents', 'Cena miesięczna'),
-                    PriceInput::make('price_yearly_cents', 'Cena roczna')
-                        ->helperText('Zwykle 10× miesięczna minus 10-30% zniżki rocznej.'),
+                    PriceInput::make('price_monthly_cents', __('admin/plan.form.label.price_monthly')),
+                    PriceInput::make('price_yearly_cents', __('admin/plan.form.label.price_yearly'))
+                        ->helperText(__('admin/plan.form.helper.price_yearly')),
                 ]),
-            Forms\Components\Section::make('Limity')
-                ->description('Twarde limity planu — egzekwowane w aplikacji (CreateTenant blokuje gdy plan przekroczony).')
+            Forms\Components\Section::make(__('admin/plan.form.section.limits'))
+                ->description(__('admin/plan.form.section.limits_description'))
                 ->schema([
                     Forms\Components\KeyValue::make('limits')
-                        ->keyLabel('Klucz')
-                        ->valueLabel('Wartość')
+                        ->keyLabel(__('admin/plan.form.label.kv_key'))
+                        ->valueLabel(__('admin/plan.form.label.kv_value'))
                         ->reorderable(false)
-                        ->helperText('Standardowe klucze: max_horses, max_clients, max_users, max_storage_mb. -1 = bez limitu.'),
+                        ->helperText(__('admin/plan.form.helper.limits')),
                 ]),
-            Forms\Components\Section::make('Funkcjonalności')
-                ->description('Lista marketingowych bullet pointów + flag fukcjonalnych dla feature-flag system.')
+            Forms\Components\Section::make(__('admin/plan.form.section.features'))
+                ->description(__('admin/plan.form.section.features_description'))
                 ->schema([
                     Forms\Components\KeyValue::make('features')
-                        ->keyLabel('Klucz')
-                        ->valueLabel('Wartość')
+                        ->keyLabel(__('admin/plan.form.label.kv_key'))
+                        ->valueLabel(__('admin/plan.form.label.kv_value'))
                         ->reorderable(false)
-                        ->helperText('Klucze: bullets[N]=string (marketing), enabled.X=bool (feature flag).'),
+                        ->helperText(__('admin/plan.form.helper.features')),
                 ]),
-            Forms\Components\Section::make('Widoczność')
+            Forms\Components\Section::make(__('admin/plan.form.section.visibility'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\Toggle::make('is_active')
-                        ->label('Aktywny')
+                        ->label(__('admin/plan.form.label.is_active'))
                         ->default(true)
-                        ->helperText('Czy plan można nadal przypisać do nowych tenantów.'),
+                        ->helperText(__('admin/plan.form.helper.is_active')),
                     Forms\Components\Toggle::make('is_public')
-                        ->label('Publiczny w cenniku')
+                        ->label(__('admin/plan.form.label.is_public'))
                         ->default(true)
-                        ->helperText('Czy pokazać na publicznej stronie cennika. Enterprise zwykle false (custom).'),
+                        ->helperText(__('admin/plan.form.helper.is_public')),
                 ]),
         ]);
     }
@@ -112,16 +112,20 @@ class PlanResource extends Resource
                 Tables\Columns\TextColumn::make('code')->searchable()->sortable()->copyable(),
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('price_monthly_cents')
-                    ->label('Miesięcznie')
+                    ->label(__('admin/plan.table.column.price_monthly'))
                     ->formatStateUsing(fn (?int $state, Plan $r): string => $state === null ? '—' : number_format($state / 100, 0, ',', ' ').' '.$r->currency),
                 Tables\Columns\TextColumn::make('price_yearly_cents')
-                    ->label('Rocznie')
+                    ->label(__('admin/plan.table.column.price_yearly'))
                     ->formatStateUsing(fn (?int $state, Plan $r): string => $state === null ? '—' : number_format($state / 100, 0, ',', ' ').' '.$r->currency),
                 Tables\Columns\TextColumn::make('tenants_count')
-                    ->label('Stajnie')
+                    ->label(__('admin/plan.table.column.tenants_count'))
                     ->counts('tenants'),
-                Tables\Columns\IconColumn::make('is_active')->boolean()->label('Akt.'),
-                Tables\Columns\IconColumn::make('is_public')->boolean()->label('Publ.'),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->boolean()
+                    ->label(__('admin/plan.table.column.is_active_short')),
+                Tables\Columns\IconColumn::make('is_public')
+                    ->boolean()
+                    ->label(__('admin/plan.table.column.is_public_short')),
             ])
             ->defaultSort('sort_order')
             ->actions([
@@ -130,8 +134,8 @@ class PlanResource extends Resource
                     if ($record->tenants()->exists()) {
                         Notification::make()
                             ->danger()
-                            ->title('Nie można usunąć — plan jest używany.')
-                            ->body($record->tenants()->count().' stajni jest na tym planie. Najpierw przypisz inny plan.')
+                            ->title(__('admin/plan.action.delete_blocked_title'))
+                            ->body(__('admin/plan.action.delete_blocked_body', ['count' => $record->tenants()->count()]))
                             ->send();
                         $this->halt();
                     }
