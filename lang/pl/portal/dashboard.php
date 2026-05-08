@@ -62,8 +62,7 @@ return [
         'ok_pill' => 'OK',
     ],
 
-    'unread_messages' => [
-        'one' => '📬 :count nowa wiadomość',
-        'other' => '📬 :count nowych wiadomości',
-    ],
+    // Polish has 3 plural forms (1 / 2-4 not in 12-14 / 5+ inc. 0).
+    // trans_choice respects pipe-delimited rules with explicit ranges.
+    'unread_messages' => '{0} 📬 :count nowych wiadomości|{1} 📬 :count nowa wiadomość|[2,4] 📬 :count nowe wiadomości|[5,*] 📬 :count nowych wiadomości',
 ];
