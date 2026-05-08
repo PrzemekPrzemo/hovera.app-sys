@@ -10,7 +10,6 @@ use App\Models\Tenant\Box;
 use App\Models\Tenant\BoxAssignment;
 use App\Models\Tenant\CalendarEntry;
 use App\Models\Tenant\Client;
-use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\HorseDocument;
 use App\Models\Tenant\HorseMessage;
@@ -20,7 +19,6 @@ use App\Models\Tenant\InvoiceItem;
 use App\Models\Tenant\Pass;
 use App\Models\Tenant\PassUse;
 use App\Models\Tenant\Payment;
-use App\Models\Tenant\StableActivity;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -304,55 +302,84 @@ class HoveraDemoSeeder
         }
     }
 
-    /** @param  array<int, Horse>  $horses */
+    /**
+     * @param  array<int, Horse>  $horses
+     *
+     * Bulk insert dla performance — single INSERT zamiast 70+ create()
+     * skraca seed o ~30s na slow MySQL. Pomijamy Eloquent observers
+     * (w demo seeded data nie potrzeba).
+     */
     private function seedHealthAndActivities(array $horses): void
     {
+        $now = now();
+        $healthRows = [];
+        $activityRows = [];
+
+        $activityTypes = ['feeding', 'grooming', 'turnout', 'exercise', 'box_cleaning'];
+        $activitySummaries = ['Karmienie poranne', 'Czesanie i mycie', 'Wybieg na padok', 'Lonża 30 min', 'Sprzątanie boksu'];
+
         foreach ($horses as $i => $horse) {
-            // Health: szczepienie + wizyta wet
-            HealthRecord::create([
+            // Health: szczepienie + kucie + (co 3-ty) dentysta
+            $healthRows[] = [
+                'id' => (string) Str::ulid(),
                 'horse_id' => $horse->id,
                 'type' => 'vaccination',
-                'performed_at' => now()->subMonths(2)->subDays(rand(0, 28)),
+                'performed_at' => $now->copy()->subMonths(2)->subDays(rand(0, 28)),
                 'performed_by' => 'lek. wet. M. Kowalski',
                 'summary' => 'Szczepienie na grypę + tężec (przypomnienie)',
-                'next_due_at' => now()->addMonths(10)->toDateString(),
+                'next_due_at' => $now->copy()->addMonths(10)->toDateString(),
                 'cost_cents' => 18000,
-            ]);
-            HealthRecord::create([
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+            $healthRows[] = [
+                'id' => (string) Str::ulid(),
                 'horse_id' => $horse->id,
                 'type' => 'farrier',
-                'performed_at' => now()->subWeeks(rand(2, 6)),
+                'performed_at' => $now->copy()->subWeeks(rand(2, 6)),
                 'performed_by' => 'A. Kowal — kowal z 15-letnim stażem',
                 'summary' => 'Korekcja + kucie na 4 nogi',
-                'next_due_at' => now()->addWeeks(8)->toDateString(),
+                'next_due_at' => $now->copy()->addWeeks(8)->toDateString(),
                 'cost_cents' => 25000,
-            ]);
-
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
             if ($i % 3 === 0) {
-                HealthRecord::create([
+                $healthRows[] = [
+                    'id' => (string) Str::ulid(),
                     'horse_id' => $horse->id,
                     'type' => 'dentist',
-                    'performed_at' => now()->subMonths(rand(4, 8)),
+                    'performed_at' => $now->copy()->subMonths(rand(4, 8)),
                     'performed_by' => 'dr P. Stomatolog',
                     'summary' => 'Korekcja zębów rocznych',
                     'cost_cents' => 35000,
-                ]);
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
 
-            // Activity log — codzienne zadania (5 wpisów per koń)
-            // StableActivityType: feeding / grooming / turnout / exercise / box_cleaning / transport_event / other
-            $types = ['feeding', 'grooming', 'turnout', 'exercise', 'box_cleaning'];
-            $summaries = ['Karmienie poranne', 'Czesanie i mycie', 'Wybieg na padok', 'Lonża 30 min', 'Sprzątanie boksu'];
+            // Activity log — 5 wpisów / koń = 70 dla 14 koni
             for ($a = 0; $a < 5; $a++) {
-                StableActivity::create([
+                $activityRows[] = [
+                    'id' => (string) Str::ulid(),
                     'horse_id' => $horse->id,
-                    'type' => $types[$a],
-                    'performed_at' => now()->subDays($a)->setTime(rand(7, 19), rand(0, 59)),
+                    'type' => $activityTypes[$a],
+                    'performed_at' => $now->copy()->subDays($a)->setTime(rand(7, 19), rand(0, 59)),
                     'performed_by' => 'A. Stajenny',
-                    'summary' => $summaries[$a],
+                    'summary' => $activitySummaries[$a],
                     'cost_cents' => 0,
-                ]);
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
+        }
+
+        // Bulk insert — chunked po 50 żeby nie hit MySQL max packet
+        foreach (array_chunk($healthRows, 50) as $chunk) {
+            DB::connection('tenant')->table('health_records')->insert($chunk);
+        }
+        foreach (array_chunk($activityRows, 50) as $chunk) {
+            DB::connection('tenant')->table('stable_activities')->insert($chunk);
         }
     }
 
