@@ -35,12 +35,11 @@ class ImpersonationDebug
             $passwordHash = $session->get('password_hash_'.$guard);
             $userPasswordHash = $user?->getAuthPassword();
 
-            // Use the default channel (whatever the project ships with —
-            // typically `single` → laravel.log). The dedicated
-            // `impersonation` channel needs its own writable file which
-            // doesn't always exist on first run on shared hosts (Plesk).
-            // The "[impersonation]" prefix makes grepping easy.
-            Log::info('[impersonation] '.$event, array_merge([
+            // Default channel (single/daily). On prod Plesk LOG_LEVEL is
+            // typically "warning" — info messages are silently dropped, so
+            // we use warning() to ensure the diagnostic actually lands. The
+            // "[impersonation]" prefix makes greppowanie trywialne.
+            Log::warning('[impersonation] '.$event, array_merge([
                 'event' => $event,
                 'request' => request()?->fullUrl(),
                 'method' => request()?->method(),
