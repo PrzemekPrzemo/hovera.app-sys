@@ -30,11 +30,16 @@ Route::get('/', fn () => redirect('/'.config('hovera.admin.path')));
 
 /*
  * Top-level `login` redirect: Laravel's `auth` middleware redirects
- * unauthenticated users to a route named `login`. Since each Filament
- * panel registers its own login (`/admin/login`, `/app/login`), the
- * top-level fallback sends them to the tenant panel by default.
+ * unauthenticated users to a route named `login`. Master admin panel
+ * doesn't register own login (świadomie) — wszyscy logują się przez
+ * /app/login, Filament przy auth check sprawdza canAccessPanel.
+ *
+ * `/admin/login` to redirect dla starych bookmark'ów / pomyłek user'ów —
+ * normalni właściciele stajni często trafiają na /admin/login zamiast
+ * /app/login i nie mogą się zalogować bo nie są master adminami.
  */
 Route::get('/login', fn () => redirect('/app/login'))->name('login');
+Route::get('/'.config('hovera.admin.path', 'admin').'/login', fn () => redirect('/app/login'));
 
 Route::middleware(['web', 'auth'])->prefix('two-factor')->name('two-factor.')->group(function () {
     Route::get('/setup', [TwoFactorController::class, 'showSetup'])->name('setup');

@@ -28,13 +28,18 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->default()
             ->id('admin')
             ->path(config('hovera.admin.path', 'admin'))
             ->brandName('hovera · master')
             ->brandLogo(asset('img/brand/hovera-logo.svg'))
             ->favicon(asset('favicon.svg'))
-            ->login()
+            // Świadomie BRAK ->login() — master admin loguje się przez wspólny
+            // /app/login (route 'login'). Filament Authenticate middleware
+            // redirectuje na route('login') gdy brak panelu auth. Po zalogowaniu
+            // canAccessPanel('admin') sprawdza is_master_admin = true.
+            // Dlaczego: właściciele stajni częściej trafiają na /admin/login
+            // przez pomyłkę — fallback redirect w routes/web.php prowadzi ich
+            // na właściwy /app/login.
             ->passwordReset()
             ->colors([
                 // Brand: Ochre #A8956B (primary akcent), Deep Brown #3D2E22 (gray sidebar)
