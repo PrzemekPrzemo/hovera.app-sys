@@ -14,6 +14,8 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Per-stable settings, editable by users with role owner/admin.
@@ -65,6 +67,7 @@ class TenantSettings extends Page implements HasForms
         $tenant = app(TenantManager::class)->tenantOrFail();
 
         $publicBooking = (array) (data_get($tenant->settings, 'public_booking') ?? []);
+        $publicProfile = (array) (data_get($tenant->settings, 'public_profile') ?? []);
 
         $this->form->fill([
             'name' => $tenant->name,
@@ -74,8 +77,17 @@ class TenantSettings extends Page implements HasForms
             'locale' => $tenant->locale,
             'timezone' => $tenant->timezone,
             'currency' => $tenant->currency,
-            'primary_color' => $tenant->branding['primary_color'] ?? '#10b981',
-            'logo_url' => $tenant->branding['logo_url'] ?? null,
+            'primary_color' => $tenant->branding['primary_color'] ?? '#A8956B',
+            'logo_path' => $tenant->branding['logo_path'] ?? null,
+            'pp_tagline' => $publicProfile['tagline'] ?? null,
+            'pp_description' => $publicProfile['description'] ?? null,
+            'pp_email' => $publicProfile['email'] ?? null,
+            'pp_phone' => $publicProfile['phone'] ?? null,
+            'pp_address' => $publicProfile['address'] ?? null,
+            'pp_website' => $publicProfile['website'] ?? null,
+            'pp_opening_hours' => $publicProfile['opening_hours'] ?? null,
+            'pp_show_box_availability' => (bool) ($publicProfile['show_box_availability'] ?? true),
+            'pp_show_instructors' => (bool) ($publicProfile['show_instructors'] ?? false),
             'pb_enabled' => (bool) ($publicBooking['enabled'] ?? false),
             'pb_lesson_duration_minutes' => $publicBooking['lesson_duration_minutes'] ?? 60,
             'pb_working_hours_start' => $publicBooking['working_hours_start'] ?? '09:00',
@@ -117,12 +129,50 @@ class TenantSettings extends Page implements HasForms
                     ]),
 
                 Forms\Components\Section::make('Branding')
+                    ->description('Logo i kolor wiodący są używane w panelu klienta + na publicznej stronie /s/{slug}.')
                     ->columns(2)
                     ->schema([
                         Forms\Components\ColorPicker::make('primary_color')->label('Kolor wiodący'),
-                        Forms\Components\TextInput::make('logo_url')->label('URL logo')
-                            ->url()->maxLength(500)
-                            ->helperText('Tymczasowe — własne uploady dorzucimy w kolejnej iteracji.'),
+                        Forms\Components\FileUpload::make('logo_path')
+                            ->label('Logo stajni')
+                            ->image()
+                            ->maxSize(2048) // 2 MB
+                            ->disk('public')
+                            ->directory('branding')
+                            ->visibility('public')
+                            ->imageResizeMode('contain')
+                            ->imageCropAspectRatio(null)
+                            ->helperText('PNG / JPG / WebP / SVG, max 2 MB. Najlepiej kwadratowe lub poziome (max ~400×100 px).'),
+                    ]),
+
+                Forms\Components\Section::make('Strona publiczna /s/'.app(TenantManager::class)->current()?->slug)
+                    ->description('Treść widoczna dla klientów odwiedzających waszą publiczną stronę. Wszystko opcjonalne.')
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('pp_tagline')->label('Tagline')
+                            ->maxLength(120)
+                            ->placeholder('np. "Stajnia z duszą — pensjonat, lekcje, rekreacja"'),
+                        Forms\Components\TextInput::make('pp_opening_hours')->label('Godziny otwarcia')
+                            ->maxLength(120)
+                            ->placeholder('np. "Pn–Pt: 9:00–20:00 · Sob–Nd: 8:00–18:00"'),
+                        Forms\Components\Textarea::make('pp_description')->label('O stajni')
+                            ->rows(4)
+                            ->columnSpanFull()
+                            ->maxLength(2000),
+                        Forms\Components\TextInput::make('pp_email')->label('Email kontaktowy')
+                            ->email()->maxLength(255),
+                        Forms\Components\TextInput::make('pp_phone')->label('Telefon')
+                            ->tel()->maxLength(40),
+                        Forms\Components\TextInput::make('pp_address')->label('Adres')
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('pp_website')->label('Strona WWW')
+                            ->url()->maxLength(255),
+                        Forms\Components\Toggle::make('pp_show_box_availability')
+                            ->label('Pokaż "Mamy X wolnych boksów"')
+                            ->default(true),
+                        Forms\Components\Toggle::make('pp_show_instructors')
+                            ->label('Pokaż listę instruktorów')
+                            ->default(false),
                     ]),
 
                 Forms\Components\Section::make('Online booking')
@@ -162,9 +212,24 @@ class TenantSettings extends Page implements HasForms
 
         $branding = (array) ($tenant->branding ?? []);
         $branding['primary_color'] = $data['primary_color'] ?? null;
-        $branding['logo_url'] = $data['logo_url'] ?? null;
+        $branding['logo_path'] = $data['logo_path'] ?? null;
+        // Public URL — generowany z file path. /storage/branding/...
+        $branding['logo_url'] = $branding['logo_path']
+            ? Storage::disk('public')->url($branding['logo_path'])
+            : null;
 
         $settings = (array) ($tenant->settings ?? []);
+        $settings['public_profile'] = [
+            'tagline' => $data['pp_tagline'] ?? null,
+            'description' => $data['pp_description'] ?? null,
+            'email' => $data['pp_email'] ?? null,
+            'phone' => $data['pp_phone'] ?? null,
+            'address' => $data['pp_address'] ?? null,
+            'website' => $data['pp_website'] ?? null,
+            'opening_hours' => $data['pp_opening_hours'] ?? null,
+            'show_box_availability' => (bool) ($data['pp_show_box_availability'] ?? true),
+            'show_instructors' => (bool) ($data['pp_show_instructors'] ?? false),
+        ];
         $settings['public_booking'] = [
             'enabled' => (bool) ($data['pb_enabled'] ?? false),
             'lesson_duration_minutes' => (int) ($data['pb_lesson_duration_minutes'] ?? 60),
@@ -191,6 +256,12 @@ class TenantSettings extends Page implements HasForms
             ->forceFill($changes)
             ->save();
 
+        // Invalidate public site cache (5 min default w PublicSiteController) —
+        // żeby zmiany w brandingu były od razu widoczne na /s/{slug}.
+        Cache::forget("public_site:{$tenant->slug}");
+        Cache::forget("public_box_availability:{$tenant->slug}");
+        Cache::forget("public_instructors:{$tenant->slug}");
+
         app(TenantAuditLogger::class)->record(
             'tenant.settings.update',
             'Tenant',
@@ -201,6 +272,7 @@ class TenantSettings extends Page implements HasForms
         Notification::make()
             ->success()
             ->title('Ustawienia zapisane')
+            ->body('Zmiany na publicznej stronie /s/'.$tenant->slug.' są od razu widoczne.')
             ->send();
     }
 
