@@ -29,4 +29,10 @@ return [
     'action' => [
         'saved' => 'Invoicing settings saved',
     ],
+
+    'reset_options' => [
+        'yearly' => 'Yearly (restart from 1 each new year)',
+        'monthly' => 'Monthly (restart from 1 each month)',
+        'never' => 'Never (continuous numbering)',
+    ],
 ];

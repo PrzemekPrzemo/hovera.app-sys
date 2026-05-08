@@ -38,11 +38,17 @@ class InvoiceNumberGenerator
         InvoiceKind::FvKorekta->value => 'KOR/{seq}/{MM}/{YYYY}',
     ];
 
-    public const RESET_OPTIONS = [
-        'yearly' => 'Rocznie (start od 1 w nowym roku)',
-        'monthly' => 'Miesięcznie (start od 1 co miesiąc)',
-        'never' => 'Nigdy (numeracja ciągła)',
-    ];
+    /**
+     * @return array<string,string>
+     */
+    public static function resetOptions(): array
+    {
+        return [
+            'yearly' => __('app/invoicing_settings.reset_options.yearly'),
+            'monthly' => __('app/invoicing_settings.reset_options.monthly'),
+            'never' => __('app/invoicing_settings.reset_options.never'),
+        ];
+    }
 
     /**
      * Wygeneruj kolejny numer dla danego rodzaju faktury i daty wystawienia.
