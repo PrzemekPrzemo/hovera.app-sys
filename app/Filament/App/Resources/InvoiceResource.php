@@ -61,31 +61,31 @@ class InvoiceResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Dane faktury')
+            Forms\Components\Section::make(__('app/invoice.form.section.invoice_data'))
                 ->columns(3)
                 ->schema([
                     Forms\Components\Select::make('kind')
-                        ->label('Rodzaj')
+                        ->label(__('app/invoice.form.label.kind'))
                         ->options(InvoiceKind::options())
                         ->default(InvoiceKind::Fv->value)
                         ->required()
                         ->disabledOn('edit'),
                     Forms\Components\TextInput::make('number')
-                        ->label('Numer')
-                        ->placeholder('— nadawany przy wystawieniu —')
+                        ->label(__('app/invoice.form.label.number'))
+                        ->placeholder(__('app/invoice.form.label.number_placeholder'))
                         ->disabled(),
                     Forms\Components\Select::make('status')
-                        ->label('Status')
+                        ->label(__('app/invoice.form.label.status'))
                         ->options(InvoiceStatus::options())
                         ->default(InvoiceStatus::Draft->value)
                         ->disabled(),
                 ]),
 
-            Forms\Components\Section::make('Nabywca')
+            Forms\Components\Section::make(__('app/invoice.form.section.buyer'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\Select::make('client_id')
-                        ->label('Klient')
+                        ->label(__('app/invoice.form.label.client'))
                         ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id'))
                         ->searchable()
                         ->required()
@@ -105,36 +105,51 @@ class InvoiceResource extends Resource
                             $set('buyer_city', $client->city);
                             $set('buyer_country', $client->country ?? 'PL');
                         }),
-                    Forms\Components\TextInput::make('buyer_name')->label('Nazwa / imię i nazwisko')->required(),
-                    Forms\Components\TextInput::make('buyer_nip')->label('NIP (opcjonalnie dla os. fizycznych)'),
-                    Forms\Components\TextInput::make('buyer_address')->label('Adres'),
-                    Forms\Components\TextInput::make('buyer_postal_code')->label('Kod'),
-                    Forms\Components\TextInput::make('buyer_city')->label('Miasto'),
-                    Forms\Components\TextInput::make('buyer_country')->label('Kraj')->default('PL')->maxLength(2),
+                    Forms\Components\TextInput::make('buyer_name')
+                        ->label(__('app/invoice.form.label.buyer_name'))->required(),
+                    Forms\Components\TextInput::make('buyer_nip')
+                        ->label(__('app/invoice.form.label.buyer_nip')),
+                    Forms\Components\TextInput::make('buyer_address')
+                        ->label(__('app/invoice.form.label.buyer_address')),
+                    Forms\Components\TextInput::make('buyer_postal_code')
+                        ->label(__('app/invoice.form.label.buyer_postal_code')),
+                    Forms\Components\TextInput::make('buyer_city')
+                        ->label(__('app/invoice.form.label.buyer_city')),
+                    Forms\Components\TextInput::make('buyer_country')
+                        ->label(__('app/invoice.form.label.buyer_country'))->default('PL')->maxLength(2),
                 ]),
 
-            Forms\Components\Section::make('Sprzedawca (snapshot)')
+            Forms\Components\Section::make(__('app/invoice.form.section.seller'))
                 ->columns(2)
                 ->collapsed()
                 ->schema([
-                    Forms\Components\TextInput::make('seller_name')->label('Nazwa')->required(),
-                    Forms\Components\TextInput::make('seller_nip')->label('NIP'),
-                    Forms\Components\TextInput::make('seller_address')->label('Adres'),
-                    Forms\Components\TextInput::make('seller_postal_code')->label('Kod'),
-                    Forms\Components\TextInput::make('seller_city')->label('Miasto'),
-                    Forms\Components\TextInput::make('seller_country')->label('Kraj')->default('PL')->maxLength(2),
+                    Forms\Components\TextInput::make('seller_name')
+                        ->label(__('app/invoice.form.label.seller_name'))->required(),
+                    Forms\Components\TextInput::make('seller_nip')
+                        ->label(__('app/invoice.form.label.seller_nip')),
+                    Forms\Components\TextInput::make('seller_address')
+                        ->label(__('app/invoice.form.label.seller_address')),
+                    Forms\Components\TextInput::make('seller_postal_code')
+                        ->label(__('app/invoice.form.label.seller_postal_code')),
+                    Forms\Components\TextInput::make('seller_city')
+                        ->label(__('app/invoice.form.label.seller_city')),
+                    Forms\Components\TextInput::make('seller_country')
+                        ->label(__('app/invoice.form.label.seller_country'))->default('PL')->maxLength(2),
                 ]),
 
-            Forms\Components\Section::make('Daty')
+            Forms\Components\Section::make(__('app/invoice.form.section.dates'))
                 ->columns(3)
                 ->schema([
-                    Forms\Components\DatePicker::make('issued_at')->label('Wystawiona')->disabled(),
-                    Forms\Components\DatePicker::make('sale_date')->label('Data sprzedaży'),
-                    Forms\Components\DatePicker::make('due_at')->label('Termin płatności')
+                    Forms\Components\DatePicker::make('issued_at')
+                        ->label(__('app/invoice.form.label.issued_at'))->disabled(),
+                    Forms\Components\DatePicker::make('sale_date')
+                        ->label(__('app/invoice.form.label.sale_date')),
+                    Forms\Components\DatePicker::make('due_at')
+                        ->label(__('app/invoice.form.label.due_at'))
                         ->default(fn () => now()->addDays(7)->toDateString()),
                 ]),
 
-            Forms\Components\Section::make('Pozycje')
+            Forms\Components\Section::make(__('app/invoice.form.section.items'))
                 ->schema([
                     Forms\Components\Repeater::make('items')
                         ->relationship()
@@ -143,21 +158,26 @@ class InvoiceResource extends Resource
                         ->defaultItems(1)
                         ->reorderable()
                         ->schema([
-                            Forms\Components\TextInput::make('name')->label('Nazwa')->required()->columnSpan(2),
-                            Forms\Components\TextInput::make('quantity')->label('Ilość')->numeric()->default(1)->required(),
-                            Forms\Components\TextInput::make('unit')->label('Jedn.')->default('szt.'),
-                            PriceInput::make('unit_price_cents', 'Cena j. netto')->required(),
-                            Forms\Components\Select::make('vat_rate')->label('VAT')
+                            Forms\Components\TextInput::make('name')
+                                ->label(__('app/invoice.form.label.item_name'))->required()->columnSpan(2),
+                            Forms\Components\TextInput::make('quantity')
+                                ->label(__('app/invoice.form.label.item_quantity'))->numeric()->default(1)->required(),
+                            Forms\Components\TextInput::make('unit')
+                                ->label(__('app/invoice.form.label.item_unit'))->default('szt.'),
+                            PriceInput::make('unit_price_cents', __('app/invoice.form.label.item_unit_price'))->required(),
+                            Forms\Components\Select::make('vat_rate')
+                                ->label(__('app/invoice.form.label.item_vat'))
                                 ->options(InvoiceItem::vatRateOptions())
                                 ->default('23')
                                 ->required(),
                         ]),
                 ]),
 
-            Forms\Components\Section::make('Notatki')
+            Forms\Components\Section::make(__('app/invoice.form.section.notes'))
                 ->collapsed()
                 ->schema([
-                    Forms\Components\Textarea::make('notes')->label('Uwagi')->rows(3),
+                    Forms\Components\Textarea::make('notes')
+                        ->label(__('app/invoice.form.label.notes_label'))->rows(3),
                 ]),
         ]);
     }
@@ -167,26 +187,28 @@ class InvoiceResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('number')
-                    ->label('Numer')
+                    ->label(__('app/invoice.table.column.number'))
                     ->placeholder('—')
                     ->searchable()
                     ->weight('bold'),
                 Tables\Columns\BadgeColumn::make('kind')
-                    ->label('Rodzaj')
+                    ->label(__('app/invoice.table.column.kind'))
                     ->formatStateUsing(fn (InvoiceKind $state) => $state->shortLabel())
                     ->colors([
                         'primary' => InvoiceKind::Fv->value,
                         'gray' => InvoiceKind::FvProforma->value,
                         'warning' => InvoiceKind::FvKorekta->value,
                     ]),
-                Tables\Columns\TextColumn::make('issued_at')->label('Wystawiona')->date()->placeholder('—')->sortable(),
-                Tables\Columns\TextColumn::make('client.name')->label('Nabywca')->searchable(),
+                Tables\Columns\TextColumn::make('issued_at')
+                    ->label(__('app/invoice.table.column.issued_at'))->date()->placeholder('—')->sortable(),
+                Tables\Columns\TextColumn::make('client.name')
+                    ->label(__('app/invoice.table.column.client'))->searchable(),
                 Tables\Columns\TextColumn::make('total_cents')
-                    ->label('Brutto')
+                    ->label(__('app/invoice.table.column.total'))
                     ->formatStateUsing(fn (?int $state, Invoice $record) => $record->totalFormatted())
                     ->sortable(),
                 Tables\Columns\BadgeColumn::make('status')
-                    ->label('Status')
+                    ->label(__('app/invoice.table.column.status'))
                     ->formatStateUsing(fn (InvoiceStatus $state) => $state->label())
                     ->colors([
                         'gray' => InvoiceStatus::Draft->value,
@@ -199,55 +221,56 @@ class InvoiceResource extends Resource
                             true,
                         ),
                     ]),
-                Tables\Columns\TextColumn::make('due_at')->label('Termin')->date()->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('due_at')
+                    ->label(__('app/invoice.table.column.due_at'))->date()->placeholder('—')->toggleable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('kind')->options(InvoiceKind::options()),
                 Tables\Filters\SelectFilter::make('status')->options(InvoiceStatus::options()),
                 Tables\Filters\Filter::make('overdue')
-                    ->label('Po terminie')
+                    ->label(__('app/invoice.table.filter.overdue'))
                     ->query(fn ($query) => $query->overdue()),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\Action::make('issue')
-                    ->label('Wystaw')
+                    ->label(__('app/invoice.action.issue.label'))
                     ->icon('heroicon-m-paper-airplane')
                     ->visible(fn (Invoice $r) => $r->status === InvoiceStatus::Draft)
                     ->requiresConfirmation()
                     ->action(function (Invoice $record) {
                         try {
                             app(IssueInvoice::class)->execute($record);
-                            Notification::make()->title('Faktura wystawiona')->success()->send();
+                            Notification::make()->title(__('app/invoice.action.issue.success'))->success()->send();
                         } catch (ValidationException $e) {
                             Notification::make()
-                                ->title('Nie można wystawić faktury')
+                                ->title(__('app/invoice.action.issue.failure_title'))
                                 ->body(implode("\n", Arr::flatten($e->errors())))
                                 ->danger()
                                 ->send();
                         }
                     }),
                 Tables\Actions\Action::make('correct')
-                    ->label('Korekta')
+                    ->label(__('app/invoice.action.correct.label'))
                     ->icon('heroicon-m-arrow-path')
                     ->visible(fn (Invoice $r) => $r->kind !== InvoiceKind::FvKorekta && $r->status->isPosted())
                     ->action(function (Invoice $record) {
                         try {
                             $korekta = app(CreateInvoiceCorrection::class)->execute($record);
-                            Notification::make()->title('Korekta utworzona')->success()
-                                ->body('Otwórz draft '.($korekta->id).' i edytuj pozycje.')
+                            Notification::make()->title(__('app/invoice.action.correct.success_title'))->success()
+                                ->body(__('app/invoice.action.correct.success_body', ['id' => $korekta->id]))
                                 ->send();
                         } catch (ValidationException $e) {
                             Notification::make()
-                                ->title('Błąd')
+                                ->title(__('app/invoice.action.correct.failure_title'))
                                 ->body(implode("\n", Arr::flatten($e->errors())))
                                 ->danger()
                                 ->send();
                         }
                     }),
                 Tables\Actions\Action::make('ksef')
-                    ->label('Wyślij do KSeF')
+                    ->label(__('app/invoice.action.ksef.label'))
                     ->icon('heroicon-m-shield-check')
                     ->color('success')
                     ->visible(function (Invoice $r) {
@@ -259,7 +282,7 @@ class InvoiceResource extends Resource
                         return $r->status->isPosted() && $r->ksef_status === null;
                     })
                     ->requiresConfirmation()
-                    ->modalDescription('Faktura zostanie podpisana certyfikatem stajni i wysłana do KSeF.')
+                    ->modalDescription(__('app/invoice.action.ksef.modal_description'))
                     ->action(function (Invoice $record) {
                         $tenant = app(TenantManager::class)->current();
                         try {
@@ -272,26 +295,26 @@ class InvoiceResource extends Resource
                                 'ksef_sent_at' => now(),
                             ])->save();
                             Notification::make()
-                                ->title('KSeF: uwierzytelnienie udane')
-                                ->body('Wysyłka treści faktury w przygotowaniu (PR 4b).')
+                                ->title(__('app/invoice.action.ksef.auth_success_title'))
+                                ->body(__('app/invoice.action.ksef.auth_success_body'))
                                 ->success()
                                 ->send();
                         } catch (\Throwable $e) {
                             $record->forceFill(['ksef_status' => 'rejected'])->save();
                             Notification::make()
-                                ->title('KSeF: błąd')
+                                ->title(__('app/invoice.action.ksef.failure_title'))
                                 ->body($e->getMessage())
                                 ->danger()
                                 ->send();
                         }
                     }),
                 Tables\Actions\Action::make('email')
-                    ->label('Wyślij na e-mail')
+                    ->label(__('app/invoice.action.email.label'))
                     ->icon('heroicon-m-envelope')
                     ->color('primary')
                     ->visible(fn (Invoice $r) => $r->status->isPosted())
                     ->requiresConfirmation()
-                    ->modalDescription('Wyślemy link do faktury na e-mail klienta. Link działa do 90 dni (lub 14 dni po terminie płatności).')
+                    ->modalDescription(__('app/invoice.action.email.modal_description'))
                     ->action(function (Invoice $record) {
                         $tenant = app(TenantManager::class)->current();
                         if (! $tenant) {
@@ -299,7 +322,7 @@ class InvoiceResource extends Resource
                         }
                         $client = $record->client;
                         if (! $client?->email) {
-                            Notification::make()->title('Brak e-maila klienta')->danger()->send();
+                            Notification::make()->title(__('app/invoice.action.email.no_email'))->danger()->send();
 
                             return;
                         }
@@ -328,7 +351,7 @@ class InvoiceResource extends Resource
                             (string) $record->id,
                         );
 
-                        Notification::make()->title('Wysłano fakturę na e-mail klienta')->success()->send();
+                        Notification::make()->title(__('app/invoice.action.email.success'))->success()->send();
                     }),
                 Tables\Actions\EditAction::make()
                     ->visible(fn (Invoice $r) => $r->status === InvoiceStatus::Draft),
