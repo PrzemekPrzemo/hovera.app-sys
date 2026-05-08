@@ -141,10 +141,16 @@ class DoctorCommand extends Command
         }
         $content = File::get($file);
 
+        // Wytnij komentarze (// i /* */) przed skanowaniem — żeby
+        // wzmianki o config() w komentarzach (jak ten po PR #49 w
+        // bootstrap/app.php) nie wpadały w regex jako false positive.
+        $stripped = preg_replace('!//[^\n]*!', '', $content);
+        $stripped = preg_replace('!/\*.*?\*/!s', '', (string) $stripped);
+
         // Sprawdź czy w withMiddleware/withRouting/withExceptions callbackach
         // ktoś używa config() (które jeszcze nie jest dostępne w tym momencie).
-        if (preg_match('/->withMiddleware\(function[^}]*config\(/s', $content)
-            || preg_match('/->withExceptions\(function[^}]*config\(/s', $content)) {
+        if (preg_match('/->withMiddleware\(function[^}]*config\(/s', (string) $stripped)
+            || preg_match('/->withExceptions\(function[^}]*config\(/s', (string) $stripped)) {
             $this->flagFail('bootstrap/app.php: użycie config() w withMiddleware/withExceptions callbacku. config() jeszcze nie jest dostępne — użyj env() zamiast.');
         } else {
             $this->ok('bootstrap/app.php: brak config() w with* callbackach');
@@ -153,13 +159,14 @@ class DoctorCommand extends Command
 
     private function checkFilamentClosureParams(): void
     {
-        // Skanuj app/Filament/ za zarezerwowanymi nazwami parametrów Filament 3.
-        // Filament rezolwuje closures po nazwach: $action, $record, $state,
-        // $livewire, $component są zarezerwowane. Custom typehints na nich
-        // → BindingResolutionException.
-        $reservedWithType = '/fn\s*\((?:array\s+|string\s+|int\s+|bool\s+|\?[a-zA-Z\\\\]+\s+|[A-Z][a-zA-Z\\\\]+\s+)\$(action|record|state|livewire|component)\b[^)]*\)/';
-        // Plus single-letter params jak $q, $s, $r, $t — zwykle błąd
-        $singleLetter = '/fn\s*\(\s*(?:\??(?:int|string|bool|array)\s+)?\$([a-z])\s*[\),]/';
+        // Filament 3 closure resolver wstrzykuje argumenty po nazwach.
+        // KLUCZOWA pułapka: $action — Filament zawsze wstrzykuje swój
+        // Tables\Actions\Action object. Custom type-hint (np.
+        // StartImpersonation $action) → TypeError.
+        //
+        // Pozostałe nazwy ($record, $state, $livewire, $component) Z type-hintem
+        // są OK — Filament wstrzykuje aktualny model/state, type-hint pomaga
+        // IDE i statyk analizie. Filament akceptuje typed parameter.
 
         $issues = [];
         $files = File::allFiles(base_path('app/Filament'));
@@ -170,27 +177,25 @@ class DoctorCommand extends Command
             $content = File::get($file->getPathname());
             $relative = str_replace(base_path().'/', '', $file->getPathname());
 
-            // Zarezerwowana nazwa z type-hint (np. StartImpersonation $action)
-            if (preg_match_all('/fn\s*\([^)]*?(?:[A-Z][a-zA-Z\\\\]+|array)\s+\$(action|record|state|livewire|component)\b[^)]*\)/', $content, $m)) {
-                foreach ($m[1] as $name) {
-                    $issues[] = "{$relative}: \${$name} z customowym type-hintem (Filament wstrzyknie własny obiekt)";
-                }
-            }
-            // Single-letter parameter
-            if (preg_match_all($singleLetter, $content, $m)) {
-                foreach ($m[1] as $letter) {
-                    if (! in_array($letter, ['e', 'i', 'k', 'v', 'p'], true)) { // heurystyki dla chained collection
-                        $issues[] = "{$relative}: \${$letter} (single-letter param — Filament nie rozpozna)";
+            // Tylko $action z customowym type-hintem (klasa zaczynająca
+            // się od dużej litery, NIE zaczynająca się od ?). Wykluczamy
+            // standard Filament Action types z namespace Filament/.
+            if (preg_match_all('/fn\s*\([^)]*?([A-Z][a-zA-Z0-9_\\\\]+)\s+\$action\b/', $content, $m)) {
+                foreach ($m[1] as $type) {
+                    // Filament's own Action class jest OK, custom App\Actions\* nie.
+                    if (! str_starts_with($type, 'Filament\\')
+                        && ! in_array($type, ['Action', 'Tables\\Actions\\Action'], true)) {
+                        $issues[] = "{$relative}: \$action z customowym type-hintem '{$type}' — Filament wstrzykuje Action object zamiast";
                     }
                 }
             }
         }
 
         if (empty($issues)) {
-            $this->ok('Filament closure params (skan app/Filament/): brak zarezerwowanych konfliktów');
+            $this->ok('Filament closure params: brak kolizji nazw zarezerwowanych');
         } else {
             foreach (array_unique($issues) as $issue) {
-                $this->flagWarn('Filament closure: '.$issue);
+                $this->flagFail('Filament closure: '.$issue);
             }
         }
     }
