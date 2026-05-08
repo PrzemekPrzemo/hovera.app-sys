@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $horse->name }} — {{ $tenant->name }}</title>
+    <title>{{ __('portal/horse.title', ['horse' => $horse->name, 'tenant' => $tenant->name]) }}</title>
     <meta name="robots" content="noindex">
     <style>
         :root { --primary: {{ $primary_color }}; }
@@ -114,52 +114,52 @@
 </head>
 <body>
     <div class="container">
-        <a class="back" href="{{ route('client_portal.dashboard', ['slug' => $tenant->slug]) }}">← Wróć do panelu</a>
+        <a class="back" href="{{ route('client_portal.dashboard', ['slug' => $tenant->slug]) }}">{{ __('portal/horse.back') }}</a>
 
         <div class="card">
             <h1>{{ $horse->name }}</h1>
             <div class="subtitle">{{ $tenant->name }}</div>
 
             <dl>
-                @if ($horse->breed)<dt>Rasa</dt><dd>{{ $horse->breed }}</dd>@endif
-                @if ($horse->sex)<dt>Płeć</dt><dd>{{ $horse->sex }}</dd>@endif
-                @if ($horse->color)<dt>Maść</dt><dd>{{ $horse->color }}</dd>@endif
+                @if ($horse->breed)<dt>{{ __('portal/horse.info.breed') }}</dt><dd>{{ $horse->breed }}</dd>@endif
+                @if ($horse->sex)<dt>{{ __('portal/horse.info.sex') }}</dt><dd>{{ $horse->sex }}</dd>@endif
+                @if ($horse->color)<dt>{{ __('portal/horse.info.color') }}</dt><dd>{{ $horse->color }}</dd>@endif
                 @if ($horse->birth_date)
-                    <dt>Wiek</dt><dd>{{ (int) $horse->birth_date->diffInYears(now()) }} lat ({{ $horse->birth_date->format('Y') }})</dd>
+                    <dt>{{ __('portal/horse.info.age') }}</dt><dd>{{ __('portal/horse.info.age_value', ['years' => (int) $horse->birth_date->diffInYears(now()), 'year' => $horse->birth_date->format('Y')]) }}</dd>
                 @endif
-                @if ($horse->microchip)<dt>Mikroczip</dt><dd>{{ $horse->microchip }}</dd>@endif
-                @if ($horse->passport_number)<dt>Paszport</dt><dd>{{ $horse->passport_number }}</dd>@endif
+                @if ($horse->microchip)<dt>{{ __('portal/horse.info.microchip') }}</dt><dd>{{ $horse->microchip }}</dd>@endif
+                @if ($horse->passport_number)<dt>{{ __('portal/horse.info.passport') }}</dt><dd>{{ $horse->passport_number }}</dd>@endif
             </dl>
         </div>
 
         @if ($horse->box || $horse->boardingServices->isNotEmpty())
             <div class="card">
-                <h2>Pensja i koszty</h2>
+                <h2>{{ __('portal/horse.sections.boarding') }}</h2>
 
                 @if ($horse->box)
                     <div class="box-info">
                         <div class="box-pill">
-                            🏠 Box {{ $horse->box->label ?: $horse->box->name }}
+                            {{ __('portal/horse.box.pill', ['label' => $horse->box->label ?: $horse->box->name]) }}
                         </div>
                         <div class="box-meta">
                             {{ $horse->box->typeLabel() }}
                             @if ($horse->box->size_m2) · {{ $horse->box->size_m2 }} m² @endif
                             @if ($horse->box->monthly_rate_cents)
-                                · pensjonat: {{ $horse->box->monthlyRateFormatted() }}/mies.
+                                · {{ __('portal/horse.box.monthly_label', ['rate' => $horse->box->monthlyRateFormatted()]) }}{{ __('portal/horse.box.monthly_suffix') }}
                             @endif
                         </div>
                     </div>
                 @endif
 
                 @if ($horse->boardingServices->isNotEmpty())
-                    <h3 class="muted">Naliczane usługi</h3>
+                    <h3 class="muted">{{ __('portal/horse.services.heading') }}</h3>
                     <table class="services">
                         <thead>
                         <tr>
-                            <th>Pozycja</th>
-                            <th class="num">Cena</th>
-                            <th>Częstotliwość</th>
-                            <th class="num">~mies.</th>
+                            <th>{{ __('portal/horse.services.col_item') }}</th>
+                            <th class="num">{{ __('portal/horse.services.col_price') }}</th>
+                            <th>{{ __('portal/horse.services.col_frequency') }}</th>
+                            <th class="num">{{ __('portal/horse.services.col_monthly') }}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -179,7 +179,7 @@
                                         <span class="meta">{{ $service->description }}</span>
                                     @endif
                                 </td>
-                                <td class="num">{{ number_format($unitPrice / 100, 2, ',', ' ') }} zł / {{ $service->unit }}</td>
+                                <td class="num">{{ __('portal/horse.services.price_per_unit', ['amount' => number_format($unitPrice / 100, 2, ',', ' '), 'unit' => $service->unit]) }}</td>
                                 <td>{{ $service->frequency->label() }}</td>
                                 <td class="num">
                                     @if ($monthly > 0)
@@ -195,16 +195,16 @@
                 @endif
 
                 <div class="cost-summary">
-                    <strong>Szacunkowy koszt miesięczny:</strong>
+                    <strong>{{ __('portal/horse.cost.monthly_label') }}</strong>
                     <span class="big">{{ number_format($estimated_monthly_cents / 100, 2, ',', ' ') }} zł</span>
-                    <small class="muted">Bez usług "za użycie" i jednorazowych — te pojawiają się tylko gdy są naliczane.</small>
+                    <small class="muted">{{ __('portal/horse.cost.monthly_disclaimer') }}</small>
                 </div>
             </div>
         @endif
 
         @if ($activities->isNotEmpty())
             <div class="card">
-                <h2>Co robimy z Twoim koniem</h2>
+                <h2>{{ __('portal/horse.sections.activities') }}</h2>
                 @foreach ($activities as $activity)
                     <div class="activity">
                         <div class="activity-head">
@@ -223,21 +223,21 @@
         @endif
 
         <div class="card">
-            <h2>Wiadomości ze stajni</h2>
+            <h2>{{ __('portal/horse.sections.messages') }}</h2>
             @if (session('horse_message_sent'))
-                <div class="flash">✓ Wiadomość wysłana — stajnia dostała powiadomienie e-mail.</div>
+                <div class="flash">{{ __('portal/horse.messages.sent_flash') }}</div>
             @endif
 
             <form method="post" enctype="multipart/form-data"
                   action="{{ route('client_portal.horses.messages.send', ['slug' => $tenant->slug, 'horse' => $horse->id]) }}"
                   class="msg-form">
                 @csrf
-                <input type="text" name="subject" placeholder="Temat (opcjonalnie)" maxlength="200" value="{{ old('subject') }}">
-                <textarea name="body" rows="3" placeholder="Napisz coś do stajni…" required maxlength="5000">{{ old('body') }}</textarea>
+                <input type="text" name="subject" placeholder="{{ __('portal/horse.messages.subject_placeholder') }}" maxlength="200" value="{{ old('subject') }}">
+                <textarea name="body" rows="3" placeholder="{{ __('portal/horse.messages.body_placeholder') }}" required maxlength="5000">{{ old('body') }}</textarea>
                 <input type="file" name="attachments[]" multiple accept="image/*,application/pdf,.doc,.docx">
                 @error('body')<div class="error">{{ $message }}</div>@enderror
                 @error('attachments.*')<div class="error">{{ $message }}</div>@enderror
-                <button type="submit">Wyślij</button>
+                <button type="submit">{{ __('portal/horse.messages.send') }}</button>
             </form>
 
             @forelse ($messages as $message)
@@ -247,7 +247,7 @@
                             @if ($message->isFromStable())
                                 {{ $tenant->name }}
                             @else
-                                Ty
+                                {{ __('portal/horse.messages.you') }}
                             @endif
                         </strong>
                         <span class="date">{{ $message->sent_at->translatedFormat('d.m.Y · H:i') }}</span>
@@ -262,40 +262,40 @@
                                     'horse' => $horse->id,
                                     'message' => $message->id,
                                     'index' => $i,
-                                ]) }}">📎 {{ $a['original_name'] ?? 'załącznik' }}</a>
+                                ]) }}">📎 {{ $a['original_name'] ?? __('portal/horse.messages.attachment_fallback') }}</a>
                             @endforeach
                         </div>
                     @endif
                 </div>
             @empty
-                <div class="empty">Brak wiadomości — napisz pierwszą.</div>
+                <div class="empty">{{ __('portal/horse.messages.empty') }}</div>
             @endforelse
         </div>
 
         <div class="card">
-            <h2>Dokumenty</h2>
+            <h2>{{ __('portal/horse.sections.documents') }}</h2>
             @if (session('horse_document_uploaded'))
-                <div class="flash">✓ Dokument wgrany.</div>
+                <div class="flash">{{ __('portal/horse.documents.uploaded_flash') }}</div>
             @endif
             @if (session('horse_document_deleted'))
-                <div class="flash">✓ Dokument usunięty.</div>
+                <div class="flash">{{ __('portal/horse.documents.deleted_flash') }}</div>
             @endif
 
             <form method="post" enctype="multipart/form-data"
                   action="{{ route('client_portal.horses.documents.upload', ['slug' => $tenant->slug, 'horse' => $horse->id]) }}"
                   class="doc-form">
                 @csrf
-                <input type="text" name="name" placeholder="Nazwa dokumentu" required maxlength="200" value="{{ old('name') }}">
+                <input type="text" name="name" placeholder="{{ __('portal/horse.documents.name_placeholder') }}" required maxlength="200" value="{{ old('name') }}">
                 <select name="kind" required>
                     @foreach (\App\Enums\HorseDocumentKind::cases() as $kind)
                         <option value="{{ $kind->value }}" {{ old('kind') === $kind->value ? 'selected' : '' }}>{{ $kind->icon() }} {{ $kind->label() }}</option>
                     @endforeach
                 </select>
-                <input type="text" name="description" placeholder="Opis (opcjonalnie)" maxlength="500" value="{{ old('description') }}">
+                <input type="text" name="description" placeholder="{{ __('portal/horse.documents.description_placeholder') }}" maxlength="500" value="{{ old('description') }}">
                 <input type="file" name="file" required accept="application/pdf,image/*,.doc,.docx">
                 @error('file')<div class="error">{{ $message }}</div>@enderror
                 @error('name')<div class="error">{{ $message }}</div>@enderror
-                <button type="submit">Wgraj dokument</button>
+                <button type="submit">{{ __('portal/horse.documents.upload') }}</button>
             </form>
 
             @forelse ($documents as $doc)
@@ -305,9 +305,9 @@
                         <strong>{{ $doc->name }}</strong>
                         <span class="doc-meta">
                             {{ $doc->kind->label() }} · {{ $doc->sizeFormatted() }}
-                            · {{ $doc->uploadedByStable() ? 'Stajnia' : 'Ty' }}
+                            · {{ $doc->uploadedByStable() ? __('portal/horse.documents.uploaded_by_stable') : __('portal/horse.documents.uploaded_by_you') }}
                             @if ($doc->valid_until)
-                                · ważny do: <span class="{{ $doc->isExpired() ? 'overdue' : ($doc->isExpiringSoon(30) ? 'soon' : '') }}">
+                                · {{ __('portal/horse.documents.valid_until') }} <span class="{{ $doc->isExpired() ? 'overdue' : ($doc->isExpiringSoon(30) ? 'soon' : '') }}">
                                     {{ $doc->valid_until->format('d.m.Y') }}
                                 </span>
                             @endif
@@ -316,23 +316,23 @@
                     </div>
                     <div class="doc-actions">
                         <a href="{{ route('client_portal.horses.documents.download', ['slug' => $tenant->slug, 'horse' => $horse->id, 'document' => $doc->id]) }}"
-                           class="btn-link">📥 Pobierz</a>
+                           class="btn-link">{{ __('portal/horse.documents.download') }}</a>
                         @if ($doc->uploadedByClient() && $doc->uploaded_by_client_id === $client->id)
                             <form method="post" action="{{ route('client_portal.horses.documents.delete', ['slug' => $tenant->slug, 'horse' => $horse->id, 'document' => $doc->id]) }}" style="display:inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn-delete" onclick="return confirm('Usunąć dokument?')">Usuń</button>
+                                <button type="submit" class="btn-delete" onclick="return confirm('{{ __('portal/horse.documents.delete_confirm') }}')">{{ __('portal/horse.documents.delete') }}</button>
                             </form>
                         @endif
                     </div>
                 </div>
             @empty
-                <div class="empty">Brak dokumentów. Wgraj pierwszy.</div>
+                <div class="empty">{{ __('portal/horse.documents.empty') }}</div>
             @endforelse
         </div>
 
         <div class="card">
-            <h2>Historia weterynaryjna</h2>
+            <h2>{{ __('portal/horse.sections.health') }}</h2>
             @forelse ($records as $record)
                 @php
                     $isOverdue = $record->next_due_at && $record->next_due_at->isPast();
@@ -350,19 +350,19 @@
                         <div class="summary">{{ $record->details }}</div>
                     @endif
                     <div class="meta">
-                        @if ($record->performed_by) Wykonał: {{ $record->performed_by }} @endif
+                        @if ($record->performed_by) {{ __('portal/horse.health.performed_by_label', ['name' => $record->performed_by]) }} @endif
                         @if ($record->next_due_at)
-                            · Następny zabieg: {{ $record->next_due_at->format('d.m.Y') }}
+                            · {{ __('portal/horse.health.next_due_label', ['date' => $record->next_due_at->format('d.m.Y')]) }}
                             @if ($isOverdue)
-                                <span class="pill danger">Przeterminowane</span>
+                                <span class="pill danger">{{ __('portal/horse.health.overdue_pill') }}</span>
                             @elseif ($isSoon)
-                                <span class="pill warning">Wkrótce</span>
+                                <span class="pill warning">{{ __('portal/horse.health.soon_pill') }}</span>
                             @endif
                         @endif
                     </div>
                 </div>
             @empty
-                <div class="empty">Brak wpisów weterynaryjnych.</div>
+                <div class="empty">{{ __('portal/horse.health.empty') }}</div>
             @endforelse
         </div>
     </div>
