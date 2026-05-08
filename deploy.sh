@@ -141,6 +141,19 @@ run "$PHP_BIN artisan filament:assets"
 log "→ queue:restart (sygnał do running workerów)"
 run "$PHP_BIN artisan queue:restart"
 
+# ── Restart FPM pool (auto-detect via detect-env.sh) ────────────────
+# OPcache trzyma stary bytecode po deploy → restart pool jest WAŻNY,
+# inaczej wprowadzone zmiany w kodzie mogą się nie aplikować.
+if [[ -f scripts/detect-env.sh ]]; then
+    # shellcheck source=scripts/detect-env.sh
+    . scripts/detect-env.sh
+    hovera_detect_environment 2>/dev/null || true
+    if [[ -n "$HOVERA_FPM_SERVICE" ]]; then
+        log "→ Restart FPM pool: $HOVERA_FPM_SERVICE"
+        run "systemctl restart $HOVERA_FPM_SERVICE 2>/dev/null || true"
+    fi
+fi
+
 # ── Maintenance OFF ─────────────────────────────────────────────────
 trap - EXIT
 log "→ Maintenance mode OFF"

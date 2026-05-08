@@ -1,12 +1,40 @@
-# Hovera — wdrożenie na app.hovera.app (Plesk UI first)
+# Hovera — wdrożenie
 
-> Cały setup robisz **z Pleska** (klikalnie) i **phpMyAdmina** (SQL).
-> SSH/root używasz tylko w jednym miejscu — i tylko jeśli Plesk nie ma składnika (Composer / Git CLI). U większości nowoczesnych Plesków jest. Jeśli nie — pojedy mail do hostingu.
+## Najszybsza droga: bootstrap script
 
-## TL;DR — kolejność klików
+Z czystego serwera (Plesk lub plain VPS) jednym poleceniem:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/PrzemekPrzemo/hovera.app-sys/main/bootstrap.sh | bash
+```
+
+Skrypt sam:
+- wykrywa środowisko (Plesk / cPanel / VPS) — `scripts/detect-env.sh`
+- wybiera najnowszego PHP 8.4+ (Plesk: `/opt/plesk/php/8.4/bin/php`, VPS: `php` z PATH)
+- klonuje repo do właściwej lokalizacji (Plesk: `/var/www/vhosts/<domain>/httpdocs`)
+- odpala interaktywny `install.sh` — pyta o domenę, bazę, master admina
+- na Plesku: auto-utwarza MySQL provisionera (przez `plesk db`)
+- naprawia permissions (vhost user) + restartuje FPM pool
+
+Po sukcesie sprawdź zdrowie: `./bin/php artisan hovera:doctor` — wyłapie wszystkie typowe pułapki (PHP version, provisioner grants, orphan tenants, Filament closure params, code smells).
+
+## Częste pułapki — lessons learned
+
+| Problem | Co zrobić |
+|---|---|
+| `Access denied for user ''@'localhost'` | Brakujące `WITH GRANT OPTION` na `hovera_t_%` LUB tenant connection nie zhydratowane przed query. `hovera:doctor` wykryje. |
+| `Table already exists` przy `migrate:fresh` | Half-baked tenant z poprzedniej awarii. `php artisan hovera:tenant:cleanup-orphans`. |
+| `BindingResolutionException ... [$q] was unresolvable` | Filament 3 closure resolver — używaj `$query`, `$record`, `$state`. Single-letter `$q/$s/$r` nie są rozpoznawane. |
+| `Target class [config] does not exist` | `bootstrap/app.php`: `withMiddleware` callback NIE może wołać `config()` — użyj `env()`. |
+| 504 Gateway Timeout przy demo seed z UI | Plesk: zwiększ `fastcgi_read_timeout 600s` w nginx directives, plus `max_execution_time 600`. ALBO odpal z CLI: `./bin/php artisan hovera:demo:seed --fresh`. |
+| Po deploy stary kod się trzyma | OPcache shared memory. Restart FPM pool: `systemctl restart plesk-php84-fpm_<domain>_<id>.service`. `update.sh` robi to automatycznie. |
+| Plesk PHP w panelu = 8.3 zamiast 8.4 | Plesk → Domain → PHP Settings → PHP version → 8.4.x. |
+| `/admin/login` daje błąd dla owner stajni | Już poprawione — `/admin/login` redirectuje na `/app/login`. Tam logują się wszyscy. |
+
+## TL;DR — Plesk UI checklist
 
 1. Plesk → **Add Domain** `app.hovera.app`
-2. Plesk → **PHP Settings** → 8.3 + memory_limit 256M + tz Warsaw
+2. Plesk → **PHP Settings** → 8.4 + memory_limit 256M + tz Warsaw + max_execution_time 600
 3. Plesk → **Hosting Settings** → document root `httpdocs/public`
 4. Plesk → **SSL/TLS** → Let's Encrypt + force HTTPS
 5. Plesk → **Databases** → utwórz `hovera_core` + user `hovera_core`

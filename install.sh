@@ -134,6 +134,12 @@ escape_env() {
 # ── 1. Pre-flight ───────────────────────────────────────────────────
 log "Sprawdzam wymagania…"
 
+# Auto-detect środowiska (Plesk / cPanel / VPS) — dostosowuje setup
+[[ -f scripts/detect-env.sh ]] || fail "Brak scripts/detect-env.sh w repo."
+# shellcheck source=scripts/detect-env.sh
+. scripts/detect-env.sh
+hovera_detect_environment
+
 # Auto-detect najnowszego PHP (Plesk-aware) i ustaw shim w PATH
 [[ -f scripts/detect-php.sh ]] || fail "Brak scripts/detect-php.sh w repo."
 # shellcheck source=scripts/detect-php.sh
@@ -228,13 +234,23 @@ ask_secret HOVERA_DB_CENTRAL_PASS "Hasło użytkownika centralnej bazy"
 # DB provisioner
 echo
 log "Provisioner — użytkownik MySQL z prawami CREATE/DROP DATABASE + GRANT (do tworzenia DB per stajnia)."
-log "Możesz pominąć (provisionować ręcznie). Bez tego nie utworzysz nowej stajni z panelu."
+if [[ -n "$HOVERA_DB_CMD" ]]; then
+    log "Wykryto root MySQL access ($HOVERA_DB_CMD) — możemy auto-utworzyć provisionera."
+fi
 ask_yes_no HOVERA_HAS_PROVISIONER "Skonfigurować provisionera teraz?" "y"
 HOVERA_DB_PROV_USER=""
 HOVERA_DB_PROV_PASS=""
+HOVERA_AUTO_SETUP_PROVISIONER=false
 if $HOVERA_HAS_PROVISIONER; then
     ask HOVERA_DB_PROV_USER "Użytkownik provisionera" "hovera_provisioner"
-    ask_secret HOVERA_DB_PROV_PASS "Hasło provisionera"
+    ask_secret HOVERA_DB_PROV_PASS "Hasło provisionera (Enter = generujemy 32 znakowe)"
+    if [[ -z "$HOVERA_DB_PROV_PASS" ]]; then
+        HOVERA_DB_PROV_PASS="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)"
+        log "Wygenerowane hasło provisionera: $HOVERA_DB_PROV_PASS (zapamiętaj/zapisz!)"
+    fi
+    if [[ -n "$HOVERA_DB_CMD" ]]; then
+        ask_yes_no HOVERA_AUTO_SETUP_PROVISIONER "Auto-utworzyć provisionera w MySQL teraz (CREATE USER + GRANT)?" "y"
+    fi
 fi
 
 # Tenant DB prefiksy
@@ -404,6 +420,16 @@ if ! $DRY_RUN && [[ -z "$(grep '^APP_KEY=' .env | cut -d= -f2-)" ]]; then
     ok "APP_KEY ustawiony"
 fi
 
+# ── 5b. Auto-setup MySQL provisionera (jeśli mamy root access) ──────
+if $HOVERA_AUTO_SETUP_PROVISIONER && ! $DRY_RUN; then
+    echo
+    if hovera_setup_provisioner "$HOVERA_DB_PROV_USER" "$HOVERA_DB_PROV_PASS"; then
+        ok "Provisioner '$HOVERA_DB_PROV_USER' skonfigurowany w MySQL"
+    else
+        warn "Auto-setup provisionera nie powiódł się — wykonaj ręcznie SQL z 'plesk db' lub 'mysql -uroot'."
+    fi
+fi
+
 # ── 6. Migrations ───────────────────────────────────────────────────
 echo
 log "Uruchamiam migracje (centralna baza)…"
@@ -484,6 +510,20 @@ if [[ "$HOVERA_APP_ENV" = "production" ]] || [[ "$HOVERA_APP_ENV" = "staging" ]]
     ok "Cache gotowy"
 fi
 
+# ── 9b. Permissions (Plesk: vhost user, VPS: www-data) ──────────────
+if [[ -n "$HOVERA_VHOST_USER" && -n "$HOVERA_VHOST_GROUP" ]] && ! $DRY_RUN; then
+    echo
+    log "Naprawiam permissions na storage/ + bootstrap/cache (owner: $HOVERA_VHOST_USER:$HOVERA_VHOST_GROUP)…"
+    run "chown -R $HOVERA_VHOST_USER:$HOVERA_VHOST_GROUP storage bootstrap/cache public 2>/dev/null || true"
+    ok "Permissions naprawione"
+fi
+
+# ── 9c. Restart FPM pool (gdy wykryliśmy konkretny service) ─────────
+if [[ -n "$HOVERA_FPM_SERVICE" ]] && ! $DRY_RUN; then
+    log "Restartuję FPM pool: $HOVERA_FPM_SERVICE (clear opcache)…"
+    run "systemctl restart $HOVERA_FPM_SERVICE 2>/dev/null || true"
+fi
+
 # ── Done ────────────────────────────────────────────────────────────
 echo
 ok "Instalacja zakończona."
@@ -494,12 +534,16 @@ echo "      ./bin/php artisan ...        # = $PHP_BIN"
 echo "      ./bin/composer install       # composer z właściwym PHP"
 echo
 echo "Następne kroki:"
-echo "  1. Zaloguj się: ${HOVERA_APP_URL}/admin (login: ${HOVERA_ADMIN_EMAIL})"
-echo "  2. Włącz 2FA na koncie master admina."
-echo "  3. Utwórz pierwszą stajnię: ./bin/php artisan tenant:create <slug> \"Nazwa\" --owner-email=…"
-echo "  4. Po dodaniu stajni: ./bin/php artisan tenants:migrate"
+echo "  1. Zaloguj się: ${HOVERA_APP_URL}/app/login (master admin: ${HOVERA_ADMIN_EMAIL})"
+echo "  2. Sprawdź zdrowie środowiska: ./bin/php artisan hovera:doctor"
+echo "  3. Utwórz demo dla pokazu:    ./bin/php artisan hovera:demo:seed --fresh"
+echo "  4. Plany cennika (5 tier'ów): /admin/plans → 'Zainstaluj domyślne plany'"
 echo "  5. Skonfiguruj cron (kolejka + cyklicze zadania):"
 echo "     * * * * * cd $SCRIPT_DIR && ./bin/php artisan schedule:run >> /dev/null 2>&1"
+echo
+echo "Diagnostyka (gdy coś pęknie):"
+echo "  ./bin/php artisan hovera:doctor                # checkup środowiska"
+echo "  ./bin/php artisan hovera:tenant:cleanup-orphans # sprzątnij niespójne tenanty"
 echo
 echo "Aktualizacje (pull z gita + migracje + cache):"
 echo "  ./update.sh                  # pull main + pełen rollout"
