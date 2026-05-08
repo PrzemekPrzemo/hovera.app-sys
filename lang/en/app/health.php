@@ -13,6 +13,9 @@ return [
             'type' => 'Type',
             'performed_at' => 'Procedure date',
             'performed_by' => 'Performed by (vet / farrier / company)',
+            'performed_by_placeholder' => 'e.g. farrier assistant (if different from selected above)',
+            'specialist' => 'Specialist',
+            'specialist_placeholder' => '— pick from specialist list —',
             'summary' => 'Short description',
             'summary_placeholder' => 'Tetanus + flu vaccination',
             'next_due_at' => 'Next due',
@@ -21,6 +24,7 @@ return [
         ],
         'helper' => [
             'next_due_at' => 'This triggers a dashboard alert closer to the due date.',
+            'specialist' => 'List filtered by entry type — farriers for "Farrier", vets for others. Manage the list in Stable → Specialists.',
         ],
     ],
 

@@ -33,6 +33,8 @@ return [
     'calendar_entries' => 'Bookings',
     'recurring_entry' => 'recurring session',
     'recurring_entries' => 'Recurring sessions',
+    'specialist' => 'specialist',
+    'specialists' => 'Specialists',
 
     'membership' => 'member',
     'memberships' => 'Members',
