@@ -96,6 +96,17 @@ class StartImpersonation
 
             Auth::loginUsingId($targetUser->id);
 
+            // Critical for impersonation: AuthenticateSession middleware on
+            // the /app panel compares Auth::user()->getAuthPassword() against
+            // the password_hash_<guard> stored in the session. If they differ
+            // (which they will, because we just swapped users), it calls
+            // logoutCurrentDevice() and bounces the browser back to login.
+            // Update the stored hash to match the new auth user so /app loads
+            // cleanly. The recaller cookie isn't in play here (we use plain
+            // session-based auth), so just the session key is sufficient.
+            $guard = config('auth.defaults.guard', 'web');
+            $session->put('password_hash_'.$guard, $targetUser->getAuthPassword());
+
             $this->audit->record(
                 'impersonation.start',
                 'User',
