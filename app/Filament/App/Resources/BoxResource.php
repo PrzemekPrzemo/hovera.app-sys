@@ -85,10 +85,7 @@ class BoxResource extends Resource
                     Forms\Components\TextInput::make('size_m2')
                         ->label(__('app/box.form.label.size_m2'))
                         ->numeric()->minValue(1)->maxValue(500),
-                    Forms\Components\TextInput::make('capacity')
-                        ->label(__('app/box.form.label.capacity'))
-                        ->helperText(__('app/box.form.helper.capacity'))
-                        ->numeric()->minValue(1)->maxValue(20)->default(1)->required(),
+                    Forms\Components\Hidden::make('capacity')->default(1),
                     PriceInput::make('monthly_rate_cents', __('app/box.form.label.monthly_rate'))
                         ->helperText(__('app/box.form.helper.monthly_rate')),
                     Forms\Components\Toggle::make('is_active')
@@ -127,13 +124,25 @@ class BoxResource extends Resource
                 Tables\Columns\TextColumn::make('size_m2')
                     ->label(__('app/box.table.column.size_m2'))
                     ->placeholder('—')->sortable()->toggleable(),
-                Tables\Columns\TextColumn::make('horses_count')
-                    ->label(__('app/box.table.column.horses_count'))
-                    ->counts('horses')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('capacity')
-                    ->label(__('app/box.table.column.capacity_short'))
-                    ->sortable(),
+                Tables\Columns\BadgeColumn::make('status')
+                    ->label(__('app/box.table.column.status'))
+                    ->getStateUsing(fn (Box $r) => $r->horses->isNotEmpty() ? 'occupied' : 'free')
+                    ->formatStateUsing(fn (string $state) => $state === 'free'
+                        ? __('app/box.table.status.free')
+                        : __('app/box.table.status.occupied'))
+                    ->colors([
+                        'success' => 'free',
+                        'gray' => 'occupied',
+                    ]),
+                Tables\Columns\TextColumn::make('horse_sex')
+                    ->label(__('app/box.table.column.horse_sex'))
+                    ->getStateUsing(function (Box $r) {
+                        $horse = $r->horses->first();
+
+                        return $horse?->sex ? HorseResource::sexOptions()[$horse->sex] ?? null : null;
+                    })
+                    ->placeholder('—')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('monthly_rate_cents')
                     ->label(__('app/box.table.column.monthly_rate'))
                     ->formatStateUsing(fn (?int $state) => $state !== null ? number_format($state / 100, 2, ',', ' ').' zł' : '—')
@@ -163,7 +172,9 @@ class BoxResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([SoftDeletingScope::class])
+            ->with(['horses' => fn ($q) => $q->select('id', 'box_id', 'sex')]);
     }
 
     public static function getPages(): array

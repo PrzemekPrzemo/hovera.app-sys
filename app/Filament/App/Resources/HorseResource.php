@@ -48,15 +48,13 @@ class HorseResource extends Resource
     protected static ?int $navigationSort = 10;
 
     /** @return array<string,string> */
-    private static function sexOptions(): array
+    public static function sexOptions(): array
     {
         return [
             'mare' => __('app/horse.sex.mare'),
-            'stallion' => __('app/horse.sex.stallion'),
             'gelding' => __('app/horse.sex.gelding'),
-            'filly' => __('app/horse.sex.filly'),
-            'colt' => __('app/horse.sex.colt'),
-            'foal' => __('app/horse.sex.foal'),
+            'stallion' => __('app/horse.sex.stallion'),
+            'breeding_stallion' => __('app/horse.sex.breeding_stallion'),
         ];
     }
 
