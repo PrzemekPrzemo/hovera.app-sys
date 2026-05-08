@@ -54,4 +54,9 @@ return [
         'overdue_by_days' => '{1} overdue by 1 day|[2,*] overdue by :days days',
         'in_days' => '{0} today|{1} tomorrow|[2,*] in :days days',
     ],
+
+    'help' => [
+        'navigation' => 'Help',
+        'title' => 'User manual',
+    ],
 ];
