@@ -109,7 +109,7 @@ class InvoicingSettings extends Page implements HasForms
                             ->placeholder(__('app/invoicing_settings.form.label.prefix_placeholder'))->maxLength(16),
                         Forms\Components\Radio::make('reset_interval')
                             ->label(__('app/invoicing_settings.form.label.reset_interval'))
-                            ->options(InvoiceNumberGenerator::RESET_OPTIONS)
+                            ->options(InvoiceNumberGenerator::resetOptions())
                             ->default('yearly')
                             ->required(),
                         Forms\Components\TextInput::make('default_due_days')

@@ -29,4 +29,10 @@ return [
     'action' => [
         'saved' => 'Zapisano ustawienia faktur',
     ],
+
+    'reset_options' => [
+        'yearly' => 'Rocznie (start od 1 w nowym roku)',
+        'monthly' => 'Miesięcznie (start od 1 co miesiąc)',
+        'never' => 'Nigdy (numeracja ciągła)',
+    ],
 ];
