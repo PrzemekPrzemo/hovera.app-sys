@@ -130,6 +130,22 @@ class ClientResource extends Resource
                         ),
                 ]),
 
+            Forms\Components\Section::make(__('app/client.form.section.armir'))
+                ->description(__('app/client.form.section.armir_description'))
+                ->columns(2)
+                ->schema([
+                    Forms\Components\TextInput::make('armir_producer_id')
+                        ->label(__('app/client.form.label.armir_producer_id'))
+                        ->placeholder(__('app/client.form.label.armir_producer_id_placeholder'))
+                        ->maxLength(32)
+                        ->helperText(__('app/client.form.helper.armir_producer_id')),
+                    Forms\Components\TextInput::make('pesel')
+                        ->label(__('app/client.form.label.pesel'))
+                        ->maxLength(11)
+                        ->placeholder('00000000000')
+                        ->helperText(__('app/client.form.helper.pesel')),
+                ]),
+
             Forms\Components\Section::make(__('app/client.form.section.address'))
                 ->collapsed()
                 ->columns(4)
@@ -230,6 +246,13 @@ class ClientResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            ClientResource\RelationManagers\HorsesRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
