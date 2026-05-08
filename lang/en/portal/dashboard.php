@@ -62,8 +62,5 @@ return [
         'ok_pill' => 'OK',
     ],
 
-    'unread_messages' => [
-        'one' => '📬 :count new message',
-        'other' => '📬 :count new messages',
-    ],
+    'unread_messages' => '{0} 📬 :count new messages|{1} 📬 :count new message|[2,*] 📬 :count new messages',
 ];
