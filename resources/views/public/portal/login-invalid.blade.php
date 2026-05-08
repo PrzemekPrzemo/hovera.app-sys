@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Link nieaktywny — {{ $tenant->name }}</title>
+    <title>{{ __('portal/login.invalid.title', ['tenant' => $tenant->name]) }}</title>
     <meta name="robots" content="noindex">
     <style>
         :root { --primary: {{ $primary_color }}; }
@@ -25,9 +25,9 @@
 <body>
     <div class="card">
         <div class="icon">⚠️</div>
-        <h1>Link nieaktywny</h1>
-        <p>Ten link logowania wygasł lub został już użyty. Linki są jednorazowe i ważne 30 minut.</p>
-        <a class="btn" href="{{ route('client_portal.login.show', ['slug' => $tenant->slug]) }}">Wyślij nowy link</a>
+        <h1>{{ __('portal/login.invalid.heading') }}</h1>
+        <p>{{ __('portal/login.invalid.body') }}</p>
+        <a class="btn" href="{{ route('client_portal.login.show', ['slug' => $tenant->slug]) }}">{{ __('portal/login.invalid.request_new') }}</a>
     </div>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sprawdź skrzynkę — {{ $tenant->name }}</title>
+    <title>{{ __('portal/login.sent.title', ['tenant' => $tenant->name]) }}</title>
     <meta name="robots" content="noindex">
     <style>
         :root { --primary: {{ $primary_color }}; }
@@ -28,13 +28,10 @@
 <body>
     <div class="card">
         <div class="icon">📧</div>
-        <h1>Sprawdź skrzynkę</h1>
-        <p>
-            Jeśli adres <strong>{{ $email }}</strong> jest powiązany z kontem w
-            <strong>{{ $tenant->name }}</strong>, wysłaliśmy link do logowania.
-        </p>
-        <p>Link działa przez 30 minut.</p>
-        <a class="secondary" href="{{ route('client_portal.login.show', ['slug' => $tenant->slug]) }}">← Wróć</a>
+        <h1>{{ __('portal/login.sent.heading') }}</h1>
+        <p>{!! __('portal/login.sent.body', ['email' => e($email), 'tenant' => e($tenant->name)]) !!}</p>
+        <p>{{ __('portal/login.sent.ttl') }}</p>
+        <a class="secondary" href="{{ route('client_portal.login.show', ['slug' => $tenant->slug]) }}">{{ __('portal/login.sent.back') }}</a>
     </div>
 </body>
 </html>

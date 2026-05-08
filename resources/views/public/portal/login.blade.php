@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Panel klienta — {{ $tenant->name }}</title>
+    <title>{{ __('portal/login.login.title', ['tenant' => $tenant->name]) }}</title>
     <meta name="robots" content="noindex">
     <style>
         :root { --primary: {{ $primary_color }}; }
@@ -31,18 +31,18 @@
 </head>
 <body>
     <div class="card">
-        <h1>Panel klienta — {{ $tenant->name }}</h1>
-        <p>Wpisz adres e-mail, na który zostały wysyłane potwierdzenia rezerwacji. Otrzymasz link do logowania.</p>
+        <h1>{{ __('portal/login.login.heading', ['tenant' => $tenant->name]) }}</h1>
+        <p>{{ __('portal/login.login.intro') }}</p>
 
         <form method="post" action="{{ route('client_portal.login.submit', ['slug' => $tenant->slug]) }}">
             @csrf
-            <label for="email">E-mail</label>
+            <label for="email">{{ __('portal/login.login.email') }}</label>
             <input id="email" type="email" name="email" required autofocus placeholder="ty@example.com" value="{{ old('email') }}">
             @error('email')<div class="error">{{ $message }}</div>@enderror
-            <button type="submit">Wyślij link logowania</button>
+            <button type="submit">{{ __('portal/login.login.submit') }}</button>
         </form>
 
-        <a class="secondary" href="{{ url('/s/' . $tenant->slug) }}">← Wróć do strony stajni</a>
+        <a class="secondary" href="{{ url('/s/' . $tenant->slug) }}">{{ __('portal/login.login.back') }}</a>
     </div>
 </body>
 </html>
