@@ -30,6 +30,7 @@ return [
     'boarding_services' => 'Cennik pensji',
     'instructors' => 'Instruktorzy',
     'employees' => 'Pracownicy',
+    'team_members' => 'Pracownicy stajni',
     'health_records' => 'Opieka i zdrowie',
     'specialists' => 'Specjaliści',
 

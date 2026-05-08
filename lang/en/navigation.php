@@ -28,6 +28,7 @@ return [
     'boarding_services' => 'Boarding pricing',
     'instructors' => 'Instructors',
     'employees' => 'Employees',
+    'team_members' => 'Team members',
     'health_records' => 'Care & health',
     'specialists' => 'Specialists',
 
