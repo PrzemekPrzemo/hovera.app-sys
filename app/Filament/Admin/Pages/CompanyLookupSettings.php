@@ -62,30 +62,30 @@ class CompanyLookupSettings extends Page implements HasForms
         return $form
             ->statePath('data')
             ->schema([
-                Forms\Components\Section::make('GUS BIR (REGON)')
-                    ->description('API kluczyk wydaje GUS po rejestracji na https://api.stat.gov.pl. Bezpłatny. Klucz rotuje co kwartał — pamiętaj o wymianie.')
+                Forms\Components\Section::make(__('admin/company_lookup.form.section.gus'))
+                    ->description(__('admin/company_lookup.form.section.gus_description'))
                     ->schema([
                         Forms\Components\TextInput::make('gus_api_key')
-                            ->label('Klucz API GUS')
+                            ->label(__('admin/company_lookup.form.label.gus_api_key'))
                             ->password()
                             ->revealable()
-                            ->helperText('Klucz testowy z dokumentacji GUS: abcde12345abcde12345 (działa tylko ze środowiskiem test).'),
+                            ->helperText(__('admin/company_lookup.form.helper.gus_api_key')),
                         Forms\Components\Radio::make('gus_env')
-                            ->label('Środowisko')
+                            ->label(__('admin/company_lookup.form.label.gus_env'))
                             ->options([
-                                'test' => 'Test (wyszukiwarkaregontest.stat.gov.pl)',
-                                'prod' => 'Produkcyjne (wyszukiwarkaregon.stat.gov.pl)',
+                                'test' => __('admin/company_lookup.form.options.env_test'),
+                                'prod' => __('admin/company_lookup.form.options.env_prod'),
                             ])
                             ->default('test')
                             ->required(),
                     ]),
 
-                Forms\Components\Section::make('KRS (publiczne API)')
-                    ->description('KRS Open Data API jest publiczne i nie wymaga konfiguracji. Hovera korzysta z https://api-krs.ms.gov.pl. Cache 30 dni.')
+                Forms\Components\Section::make(__('admin/company_lookup.form.section.krs'))
+                    ->description(__('admin/company_lookup.form.section.krs_description'))
                     ->schema([
                         Forms\Components\Placeholder::make('krs_status')
-                            ->label('Status')
-                            ->content('✓ Włączone (publiczne API, brak konfiguracji)'),
+                            ->label(__('admin/company_lookup.form.label.krs_status'))
+                            ->content(__('admin/company_lookup.form.options.krs_enabled')),
                     ]),
             ]);
     }
@@ -100,6 +100,6 @@ class CompanyLookupSettings extends Page implements HasForms
         }
         SystemSetting::setValue('gus.env', (string) ($form['gus_env'] ?? 'test'));
 
-        Notification::make()->title('Zapisano konfigurację GUS / KRS')->success()->send();
+        Notification::make()->title(__('admin/company_lookup.action.saved'))->success()->send();
     }
 }
