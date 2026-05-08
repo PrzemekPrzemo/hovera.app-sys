@@ -64,10 +64,18 @@ return [
 
     'action' => [
         'issue_portal_link' => [
-            'label' => 'Wygeneruj link portalu',
+            'label' => 'Skopiuj link portalu',
             'modal_heading' => 'Wygenerować link logowania dla :name?',
             'modal_description' => 'Tworzy jednorazowy magic link (TTL 30 min). Możesz go skopiować i wysłać klientowi ręcznie, np. SMS-em lub Messengerem. Nie wymaga maila.',
             'success_title' => 'Link logowania utworzony',
+        ],
+        'email_portal_link' => [
+            'label' => 'Wyślij link na e-mail',
+            'modal_heading' => 'Wysłać link logowania do :name?',
+            'modal_description' => 'Wyślemy email z linkiem logowania na adres :email. Link działa 30 minut, jednorazowo.',
+            'success_title' => 'Link wysłany',
+            'success_body' => 'Email z linkiem logowania wysłany na :email.',
+            'no_email' => 'Klient nie ma adresu e-mail w profilu.',
         ],
     ],
 ];

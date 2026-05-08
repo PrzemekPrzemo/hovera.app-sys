@@ -6,6 +6,7 @@ namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\ClientResource\Pages;
 use App\Models\Tenant\Client;
+use App\Notifications\ClientPortalMagicLinkNotification;
 use App\Services\CompanyLookup\CompanyLookupService;
 use App\Services\CompanyLookup\GusApiService;
 use App\Services\Portal\ClientPortalAuth;
@@ -236,6 +237,44 @@ class ClientResource extends Resource
                             ->title(__('app/client.action.issue_portal_link.success_title'))
                             ->body($url)
                             ->persistent()
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('email_portal_link')
+                    ->label(__('app/client.action.email_portal_link.label'))
+                    ->icon('heroicon-o-envelope')
+                    ->color('success')
+                    ->visible(fn (Client $r) => ! $r->trashed() && ! empty($r->email))
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Client $r) => __('app/client.action.email_portal_link.modal_heading', ['name' => $r->name]))
+                    ->modalDescription(fn (Client $r) => __('app/client.action.email_portal_link.modal_description', ['email' => $r->email]))
+                    ->action(function (Client $record, ClientPortalAuth $auth, TenantManager $tm) {
+                        $tenant = $tm->tenantOrFail();
+                        if (empty($record->email)) {
+                            Notification::make()->danger()
+                                ->title(__('app/client.action.email_portal_link.no_email'))
+                                ->send();
+
+                            return;
+                        }
+
+                        $url = $auth->issueMagicLink($record, $tenant->slug);
+
+                        \Illuminate\Support\Facades\Notification::route('mail', $record->email)
+                            ->notify(new ClientPortalMagicLinkNotification(
+                                tenantName: $tenant->name,
+                                magicLinkUrl: $url,
+                                ttlMinutes: 30,
+                            ));
+
+                        app(TenantAuditLogger::class)->record('client.portal_link_emailed', 'Client', $record->id, [
+                            'name' => $record->name,
+                            'email' => $record->email,
+                        ]);
+
+                        Notification::make()
+                            ->success()
+                            ->title(__('app/client.action.email_portal_link.success_title'))
+                            ->body(__('app/client.action.email_portal_link.success_body', ['email' => $record->email]))
                             ->send();
                     }),
                 Tables\Actions\DeleteAction::make()->after(self::auditCallback('client.delete')),
