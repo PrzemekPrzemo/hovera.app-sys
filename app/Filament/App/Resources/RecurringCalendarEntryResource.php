@@ -52,30 +52,33 @@ class RecurringCalendarEntryResource extends Resource
 
     protected static ?int $navigationSort = 35;
 
-    /** @var array<int,string> */
-    private const DAYS_OF_WEEK = [
-        '1' => 'Poniedziałek',
-        '2' => 'Wtorek',
-        '3' => 'Środa',
-        '4' => 'Czwartek',
-        '5' => 'Piątek',
-        '6' => 'Sobota',
-        '0' => 'Niedziela',
-    ];
+    /** @return array<string,string> */
+    private static function daysOfWeek(): array
+    {
+        return [
+            '1' => __('app/recurring.days_of_week.1'),
+            '2' => __('app/recurring.days_of_week.2'),
+            '3' => __('app/recurring.days_of_week.3'),
+            '4' => __('app/recurring.days_of_week.4'),
+            '5' => __('app/recurring.days_of_week.5'),
+            '6' => __('app/recurring.days_of_week.6'),
+            '0' => __('app/recurring.days_of_week.0'),
+        ];
+    }
 
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Podstawowe')
+            Forms\Components\Section::make(__('app/recurring.form.section.basic'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\TextInput::make('name')
-                        ->label('Nazwa serii')
+                        ->label(__('app/recurring.form.label.name'))
                         ->required()
                         ->maxLength(160)
-                        ->placeholder('Szkółka pon. 17:00'),
+                        ->placeholder(__('app/recurring.form.label.name_placeholder')),
                     Forms\Components\Select::make('type')
-                        ->label('Typ')
+                        ->label(__('app/recurring.form.label.type'))
                         ->options(collect([
                             CalendarEntryType::LessonIndividual,
                             CalendarEntryType::LessonGroup,
@@ -84,79 +87,84 @@ class RecurringCalendarEntryResource extends Resource
                         ])->mapWithKeys(fn ($t) => [$t->value => $t->label()])->all())
                         ->default(CalendarEntryType::LessonIndividual->value)
                         ->required(),
-                    Forms\Components\TimePicker::make('starts_time')->label('Godzina rozpoczęcia')->required()->seconds(false),
+                    Forms\Components\TimePicker::make('starts_time')
+                        ->label(__('app/recurring.form.label.starts_time'))->required()->seconds(false),
                     Forms\Components\TextInput::make('duration_minutes')
-                        ->label('Czas trwania (min)')
+                        ->label(__('app/recurring.form.label.duration_minutes'))
                         ->numeric()
                         ->minValue(15)
                         ->default(60)
                         ->required(),
                 ]),
 
-            Forms\Components\Section::make('Powtarzalność')
+            Forms\Components\Section::make(__('app/recurring.form.section.recurrence'))
                 ->columns(3)
                 ->schema([
                     Forms\Components\Select::make('recurrence_pattern')
-                        ->label('Wzorzec')
+                        ->label(__('app/recurring.form.label.pattern'))
                         ->options(RecurrencePattern::options())
                         ->default(RecurrencePattern::Weekly->value)
                         ->required()
                         ->reactive(),
                     Forms\Components\TextInput::make('recurrence_interval')
-                        ->label('Co ile')
+                        ->label(__('app/recurring.form.label.interval'))
                         ->numeric()
                         ->minValue(1)
                         ->default(1)
-                        ->helperText('1 = każdy, 2 = co drugi…'),
+                        ->helperText(__('app/recurring.form.helper.interval')),
                     Forms\Components\CheckboxList::make('recurrence_days_of_week')
-                        ->label('Dni tygodnia')
-                        ->options(self::DAYS_OF_WEEK)
+                        ->label(__('app/recurring.form.label.days_of_week'))
+                        ->options(self::daysOfWeek())
                         ->columns(4)
                         ->visible(fn (Forms\Get $get) => $get('recurrence_pattern') === RecurrencePattern::Weekly->value)
                         ->columnSpanFull(),
-                    Forms\Components\DatePicker::make('recurrence_starts_on')->label('Od')->required(),
+                    Forms\Components\DatePicker::make('recurrence_starts_on')
+                        ->label(__('app/recurring.form.label.recurrence_starts_on'))->required(),
                     Forms\Components\DatePicker::make('recurrence_ends_on')
-                        ->label('Do (opcjonalne)')
+                        ->label(__('app/recurring.form.label.recurrence_ends_on'))
                         ->after('recurrence_starts_on')
-                        ->helperText('Puste = bez końca; expander generuje max 365 wystąpień jednorazowo.'),
+                        ->helperText(__('app/recurring.form.helper.recurrence_ends_on')),
                     Forms\Components\TextInput::make('max_occurrences')
-                        ->label('Limit wystąpień')
+                        ->label(__('app/recurring.form.label.max_occurrences'))
                         ->numeric()
                         ->minValue(1)
-                        ->placeholder('np. 26')
-                        ->helperText('Alternatywa do daty końcowej.'),
+                        ->placeholder(__('app/recurring.form.label.max_occurrences_placeholder'))
+                        ->helperText(__('app/recurring.form.helper.max_occurrences')),
                 ]),
 
-            Forms\Components\Section::make('Domyślne zasoby')
+            Forms\Components\Section::make(__('app/recurring.form.section.default_resources'))
                 ->columns(2)
                 ->collapsed()
                 ->schema([
                     Forms\Components\Select::make('horse_id')
-                        ->label('Koń')
+                        ->label(__('app/recurring.form.label.horse'))
                         ->options(fn () => Horse::query()->orderBy('name')->pluck('name', 'id'))
                         ->searchable(),
                     Forms\Components\Select::make('instructor_id')
-                        ->label('Instruktor')
+                        ->label(__('app/recurring.form.label.instructor'))
                         ->options(fn () => Instructor::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
                         ->searchable(),
                     Forms\Components\Select::make('arena_id')
-                        ->label('Ujeżdżalnia')
+                        ->label(__('app/recurring.form.label.arena'))
                         ->options(fn () => Arena::query()->where('is_active', true)->orderBy('sort_order')->pluck('name', 'id'))
                         ->searchable(),
                     Forms\Components\Select::make('client_id')
-                        ->label('Klient')
+                        ->label(__('app/recurring.form.label.client'))
                         ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id'))
                         ->searchable(),
                 ]),
 
-            Forms\Components\Section::make('Szczegóły')
+            Forms\Components\Section::make(__('app/recurring.form.section.details'))
                 ->collapsed()
                 ->columns(2)
                 ->schema([
-                    Forms\Components\TextInput::make('title')->label('Tytuł zajęć')->maxLength(160),
-                    PriceInput::make('price_cents', 'Cena'),
-                    Forms\Components\Toggle::make('is_active')->label('Aktywna seria')->default(true),
-                    Forms\Components\Textarea::make('notes')->label('Notatki')->rows(2)->columnSpanFull(),
+                    Forms\Components\TextInput::make('title')
+                        ->label(__('app/recurring.form.label.title'))->maxLength(160),
+                    PriceInput::make('price_cents', __('app/recurring.form.label.price')),
+                    Forms\Components\Toggle::make('is_active')
+                        ->label(__('app/recurring.form.label.is_active'))->default(true),
+                    Forms\Components\Textarea::make('notes')
+                        ->label(__('app/recurring.form.label.notes'))->rows(2)->columnSpanFull(),
                 ]),
         ]);
     }
@@ -165,68 +173,77 @@ class RecurringCalendarEntryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Nazwa')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->label(__('app/recurring.table.column.name'))->searchable()->sortable(),
                 Tables\Columns\BadgeColumn::make('type')
-                    ->label('Typ')
+                    ->label(__('app/recurring.table.column.type'))
                     ->formatStateUsing(fn (CalendarEntryType $state) => $state->label()),
                 Tables\Columns\TextColumn::make('recurrence_pattern')
-                    ->label('Wzorzec')
+                    ->label(__('app/recurring.table.column.pattern'))
                     ->formatStateUsing(fn (RecurrencePattern $state, RecurringCalendarEntry $r) => sprintf(
                         '%s × %d',
                         $state->label(),
                         $r->recurrence_interval,
                     )),
-                Tables\Columns\TextColumn::make('starts_time')->label('Godz.')->formatStateUsing(fn ($state) => substr((string) $state, 0, 5)),
-                Tables\Columns\TextColumn::make('duration_minutes')->label('Min')->toggleable(),
-                Tables\Columns\TextColumn::make('recurrence_starts_on')->label('Od')->date(),
-                Tables\Columns\TextColumn::make('recurrence_ends_on')->label('Do')->date()->placeholder('— bez końca —'),
+                Tables\Columns\TextColumn::make('starts_time')
+                    ->label(__('app/recurring.table.column.starts_time'))
+                    ->formatStateUsing(fn ($state) => substr((string) $state, 0, 5)),
+                Tables\Columns\TextColumn::make('duration_minutes')
+                    ->label(__('app/recurring.table.column.duration_minutes'))->toggleable(),
+                Tables\Columns\TextColumn::make('recurrence_starts_on')
+                    ->label(__('app/recurring.table.column.recurrence_starts_on'))->date(),
+                Tables\Columns\TextColumn::make('recurrence_ends_on')
+                    ->label(__('app/recurring.table.column.recurrence_ends_on'))
+                    ->date()->placeholder(__('app/recurring.table.column.recurrence_ends_on_empty')),
                 Tables\Columns\TextColumn::make('occurrences_count')
                     ->counts('occurrences')
-                    ->label('Wystąpień')
+                    ->label(__('app/recurring.table.column.occurrences_count'))
                     ->sortable(),
-                Tables\Columns\IconColumn::make('is_active')->label('Aktywna')->boolean(),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label(__('app/recurring.table.column.is_active'))->boolean(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')->label('Status'),
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label(__('app/recurring.table.filter.status')),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\Action::make('expand')
-                    ->label('Wygeneruj wystąpienia')
+                    ->label(__('app/recurring.action.expand.label'))
                     ->icon('heroicon-o-sparkles')
                     ->color('success')
                     ->action(function (RecurringCalendarEntry $record, CreateRecurringSeries $action) {
                         $result = $action->execute($record);
 
-                        $body = "Utworzono {$result['created']} wystąpień.";
+                        $body = __('app/recurring.action.expand.success_body', ['count' => $result['created']]);
                         if (count($result['skipped_conflicts']) > 0) {
-                            $body .= ' Pominięto z powodu konfliktu: '
-                                .implode(', ', array_slice($result['skipped_conflicts'], 0, 5))
-                                .(count($result['skipped_conflicts']) > 5 ? '…' : '').'.';
+                            $list = implode(', ', array_slice($result['skipped_conflicts'], 0, 5))
+                                .(count($result['skipped_conflicts']) > 5 ? '…' : '');
+                            $body .= __('app/recurring.action.expand.skipped', ['list' => $list]);
                         }
 
                         Notification::make()
                             ->success()
-                            ->title('Seria rozwinięta')
+                            ->title(__('app/recurring.action.expand.success_title'))
                             ->body($body)
                             ->persistent()
                             ->send();
                     }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('cancel_series')
-                    ->label('Anuluj serię')
+                    ->label(__('app/recurring.action.cancel_series.label'))
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->modalHeading('Anuluj całą serię')
-                    ->modalDescription('Wystąpienia w przeszłości zostaną zachowane, przyszłe odwołane.')
+                    ->modalHeading(__('app/recurring.action.cancel_series.modal_heading'))
+                    ->modalDescription(__('app/recurring.action.cancel_series.modal_description'))
                     ->action(function (RecurringCalendarEntry $record, DeleteRecurringSeries $action) {
                         $result = $action->execute($record);
                         Notification::make()
                             ->success()
-                            ->title('Seria anulowana')
-                            ->body("Anulowano {$result['cancelled']} przyszłych wystąpień.")
+                            ->title(__('app/recurring.action.cancel_series.success_title'))
+                            ->body(__('app/recurring.action.cancel_series.success_body', ['count' => $result['cancelled']]))
                             ->send();
                     }),
                 Tables\Actions\RestoreAction::make(),
