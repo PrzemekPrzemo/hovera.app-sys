@@ -15,14 +15,7 @@ enum CalendarEntryType: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::LessonIndividual => 'Jazda indywidualna',
-            self::LessonGroup => 'Jazda grupowa',
-            self::Training => 'Trening',
-            self::Care => 'Opieka (wet/kowal)',
-            self::Event => 'Wydarzenie',
-            self::Block => 'Blokada',
-        };
+        return __('enums.calendar_entry_type.'.$this->value);
     }
 
     /**

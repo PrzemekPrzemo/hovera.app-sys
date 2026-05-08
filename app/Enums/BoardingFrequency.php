@@ -20,12 +20,7 @@ enum BoardingFrequency: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Daily => 'Dziennie',
-            self::Monthly => 'Miesięcznie',
-            self::PerUse => 'Za użycie',
-            self::Once => 'Jednorazowo',
-        };
+        return __('enums.boarding_frequency.'.$this->value);
     }
 
     /** @return array<string,string> */

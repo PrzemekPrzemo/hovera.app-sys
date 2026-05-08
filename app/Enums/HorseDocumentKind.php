@@ -21,16 +21,7 @@ enum HorseDocumentKind: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Passport => 'Paszport konia',
-            self::Contract => 'Umowa pensjonatu',
-            self::Insurance => 'Polisa / ubezpieczenie',
-            self::VaccineBook => 'Książka szczepień',
-            self::OwnershipProof => 'Dowód własności',
-            self::CompetitionLicence => 'Licencja zawodnicza',
-            self::VetCertificate => 'Zaświadczenie weterynaryjne',
-            self::Other => 'Inny',
-        };
+        return __('enums.horse_document_kind.'.$this->value);
     }
 
     public function icon(): string

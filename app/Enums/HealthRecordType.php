@@ -17,16 +17,7 @@ enum HealthRecordType: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Vaccination => 'Szczepienie',
-            self::Deworming => 'Odrobaczanie',
-            self::VetVisit => 'Wizyta weterynaryjna',
-            self::Farrier => 'Kowal',
-            self::Dentist => 'Dentysta',
-            self::CheckUp => 'Badanie kontrolne',
-            self::Medication => 'Leki',
-            self::Other => 'Inne',
-        };
+        return __('enums.health_record_type.'.$this->value);
     }
 
     public function icon(): string

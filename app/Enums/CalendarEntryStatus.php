@@ -14,13 +14,7 @@ enum CalendarEntryStatus: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Requested => 'Zgłoszone',
-            self::Confirmed => 'Potwierdzone',
-            self::Cancelled => 'Anulowane',
-            self::Completed => 'Zakończone',
-            self::NoShow => 'Nieobecność',
-        };
+        return __('enums.calendar_entry_status.'.$this->value);
     }
 
     /**

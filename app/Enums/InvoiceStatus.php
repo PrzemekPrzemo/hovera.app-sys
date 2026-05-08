@@ -27,14 +27,7 @@ enum InvoiceStatus: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::Draft => 'Wersja robocza',
-            self::Issued => 'Wystawiona',
-            self::Paid => 'Opłacona',
-            self::Overdue => 'Po terminie',
-            self::Void => 'Anulowana',
-            self::Cancelled => 'Skorygowana',
-        };
+        return __('enums.invoice_status.'.$this->value);
     }
 
     public function isTerminal(): bool
