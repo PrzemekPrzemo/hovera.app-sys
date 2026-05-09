@@ -58,49 +58,42 @@ class HorseUtilizationReport extends Page
     {
         $range = $this->range();
 
-        // Two-step: count entries grouped by horse_id, then enrich with name.
-        $counts = CalendarEntry::query()
-            ->selectRaw('horse_id, COUNT(*) as lesson_count, SUM(strftime(\'%s\', ends_at) - strftime(\'%s\', starts_at)) as seconds')
+        // Pull all rows and aggregate in PHP. Using `strftime` works on
+        // SQLite but not MySQL; `TIMESTAMPDIFF` flips the dependency the
+        // other way. Per-tenant calendar volume in a single month is
+        // small (< few thousand entries) so PHP-side grouping is cheap
+        // and DB-portable.
+        $entries = CalendarEntry::query()
             ->whereIn('status', [
                 CalendarEntryStatus::Confirmed->value,
                 CalendarEntryStatus::Completed->value,
             ])
             ->whereNotNull('horse_id')
             ->whereBetween('starts_at', [$range->start, $range->end])
+            ->get(['horse_id', 'starts_at', 'ends_at']);
+
+        $aggregated = $entries
             ->groupBy('horse_id')
-            ->orderByDesc('lesson_count')
-            ->get();
+            ->map(fn (Collection $group, $horseId) => [
+                'horse_id' => (string) $horseId,
+                'lesson_count' => $group->count(),
+                'seconds' => (int) $group->sum(
+                    fn ($e) => $e->starts_at->diffInSeconds($e->ends_at)
+                ),
+            ])
+            ->sortByDesc('lesson_count')
+            ->values();
 
-        // Use a generic time difference fallback for MySQL, then PHP-side
-        // recompute hours from `lesson_count * avg_minutes` if the seconds
-        // column is null (cross-DB compat).
-        if ($counts->isNotEmpty() && $counts->first()->seconds === null) {
-            $counts = $counts->map(function ($r) use ($range) {
-                $totalSeconds = (int) CalendarEntry::query()
-                    ->whereBetween('starts_at', [$range->start, $range->end])
-                    ->where('horse_id', $r->horse_id)
-                    ->whereIn('status', [
-                        CalendarEntryStatus::Confirmed->value,
-                        CalendarEntryStatus::Completed->value,
-                    ])
-                    ->get()
-                    ->sum(fn ($e) => $e->starts_at->diffInSeconds($e->ends_at));
-                $r->seconds = $totalSeconds;
-
-                return $r;
-            });
-        }
-
-        $horseIds = $counts->pluck('horse_id')->all();
+        $horseIds = $aggregated->pluck('horse_id')->all();
         $horses = Horse::query()
             ->whereIn('id', $horseIds)
             ->pluck('name', 'id');
 
-        $rows = $counts->map(fn ($r) => [
-            'horse_id' => (string) $r->horse_id,
-            'horse_name' => $horses->get($r->horse_id, '—'),
-            'lesson_count' => (int) $r->lesson_count,
-            'hours' => round(((int) $r->seconds) / 3600, 1),
+        $rows = $aggregated->map(fn (array $r) => [
+            'horse_id' => $r['horse_id'],
+            'horse_name' => $horses->get($r['horse_id'], '—'),
+            'lesson_count' => $r['lesson_count'],
+            'hours' => round($r['seconds'] / 3600, 1),
         ]);
 
         return [
