@@ -22,7 +22,7 @@ return [
 
     'terms' => [
         'title' => 'Regulamin świadczenia usługi hovera',
-        'intro' => 'Regulamin określa zasady korzystania z serwisu internetowego hovera dostępnego pod adresem app.hovera.app, świadczonego przez hovera sp. z o.o. (dalej: „Usługodawca"), na rzecz przedsiębiorców prowadzących stajnie jeździeckie i pokrewną działalność (dalej: „Klient" lub „Stajnia").',
+        'intro' => 'Regulamin określa zasady korzystania z serwisu internetowego hovera dostępnego pod adresem app.hovera.app, świadczonego przez Sendormeco Holding sp. z o.o. (dalej: „Usługodawca"), na rzecz przedsiębiorców prowadzących stajnie jeździeckie i pokrewną działalność (dalej: „Klient" lub „Stajnia").',
 
         'section_1_heading' => '1. Definicje',
         'section_1_body' => 'Usługa — system SaaS hovera służący do zarządzania stajnią (rezerwacje, klienci, konie, rozliczenia, komunikacja). Klient — przedsiębiorca, który zawarł umowę o świadczenie usługi. Użytkownik — osoba fizyczna korzystająca z usługi w imieniu Klienta (właściciel, instruktor, pracownik, jeździec). Trial — bezpłatny okres próbny trwający 30 dni od rejestracji. Plan — pakiet funkcjonalny opisany w cenniku.',
@@ -55,7 +55,7 @@ return [
         'section_10_body' => 'Usługodawca zastrzega prawo zmiany regulaminu. O zmianach Klient zostanie poinformowany pocztą elektroniczną z co najmniej 30-dniowym wyprzedzeniem. W przypadku braku akceptacji zmian Klient ma prawo wypowiedzieć umowę ze skutkiem natychmiastowym przed wejściem zmian w życie.',
 
         'section_11_heading' => '11. Kontakt',
-        'section_11_body' => 'Wszelkie pytania dotyczące regulaminu prosimy kierować na adres support@hovera.app. Dane Usługodawcy: hovera sp. z o.o., NIP: [do uzupełnienia], REGON: [do uzupełnienia], adres: [do uzupełnienia], wpisana do KRS pod numerem [do uzupełnienia].',
+        'section_11_body' => 'Wszelkie pytania dotyczące regulaminu prosimy kierować na adres support@hovera.app. Dane Usługodawcy: Sendormeco Holding sp. z o.o. z siedzibą w Warszawie, ul. Złota 75A/7, 00-819 Warszawa, NIP: 5252866457, REGON: 389194801, wpisana do rejestru przedsiębiorców KRS pod numerem 0000906110 prowadzonego przez Sąd Rejonowy dla m.st. Warszawy w Warszawie, XII Wydział Gospodarczy KRS, kapitał zakładowy 5 000 zł.',
     ],
 
     'privacy' => [
@@ -63,7 +63,7 @@ return [
         'intro' => 'Niniejsza polityka prywatności opisuje zasady przetwarzania danych osobowych Użytkowników serwisu hovera, zgodnie z rozporządzeniem RODO (UE 2016/679) oraz ustawą z dnia 10 maja 2018 r. o ochronie danych osobowych.',
 
         'section_1_heading' => '1. Administrator danych',
-        'section_1_body' => 'Administratorem danych osobowych jest hovera sp. z o.o. z siedzibą w Warszawie, NIP: [do uzupełnienia], REGON: [do uzupełnienia], adres: [do uzupełnienia]. Kontakt z administratorem: privacy@hovera.app. Inspektor Ochrony Danych (DPO): dpo@hovera.app.',
+        'section_1_body' => 'Administratorem danych osobowych jest Sendormeco Holding sp. z o.o. z siedzibą w Warszawie, ul. Złota 75A/7, 00-819 Warszawa, NIP: 5252866457, REGON: 389194801, KRS: 0000906110. Kontakt z administratorem: privacy@hovera.app. Inspektor Ochrony Danych (DPO): dpo@hovera.app.',
 
         'section_2_heading' => '2. Zakres przetwarzanych danych',
         'section_2_body' => 'W ramach rejestracji przetwarzamy: imię i nazwisko, adres e-mail, nazwę stajni oraz adres URL stajni. W ramach korzystania z usługi: adres IP, identyfikatory sesji i ciasteczek (cookies), dane techniczne urządzenia (user-agent), logi aktywności (czas logowania, akcje w panelu). Dane wprowadzone przez Klienta o jego klientach (jeźdźcach, koniach) przetwarzamy jako podmiot przetwarzający — na zasadach DPA (/dpa).',
@@ -92,10 +92,10 @@ return [
 
     'dpa' => [
         'title' => 'Umowa powierzenia przetwarzania danych osobowych (DPA)',
-        'intro' => 'Niniejsza umowa powierzenia (Data Processing Agreement) stanowi integralną część regulaminu i jest zawierana pomiędzy Klientem (Stajnią) jako Administratorem danych osobowych klientów stajni (jeźdźców, ich opiekunów, właścicieli koni) a hovera sp. z o.o. jako Podmiotem Przetwarzającym (procesorem), zgodnie z art. 28 RODO.',
+        'intro' => 'Niniejsza umowa powierzenia (Data Processing Agreement) stanowi integralną część regulaminu i jest zawierana pomiędzy Klientem (Stajnią) jako Administratorem danych osobowych klientów stajni (jeźdźców, ich opiekunów, właścicieli koni) a Sendormeco Holding sp. z o.o. jako Podmiotem Przetwarzającym (procesorem), zgodnie z art. 28 RODO.',
 
         'section_1_heading' => '1. Strony umowy i role',
-        'section_1_body' => 'Administrator: Klient (Stajnia), wprowadzający do systemu hovera dane swoich klientów, koni i pracowników. Procesor: hovera sp. z o.o., świadczący usługę SaaS do zarządzania stajnią. Każda ze stron pozostaje niezależnie odpowiedzialna za przetwarzanie danych w zakresie swoich obowiązków.',
+        'section_1_body' => 'Administrator: Klient (Stajnia), wprowadzający do systemu hovera dane swoich klientów, koni i pracowników. Procesor: Sendormeco Holding sp. z o.o., świadczący usługę SaaS do zarządzania stajnią. Każda ze stron pozostaje niezależnie odpowiedzialna za przetwarzanie danych w zakresie swoich obowiązków.',
 
         'section_2_heading' => '2. Przedmiot i czas przetwarzania',
         'section_2_body' => 'Procesor przetwarza powierzone dane wyłącznie w celu i zakresie niezbędnym do świadczenia usługi hovera (przechowywanie, prezentacja, kopie zapasowe, wysyłka powiadomień). Czas przetwarzania: czas trwania umowy głównej + 90 dni okresu karencji. Po upływie tego okresu dane są usuwane lub zwracane Administratorowi w formie eksportu (CSV/JSON) na jego żądanie.',
