@@ -11,6 +11,7 @@ return [
         'stable' => 'Stable',
         'settings' => 'Settings',
         'reports' => 'Reports',
+        'tools' => 'Tools',
     ],
 
     'tenants' => 'Stables',
