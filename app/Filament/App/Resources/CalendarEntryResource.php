@@ -89,6 +89,7 @@ class CalendarEntryResource extends Resource
                         ->label(__('app/calendar.form.label.horse'))
                         ->options(fn () => Horse::query()->orderBy('name')->pluck('name', 'id'))
                         ->searchable()
+                        ->visible(fn (Forms\Get $get) => CalendarEntryType::tryFrom((string) $get('type')) !== CalendarEntryType::LessonGroup)
                         ->required(fn (Forms\Get $get) => CalendarEntryType::tryFrom((string) $get('type'))?->requiresHorse() ?? false),
                     Forms\Components\Select::make('instructor_id')
                         ->label(__('app/calendar.form.label.instructor'))
@@ -102,7 +103,49 @@ class CalendarEntryResource extends Resource
                     Forms\Components\Select::make('client_id')
                         ->label(__('app/calendar.form.label.client'))
                         ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id'))
+                        ->visible(fn (Forms\Get $get) => CalendarEntryType::tryFrom((string) $get('type')) !== CalendarEntryType::LessonGroup)
                         ->searchable(),
+                ]),
+
+            Forms\Components\Section::make(__('app/calendar.form.section.participants'))
+                ->description(__('app/calendar.form.section.participants_description'))
+                ->visible(fn (Forms\Get $get) => CalendarEntryType::tryFrom((string) $get('type')) === CalendarEntryType::LessonGroup)
+                ->schema([
+                    Forms\Components\Repeater::make('participants')
+                        ->relationship('participants')
+                        ->label(__('app/calendar.form.label.participants'))
+                        ->columns(3)
+                        ->schema([
+                            Forms\Components\Select::make('client_id')
+                                ->label(__('app/calendar.form.label.participant_client'))
+                                ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id'))
+                                ->searchable()
+                                ->required(),
+                            Forms\Components\Select::make('horse_id')
+                                ->label(__('app/calendar.form.label.participant_horse'))
+                                ->options(fn () => Horse::query()->orderBy('name')->pluck('name', 'id'))
+                                ->searchable()
+                                ->placeholder(__('app/calendar.form.label.participant_horse_placeholder')),
+                            Forms\Components\Select::make('attendance_status')
+                                ->label(__('app/calendar.form.label.participant_attendance'))
+                                ->options([
+                                    'expected' => __('app/calendar.attendance.expected'),
+                                    'present' => __('app/calendar.attendance.present'),
+                                    'absent' => __('app/calendar.attendance.absent'),
+                                    'late' => __('app/calendar.attendance.late'),
+                                ])
+                                ->default('expected')
+                                ->required(),
+                            Forms\Components\TextInput::make('notes')
+                                ->label(__('app/calendar.form.label.participant_notes'))
+                                ->maxLength(255)
+                                ->columnSpanFull(),
+                        ])
+                        ->itemLabel(fn (array $state): ?string => $state['client_id'] ?? null)
+                        ->addActionLabel(__('app/calendar.actions.add_participant'))
+                        ->reorderable(false)
+                        ->defaultItems(0)
+                        ->collapsible(),
                 ]),
 
             Forms\Components\Section::make(__('app/calendar.form.section.details'))
@@ -142,13 +185,23 @@ class CalendarEntryResource extends Resource
                     ->label(__('app/calendar.table.column.type'))
                     ->formatStateUsing(fn (CalendarEntryType $state) => $state->label()),
                 Tables\Columns\TextColumn::make('horse.name')
-                    ->label(__('app/calendar.table.column.horse'))->placeholder('—')->toggleable(),
+                    ->label(__('app/calendar.table.column.horse'))
+                    ->placeholder('—')
+                    ->getStateUsing(fn (CalendarEntry $r) => $r->isGroupLesson()
+                        ? trans_choice('app/calendar.table.participant_count', $r->participantCount(), ['count' => $r->participantCount()])
+                        : $r->horse?->name)
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('instructor.name')
                     ->label(__('app/calendar.table.column.instructor'))->placeholder('—')->toggleable(),
                 Tables\Columns\TextColumn::make('arena.name')
                     ->label(__('app/calendar.table.column.arena'))->placeholder('—')->toggleable(),
                 Tables\Columns\TextColumn::make('client.name')
-                    ->label(__('app/calendar.table.column.client'))->placeholder('—')->toggleable(),
+                    ->label(__('app/calendar.table.column.client'))
+                    ->placeholder('—')
+                    ->getStateUsing(fn (CalendarEntry $r) => $r->isGroupLesson()
+                        ? null
+                        : $r->client?->name)
+                    ->toggleable(),
                 Tables\Columns\BadgeColumn::make('status')
                     ->label(__('app/calendar.table.column.status'))
                     ->formatStateUsing(fn (CalendarEntryStatus $state) => $state->label())
