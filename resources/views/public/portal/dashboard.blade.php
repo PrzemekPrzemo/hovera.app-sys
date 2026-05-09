@@ -92,6 +92,9 @@
                 <span class="stable">{{ __('portal/dashboard.subtitle', ['tenant' => $tenant->name]) }}</span>
             </div>
             <div class="actions">
+                <a class="help-link" href="{{ route('client_portal.book.show', ['slug' => $tenant->slug]) }}" style="background: var(--primary); color: white; border-color: var(--primary);">
+                    + {{ __('portal/booking.heading') }}
+                </a>
                 <a class="help-link" href="{{ route('client_portal.help.show', ['slug' => $tenant->slug]) }}">{{ __('portal/help.cta') }}</a>
                 <form method="post" action="{{ route('client_portal.logout', ['slug' => $tenant->slug]) }}">
                     @csrf
@@ -102,6 +105,12 @@
 
         @if (session('reschedule_success'))
             <div class="flash">{{ __('portal/dashboard.flash.reschedule_success') }}</div>
+        @endif
+        @if (session('booking_requested'))
+            <div class="flash">{{ __('portal/booking.success_flash') }}</div>
+        @endif
+        @if (session('booking_disabled'))
+            <div class="flash" style="background:#fef3c7;color:#92400e;">{{ __('portal/booking.disabled_flash') }}</div>
         @endif
 
         <section class="section">

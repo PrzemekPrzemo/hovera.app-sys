@@ -163,6 +163,10 @@ Route::middleware(['web', 'throttle:30,1'])
         Route::delete('/horses/{horse}/documents/{document}', [ClientPortalController::class, 'deleteHorseDocument'])->name('horses.documents.delete');
         Route::get('/messages', [ClientPortalController::class, 'showMessages'])->name('messages.show');
         Route::get('/help', [ClientPortalController::class, 'showHelp'])->name('help.show');
+        Route::get('/book', [ClientPortalController::class, 'showBooking'])->name('book.show');
+        Route::post('/book', [ClientPortalController::class, 'submitBooking'])
+            ->middleware('throttle:10,1')
+            ->name('book.submit');
     });
 
 /*
