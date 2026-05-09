@@ -6,6 +6,7 @@
     <title>{{ __('public/signup.thanks_title') }} — hovera</title>
     <meta name="robots" content="noindex">
     <link rel="icon" href="{{ asset('favicon.svg') }}">
+    <x-pwa-head />
     <style>
         * { box-sizing: border-box; }
         html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #F7F4EF; color: #1F1A17; }
@@ -66,5 +67,7 @@
             <a href="mailto:support@hovera.app">support@hovera.app</a>
         </div>
     </div>
+
+    <x-pwa-register />
 </body>
 </html>

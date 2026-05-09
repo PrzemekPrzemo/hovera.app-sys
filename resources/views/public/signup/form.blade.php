@@ -6,6 +6,7 @@
     <title>{{ __('public/signup.title') }} — hovera</title>
     <meta name="robots" content="noindex">
     <link rel="icon" href="{{ asset('favicon.svg') }}">
+    <x-pwa-head />
     <style>
         :root { --primary: #A8956B; --primary-dark: #8F8576; --bg: #F7F4EF; --text: #1F1A17; }
         * { box-sizing: border-box; }
@@ -143,5 +144,7 @@
         }
         document.getElementById('slug').addEventListener('input', e => e.target.dataset.touched = '1');
     </script>
+
+    <x-pwa-register />
 </body>
 </html>
