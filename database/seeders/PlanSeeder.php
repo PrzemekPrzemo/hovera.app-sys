@@ -45,7 +45,7 @@ class PlanSeeder extends Seeder
                 'price_monthly_cents' => 34900,
                 'price_yearly_cents' => 335000,
                 'limits' => ['max_horses' => 100, 'max_clients' => null, 'max_seats' => 15, 'online_booking' => true],
-                'features' => ['ksef' => true, 'mobile' => true, 'ai_copilot' => false, 'livery' => true, 'passes' => true],
+                'features' => ['ksef' => true, 'mobile' => true, 'ai_copilot' => false, 'livery' => true, 'passes' => true, 'vanity_domain' => true],
                 'sort_order' => 30,
             ],
             [
@@ -55,7 +55,7 @@ class PlanSeeder extends Seeder
                 'price_yearly_cents' => 959000,
                 'limits' => ['max_horses' => null, 'max_clients' => null, 'max_seats' => null, 'online_booking' => true],
                 'features' => ['ksef' => true, 'peppol' => true, 'mobile' => true, 'ai_copilot' => true,
-                    'livery' => true, 'passes' => true, 'white_label' => true, 'sso' => true],
+                    'livery' => true, 'passes' => true, 'white_label' => true, 'sso' => true, 'vanity_domain' => true],
                 'sort_order' => 40,
             ],
         ];

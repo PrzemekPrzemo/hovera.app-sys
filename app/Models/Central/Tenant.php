@@ -25,6 +25,7 @@ class Tenant extends Model
         'country', 'locale', 'timezone', 'currency',
         'plan_id', 'status', 'trial_ends_at',
         'branding', 'settings',
+        'custom_domain', 'custom_domain_verified_at',
     ];
 
     protected function casts(): array
@@ -35,9 +36,29 @@ class Tenant extends Model
             'trial_ends_at' => 'datetime',
             'suspended_at' => 'datetime',
             'last_activity_at' => 'datetime',
+            'custom_domain_verified_at' => 'datetime',
             'health_score' => 'integer',
             'db_port' => 'integer',
         ];
+    }
+
+    /**
+     * True when this tenant has a custom domain that has been verified
+     * (DNS confirmed by the admin). Until verified, the middleware
+     * ignores the column to prevent half-configured CNAMEs from blackholing.
+     */
+    public function hasVerifiedCustomDomain(): bool
+    {
+        return $this->custom_domain !== null && $this->custom_domain_verified_at !== null;
+    }
+
+    /**
+     * Plan-level gate — only plans with `features.vanity_domain = true`
+     * may set a custom domain. Master admin flips the feature in plans.
+     */
+    public function planAllowsVanityDomain(): bool
+    {
+        return (bool) data_get($this->plan?->features ?? [], 'vanity_domain', false);
     }
 
     public function plan(): BelongsTo

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\HydrateTenantConnectionFromSession;
+use App\Http\Middleware\ResolveTenantByCustomDomain;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -32,6 +33,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // tylko panel auth). Konieczne żeby Livewire endpoints (np.
         // /livewire/update) miały tenant connection — bez tego pluck()
         // na BoardingService etc. wybucha z "Access denied for ''@'localhost'".
+        // Vanity domain resolver runs FIRST in the global stack — it
+        // rewrites the request path before route matching, so the
+        // public site / portal / booking respond at e.g.
+        // https://mojastajnia.pl/ instead of /s/mojastajnia/.
+        $middleware->prepend(ResolveTenantByCustomDomain::class);
+
         $middleware->web(append: [
             SetLocale::class,
             HydrateTenantConnectionFromSession::class,
