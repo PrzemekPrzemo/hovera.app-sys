@@ -8,8 +8,10 @@ use App\Filament\App\Resources\InstructorResource\Pages;
 use App\Filament\Components\PriceInput;
 use App\Models\Tenant\Instructor;
 use App\Services\TenantAuditLogger;
+use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -91,6 +93,32 @@ class InstructorResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                Tables\Actions\Action::make('ics_url')
+                    ->label(__('app/instructor.actions.ics_url'))
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('gray')
+                    ->modalHeading(fn (Instructor $r) => __('app/instructor.ics_modal.heading', ['name' => $r->name]))
+                    ->modalDescription(__('app/instructor.ics_modal.description'))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel(__('app/instructor.ics_modal.close'))
+                    ->form(fn (Instructor $r) => [
+                        Forms\Components\TextInput::make('url')
+                            ->label(__('app/instructor.ics_modal.url_label'))
+                            ->default(self::icsUrlFor($r))
+                            ->readOnly()
+                            ->extraAttributes(['onclick' => 'this.select();']),
+                        Forms\Components\Placeholder::make('howto')
+                            ->label('')
+                            ->content(__('app/instructor.ics_modal.howto')),
+                    ])
+                    ->action(function (Instructor $r) {
+                        // Sole purpose of action callback: lazy-create token if missing
+                        $r->ensureIcsToken();
+                        Notification::make()
+                            ->title(__('app/instructor.ics_modal.token_ensured'))
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make()->after(self::auditCallback('instructor.update')),
                 Tables\Actions\DeleteAction::make()->after(self::auditCallback('instructor.delete')),
                 Tables\Actions\RestoreAction::make()->after(self::auditCallback('instructor.restore')),
@@ -109,6 +137,21 @@ class InstructorResource extends Resource
             'create' => Pages\CreateInstructor::route('/create'),
             'edit' => Pages\EditInstructor::route('/{record}/edit'),
         ];
+    }
+
+    private static function icsUrlFor(Instructor $instructor): string
+    {
+        $tenant = app(TenantManager::class)->current();
+        $token = $instructor->ensureIcsToken();
+
+        if (! $tenant) {
+            return '';
+        }
+
+        return route('public.instructor_calendar', [
+            'slug' => $tenant->slug,
+            'token' => $token,
+        ]);
     }
 
     private static function auditCallback(string $action): callable

@@ -8,6 +8,7 @@ use App\Http\Controllers\Invitations\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\ClientPortalController;
+use App\Http\Controllers\Public\InstructorCalendarController;
 use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicInvoiceController;
@@ -95,6 +96,17 @@ Route::middleware('web')
     ->get('/'.$publicPrefix.'/{slug}', [PublicSiteController::class, 'show'])
     ->where('slug', $slugRegex)
     ->name('public.tenant');
+
+/*
+ * Public iCalendar feed for an instructor. Token-authenticated so calendar
+ * apps (Google / Outlook / Apple) can subscribe without login. Lightly
+ * throttled because the upstream apps poll every few hours.
+ */
+Route::middleware(['throttle:60,1'])
+    ->get('/'.$publicPrefix.'/{slug}/calendar/instructor/{token}.ics',
+        [InstructorCalendarController::class, 'show'])
+    ->where(['slug' => $slugRegex, 'token' => '[A-Za-z0-9]{40,80}'])
+    ->name('public.instructor_calendar');
 
 /*
  * Embed widgety — pojedyncze sekcje renderowane bez chrome (header/footer)
