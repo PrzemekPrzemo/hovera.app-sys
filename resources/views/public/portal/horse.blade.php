@@ -54,6 +54,11 @@
         .feeding-meal-head { font-weight: 600; color: var(--primary); margin-bottom: .35rem; font-size: .95rem; }
         .feeding-list { margin: 0; padding-left: 1.25rem; line-height: 1.6; color: #374151; }
         .feeding-list li { padding: .15rem 0; }
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .65rem; }
+        .photo-tile { display: block; position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 8px; background: #f3f4f6; text-decoration: none; }
+        .photo-tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s ease; }
+        .photo-tile:hover img { transform: scale(1.04); }
+        .photo-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: .35rem .55rem; background: linear-gradient(transparent, rgba(0,0,0,.65)); color: white; font-size: .8rem; }
         .activity { padding: .8rem 0; border-bottom: 1px solid #f3f4f6; }
         .activity:last-of-type { border-bottom: 0; }
         .activity-head { display: flex; justify-content: space-between; gap: .5rem; align-items: baseline; margin-bottom: .25rem; }
@@ -229,6 +234,27 @@
                     @endif
                 @endforeach
                 <small class="muted">{{ __('portal/horse.feeding_plan.disclaimer') }}</small>
+            </div>
+        @endif
+
+        @if ($photos->isNotEmpty())
+            <div class="card">
+                <h2>{{ __('portal/horse.sections.photos') }}</h2>
+                <div class="photo-grid">
+                    @foreach ($photos as $photo)
+                        <a class="photo-tile"
+                           href="{{ route('client_portal.horses.photos.view', ['slug' => $tenant->slug, 'horse' => $horse->id, 'photo' => $photo->id]) }}"
+                           target="_blank"
+                           rel="noopener">
+                            <img src="{{ route('client_portal.horses.photos.view', ['slug' => $tenant->slug, 'horse' => $horse->id, 'photo' => $photo->id]) }}"
+                                 alt="{{ $photo->caption ?: $horse->name }}"
+                                 loading="lazy">
+                            @if ($photo->caption)
+                                <span class="photo-caption">{{ $photo->caption }}</span>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
             </div>
         @endif
 

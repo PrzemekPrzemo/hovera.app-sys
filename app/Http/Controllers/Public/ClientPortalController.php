@@ -18,6 +18,7 @@ use App\Models\Tenant\Horse;
 use App\Models\Tenant\HorseDocument;
 use App\Models\Tenant\HorseFeedingPlanItem;
 use App\Models\Tenant\HorseMessage;
+use App\Models\Tenant\HorsePhoto;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\Pass;
 use App\Models\Tenant\PassUse;
@@ -357,6 +358,12 @@ class ClientPortalController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        $photos = HorsePhoto::query()
+            ->where('horse_id', $horse->id)
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
+            ->get();
+
         $feedingPlan = HorseFeedingPlanItem::query()
             ->where('horse_id', $horse->id)
             ->active()
@@ -373,6 +380,7 @@ class ClientPortalController extends Controller
             'activities' => $activities,
             'messages' => $messages,
             'documents' => $documents,
+            'photos' => $photos,
             'feeding_plan' => $feedingPlan,
             'estimated_monthly_cents' => $horse->estimatedMonthlyCostCents(),
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
@@ -496,6 +504,34 @@ class ClientPortalController extends Controller
         return redirect()
             ->route('client_portal.horses.show', ['slug' => $slug, 'horse' => $horseId])
             ->with('horse_document_uploaded', true);
+    }
+
+    public function viewHorsePhoto(Request $request, string $slug, string $horseId, string $photoId): StreamedResponse|RedirectResponse
+    {
+        $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $horse = Horse::query()
+            ->where('owner_client_id', $client->id)
+            ->find($horseId);
+        if (! $horse) {
+            abort(404);
+        }
+
+        $photo = HorsePhoto::query()
+            ->where('horse_id', $horse->id)
+            ->find($photoId);
+        if (! $photo || ! Storage::disk('local')->exists($photo->file_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->response($photo->file_path, $photo->original_name, [
+            'Content-Type' => $photo->mime,
+            'Cache-Control' => 'private, max-age=3600',
+        ]);
     }
 
     public function downloadHorseDocument(Request $request, string $slug, string $horseId, string $documentId): StreamedResponse|RedirectResponse

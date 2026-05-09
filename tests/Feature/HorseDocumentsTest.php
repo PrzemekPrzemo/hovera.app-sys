@@ -424,6 +424,23 @@ class HorseDocumentsTest extends TestCase
             $t->timestamp('updated_at')->useCurrent();
         });
 
+        Schema::connection('tenant')->create('horse_photos', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('horse_id', 26);
+            $t->string('file_path', 500);
+            $t->string('original_name', 255);
+            $t->string('mime', 120);
+            $t->unsignedBigInteger('size_bytes');
+            $t->string('caption', 255)->nullable();
+            $t->unsignedSmallInteger('sort_order')->default(0);
+            $t->string('uploaded_by_role', 16)->default('stable');
+            $t->string('uploaded_by_user_id', 26)->nullable();
+            $t->string('uploaded_by_client_id', 26)->nullable();
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+            $t->timestamp('deleted_at')->nullable();
+        });
+
         Schema::connection('tenant')->create('horse_documents', function ($t) {
             $t->string('id', 26)->primary();
             $t->string('horse_id', 26);

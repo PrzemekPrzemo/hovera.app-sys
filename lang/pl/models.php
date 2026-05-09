@@ -67,4 +67,6 @@ return [
     'feeding_plan' => 'Plan żywienia',
     'feed_item' => 'pozycja paszowa',
     'feed_items' => 'Magazyn paszy',
+    'horse_photo' => 'zdjęcie',
+    'horse_photos' => 'Galeria zdjęć',
 ];
