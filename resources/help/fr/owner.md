@@ -227,7 +227,76 @@ Dans le portail le client voit :
 
 ---
 
-## 14. Astuces
+## 14. Tableau de bord « Aujourd'hui » — `/app`
+
+Après connexion, 4 tuiles KPI en haut : 🗓️ Réservations du jour · 🟢 Boxes libres · 🔴 Soins en retard · 💸 Factures impayées. Chaque tuile mène à la liste filtrée. En dessous : tableau des réservations actives du jour.
+
+---
+
+## 15. Modèles de soins — `/app/treatment-templates`
+
+Presets réutilisables — un clic remplit type, description et date suggérée du prochain soin (`interval_days`).
+
+Chaque nouvelle écurie démarre avec 6 standards (vaccin tétanos/grippe, EHV, vermifuge, ferrage, dentiste, contrôle vétérinaire). Modifiables / désactivables / extensibles.
+
+Dans le formulaire Soins & santé, un select « Modèle de soin » apparaît.
+
+---
+
+## 16. Poids du cheval — onglet sur la fiche
+
+Saisir des mesures mensuelles (kg + sangle optionnelle). Colonne « Évolution » compare au précédent : 🟢 prise, 🟡 perte, ⚪ stable (< 5 kg).
+
+---
+
+## 17. Plan d'alimentation — onglet sur la fiche
+
+CRUD : moment (matin/midi/soir/nuit), aliment, quantité, notes. **Le propriétaire voit le plan dans le portail** sous « Plan d'alimentation » (lecture seule).
+
+---
+
+## 18. Stock de fourrage — `/app/feed-inventory`
+
+Articles avec stock (`SUM(delta)`) et seuil d'alerte. Action **« + Mouvement »** : achat / consommation / ajustement / perte. Articles sous le seuil affichent un badge dans la barre latérale. Onglet **Historique des mouvements** par article.
+
+---
+
+## 19. Galerie photos du cheval — onglet sur la fiche
+
+Upload JPG/PNG/WEBP/HEIC jusqu'à 10 Mo. Le propriétaire voit une grille dans le portail (1:1, lightbox). Séparé des Documents.
+
+---
+
+## 20. Export `.ics` instructeur
+
+Dans **Écurie → Instructeurs**, l'action **« Calendrier .ics »** affiche une URL de flux. À coller dans Google Calendar / Outlook / Apple via « Ajouter par URL ». Synchronise toutes les quelques heures. Fenêtre : 6 mois en arrière + 12 mois en avant.
+
+---
+
+## 21. Rapports — groupe de navigation « Rapports »
+
+Quatre pages mensuelles :
+
+- **Revenus** — totaux nets : pension / leçons / cartes / autres + top 10.
+- **Vieillissement des créances** — factures impayées 0–30 / 31–60 / 61–90 / 90+ jours avec dégradé.
+- **Utilisation cheval** — leçons par cheval + heures. >25 = risque de surcharge.
+- **Utilisation instructeur** — heures + présence % + annulées + absents.
+
+---
+
+## 22. Facturation en masse — `/app/bulk-invoicing`
+
+Génération massive de Brouillons FV pour un mois (Daily × jours, Monthly × quantité). Aperçu par client, sélection optionnelle, **« Générer les brouillons »**. Les cartes sont exclues (auto-FV à la vente). Chaque brouillon est ensuite **Émis** individuellement.
+
+---
+
+## 23. Réservation autonome dans le portail client
+
+Le client se connecte et clique « + Réserver une leçon » → choisit son cheval, l'instructeur, jour + créneau → envoyer. Dans le panneau de l'écurie, la réservation apparaît avec le statut **Demandée** + `metadata.source = client_portal`. À confirmer comme les autres.
+
+---
+
+## 24. Astuces
 
 - **Langue** — basculer dans le menu utilisateur (PL / EN / DE / FR) ; préférence par utilisateur
 - **Support** — support@hovera.app

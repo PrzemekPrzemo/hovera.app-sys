@@ -148,6 +148,14 @@ Menu utilisateur (haut à droite) → **Polski / English / Deutsch / Français**
 
 ---
 
+## 9a. Nouveaux modules qui vous concernent
+
+- **Plan d'alimentation du cheval** — l'onglet « Plan d'alimentation » sur la fiche du cheval indique précisément quoi donner et quand. Instructeur/Manager édite ; Employé lit et exécute.
+- **Stock de fourrage** — `/app/feed-inventory`. Sortie quotidienne : « + Mouvement » → « Consommation » → quantité → valider. Le stock diminue. Les articles sous le seuil affichent un badge.
+- **Poids du cheval** — Instructeur/Employé peut enregistrer la pesée mensuelle dans l'onglet « Poids » (kg + sangle optionnelle).
+
+---
+
 ## 10. Support
 
 - **Votre écurie** — propriétaire / admin (contact dans la fiche écurie),

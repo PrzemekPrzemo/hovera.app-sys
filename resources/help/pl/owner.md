@@ -291,7 +291,89 @@ W portalu klient widzi:
 
 ---
 
-## 14. Wskazówki
+## 14. Dashboard "Dziś" — `/app`
+
+Po zalogowaniu na górze widzisz 4 kafelki:
+- 🗓️ **Rezerwacje dziś** — klik wchodzi do kalendarza,
+- 🟢 **Wolne boksy** — klik do listy boksów,
+- 🔴 **Przeterminowane zabiegi** — klik do filtra w opiece i zdrowiu,
+- 💸 **Niezapłacone FV** — suma zł + count, klik do filtra Wystawione.
+
+Pod nimi tabela dzisiejszych aktywnych rezerwacji (godzina · koń · instruktor · manaż · status).
+
+---
+
+## 15. Szablony zabiegów — `/app/treatment-templates`
+
+Predefiniowane preset'y do wpisów opieki — jeden klik wypełnia typ, opis i sugerowany termin następnej wizyty na podstawie `interval_days`.
+
+Każdy nowy tenant dostaje 6 standardowych: szczepienie tężec/grypa (rocznie), EHV (półrocznie), odrobaczanie (3 mies.), kucie (6 tyg.), dentysta (rocznie), kontrola wet. (półrocznie). Możesz je edytować, dezaktywować lub dodać własne.
+
+W formularzu nowego wpisu w **Opieka i zdrowie** pojawia się select „Szablon zabiegu" — wybór auto-fill type/summary/details/next_due_at.
+
+---
+
+## 16. Karta wagi konia — tab w karcie konia
+
+Wpisuj pomiary co miesiąc (waga w kg + opcjonalnie obwód klatki). Kolumna „Zmiana" porównuje z poprzednim pomiarem: 🟢 przyrost, 🟡 spadek, ⚪ stabilnie (różnica < 5 kg).
+
+---
+
+## 17. Plan żywienia — tab w karcie konia
+
+CRUD: pora dnia (rano/południe/wieczór/noc), pasza, ilość, notatki. **Klient widzi plan w portalu** w sekcji „Plan żywienia" karty konia (read-only).
+
+---
+
+## 18. Magazyn paszy — `/app/feed-inventory`
+
+Lista pozycji paszowych ze stanem (`SUM(delta)`) i progiem alertu. Akcja **„+ Ruch magazynowy"** dodaje wpis (przyjęcie / wydanie / korekta / odpis); znaki ruchu wyliczane automatycznie. Karta pozycji ma tab **Historia ruchów** (audit log). Pozycje poniżej progu pokazują się z liczbowym badge'em w sidebarze.
+
+---
+
+## 19. Galeria zdjęć konia — tab w karcie konia
+
+Upload JPG/PNG/WEBP/HEIC do 10 MB. Klient widzi grid w portalu (kafle 1:1, lightbox). Osobno od dokumentów (paszporty / polisy zostają w tabie „Dokumenty").
+
+---
+
+## 20. Eksport `.ics` instruktora
+
+W **Stajnia → Instruktorzy** akcja **„Kalendarz .ics"** w wierszu → modal z URL feedu. Wklej w Google Calendar / Outlook / Apple jako „Dodaj kalendarz przez URL". Lekcje synchronizują się co kilka godzin. Window: 6 mies. wstecz + 12 wprzód. Anulowane lekcje = `STATUS:CANCELLED`.
+
+---
+
+## 21. Raporty — grupa nawigacji „Raporty"
+
+4 strony miesięczne (z pickerem miesiąca):
+
+- **Przychody** — sumy netto bucketed: pensjonat / lekcje / karnety / inne + top 10 pozycji.
+- **Wiekowanie należności** — niezapłacone po terminie kubełkowane: 0–30 / 31–60 / 61–90 / 90+ dni z gradientem barw.
+- **Wykorzystanie konia** — count lekcji per koń + suma godzin. >25 = ryzyko przeciążenia.
+- **Wykorzystanie instruktora** — godziny + frekwencja % + cancelled + no-show.
+
+---
+
+## 22. Bulk invoicing — `/app/bulk-invoicing`
+
+Masowe generowanie FV Draft za miesiąc dla wszystkich klientów na podstawie aktywnych usług pensji ich koni (`Daily × dni miesiąca`, `Monthly × quantity`).
+
+1. Wybierz miesiąc (default: poprzedni),
+2. Sprawdź podgląd (per-client lista pozycji + sumy),
+3. Zaznacz klientów lub zostaw wszystkich,
+4. **Generuj Drafty** → tworzy Draft Invoice per client.
+
+Karnety pomijane (mają auto-FV przy sprzedaży). Każdą Draft zatwierdzasz osobno w **Faktury → Wystaw** (numer + KSeF + mail).
+
+---
+
+## 23. Self-booking klienta w portalu
+
+Klient po zalogowaniu klika „+ Zarezerwuj lekcję" → wybiera swojego konia, instruktora, dzień + slot z dostępnych → submit. W panelu stajni rezerwacja pojawia się ze statusem **Oczekuje** + `metadata.source = client_portal`. Potwierdzasz tak samo jak inne rezerwacje.
+
+---
+
+## 24. Wskazówki
 
 - **Skróty z klawiatury** — `?` w panelu pokazuje listę skrótów
 - **Język** — przełącz w user menu (PL / EN / DE / FR); preferencja zapisuje się per user

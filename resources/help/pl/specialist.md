@@ -149,6 +149,13 @@ Menu użytkownika (prawy górny róg) → **Polski / English / Deutsch / França
 
 ---
 
+## 9a. Nowości
+
+- **Szablony zabiegów** — w formularzu nowego wpisu zdrowotnego pojawia się select „Szablon zabiegu". Wybór szablonu (np. „Kucie/korekcja") auto-wypełnia typ, opis, sugerowany termin następnej wizyty (np. +42 dni od dziś). Twoja stajnia ma 6 standardowych PL + może dodać własne.
+- **Plakietki w terminarzu** — przy oznaczaniu wizyty jako wykonanej, jeśli ustawisz „następną wizytę" → automatycznie utworzy się rezerwacja w kalendarzu jako *Oczekuje* — Ty lub stajnia ją potwierdzicie.
+
+---
+
 ## 10. Wsparcie
 
 - **Stajnia** — kontakt mailowy / telefoniczny widoczny w karcie stajni,

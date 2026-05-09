@@ -148,6 +148,14 @@ Menu użytkownika (prawy górny róg) → **Polski / English / Deutsch / França
 
 ---
 
+## 9a. Nowe moduły, które Cię dotyczą
+
+- **Plan żywienia konia** — w karcie konia tab „Plan żywienia" mówi dokładnie kto co o jakiej porze ma jeść. Dodawanie/edycja przez Trenera/Managera; Pracownik czyta i wykonuje.
+- **Magazyn paszy** — `/app/feed-inventory`. Codzienne wydania: klik „+ Ruch magazynowy" → typ „Wydanie / spożycie" → ilość (np. 12 kg) → zatwierdź. Stan się odejmuje. Gdy stan spadnie poniżej progu — w sidebarze pokaże się badge alertu.
+- **Wpisy aktywności i waga konia** — Trener/Pracownik może wpisać miesięczny pomiar wagi w tabie „Waga konia" (kg + opcjonalnie obwód klatki). Wykres trendu pomaga zauważyć spadki/przyrosty.
+
+---
+
 ## 10. Wsparcie
 
 - **Twoja stajnia** — właściciel / admin (kontakt w karcie stajni),

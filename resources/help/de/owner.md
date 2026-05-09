@@ -230,7 +230,76 @@ Im Portal sieht der Kunde:
 
 ---
 
-## 14. Tipps
+## 14. „Heute"-Dashboard — `/app`
+
+Nach der Anmeldung 4 KPI-Kacheln oben: 🗓️ Buchungen heute · 🟢 Freie Boxen · 🔴 Überfällige Behandlungen · 💸 Offene Rechnungen. Jede verlinkt zur entsprechenden Liste mit Filter. Darunter Tabelle der heutigen aktiven Buchungen.
+
+---
+
+## 15. Behandlungsvorlagen — `/app/treatment-templates`
+
+Wiederverwendbare Presets für Pflegeeinträge — ein Klick füllt Typ, Beschreibung und vorgeschlagenen Folgetermin (`interval_days`).
+
+Jeder neue Stall startet mit 6 Standards (Tetanus/Influenza, EHV, Entwurmung, Beschlag, Zahn, Vet-Check). Anpassbar / deaktivierbar / erweiterbar.
+
+Im Formular Pflege & Gesundheit erscheint ein Select „Behandlungsvorlage".
+
+---
+
+## 16. Pferdegewicht — Tab im Pferdeprofil
+
+Monatliche Wiegungen (kg + optional Brustumfang). Spalte „Änderung" vergleicht: 🟢 Zunahme, 🟡 Abnahme, ⚪ stabil (< 5 kg).
+
+---
+
+## 17. Fütterungsplan — Tab im Pferdeprofil
+
+CRUD: Tageszeit (Frühstück/Mittag/Abend/Nacht), Futter, Menge, Notizen. **Eigentümer sieht den Plan im Kundenportal** unter „Fütterungsplan" (read-only).
+
+---
+
+## 18. Futterlager — `/app/feed-inventory`
+
+Futterposten mit aktuellem Bestand (`SUM(delta)`) und Alarm-Schwelle. Aktion **„+ Lagerbewegung"** erfasst Eingang / Verbrauch / Korrektur / Verlust. Posten unter Schwelle zeigen Sidebar-Badge. Per-Posten Tab **Bewegungshistorie** (Audit-Log).
+
+---
+
+## 19. Pferde-Fotogalerie — Tab im Pferdeprofil
+
+Upload JPG/PNG/WEBP/HEIC bis 10 MB. Eigentümer sieht im Portal ein Grid (1:1, Lightbox). Getrennt von Dokumenten.
+
+---
+
+## 20. Instruktor-Kalender (.ics)
+
+In **Stall → Trainer** Reihen-Aktion **„Kalender .ics"** → Modal mit Feed-URL. In Google Calendar / Outlook / Apple einfügen über „Kalender per URL hinzufügen". Synchronisiert alle paar Stunden. Fenster: 6 Mo zurück + 12 Mo voraus.
+
+---
+
+## 21. Berichte — Navigationsgruppe „Berichte"
+
+Vier monatliche Seiten:
+
+- **Umsatz** — Netto bucketed: Pension / Lektionen / Mehrfachkarten / Andere + Top 10.
+- **Forderungsalterung** — überfällige Rechnungen 0–30 / 31–60 / 61–90 / 90+ Tage mit Farbgradient.
+- **Pferdeauslastung** — Lektionen pro Pferd + Stunden. >25 = Überlastungsrisiko.
+- **Trainerauslastung** — Stunden + Anwesenheit % + cancelled + no-show.
+
+---
+
+## 22. Bulk-Rechnungen — `/app/bulk-invoicing`
+
+Massenerstellung von Draft-Rechnungen für einen Monat (Daily × Tage, Monthly × Menge). Vorschau pro Kunde, Auswahl optional, **„Drafts erzeugen"**. Mehrfachkarten ausgeschlossen (Auto-FV bei Verkauf). Jede Draft anschließend einzeln **Ausstellen**.
+
+---
+
+## 23. Self-Booking im Kundenportal
+
+Kunde klickt im Portal „+ Lektion buchen" → wählt Pferd, Trainer, Tag + Slot → senden. Im Stall-Panel erscheint die Buchung mit Status **Angefragt** + `metadata.source = client_portal`. Bestätigen wie jede andere.
+
+---
+
+## 24. Tipps
 
 - **Sprache** — im Benutzermenü umschalten (PL / EN / DE / FR); Präferenz pro Benutzer gespeichert
 - **Support** — support@hovera.app

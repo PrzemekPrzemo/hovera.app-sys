@@ -8,6 +8,21 @@
 
 ## Recently shipped (porządek odwrotnie chronologiczny)
 
+### Druga runda rozszerzeń (PR #126–#129)
+- **Self-booking klienta** (#129) — w portalu klienta przycisk „+ Zarezerwuj lekcję", wybór konia (z ownership check) + instruktora + slotu. `CalendarEntry.metadata.source = client_portal`.
+- **Bulk invoicing** (#128) — `/app/bulk-invoicing`, masowe Drafty FV za miesiąc na podstawie aktywnych boarding services (Daily × dni, Monthly × quantity). Karnety pomijane.
+- **Raporty** (#127) — grupa „Raporty": przychody (bucketed pensjonat/lekcje/karnety), wiekowanie należności (0-30/31-60/61-90/90+), wykorzystanie konia, wykorzystanie instruktora.
+- **Eksport `.ics` instruktora** (#126) — token-auth feed `/s/{slug}/calendar/instructor/{token}.ics`, RFC 5545, window 6 mies. wstecz + 12 wprzód.
+
+### Pierwsza runda rozszerzeń (PR #120–#125)
+- **Galeria zdjęć konia** (#125) — tab w karcie konia + sekcja w portalu z gridem 1:1 i lightboxem.
+- **Magazyn paszy** (#124) — FeedItem + FeedStockMovement, low-stock badge w sidebarze, signed delta.
+- **Plan żywienia** (#123) — CRUD per koń + sekcja read-only w portalu klienta z grupowaniem po porach dnia.
+- **Karta wagi konia** (#122) — pomiary z kolumną „Zmiana" color-coded.
+- **Szablony zabiegów** (#121) — TreatmentTemplate + 6 PL standardów seed, integracja w HealthRecord form.
+- **Widget „Dziś"** (#120) — dashboard `/app` z 4 KPI + tabelą rezerwacji.
+
+### Dokumentacja i platforma
 - **Dokumentacja per rola** (#117 + #118 + #119) — manuale PL/EN/DE/FR dla owner / specialist / employee w `/app/help` (per-role dispatch wg `TenantMembership.role`) + manual klienta w `/s/{slug}/portal/help`. Markdown w `resources/help/{locale}/{role}.md`.
 - **Pretty URLs + reset hasła** (#116) — `/forgot-password`, `/reset-password` aliasy, "Wyślij link resetu" w `TeamMemberResource`.
 - **Dodawanie pracowników** (poprzednie PR) — `TeamMemberResource` + role (owner / admin / manager / instructor / employee / vet / viewer).

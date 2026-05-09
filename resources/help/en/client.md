@@ -213,6 +213,18 @@ The portal speaks four languages: **Polish / English / German / French**. By def
 
 ---
 
+## 9a. Feeding plan, photo gallery, self-booking
+
+**Feeding plan** — on the horse profile you'll find a "Feeding plan" section: what your horse eats and when (morning / midday / evening / night). The stable sets the plan; discuss changes via Messages or e-mail.
+
+**Photo gallery** — on the horse profile, the "Photo gallery" section shows photos uploaded by the stable (grid, click for full size). Separate from Documents.
+
+**Self-booking** — in the dashboard header there's a **+ Book a lesson** button. Pick your horse, instructor, day + slot (from available ones), optionally add notes. The stable confirms and you get an e-mail.
+
+> **Status after sending**: the booking appears as *Requested* in "Upcoming bookings". Once the stable confirms it switches to *Confirmed*.
+
+---
+
 ## 10. Common issues
 
 | Problem | What to do |

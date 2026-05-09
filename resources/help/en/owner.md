@@ -292,7 +292,89 @@ In the portal, client sees:
 
 ---
 
-## 14. Tips
+## 14. "Today" dashboard — `/app`
+
+After login, four KPI tiles up top:
+- 🗓️ **Bookings today** — clicks into calendar,
+- 🟢 **Vacant boxes** — clicks into box list,
+- 🔴 **Overdue care** — clicks into Care & health filter,
+- 💸 **Unpaid invoices** — total + count, clicks into Issued filter.
+
+Below: a table of today's active bookings (time · horse · instructor · arena · status).
+
+---
+
+## 15. Treatment templates — `/app/treatment-templates`
+
+Reusable presets for care entries — one click fills type, summary and suggested next-due date based on `interval_days`.
+
+Every new tenant gets 6 PL standards: tetanus/flu vaccination (yearly), EHV (semi-annual), deworming (3 mo), shoeing (6 wk), dental (yearly), vet check (semi-annual). You can edit, disable or add custom.
+
+In the **Care & health** form a "Treatment template" select appears — picking auto-fills type/summary/details/next_due_at.
+
+---
+
+## 16. Horse weight log — tab on horse profile
+
+Log monthly weight measurements (kg + optional heart girth). The "Change" column compares to the previous: 🟢 gain, 🟡 loss, ⚪ stable (`|diff| < 5 kg`).
+
+---
+
+## 17. Feeding plan — tab on horse profile
+
+CRUD: time of day (breakfast/midday/evening/night), feed, amount, notes. **Owner sees the plan in the client portal** under "Feeding plan" (read-only).
+
+---
+
+## 18. Feed inventory — `/app/feed-inventory`
+
+Feed items with current stock (`SUM(delta)`) and alert threshold. Action **"+ Stock movement"** logs purchase / consumption / adjustment / waste; signs computed from kind. The item profile has a **Movement history** tab (audit log). Items below threshold show a count badge in the sidebar.
+
+---
+
+## 19. Horse photo gallery — tab on horse profile
+
+Upload JPG/PNG/WEBP/HEIC up to 10 MB. Owner sees a grid in the portal (1:1 tiles, lightbox). Separate from Documents (passport / insurance stay there).
+
+---
+
+## 20. Instructor `.ics` export
+
+In **Stable → Instructors** the row action **"Calendar feed (.ics)"** opens a modal with a feed URL. Paste it into Google Calendar / Outlook / Apple as "Add calendar from URL". Lessons sync every few hours. Window: 6 mo back + 12 mo forward. Cancelled lessons → `STATUS:CANCELLED`.
+
+---
+
+## 21. Reports — "Reports" navigation group
+
+Four monthly pages (with month picker):
+
+- **Revenue** — net totals bucketed: boarding / lessons / passes / other + top 10 items.
+- **Receivables aging** — overdue unpaid invoices bucketed: 0–30 / 31–60 / 61–90 / 90+ days with color gradient.
+- **Horse utilization** — lessons per horse + total hours. >25 = overwork risk.
+- **Instructor utilization** — hours + attendance % + cancelled + no-show.
+
+---
+
+## 22. Bulk invoicing — `/app/bulk-invoicing`
+
+Mass-generate Draft invoices for all clients for a month based on each horse's active boarding services (`Daily × days`, `Monthly × quantity`).
+
+1. Pick the month (default: previous),
+2. Review the preview (per-client items + totals),
+3. Tick clients or leave none = all,
+4. **Generate Drafts** → one Draft invoice per client.
+
+Passes are skipped (auto-FV at sale). Each Draft is then issued individually in **Invoices → Issue** (number + KSeF + e-mail).
+
+---
+
+## 23. Client self-booking via portal
+
+Client logs in and clicks "+ Book a lesson" → picks own horse, instructor, day + slot from the available ones → submit. In the stable panel the booking appears with status **Requested** + `metadata.source = client_portal`. Confirm just like any other booking.
+
+---
+
+## 24. Tips
 
 - **Keyboard shortcuts** — `?` in the panel shows the list
 - **Language** — switch in user menu (PL / EN / DE / FR); preference saved per user
