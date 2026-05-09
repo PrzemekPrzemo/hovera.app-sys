@@ -15,6 +15,8 @@ use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicInvoiceController;
 use App\Http\Controllers\Public\PublicSiteController;
 use App\Http\Controllers\Public\SignupController;
+use App\Http\Controllers\Public\StripeWebhookController;
+use App\Http\Controllers\Tenant\BillingController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
 use Illuminate\Support\Facades\Route;
 
@@ -106,6 +108,29 @@ Route::middleware(['web', 'auth'])->prefix('impersonation')->name('impersonation
     Route::get('/start', [ImpersonationController::class, 'start'])->name('start');
     Route::post('/stop', [ImpersonationController::class, 'stop'])->name('stop');
 });
+
+/*
+ * Central hovera billing — tenant owners pick a plan, Stripe Checkout
+ * handles payment, Customer Portal handles upgrades/cancellations.
+ *
+ * Auth + tenant context come from the standard `web` + `auth` stack.
+ * Role gate (owner/admin) is enforced inside BillingController.
+ */
+Route::middleware(['web', 'auth'])->prefix('app/billing')->name('billing.')->group(function () {
+    Route::get('/', [BillingController::class, 'show'])->name('show');
+    Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout');
+    Route::get('/return', [BillingController::class, 'return'])->name('return');
+    Route::post('/portal', [BillingController::class, 'portal'])->name('portal');
+});
+
+/*
+ * Stripe webhook delivery target. CSRF excluded in bootstrap/app.php;
+ * signature verification happens inside StripeBillingService. Throttled
+ * defensively — Stripe normally fires <10/min per account.
+ */
+Route::post('/webhooks/stripe', StripeWebhookController::class)
+    ->middleware(['throttle:60,1'])
+    ->name('webhooks.stripe');
 
 // Language switcher — redirects back to where the user came from.
 Route::middleware('web')

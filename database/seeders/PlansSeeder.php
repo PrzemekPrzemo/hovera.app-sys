@@ -17,6 +17,19 @@ use Illuminate\Database\Seeder;
  *
  * Idempotentny — `firstOrCreate` po `code`. Zmiana cen → najpierw
  * edycja w UI lub `forceFill` ręczny.
+ *
+ * UWAGA — Stripe Price IDs:
+ *   `stripe_price_monthly_id` i `stripe_price_yearly_id` zostawiamy null.
+ *   Po stworzeniu Product+Price w Stripe Dashboard wypełnij je przez:
+ *
+ *     php artisan tinker
+ *     >>> Plan::where('code','stable')->update([
+ *     ...     'stripe_price_monthly_id' => 'price_1Abc...',
+ *     ...     'stripe_price_yearly_id' => 'price_1Xyz...',
+ *     ... ]);
+ *
+ *   Plany bez Stripe Price ID (Free, Enterprise) pomijają Checkout —
+ *   Free zostaje za darmo, Enterprise wymaga kontaktu z handlowcem.
  */
 class PlansSeeder extends Seeder
 {
