@@ -103,4 +103,11 @@ return [
         'transport_event' => 'Transport / event',
         'other' => 'Other',
     ],
+
+    'feeding_meal' => [
+        'breakfast' => 'Morning',
+        'midday' => 'Midday',
+        'evening' => 'Evening',
+        'night' => 'Night',
+    ],
 ];

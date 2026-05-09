@@ -59,4 +59,6 @@ return [
     'health_entries' => 'Wpisy zdrowotne',
     'activity' => 'aktywność',
     'activities' => 'Aktywności',
+    'feeding_plan_item' => 'pozycja planu żywienia',
+    'feeding_plan' => 'Plan żywienia',
 ];
