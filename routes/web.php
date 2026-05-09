@@ -33,6 +33,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => redirect('/'.config('hovera.admin.path')));
 
 /*
+ * PWA offline fallback. Service worker (public/sw.js) precache'uje to
+ * podczas install i serwuje gdy network-first padnie. Brak auth/middleware,
+ * static-ish — sama strona z brand shellem i CTA "Spróbuj ponownie".
+ */
+Route::get('/offline', fn () => view('public.offline'))->name('offline');
+
+/*
  * Top-level `login` redirect: Laravel's `auth` middleware redirects
  * unauthenticated users to a route named `login`. Master admin panel
  * doesn't register own login (świadomie) — wszyscy logują się przez
