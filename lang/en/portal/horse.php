@@ -18,10 +18,15 @@ return [
 
     'sections' => [
         'boarding' => 'Boarding and costs',
+        'feeding_plan' => 'Feeding plan',
         'activities' => 'What we do with your horse',
         'messages' => 'Messages with the stable',
         'documents' => 'Documents',
         'health' => 'Veterinary history',
+    ],
+
+    'feeding_plan' => [
+        'disclaimer' => 'The plan is set by the stable. Discuss feeding changes by e-mail or in "Messages".',
     ],
 
     'box' => [
