@@ -150,9 +150,28 @@ Benutzermenü (oben rechts) → **Polski / English / Deutsch / Français**. Prä
 
 ## 9a. Für Sie relevante neue Module
 
-- **Pferde-Fütterungsplan** — Tab „Fütterungsplan" im Pferdeprofil zeigt genau, was und wann zu füttern ist. Trainer/Manager bearbeitet; Mitarbeiter liest und führt aus.
-- **Futterlager** — `/app/feed-inventory`. Tägliche Ausgabe: „+ Lagerbewegung" → „Verbrauch" → Menge → bestätigen. Bestand sinkt. Unter-Schwelle-Artikel zeigen Sidebar-Badge.
-- **Pferdegewicht** — Trainer/Mitarbeiter kann monatliche Wiegung im Tab „Gewicht" eintragen (kg + optional Brustumfang).
+- **Fütterungsplan** — Tab „Fütterungsplan" im Pferdeprofil. Trainer/Manager bearbeitet; Mitarbeiter führt aus. Eigentümer sieht im Portal.
+- **Futterlager** — `/app/feed-inventory`. Tägliche Ausgabe: **„+ Lagerbewegung"** → „Verbrauch" → Menge → bestätigen. Bestand sinkt. Unter-Schwelle-Artikel zeigen Sidebar-Badge mit Anzahl.
+- **Pferdegewicht** — Tab **Gewicht** (kg + optional Brustumfang). Spalte „Änderung" markiert 🟢 Zunahme / 🟡 Abnahme / ⚪ stabil.
+- **Fotogalerie** — Tab **Galerie**; Eigentümer sieht Raster im Portal.
+- **„Heute"-Dashboard** (`/app`) — 4 KPI-Kacheln + Tagesbuchungen.
+
+---
+
+## 9b. Was Sie im Panel sehen — Ihre Rolle
+
+Sidebar ist nach Rolle gefiltert:
+
+| | Trainer | Mitarbeiter | Manager | Nur Ansicht |
+|---|:-:|:-:|:-:|:-:|
+| Pferde · Pflege · Tagesplan · Buchungen | ✓ | ✓ | ✓ | ✓ |
+| Kunden | ✓ | — | ✓ | ✓ |
+| Boxen · Preise · Serien · Trainer · Reitplätze | ✓ | — | ✓ | ✓ |
+| Futterlager | — | ✓ | ✓ | ✓ |
+| Spezialisten · Behandlungsvorlagen | — | — | ✓ | ✓ |
+| Rechnungen · Mehrfachkarten · Berichte | — | — | ✓ | ✓ |
+| Bulk-Rechnungen | — | — | ✓ | — |
+| Einstellungen · Mitarbeiter | — | — | — | — |
 
 ---
 

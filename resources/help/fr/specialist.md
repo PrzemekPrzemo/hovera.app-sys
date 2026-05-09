@@ -151,8 +151,23 @@ Menu utilisateur (haut à droite) → **Polski / English / Deutsch / Français**
 
 ## 9a. Nouveautés
 
-- **Modèles de soins** — à la création d'un soin, un select « Modèle » apparaît. Le choix (ex. « Ferrage ») remplit type, description et date suggérée (ex. aujourd'hui + 42 jours).
+- **Modèles de soins** — à la création d'un soin, un select « Modèle » apparaît. Le choix (ex. « Ferrage ») remplit type, description et date suggérée. Gestion dans **Écurie → Modèles de soins**.
 - **Création auto du prochain rendez-vous** — lors du marquage « effectué », fixez la date du prochain et le système crée une réservation *Demandée*.
+- **Flux calendrier `.ics`** — dans **Écurie → Instructeurs** (si sur la liste) ou la fiche spécialiste → action **« Calendrier .ics »**. URL à coller dans Google Calendar / Outlook / Apple via « Ajouter par URL ». Sync toutes les quelques heures. Fenêtre : 6 mois en arrière + 12 mois en avant.
+- **Poids du cheval** — onglet **Poids** sur la fiche cheval avec colonne « Évolution » (🟢 prise / 🟡 perte / ⚪ stable).
+- **Galerie photos** — onglet **Galerie**. Pratique avant la visite.
+- **Tableau de bord « Aujourd'hui »** (`/app`) — 4 tuiles KPI en haut (Réservations du jour, Boxes libres, **Soins en retard**, Factures impayées) + tableau des réservations du jour.
+
+---
+
+## 9b. Ce que vous voyez dans le panneau — votre rôle
+
+La barre latérale est filtrée par rôle. Comme **vétérinaire** vous voyez :
+
+- ✓ Chevaux, Soins & santé, Plan du jour, Réservations
+- ✓ Spécialistes, Modèles de soins
+- ✓ Mes tâches (si compte lié à une fiche Spécialiste)
+- ✗ Clients, Boxes, Tarifs pension, Factures, Cartes, Stock fourrage, Rapports, Paramètres, Employés
 
 ---
 
