@@ -122,6 +122,8 @@
         <div class="footer-links">
             <a href="{{ url('/demo') }}">{{ __('public/signup.footer.demo') }}</a>
             ·
+            <a href="{{ route('pricing.show') }}">{{ __('public/signup.footer.pricing') }}</a>
+            ·
             <a href="/app/login">{{ __('public/signup.footer.login') }}</a>
         </div>
     </div>

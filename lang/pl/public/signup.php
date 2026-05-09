@@ -37,6 +37,7 @@ return [
 
     'footer' => [
         'demo' => 'Najpierw zobacz demo',
+        'pricing' => 'Zobacz cennik',
         'login' => 'Mam już konto',
     ],
 

@@ -37,6 +37,7 @@ return [
 
     'footer' => [
         'demo' => 'See the demo first',
+        'pricing' => 'See pricing',
         'login' => 'I already have an account',
     ],
 
