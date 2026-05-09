@@ -19,6 +19,7 @@ class Plan extends Model
     protected $fillable = [
         'code', 'name', 'currency',
         'price_monthly_cents', 'price_yearly_cents',
+        'stripe_price_monthly_id', 'stripe_price_yearly_id',
         'limits', 'features',
         'is_active', 'is_public', 'sort_order',
     ];

@@ -24,6 +24,8 @@ class Tenant extends Model
         'db_host', 'db_port', 'db_name', 'db_username', 'db_password_encrypted',
         'country', 'locale', 'timezone', 'currency',
         'plan_id', 'status', 'trial_ends_at',
+        'stripe_customer_id', 'stripe_subscription_id',
+        'current_period_ends_at', 'subscription_ends_at',
         'branding', 'settings',
         'custom_domain', 'custom_domain_verified_at',
     ];
@@ -34,6 +36,8 @@ class Tenant extends Model
             'branding' => 'array',
             'settings' => 'array',
             'trial_ends_at' => 'datetime',
+            'current_period_ends_at' => 'datetime',
+            'subscription_ends_at' => 'datetime',
             'suspended_at' => 'datetime',
             'last_activity_at' => 'datetime',
             'custom_domain_verified_at' => 'datetime',
@@ -116,5 +120,20 @@ class Tenant extends Model
     public function isUsable(): bool
     {
         return in_array($this->status, ['trialing', 'active', 'past_due'], true);
+    }
+
+    /**
+     * True when the trial has ended AND no Stripe subscription is bound —
+     * i.e. the tenant must pick a paid plan to keep using the panel.
+     * Master admins / Free plan are checked higher up the call stack.
+     */
+    public function trialHasExpired(): bool
+    {
+        if ($this->stripe_subscription_id !== null) {
+            return false;
+        }
+
+        return $this->trial_ends_at !== null
+            && $this->trial_ends_at->isPast();
     }
 }

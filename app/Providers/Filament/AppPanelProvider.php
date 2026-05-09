@@ -7,6 +7,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Profile;
 use App\Http\Middleware\EnforceImpersonationExpiry;
 use App\Http\Middleware\InitialiseTenantFromSession;
+use App\Http\Middleware\RedirectIfTrialExpired;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -119,6 +120,10 @@ class AppPanelProvider extends PanelProvider
                 Authenticate::class,
                 EnforceImpersonationExpiry::class,
                 InitialiseTenantFromSession::class,
+                // Forces /app/* → /app/billing once trial_ends_at is past
+                // and no Stripe subscription is bound. Must come AFTER
+                // InitialiseTenantFromSession so $tenant is hydrated.
+                RedirectIfTrialExpired::class,
             ]);
     }
 }

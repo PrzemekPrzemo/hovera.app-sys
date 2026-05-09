@@ -27,6 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $publicPrefix = env('HOVERA_PUBLIC_SITE_PREFIX', 's');
         $middleware->validateCsrfTokens(except: [
             $publicPrefix.'/*/payments/*/webhook',
+            // Central hovera Stripe billing — signature header is the auth.
+            'webhooks/stripe',
         ]);
 
         // Hydrate tenant connection ze sesji na KAŻDYM web request (nie
