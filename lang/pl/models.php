@@ -63,6 +63,8 @@ return [
     'activities' => 'Aktywności',
     'horse_weight_measurement' => 'pomiar wagi',
     'horse_weight_measurements' => 'Waga konia',
+    'feeding_plan_item' => 'pozycja planu żywienia',
+    'feeding_plan' => 'Plan żywienia',
     'feed_item' => 'pozycja paszowa',
     'feed_items' => 'Magazyn paszy',
 ];

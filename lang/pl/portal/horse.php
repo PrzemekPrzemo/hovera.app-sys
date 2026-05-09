@@ -18,10 +18,15 @@ return [
 
     'sections' => [
         'boarding' => 'Pensja i koszty',
+        'feeding_plan' => 'Plan żywienia',
         'activities' => 'Co robimy z Twoim koniem',
         'messages' => 'Wiadomości ze stajni',
         'documents' => 'Dokumenty',
         'health' => 'Historia weterynaryjna',
+    ],
+
+    'feeding_plan' => [
+        'disclaimer' => 'Plan ustala stajnia. Zmiany żywienia konsultuj mailem lub w sekcji "Wiadomości".',
     ],
 
     'box' => [
