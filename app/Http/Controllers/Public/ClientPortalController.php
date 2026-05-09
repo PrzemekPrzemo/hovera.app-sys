@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
+use App\Actions\Calendar\CreateClientPortalBooking;
 use App\Actions\Calendar\RescheduleBookingByClient;
 use App\Actions\Stable\SendHorseMessage;
 use App\Enums\CalendarEntryStatus;
@@ -19,6 +20,7 @@ use App\Models\Tenant\HorseDocument;
 use App\Models\Tenant\HorseFeedingPlanItem;
 use App\Models\Tenant\HorseMessage;
 use App\Models\Tenant\HorsePhoto;
+use App\Models\Tenant\Instructor;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\Pass;
 use App\Models\Tenant\PassUse;
@@ -282,6 +284,96 @@ class ClientPortalController extends Controller
             'messages' => $messages,
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
         ]);
+    }
+
+    public function showBooking(Request $request, string $slug): View|RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $cfg = $this->availability->settingsFor($tenant);
+        if (! $cfg['enabled']) {
+            return redirect()->route('client_portal.dashboard', ['slug' => $slug])
+                ->with('booking_disabled', true);
+        }
+
+        $horses = Horse::query()
+            ->where('owner_client_id', $client->id)
+            ->orderBy('name')
+            ->get();
+
+        $instructors = Instructor::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $instructorId = (string) $request->query('instructor');
+        $date = (string) $request->query('date', now()->toDateString());
+
+        $slots = collect();
+        $datesWithSlots = collect();
+        $selectedInstructor = null;
+        if ($instructorId !== '') {
+            $selectedInstructor = $instructors->firstWhere('id', $instructorId);
+            if ($selectedInstructor) {
+                try {
+                    $cursor = Carbon::parse($date);
+                } catch (\Throwable) {
+                    $cursor = now()->startOfDay();
+                }
+                $slots = $this->availability->slotsFor($tenant, $selectedInstructor, $cursor);
+                $datesWithSlots = $this->availability->datesWithSlots($tenant, $selectedInstructor);
+            }
+        }
+
+        return view('public.portal.booking', [
+            'tenant' => $tenant,
+            'client' => $client,
+            'horses' => $horses,
+            'instructors' => $instructors,
+            'selected_instructor' => $selectedInstructor,
+            'date' => $date,
+            'slots' => $slots,
+            'dates_with_slots' => $datesWithSlots,
+            'config' => $cfg,
+            'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
+        ]);
+    }
+
+    public function submitBooking(Request $request, string $slug, CreateClientPortalBooking $action): RedirectResponse
+    {
+        $tenant = $this->resolveAndActivate($slug);
+        $client = $this->auth->current($request, $slug);
+        if (! $client) {
+            return redirect()->route('client_portal.login.show', ['slug' => $slug]);
+        }
+
+        $data = $request->validate([
+            'horse_id' => ['required', 'string'],
+            'instructor_id' => ['required', 'string'],
+            'starts_at' => ['required', 'date'],
+            'notes' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        try {
+            $action->execute(
+                tenant: $tenant,
+                client: $client,
+                horseId: $data['horse_id'],
+                instructorId: $data['instructor_id'],
+                startsAtIso: $data['starts_at'],
+                notes: $data['notes'] ?? null,
+            );
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        return redirect()
+            ->route('client_portal.dashboard', ['slug' => $slug])
+            ->with('booking_requested', true);
     }
 
     public function showHelp(Request $request, string $slug): View|RedirectResponse
