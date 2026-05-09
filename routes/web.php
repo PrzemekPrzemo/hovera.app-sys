@@ -10,6 +10,7 @@ use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\ClientPortalController;
 use App\Http\Controllers\Public\DemoLoginController;
 use App\Http\Controllers\Public\InstructorCalendarController;
+use App\Http\Controllers\Public\LegalController;
 use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PricingController;
 use App\Http\Controllers\Public\PublicBookingController;
@@ -90,6 +91,20 @@ Route::middleware(['web'])
 Route::middleware(['web', 'throttle:30,1'])
     ->get('/pricing', [PricingController::class, 'show'])
     ->name('pricing.show');
+
+/*
+ * Strony prawne — regulamin, polityka prywatności, DPA. Renderowane
+ * statycznie z lang files. Throttle 30/min broni przed scrapingiem.
+ *
+ * Linkowane z signupu (`/regulamin`, `/polityka-prywatnosci` w label
+ * checkboxa zgody) — bez tych routów signup form daje 404 po kliknięciu
+ * w link, co blokuje świadomą zgodę użytkownika (RODO art. 7).
+ */
+Route::middleware(['web', 'throttle:30,1'])->group(function () {
+    Route::get('/regulamin', [LegalController::class, 'terms'])->name('legal.terms');
+    Route::get('/polityka-prywatnosci', [LegalController::class, 'privacy'])->name('legal.privacy');
+    Route::get('/dpa', [LegalController::class, 'dpa'])->name('legal.dpa');
+});
 
 /*
  * Self-service signup — stajnia podaje 4 pola, dostaje 30-dniowy trial

@@ -17,7 +17,7 @@ return [
         'slug' => 'Stable URL',
         'owner_name' => 'Your full name',
         'owner_email' => 'Email',
-        'terms' => 'I accept the <a href="/terms" target="_blank">terms</a> and <a href="/privacy" target="_blank">privacy policy</a>',
+        'terms' => 'I accept the <a href="/regulamin" target="_blank">terms</a> and <a href="/polityka-prywatnosci" target="_blank">privacy policy</a>',
     ],
 
     'placeholder' => [
