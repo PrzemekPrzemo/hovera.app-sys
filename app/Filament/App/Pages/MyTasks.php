@@ -6,6 +6,7 @@ namespace App\Filament\App\Pages;
 
 use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Specialist;
+use App\Tenancy\TenantManager;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Carbon;
@@ -67,10 +68,24 @@ class MyTasks extends Page
             return null;
         }
 
-        return Specialist::query()
-            ->where('central_user_id', $userId)
-            ->where('is_active', true)
-            ->first();
+        // Filament evaluates shouldRegisterNavigation()/canAccess() during
+        // sidebar render, which can fire before InitialiseTenantFromSession
+        // has bound a tenant connection (e.g. login → /app redirect → tenant
+        // selector). Querying the tenant DB at that moment hits an empty
+        // ''@'localhost' connection. Bail silently and let the page reappear
+        // after the user picks a stable.
+        if (! app(TenantManager::class)->hasTenant()) {
+            return null;
+        }
+
+        try {
+            return Specialist::query()
+                ->where('central_user_id', $userId)
+                ->where('is_active', true)
+                ->first();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public function specialist(): ?Specialist
