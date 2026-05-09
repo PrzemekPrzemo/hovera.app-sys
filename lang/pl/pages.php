@@ -59,4 +59,68 @@ return [
         'navigation' => 'Pomoc',
         'title' => 'Instrukcja obsługi',
     ],
+
+    'reports' => [
+        'month_picker' => 'Miesiąc',
+        'apply' => 'Pokaż',
+        'empty' => 'Brak danych dla wybranego miesiąca.',
+        'col_item' => 'Pozycja',
+        'col_total' => 'Wartość netto',
+
+        'revenue' => [
+            'navigation' => 'Przychody',
+            'title' => 'Raport miesięczny — przychody',
+            'total_heading' => 'Razem netto · :month',
+            'invoice_count' => 'Faktury w okresie: :count',
+            'top_items' => 'Top 10 pozycji',
+            'bucket' => [
+                'boarding' => 'Pensjonat',
+                'lessons' => 'Lekcje',
+                'passes' => 'Karnety',
+                'other' => 'Inne',
+            ],
+        ],
+
+        'aging' => [
+            'navigation' => 'Wiekowanie należności',
+            'title' => 'Wiekowanie należności',
+            'total_heading' => 'Łącznie zaległe',
+            'list_heading' => 'Lista przeterminowanych faktur',
+            'empty' => 'Brak zaległych faktur — wszystko opłacone.',
+            'col_invoice' => 'Numer FV',
+            'col_client' => 'Klient',
+            'col_due_at' => 'Termin',
+            'col_days_overdue' => 'Dni po terminie',
+            'col_amount' => 'Kwota brutto',
+            'days' => 'dni',
+            'bucket' => [
+                '0_30' => '1–30 dni',
+                '31_60' => '31–60 dni',
+                '61_90' => '61–90 dni',
+                '90_plus' => '> 90 dni',
+            ],
+        ],
+
+        'horse_utilization' => [
+            'navigation' => 'Wykorzystanie konia',
+            'title' => 'Wykorzystanie konia',
+            'heading' => 'Lekcje per koń · :month',
+            'subtitle' => 'Liczba potwierdzonych / zakończonych rezerwacji w wybranym miesiącu. Powyżej 25 lekcji = ryzyko przeciążenia.',
+            'col_horse' => 'Koń',
+            'col_lessons' => 'Lekcje',
+            'col_hours' => 'Godziny',
+        ],
+
+        'instructor_utilization' => [
+            'navigation' => 'Wykorzystanie instruktora',
+            'title' => 'Wykorzystanie instruktora',
+            'heading' => 'Godziny i frekwencja · :month',
+            'col_instructor' => 'Instruktor',
+            'col_lessons' => 'Lekcje',
+            'col_hours' => 'Godziny',
+            'col_cancelled' => 'Odwołane',
+            'col_no_show' => 'No-show',
+            'col_attendance' => 'Frekwencja',
+        ],
+    ],
 ];

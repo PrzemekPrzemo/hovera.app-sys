@@ -10,6 +10,7 @@ return [
         'calendar' => 'Calendar',
         'stable' => 'Stable',
         'settings' => 'Settings',
+        'reports' => 'Reports',
     ],
 
     'tenants' => 'Stables',
