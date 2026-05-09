@@ -10,6 +10,8 @@ return [
         ],
         'label' => [
             'horse' => 'Koń',
+            'template' => 'Szablon zabiegu',
+            'template_placeholder' => '— opcjonalnie wybierz szablon —',
             'type' => 'Typ',
             'performed_at' => 'Data zabiegu',
             'performed_by' => 'Wykonał (lekarz / kowal / firma)',
@@ -23,6 +25,7 @@ return [
             'details' => 'Notatki / leki / zalecenia',
         ],
         'helper' => [
+            'template' => 'Wybór szablonu wypełni typ, opis i sugerowany termin następnej wizyty.',
             'next_due_at' => 'Dzięki temu pojawi się alert na dashboardzie.',
             'specialist' => 'Lista filtrowana wg typu wpisu — kowale dla "Kowal", weterynarze dla pozostałych typów. Skonfiguruj listę w Stajnia → Specjaliści.',
         ],

@@ -33,6 +33,7 @@ return [
     'team_members' => 'Pracownicy stajni',
     'health_records' => 'Opieka i zdrowie',
     'specialists' => 'Specjaliści',
+    'treatment_templates' => 'Szablony zabiegów',
 
     // Pages (non-resource)
     'pages' => [
