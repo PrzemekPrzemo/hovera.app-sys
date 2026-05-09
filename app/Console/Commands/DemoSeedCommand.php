@@ -31,7 +31,15 @@ class DemoSeedCommand extends Command
     public function handle(CreateTenant $createTenant, TenantManager $tenants, HoveraDemoSeeder $seeder): int
     {
         $slug = (string) $this->option('slug');
-        $tenant = Tenant::query()->where('slug', $slug)->first();
+        // withTrashed bo Tenant ma SoftDeletes — bez tego soft-deleted demo
+        // wygląda jak "nie istnieje", a CreateTenant przy walidacji slug
+        // unique widzi trashed row i wywala "The slug has already been taken".
+        $tenant = Tenant::query()->withTrashed()->where('slug', $slug)->first();
+
+        if ($tenant && $tenant->trashed()) {
+            $this->warn("Tenant '{$slug}' był soft-deleted — przywracam.");
+            $tenant->restore();
+        }
 
         if (! $tenant) {
             $this->info("Tenant '{$slug}' nie istnieje — tworzę przez CreateTenant action…");
