@@ -14,6 +14,7 @@ use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicInvoiceController;
 use App\Http\Controllers\Public\PublicSiteController;
+use App\Http\Controllers\Public\SignupController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
 use Illuminate\Support\Facades\Route;
 
@@ -66,6 +67,26 @@ Route::middleware(['web'])
     ->get('/demo/as/{role}', [DemoLoginController::class, 'switchRole'])
     ->where('role', 'owner|admin|manager|instructor|employee|vet|viewer')
     ->name('demo.switch_role');
+
+/*
+ * Self-service signup — stajnia podaje 4 pola, dostaje 30-dniowy trial
+ * z mailem zawierającym magic link do ustawienia hasła ownera.
+ *
+ * GET nie throttluje — same form. POST throttle 3/h z IP, hard limit
+ * przeciw spam-rejestracjom.
+ */
+Route::middleware(['web'])
+    ->prefix('signup')
+    ->name('signup.')
+    ->group(function () {
+        Route::get('/', [SignupController::class, 'show'])->name('show');
+        Route::post('/', [SignupController::class, 'submit'])
+            ->middleware('throttle:3,60')
+            ->name('submit');
+        Route::get('/dziekujemy/{slug}', [SignupController::class, 'thanks'])
+            ->where('slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
+            ->name('thanks');
+    });
 
 Route::middleware(['web', 'auth'])->prefix('two-factor')->name('two-factor.')->group(function () {
     Route::get('/setup', [TwoFactorController::class, 'showSetup'])->name('setup');

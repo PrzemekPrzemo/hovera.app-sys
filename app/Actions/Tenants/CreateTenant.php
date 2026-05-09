@@ -76,7 +76,13 @@ class CreateTenant
             throw $e;
         }
 
-        $tenant->forceFill(['status' => 'trialing'])->save();
+        $tenant->forceFill([
+            'status' => 'trialing',
+            // Standardowy 30-dniowy trial. Master admin może przedłużyć
+            // ręcznie w panelu admin lub przy upgrade na płatny plan
+            // status flipuje na 'active' i trial_ends_at idzie ignored.
+            'trial_ends_at' => $tenant->trial_ends_at ?? now()->addDays(30),
+        ])->save();
 
         $ownerEmail = $data['owner_email'] ?? null;
         if (! empty($ownerEmail)) {
