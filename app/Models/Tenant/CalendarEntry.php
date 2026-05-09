@@ -8,6 +8,7 @@ use App\Enums\CalendarEntryStatus;
 use App\Enums\CalendarEntryType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CalendarEntry extends TenantModel
@@ -60,6 +61,33 @@ class CalendarEntry extends TenantModel
     public function recurrence(): BelongsTo
     {
         return $this->belongsTo(RecurringCalendarEntry::class, 'recurrence_id');
+    }
+
+    /**
+     * Group lesson participants. Empty for non-group entry types — those
+     * use the scalar `client_id` / `horse_id` columns directly.
+     */
+    public function participants(): HasMany
+    {
+        return $this->hasMany(CalendarEntryParticipant::class);
+    }
+
+    public function isGroupLesson(): bool
+    {
+        return $this->type === CalendarEntryType::LessonGroup;
+    }
+
+    /**
+     * Effective participant count — pivot rows for group lessons,
+     * 1 for individual lessons (or 0 if no client assigned).
+     */
+    public function participantCount(): int
+    {
+        if ($this->isGroupLesson()) {
+            return (int) $this->participants()->count();
+        }
+
+        return $this->client_id ? 1 : 0;
     }
 
     /**
