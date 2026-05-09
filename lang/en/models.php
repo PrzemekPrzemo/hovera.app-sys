@@ -58,4 +58,6 @@ return [
     'horse_weight_measurements' => 'Weight log',
     'feeding_plan_item' => 'feeding plan item',
     'feeding_plan' => 'Feeding plan',
+    'feed_item' => 'feed item',
+    'feed_items' => 'Feed inventory',
 ];
