@@ -33,6 +33,8 @@ return [
     'instructors' => 'Instructors',
     'health_record' => 'health record',
     'health_records' => 'Care & health',
+    'treatment_template' => 'treatment template',
+    'treatment_templates' => 'Treatment templates',
     'calendar_entry' => 'booking',
     'calendar_entries' => 'Bookings',
     'recurring_entry' => 'recurring session',
