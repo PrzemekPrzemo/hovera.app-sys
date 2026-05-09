@@ -123,4 +123,34 @@ return [
             'col_attendance' => 'Frekwencja',
         ],
     ],
+
+    'bulk_invoicing' => [
+        'navigation' => 'Masowe FV za miesiąc',
+        'title' => 'Bulk invoicing — masowe FV za pensjonat',
+        'month_picker' => 'Miesiąc do rozliczenia',
+        'refresh' => 'Odśwież podgląd',
+        'helper' => 'Generuje wersję roboczą faktury (Draft) dla każdego klienta na podstawie aktywnych usług pensji jego koni. Karnety są fakturowane przy sprzedaży i nie wchodzą w bulk. Każdą Draft fakturę zatwierdzasz osobno w Faktury → Wystaw.',
+        'preview_heading' => 'Podgląd · :month · :count klientów',
+        'empty' => 'Brak naliczeń dla wybranego miesiąca. Sprawdź czy konie mają przypisane usługi pensji aktywne w danym okresie.',
+        'items_suffix' => 'pozycji',
+        'col_item' => 'Pozycja',
+        'col_qty' => 'Ilość',
+        'col_unit_price' => 'Cena/jedn.',
+        'col_net' => 'Netto',
+        'col_gross' => 'Brutto',
+        'totals' => 'Razem (zaznaczone lub wszyscy):',
+        'net_short' => 'netto',
+        'gross_short' => 'brutto',
+        'actions' => [
+            'generate' => 'Generuj Drafty',
+        ],
+        'confirm' => [
+            'heading' => 'Wygenerować Drafty FV?',
+            'description' => 'Stworzymy wersje robocze faktur za :month dla zaznaczonych klientów (lub wszystkich z podglądu). Każdą zatwierdzisz osobno w Faktury.',
+            'submit' => 'Tak, generuj',
+        ],
+        'flash' => [
+            'success' => 'Wygenerowano :count Draftów. Sprawdź zakładkę Faktury aby je wystawić.',
+        ],
+    ],
 ];

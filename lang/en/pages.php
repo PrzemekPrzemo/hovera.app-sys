@@ -123,4 +123,34 @@ return [
             'col_attendance' => 'Attendance',
         ],
     ],
+
+    'bulk_invoicing' => [
+        'navigation' => 'Monthly bulk invoicing',
+        'title' => 'Bulk invoicing — monthly boarding charges',
+        'month_picker' => 'Billing month',
+        'refresh' => 'Refresh preview',
+        'helper' => 'Generates a Draft invoice per client based on each horse\'s active boarding services. Passes are invoiced at sale and excluded from bulk. Each Draft is reviewed and Issued individually in Invoices.',
+        'preview_heading' => 'Preview · :month · :count clients',
+        'empty' => 'No charges for the selected month. Check if your horses have active boarding services for that period.',
+        'items_suffix' => 'items',
+        'col_item' => 'Item',
+        'col_qty' => 'Qty',
+        'col_unit_price' => 'Unit price',
+        'col_net' => 'Net',
+        'col_gross' => 'Gross',
+        'totals' => 'Total (selected or all):',
+        'net_short' => 'net',
+        'gross_short' => 'gross',
+        'actions' => [
+            'generate' => 'Generate Drafts',
+        ],
+        'confirm' => [
+            'heading' => 'Generate invoice Drafts?',
+            'description' => 'We will create Draft invoices for :month for the selected clients (or all in the preview). Each one is Issued separately in Invoices.',
+            'submit' => 'Yes, generate',
+        ],
+        'flash' => [
+            'success' => ':count Drafts generated. Open Invoices to issue them.',
+        ],
+    ],
 ];
