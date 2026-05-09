@@ -33,6 +33,7 @@ return [
     'team_members' => 'Pracownicy stajni',
     'health_records' => 'Opieka i zdrowie',
     'specialists' => 'Specjaliści',
+    'feed_inventory' => 'Magazyn paszy',
 
     // Pages (non-resource)
     'pages' => [

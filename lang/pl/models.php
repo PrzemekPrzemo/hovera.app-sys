@@ -59,4 +59,6 @@ return [
     'health_entries' => 'Wpisy zdrowotne',
     'activity' => 'aktywność',
     'activities' => 'Aktywności',
+    'feed_item' => 'pozycja paszowa',
+    'feed_items' => 'Magazyn paszy',
 ];

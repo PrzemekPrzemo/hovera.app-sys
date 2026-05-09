@@ -31,6 +31,7 @@ return [
     'team_members' => 'Team members',
     'health_records' => 'Care & health',
     'specialists' => 'Specialists',
+    'feed_inventory' => 'Feed inventory',
 
     'pages' => [
         'profile' => 'Profile',

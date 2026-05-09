@@ -52,4 +52,6 @@ return [
     'health_entries' => 'Health entries',
     'activity' => 'activity',
     'activities' => 'Activities',
+    'feed_item' => 'feed item',
+    'feed_items' => 'Feed inventory',
 ];
