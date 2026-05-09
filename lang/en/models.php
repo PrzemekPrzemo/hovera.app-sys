@@ -52,4 +52,6 @@ return [
     'health_entries' => 'Health entries',
     'activity' => 'activity',
     'activities' => 'Activities',
+    'horse_photo' => 'photo',
+    'horse_photos' => 'Photo gallery',
 ];

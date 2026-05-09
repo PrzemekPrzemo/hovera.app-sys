@@ -18,6 +18,7 @@ return [
 
     'sections' => [
         'boarding' => 'Pensja i koszty',
+        'photos' => 'Galeria zdjęć',
         'activities' => 'Co robimy z Twoim koniem',
         'messages' => 'Wiadomości ze stajni',
         'documents' => 'Dokumenty',

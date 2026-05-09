@@ -49,6 +49,11 @@
         .services .meta { display: block; color: #9ca3af; font-size: .8rem; }
         .cost-summary { padding: 1rem; background: color-mix(in srgb, var(--primary) 10%, white); border-radius: 8px; margin-top: 1rem; display: flex; flex-direction: column; gap: .15rem; }
         .cost-summary .big { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .65rem; }
+        .photo-tile { display: block; position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 8px; background: #f3f4f6; text-decoration: none; }
+        .photo-tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s ease; }
+        .photo-tile:hover img { transform: scale(1.04); }
+        .photo-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: .35rem .55rem; background: linear-gradient(transparent, rgba(0,0,0,.65)); color: white; font-size: .8rem; }
         .activity { padding: .8rem 0; border-bottom: 1px solid #f3f4f6; }
         .activity:last-of-type { border-bottom: 0; }
         .activity-head { display: flex; justify-content: space-between; gap: .5rem; align-items: baseline; margin-bottom: .25rem; }
@@ -198,6 +203,27 @@
                     <strong>{{ __('portal/horse.cost.monthly_label') }}</strong>
                     <span class="big">{{ number_format($estimated_monthly_cents / 100, 2, ',', ' ') }} zł</span>
                     <small class="muted">{{ __('portal/horse.cost.monthly_disclaimer') }}</small>
+                </div>
+            </div>
+        @endif
+
+        @if ($photos->isNotEmpty())
+            <div class="card">
+                <h2>{{ __('portal/horse.sections.photos') }}</h2>
+                <div class="photo-grid">
+                    @foreach ($photos as $photo)
+                        <a class="photo-tile"
+                           href="{{ route('client_portal.horses.photos.view', ['slug' => $tenant->slug, 'horse' => $horse->id, 'photo' => $photo->id]) }}"
+                           target="_blank"
+                           rel="noopener">
+                            <img src="{{ route('client_portal.horses.photos.view', ['slug' => $tenant->slug, 'horse' => $horse->id, 'photo' => $photo->id]) }}"
+                                 alt="{{ $photo->caption ?: $horse->name }}"
+                                 loading="lazy">
+                            @if ($photo->caption)
+                                <span class="photo-caption">{{ $photo->caption }}</span>
+                            @endif
+                        </a>
+                    @endforeach
                 </div>
             </div>
         @endif

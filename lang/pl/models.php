@@ -59,4 +59,6 @@ return [
     'health_entries' => 'Wpisy zdrowotne',
     'activity' => 'aktywność',
     'activities' => 'Aktywności',
+    'horse_photo' => 'zdjęcie',
+    'horse_photos' => 'Galeria zdjęć',
 ];

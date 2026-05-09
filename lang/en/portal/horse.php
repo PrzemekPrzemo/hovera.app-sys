@@ -18,6 +18,7 @@ return [
 
     'sections' => [
         'boarding' => 'Boarding and costs',
+        'photos' => 'Photo gallery',
         'activities' => 'What we do with your horse',
         'messages' => 'Messages with the stable',
         'documents' => 'Documents',
