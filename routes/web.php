@@ -162,6 +162,7 @@ Route::middleware(['web', 'throttle:30,1'])
         Route::get('/horses/{horse}/documents/{document}', [ClientPortalController::class, 'downloadHorseDocument'])->name('horses.documents.download');
         Route::delete('/horses/{horse}/documents/{document}', [ClientPortalController::class, 'deleteHorseDocument'])->name('horses.documents.delete');
         Route::get('/messages', [ClientPortalController::class, 'showMessages'])->name('messages.show');
+        Route::get('/help', [ClientPortalController::class, 'showHelp'])->name('help.show');
     });
 
 /*

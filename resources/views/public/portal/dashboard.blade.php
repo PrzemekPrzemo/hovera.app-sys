@@ -15,6 +15,9 @@
         header.bar .who { font-weight: 600; }
         header.bar .who .stable { display: block; font-size: .8rem; color: #6b7280; font-weight: 400; }
         header.bar form { margin: 0; }
+        header.bar .actions { display: flex; align-items: center; gap: .5rem; }
+        header.bar a.help-link { padding: .5rem .9rem; background: transparent; border: 1px solid #e5e7eb; border-radius: 8px; color: #374151; font-size: .85rem; text-decoration: none; }
+        header.bar a.help-link:hover { background: #f3f4f6; }
         header.bar button { padding: .5rem .9rem; background: transparent; border: 1px solid #e5e7eb; border-radius: 8px; color: #374151; font-size: .85rem; cursor: pointer; }
         header.bar button:hover { background: #f3f4f6; }
         .section { background: #fff; border-radius: 14px; padding: 1.25rem; box-shadow: 0 4px 18px rgba(0,0,0,.05); margin-bottom: 1rem; }
@@ -71,8 +74,8 @@
             body { background: #0f172a; color: #e5e7eb; }
             header.bar, .section { background: #1e293b; }
             header.bar .who .stable { color: #94a3b8; }
-            header.bar button { border-color: #334155; color: #e2e8f0; }
-            header.bar button:hover { background: #0f172a; }
+            header.bar button, header.bar a.help-link { border-color: #334155; color: #e2e8f0; }
+            header.bar button:hover, header.bar a.help-link:hover { background: #0f172a; }
             .booking { border-color: #334155; }
             .booking .what { color: #cbd5e1; }
             .booking .what .meta { color: #64748b; }
@@ -88,10 +91,13 @@
                 {{ $client->name }}
                 <span class="stable">{{ __('portal/dashboard.subtitle', ['tenant' => $tenant->name]) }}</span>
             </div>
-            <form method="post" action="{{ route('client_portal.logout', ['slug' => $tenant->slug]) }}">
-                @csrf
-                <button type="submit">{{ __('portal/dashboard.logout') }}</button>
-            </form>
+            <div class="actions">
+                <a class="help-link" href="{{ route('client_portal.help.show', ['slug' => $tenant->slug]) }}">{{ __('portal/help.cta') }}</a>
+                <form method="post" action="{{ route('client_portal.logout', ['slug' => $tenant->slug]) }}">
+                    @csrf
+                    <button type="submit">{{ __('portal/dashboard.logout') }}</button>
+                </form>
+            </div>
         </header>
 
         @if (session('reschedule_success'))
