@@ -149,6 +149,13 @@ Benutzermenü (oben rechts) → **Polski / English / Deutsch / Français**. Prä
 
 ---
 
+## 9a. Neuerungen
+
+- **Behandlungsvorlagen** — beim Anlegen eines Pflegeeintrags erscheint ein Select „Behandlungsvorlage". Auswahl (z. B. „Beschlag") füllt Typ, Beschreibung und Folgetermin (z. B. heute + 42 Tage) automatisch.
+- **Auto-Folgetermin** — beim Markieren als „erledigt" einen Folgetermin setzen → System erstellt automatisch eine *Angefragt*-Buchung im Kalender.
+
+---
+
 ## 10. Support
 
 - **Stall** — Mail- / Telefonkontakt auf der Stallseite,

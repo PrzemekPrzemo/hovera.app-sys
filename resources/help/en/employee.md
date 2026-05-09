@@ -148,6 +148,14 @@ User menu (top-right) → **Polski / English / Deutsch / Français**. The prefer
 
 ---
 
+## 9a. New modules relevant for you
+
+- **Horse feeding plan** — the "Feeding plan" tab on the horse profile says exactly what to feed and when. Trainer/Manager edits; Employee reads and executes.
+- **Feed inventory** — `/app/feed-inventory`. Daily issuance: click "+ Stock movement" → "Consumption" → amount → confirm. Stock decreases. Below-threshold items show a sidebar badge.
+- **Horse weight** — Trainer/Employee can log monthly weight in the "Weight log" tab (kg + optional heart girth). Trend column flags gain/loss.
+
+---
+
 ## 10. Support
 
 - **Your stable** — owner / admin (contact on the stable record),

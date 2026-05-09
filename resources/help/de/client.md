@@ -213,6 +213,18 @@ Das Portal spricht vier Sprachen: **Polnisch / Englisch / Deutsch / Französisch
 
 ---
 
+## 9a. Fütterungsplan, Fotogalerie, Selbstbuchung
+
+**Fütterungsplan** — im Pferdeprofil finden Sie den Abschnitt „Fütterungsplan": was Ihr Pferd wann frisst (morgens / mittags / abends / nachts). Der Stall legt den Plan fest; Änderungen über Nachrichten oder per E-Mail besprechen.
+
+**Fotogalerie** — im Pferdeprofil zeigt der Abschnitt „Fotogalerie" vom Stall hochgeladene Fotos (Raster, Klick = Vollbild in neuem Tab). Getrennt von Dokumenten.
+
+**Selbstbuchung** — im Dashboard-Header gibt es **+ Lektion buchen**. Pferd wählen, Trainer, Tag + Slot (aus verfügbaren), optional Notizen. Der Stall bestätigt und Sie erhalten eine E-Mail.
+
+> **Status nach dem Senden**: erscheint als *Angefragt* in „Kommende Buchungen". Nach Bestätigung → *Bestätigt*.
+
+---
+
 ## 10. Häufige Probleme
 
 | Problem | Was tun |

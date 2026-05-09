@@ -149,6 +149,13 @@ User menu (top-right) → **Polski / English / Deutsch / Français**. The prefer
 
 ---
 
+## 9a. What's new
+
+- **Treatment templates** — when creating a health record, a "Treatment template" select appears. Picking one (e.g. "Shoeing") auto-fills type, summary, suggested next-due date. Your stable starts with 6 PL standards and can add custom.
+- **Auto-create next visit** — when marking a visit as done, set "next visit" date and the system creates a *Requested* calendar entry — you or the stable confirms it.
+
+---
+
 ## 10. Support
 
 - **Stable** — e-mail / phone visible on the stable page,

@@ -213,6 +213,18 @@ Le portail parle quatre langues : **polonais / anglais / allemand / français**.
 
 ---
 
+## 9a. Plan d'alimentation, galerie photos, réservation autonome
+
+**Plan d'alimentation** — sur la fiche du cheval, section « Plan d'alimentation » : ce que votre cheval mange et quand (matin / midi / soir / nuit). L'écurie définit le plan ; discutez des changements via Messages ou par e-mail.
+
+**Galerie photos** — sur la fiche du cheval, section « Galerie photos » avec photos téléversées par l'écurie (grille, clic = plein écran nouvel onglet). Séparée des Documents.
+
+**Réservation autonome** — dans l'en-tête du tableau de bord, bouton **+ Réserver une leçon**. Choisissez votre cheval, l'instructeur, le jour + créneau (parmi disponibles), notes optionnelles. L'écurie confirme et vous recevez un e-mail.
+
+> **Statut après envoi** : apparaît comme *Demandée* dans « Réservations à venir ». Après confirmation → *Confirmée*.
+
+---
+
 ## 10. Problèmes courants
 
 | Problème | Que faire |

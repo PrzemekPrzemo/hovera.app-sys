@@ -148,6 +148,14 @@ Benutzermenü (oben rechts) → **Polski / English / Deutsch / Français**. Prä
 
 ---
 
+## 9a. Für Sie relevante neue Module
+
+- **Pferde-Fütterungsplan** — Tab „Fütterungsplan" im Pferdeprofil zeigt genau, was und wann zu füttern ist. Trainer/Manager bearbeitet; Mitarbeiter liest und führt aus.
+- **Futterlager** — `/app/feed-inventory`. Tägliche Ausgabe: „+ Lagerbewegung" → „Verbrauch" → Menge → bestätigen. Bestand sinkt. Unter-Schwelle-Artikel zeigen Sidebar-Badge.
+- **Pferdegewicht** — Trainer/Mitarbeiter kann monatliche Wiegung im Tab „Gewicht" eintragen (kg + optional Brustumfang).
+
+---
+
 ## 10. Support
 
 - **Ihr Stall** — Eigentümer / Admin (Kontakt in Stallkarte),

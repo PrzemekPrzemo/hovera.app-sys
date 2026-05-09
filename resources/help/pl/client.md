@@ -213,6 +213,18 @@ Portal mówi w czterech językach: **polski / angielski / niemiecki / francuski*
 
 ---
 
+## 9a. Plan żywienia, galeria zdjęć, samodzielna rezerwacja
+
+**Plan żywienia** — w karcie konia widzisz sekcję „Plan żywienia": co i kiedy je Twój koń (rano / południe / wieczór / noc). Plan ustala stajnia; zmiany konsultuj w sekcji Wiadomości lub mailem.
+
+**Galeria zdjęć** — w karcie konia sekcja „Galeria zdjęć" pokazuje zdjęcia dodane przez stajnię (siatka, klik = pełny rozmiar w nowej karcie). Osobno od dokumentów.
+
+**Samodzielna rezerwacja lekcji** — w nagłówku dashboardu jest przycisk **+ Zarezerwuj lekcję**. Wybierz swojego konia, instruktora, dzień + godzinę (z dostępnych slotów), opcjonalnie dopisz uwagi. Po wysłaniu prośby stajnia ją potwierdzi i dostaniesz mail.
+
+> **Status po wysłaniu**: rezerwacja pojawia się jako *Oczekuje* w sekcji „Nadchodzące rezerwacje". Po potwierdzeniu przez stajnię status zmienia się na *Potwierdzona*.
+
+---
+
 ## 10. Najczęstsze problemy
 
 | Problem | Co zrobić |

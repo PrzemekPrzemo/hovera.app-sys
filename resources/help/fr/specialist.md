@@ -149,6 +149,13 @@ Menu utilisateur (haut à droite) → **Polski / English / Deutsch / Français**
 
 ---
 
+## 9a. Nouveautés
+
+- **Modèles de soins** — à la création d'un soin, un select « Modèle » apparaît. Le choix (ex. « Ferrage ») remplit type, description et date suggérée (ex. aujourd'hui + 42 jours).
+- **Création auto du prochain rendez-vous** — lors du marquage « effectué », fixez la date du prochain et le système crée une réservation *Demandée*.
+
+---
+
 ## 10. Support
 
 - **Écurie** — contact e-mail / téléphone visible sur la page écurie,
