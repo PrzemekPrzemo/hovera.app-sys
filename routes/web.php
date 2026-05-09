@@ -8,6 +8,7 @@ use App\Http\Controllers\Invitations\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\ClientPortalController;
+use App\Http\Controllers\Public\DemoLoginController;
 use App\Http\Controllers\Public\InstructorCalendarController;
 use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PublicBookingController;
@@ -48,6 +49,17 @@ Route::get('/'.config('hovera.admin.path', 'admin').'/login', fn () => redirect(
 // /forgot-password jest krótszy do podyktowania przez telefon.
 Route::get('/forgot-password', fn () => redirect('/app/password-reset/request'));
 Route::get('/reset-password', fn () => redirect('/app/password-reset/request'));
+
+/*
+ * Public demo — auto-login do tenant `demo` jako owner. Zero rejestracji,
+ * dane resetowane co noc o 22:00 (hovera:demo:reset).
+ *
+ * Throttle żeby ktoś nie zassał tego endpointu jako auth bypass — jeden
+ * adres IP może odpalić demo max 6 razy na minutę.
+ */
+Route::middleware(['web', 'throttle:6,1'])
+    ->get('/demo', DemoLoginController::class)
+    ->name('demo.login');
 
 Route::middleware(['web', 'auth'])->prefix('two-factor')->name('two-factor.')->group(function () {
     Route::get('/setup', [TwoFactorController::class, 'showSetup'])->name('setup');

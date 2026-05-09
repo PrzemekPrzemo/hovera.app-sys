@@ -96,4 +96,18 @@ return [
     'impersonation' => [
         'max_minutes' => (int) env('HOVERA_IMPERSONATION_MAX_MINUTES', 60),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Demo
+    |--------------------------------------------------------------------------
+    | Public demo tenant — odwiedzający `/demo` lądują tu z rolą owner.
+    | Resetowane co noc o 22:00 przez `hovera:demo:reset` (routes/console.php).
+    | Provisioning jednorazowy przez `hovera:demo:seed --slug=demo`.
+    */
+
+    'demo' => [
+        'slug' => env('HOVERA_DEMO_SLUG', 'demo'),
+        'enabled' => (bool) env('HOVERA_DEMO_ENABLED', true),
+    ],
 ];
