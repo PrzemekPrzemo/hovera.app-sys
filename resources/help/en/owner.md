@@ -374,7 +374,30 @@ Client logs in and clicks "+ Book a lesson" → picks own horse, instructor, day
 
 ---
 
-## 24. Tips
+## 24. What each role sees — access matrix
+
+The sidebar and pages are **filtered by employee role**. Vets won't see invoices/passes, employees won't see stable settings — minimised view means fewer mistakes and a clearer interface.
+
+| Section | owner | admin | manager | trainer | employee | vet | viewer |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Horses · Care & health · Day plan · Bookings | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Clients | ✓ | ✓ | ✓ | ✓ | — | — | ✓ |
+| Boxes · Boarding pricing · Buildings · Recurring · Instructors · Arenas | ✓ | ✓ | ✓ | ✓ | — | — | ✓ |
+| Specialists · Treatment templates | ✓ | ✓ | ✓ | — | — | ✓ | ✓ |
+| Feed inventory | ✓ | ✓ | ✓ | — | ✓ | — | ✓ |
+| Invoices · Passes · Reports | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| Bulk invoicing | ✓ | ✓ | ✓ | — | — | — | — |
+| Settings (stable · invoicing · KSeF · payments) · Team members | ✓ | ✓ | — | — | — | — | — |
+| My tasks | — | — | — | — | — | ✓ | — |
+| Help | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+> **Master admin** (hovera external support) sees everything regardless of role — used for impersonation when debugging.
+
+> **Role change** = visibility updates after page refresh. You can change a member's role under **Settings → Team members**.
+
+---
+
+## 25. Tips
 
 - **Keyboard shortcuts** — `?` in the panel shows the list
 - **Language** — switch in user menu (PL / EN / DE / FR); preference saved per user

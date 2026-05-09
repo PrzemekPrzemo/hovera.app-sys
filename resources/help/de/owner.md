@@ -299,7 +299,28 @@ Kunde klickt im Portal „+ Lektion buchen" → wählt Pferd, Trainer, Tag + Slo
 
 ---
 
-## 24. Tipps
+## 24. Was jede Rolle sieht — Zugriffsmatrix
+
+Sidebar und Seiten werden **nach Mitarbeiterrolle gefiltert**. Tierärzte sehen keine Rechnungen, Mitarbeiter keine Stalleinstellungen — schlankere Ansicht = weniger Fehler.
+
+| Bereich | owner | admin | manager | trainer | mitarbeiter | tierarzt | viewer |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Pferde · Pflege & Gesundheit · Tagesplan · Buchungen | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Kunden | ✓ | ✓ | ✓ | ✓ | — | — | ✓ |
+| Boxen · Pensionspreise · Gebäude · Serienlektionen · Trainer · Reitplätze | ✓ | ✓ | ✓ | ✓ | — | — | ✓ |
+| Spezialisten · Behandlungsvorlagen | ✓ | ✓ | ✓ | — | — | ✓ | ✓ |
+| Futterlager | ✓ | ✓ | ✓ | — | ✓ | — | ✓ |
+| Rechnungen · Mehrfachkarten · Berichte | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| Bulk-Rechnungen | ✓ | ✓ | ✓ | — | — | — | — |
+| Einstellungen (Stall · FV · KSeF · Zahlungen) · Mitarbeiter | ✓ | ✓ | — | — | — | — | — |
+| Meine Aufgaben | — | — | — | — | — | ✓ | — |
+| Hilfe | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+> **Master Admin** (hovera Support) sieht alles unabhängig von der Rolle.
+
+---
+
+## 25. Tipps
 
 - **Sprache** — im Benutzermenü umschalten (PL / EN / DE / FR); Präferenz pro Benutzer gespeichert
 - **Support** — support@hovera.app

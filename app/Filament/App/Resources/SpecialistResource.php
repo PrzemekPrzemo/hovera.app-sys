@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\SpecialistResource\Pages;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Central\TenantMembership;
 use App\Models\Tenant\Specialist;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -18,6 +20,14 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class SpecialistResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::SPECIALIST_STAFF;
+    }
+
     protected static ?string $model = Specialist::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';

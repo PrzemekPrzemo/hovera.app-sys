@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\ArenaResource\Pages;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Arena;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -18,6 +20,14 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ArenaResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::STABLE_OPS_STAFF;
+    }
+
     protected static ?string $model = Arena::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-square-3-stack-3d';

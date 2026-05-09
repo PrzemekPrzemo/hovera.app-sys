@@ -296,7 +296,28 @@ Le client se connecte et clique « + Réserver une leçon » → choisit son che
 
 ---
 
-## 24. Astuces
+## 24. Ce que voit chaque rôle — matrice d'accès
+
+La barre latérale et les pages sont **filtrées par rôle de l'employé**. Les vétérinaires ne voient pas les factures, les employés ne voient pas les paramètres écurie — vue épurée = moins d'erreurs.
+
+| Section | owner | admin | manager | instructeur | employé | vétérinaire | viewer |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Chevaux · Soins & santé · Plan du jour · Réservations | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Clients | ✓ | ✓ | ✓ | ✓ | — | — | ✓ |
+| Boxes · Tarifs pension · Bâtiments · Récurrentes · Instructeurs · Manèges | ✓ | ✓ | ✓ | ✓ | — | — | ✓ |
+| Spécialistes · Modèles de soins | ✓ | ✓ | ✓ | — | — | ✓ | ✓ |
+| Stock fourrage | ✓ | ✓ | ✓ | — | ✓ | — | ✓ |
+| Factures · Cartes · Rapports | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| Facturation en masse | ✓ | ✓ | ✓ | — | — | — | — |
+| Paramètres (écurie · FV · KSeF · paiements) · Employés | ✓ | ✓ | — | — | — | — | — |
+| Mes tâches | — | — | — | — | — | ✓ | — |
+| Aide | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+> **Master admin** (support hovera) voit tout indépendamment du rôle.
+
+---
+
+## 25. Astuces
 
 - **Langue** — basculer dans le menu utilisateur (PL / EN / DE / FR) ; préférence par utilisateur
 - **Support** — support@hovera.app

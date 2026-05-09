@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Filament\App\Pages\Reports;
 
 use App\Enums\InvoiceStatus;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Invoice;
 use App\Services\Reports\MonthRange;
+use App\Services\Tenancy\TenantRoleGate;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Livewire\Attributes\Url;
@@ -19,6 +21,14 @@ use Livewire\Attributes\Url;
  */
 class RevenueReport extends Page
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::FINANCE_STAFF;
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
     protected static ?int $navigationSort = 91;

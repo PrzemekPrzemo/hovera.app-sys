@@ -7,8 +7,10 @@ namespace App\Filament\App\Resources;
 use App\Enums\PassStatus;
 use App\Filament\App\Resources\PassResource\Pages;
 use App\Filament\Components\PriceInput;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Pass;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -21,6 +23,14 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PassResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::FINANCE_STAFF;
+    }
+
     protected static ?string $model = Pass::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';

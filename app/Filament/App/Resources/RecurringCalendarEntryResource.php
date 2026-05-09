@@ -10,11 +10,13 @@ use App\Enums\CalendarEntryType;
 use App\Enums\RecurrencePattern;
 use App\Filament\App\Resources\RecurringCalendarEntryResource\Pages;
 use App\Filament\Components\PriceInput;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Arena;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\Instructor;
 use App\Models\Tenant\RecurringCalendarEntry;
+use App\Services\Tenancy\TenantRoleGate;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -26,6 +28,14 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RecurringCalendarEntryResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::STABLE_OPS_STAFF;
+    }
+
     protected static ?string $model = RecurringCalendarEntry::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-arrow-path';

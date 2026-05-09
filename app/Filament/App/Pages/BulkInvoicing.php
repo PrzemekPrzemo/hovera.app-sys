@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\App\Pages;
 
 use App\Actions\Invoicing\GenerateBulkBoardingInvoices;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Central\Tenant;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Tenancy\TenantManager;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -22,6 +24,14 @@ use Livewire\Attributes\Url;
  */
 class BulkInvoicing extends Page
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::FULL_ADMINS_AND_MANAGERS;
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?int $navigationSort = 45;

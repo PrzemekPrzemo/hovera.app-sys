@@ -6,7 +6,9 @@ namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\InstructorResource\Pages;
 use App\Filament\Components\PriceInput;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Instructor;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
@@ -21,6 +23,14 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class InstructorResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::STABLE_OPS_STAFF;
+    }
+
     protected static ?string $model = Instructor::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user';

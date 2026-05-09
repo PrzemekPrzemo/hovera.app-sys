@@ -8,11 +8,13 @@ use App\Enums\CalendarEntryStatus;
 use App\Enums\CalendarEntryType;
 use App\Filament\App\Resources\CalendarEntryResource\Pages;
 use App\Filament\Components\PriceInput;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Arena;
 use App\Models\Tenant\CalendarEntry;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\Instructor;
+use App\Services\Tenancy\TenantRoleGate;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -23,6 +25,14 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CalendarEntryResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::HORSE_AND_CARE_STAFF;
+    }
+
     protected static ?string $model = CalendarEntry::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';

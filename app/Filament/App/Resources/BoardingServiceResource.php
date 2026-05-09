@@ -7,7 +7,9 @@ namespace App\Filament\App\Resources;
 use App\Enums\BoardingFrequency;
 use App\Filament\App\Resources\BoardingServiceResource\Pages;
 use App\Filament\Components\PriceInput;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\BoardingService;
+use App\Services\Tenancy\TenantRoleGate;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -18,6 +20,14 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BoardingServiceResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::STABLE_OPS_STAFF;
+    }
+
     protected static ?string $model = BoardingService::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';

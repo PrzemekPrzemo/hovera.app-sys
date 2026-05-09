@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\HorseResource\Pages;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\BoardingService;
 use App\Models\Tenant\Box;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -21,7 +23,15 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class HorseResource extends Resource
 {
+    use RestrictedByTenantRole;
+
     protected static ?string $model = Horse::class;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::HORSE_AND_CARE_STAFF;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-bolt';
 

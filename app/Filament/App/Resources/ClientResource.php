@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\ClientResource\Pages;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Client;
 use App\Notifications\ClientPortalMagicLinkNotification;
 use App\Services\CompanyLookup\CompanyLookupService;
 use App\Services\CompanyLookup\GusApiService;
 use App\Services\Portal\ClientPortalAuth;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
@@ -24,6 +26,14 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ClientResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::FULL_ADMINS_AND_MANAGERS;
+    }
+
     protected static ?string $model = Client::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
