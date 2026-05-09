@@ -11,6 +11,7 @@ use App\Http\Controllers\Public\ClientPortalController;
 use App\Http\Controllers\Public\DemoLoginController;
 use App\Http\Controllers\Public\InstructorCalendarController;
 use App\Http\Controllers\Public\PaymentWebhookController;
+use App\Http\Controllers\Public\PricingController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicInvoiceController;
 use App\Http\Controllers\Public\PublicSiteController;
@@ -67,6 +68,17 @@ Route::middleware(['web'])
     ->get('/demo/as/{role}', [DemoLoginController::class, 'switchRole'])
     ->where('role', 'owner|admin|manager|instructor|employee|vet|viewer')
     ->name('demo.switch_role');
+
+/*
+ * Public pricing page — `/pricing`. Czyta plany z central DB (is_public=true)
+ * i renderuje porównawczy cennik z toggle miesięcznie/rocznie.
+ *
+ * Throttle 30/min — bot scraping protection bez blokowania normalnych
+ * odwiedzających (cennik bywa odświeżany kilka razy podczas decyzji).
+ */
+Route::middleware(['web', 'throttle:30,1'])
+    ->get('/pricing', [PricingController::class, 'show'])
+    ->name('pricing.show');
 
 /*
  * Self-service signup — stajnia podaje 4 pola, dostaje 30-dniowy trial
