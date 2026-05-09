@@ -64,6 +64,7 @@ class AppPanelProvider extends PanelProvider
                 NavigationGroup::make(fn () => __('navigation.group.stable'))->collapsible(),
                 NavigationGroup::make(fn () => __('navigation.group.calendar'))->collapsible(),
                 NavigationGroup::make(fn () => __('navigation.group.finances'))->collapsible(),
+                NavigationGroup::make(fn () => __('navigation.group.reports'))->collapsible(),
                 NavigationGroup::make(fn () => __('navigation.group.settings'))->collapsed()->collapsible(),
             ])
             ->userMenuItems([

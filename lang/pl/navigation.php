@@ -11,6 +11,7 @@ return [
         'calendar' => 'Kalendarz',
         'stable' => 'Stajnia',
         'settings' => 'Ustawienia',
+        'reports' => 'Raporty',
     ],
 
     // Resource labels
