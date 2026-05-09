@@ -39,6 +39,8 @@ return [
     'instructors' => 'Instruktorzy',
     'health_record' => 'wpis zdrowotny',
     'health_records' => 'Opieka i zdrowie',
+    'treatment_template' => 'szablon zabiegu',
+    'treatment_templates' => 'Szablony zabiegów',
     'calendar_entry' => 'rezerwacja',
     'calendar_entries' => 'Rezerwacje',
     'recurring_entry' => 'cykliczne zajęcie',
