@@ -25,3 +25,11 @@ Schedule::command('tenants:snapshot-health')
     ->dailyAt('03:30')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Public demo tenant reset — wipes all user-edited data and reseeds the
+// baseline at 22:00 every day. Visitors via `/demo` always land on a
+// fresh, predictable dataset the next morning.
+Schedule::command('hovera:demo:reset')
+    ->dailyAt('22:00')
+    ->withoutOverlapping()
+    ->onOneServer();
