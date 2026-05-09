@@ -22,7 +22,7 @@ return [
 
     'terms' => [
         'title' => 'hovera Terms of Service',
-        'intro' => 'These Terms govern access to and use of the hovera service available at app.hovera.app, provided by hovera sp. z o.o. (the "Provider") to businesses operating riding stables and related activities (the "Customer" or "Stable").',
+        'intro' => 'These Terms govern access to and use of the hovera service available at app.hovera.app, provided by Sendormeco Holding sp. z o.o. (the "Provider") to businesses operating riding stables and related activities (the "Customer" or "Stable").',
 
         'section_1_heading' => '1. Definitions',
         'section_1_body' => 'Service — the hovera SaaS platform for stable management (bookings, clients, horses, billing, communications). Customer — the business that has entered into a service agreement. User — a natural person using the service on behalf of the Customer (owner, instructor, employee, rider). Trial — the 30-day free period from registration. Plan — a feature package described on the pricing page.',
@@ -55,7 +55,7 @@ return [
         'section_10_body' => 'The Provider reserves the right to amend these Terms. Changes will be communicated by email at least 30 days in advance. If the Customer does not accept changes, they may terminate the agreement with immediate effect before the changes take effect.',
 
         'section_11_heading' => '11. Contact',
-        'section_11_body' => 'Questions about these Terms: support@hovera.app. Provider details: hovera sp. z o.o., NIP: [TBD], REGON: [TBD], address: [TBD], registered in KRS under number [TBD].',
+        'section_11_body' => 'Questions about these Terms: support@hovera.app. Provider details: Sendormeco Holding sp. z o.o., registered office at ul. Złota 75A/7, 00-819 Warsaw, Poland; NIP (Polish tax ID): 5252866457; REGON: 389194801; registered in the National Court Register (KRS) under number 0000906110, kept by the District Court for the Capital City of Warsaw, 12th Commercial Division of KRS; share capital PLN 5,000.',
     ],
 
     'privacy' => [
@@ -63,7 +63,7 @@ return [
         'intro' => 'This privacy policy describes how personal data of hovera users is processed, in accordance with GDPR (EU 2016/679) and Polish Personal Data Protection Act of 10 May 2018.',
 
         'section_1_heading' => '1. Data controller',
-        'section_1_body' => 'The data controller is hovera sp. z o.o., based in Warsaw, NIP: [TBD], REGON: [TBD], address: [TBD]. Controller contact: privacy@hovera.app. Data Protection Officer (DPO): dpo@hovera.app.',
+        'section_1_body' => 'The data controller is Sendormeco Holding sp. z o.o., based in Warsaw, registered office at ul. Złota 75A/7, 00-819 Warsaw, Poland; NIP: 5252866457; REGON: 389194801; KRS: 0000906110. Controller contact: privacy@hovera.app. Data Protection Officer (DPO): dpo@hovera.app.',
 
         'section_2_heading' => '2. Scope of processed data',
         'section_2_body' => 'During registration: full name, email, stable name, stable URL. During use of the service: IP address, session and cookie identifiers, device technical data (user-agent), activity logs (login time, panel actions). Data entered by the Customer about its clients (riders, horses) is processed as a processor — under the DPA terms (/dpa).',
@@ -92,10 +92,10 @@ return [
 
     'dpa' => [
         'title' => 'Data Processing Agreement (DPA)',
-        'intro' => 'This Data Processing Agreement is an integral part of the Terms of Service and is concluded between the Customer (Stable) as Controller of personal data of stable clients (riders, guardians, horse owners) and hovera sp. z o.o. as Processor, in accordance with Art. 28 GDPR.',
+        'intro' => 'This Data Processing Agreement is an integral part of the Terms of Service and is concluded between the Customer (Stable) as Controller of personal data of stable clients (riders, guardians, horse owners) and Sendormeco Holding sp. z o.o. as Processor, in accordance with Art. 28 GDPR.',
 
         'section_1_heading' => '1. Parties and roles',
-        'section_1_body' => 'Controller: the Customer (Stable), entering data of clients, horses and staff into hovera. Processor: hovera sp. z o.o., providing the SaaS service for stable management. Each party is independently responsible for processing within its respective duties.',
+        'section_1_body' => 'Controller: the Customer (Stable), entering data of clients, horses and staff into hovera. Processor: Sendormeco Holding sp. z o.o., providing the SaaS service for stable management. Each party is independently responsible for processing within its respective duties.',
 
         'section_2_heading' => '2. Subject matter and duration',
         'section_2_body' => 'The Processor processes entrusted data solely for and to the extent necessary to provide the hovera service (storage, presentation, backups, notifications). Duration: the term of the main agreement plus a 90-day grace period. After this, data is deleted or returned to the Controller as an export (CSV/JSON) on request.',
