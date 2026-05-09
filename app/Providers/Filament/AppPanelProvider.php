@@ -90,7 +90,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 PanelsRenderHook::BODY_START,
-                fn () => Blade::render('<x-demo-banner /><x-impersonation-banner />'),
+                fn () => Blade::render('<x-trial-banner /><x-demo-banner /><x-impersonation-banner />'),
             )
             ->middleware([
                 EncryptCookies::class,
