@@ -8,12 +8,14 @@ use App\Filament\Pages\Profile;
 use App\Http\Middleware\EnforceImpersonationExpiry;
 use App\Http\Middleware\InitialiseTenantFromSession;
 use App\Http\Middleware\RedirectIfTrialExpired;
+use App\Services\Tenancy\TenantRoleGate;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -68,6 +70,20 @@ class AppPanelProvider extends PanelProvider
                 NavigationGroup::make(fn () => __('navigation.group.reports'))->collapsible(),
                 NavigationGroup::make(fn () => __('navigation.group.tools'))->collapsed()->collapsible(),
                 NavigationGroup::make(fn () => __('navigation.group.settings'))->collapsed()->collapsible(),
+            ])
+            // Sidebar entry dla Stripe billing — link bezpośrednio do Blade
+            // flow w BillingController. NavigationItem (zamiast Filament Page)
+            // bo Filament Page pod /app/billing kolidowałaby z BillingController
+            // route i Filament cicho rezygnuje z rejestracji `filament.app.pages.billing`,
+            // co sypie błędem w nawigacji.
+            ->navigationItems([
+                NavigationItem::make('billing')
+                    ->label(fn () => __('billing.navigation.label'))
+                    ->icon('heroicon-o-credit-card')
+                    ->group(fn () => __('navigation.group.settings'))
+                    ->sort(90)
+                    ->url(fn () => route('billing.show'))
+                    ->visible(fn () => app(TenantRoleGate::class)->allows(TenantRoleGate::FULL_ADMINS)),
             ])
             ->userMenuItems([
                 MenuItem::make()
