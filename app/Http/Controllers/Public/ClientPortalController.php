@@ -16,6 +16,7 @@ use App\Models\Tenant\ClientMessage;
 use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\HorseDocument;
+use App\Models\Tenant\HorseFeedingPlanItem;
 use App\Models\Tenant\HorseMessage;
 use App\Models\Tenant\HorsePhoto;
 use App\Models\Tenant\Invoice;
@@ -363,6 +364,14 @@ class ClientPortalController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        $feedingPlan = HorseFeedingPlanItem::query()
+            ->where('horse_id', $horse->id)
+            ->active()
+            ->orderBy('meal')
+            ->orderBy('sort_order')
+            ->get()
+            ->groupBy(fn ($item) => $item->meal->value);
+
         return view('public.portal.horse', [
             'tenant' => $tenant,
             'client' => $client,
@@ -372,6 +381,7 @@ class ClientPortalController extends Controller
             'messages' => $messages,
             'documents' => $documents,
             'photos' => $photos,
+            'feeding_plan' => $feedingPlan,
             'estimated_monthly_cents' => $horse->estimatedMonthlyCostCents(),
             'primary_color' => data_get($tenant->branding, 'primary_color', '#10b981'),
         ]);

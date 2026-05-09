@@ -10,6 +10,8 @@ return [
         ],
         'label' => [
             'horse' => 'Horse',
+            'template' => 'Treatment template',
+            'template_placeholder' => '— optionally pick a template —',
             'type' => 'Type',
             'performed_at' => 'Procedure date',
             'performed_by' => 'Performed by (vet / farrier / company)',
@@ -23,6 +25,7 @@ return [
             'details' => 'Notes / medications / recommendations',
         ],
         'helper' => [
+            'template' => 'Picking a template fills in type, summary and the suggested next-due date.',
             'next_due_at' => 'This triggers a dashboard alert closer to the due date.',
             'specialist' => 'List filtered by entry type — farriers for "Farrier", vets for others. Manage the list in Stable → Specialists.',
         ],

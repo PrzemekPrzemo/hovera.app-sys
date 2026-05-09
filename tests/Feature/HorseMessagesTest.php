@@ -433,6 +433,20 @@ class HorseMessagesTest extends TestCase
             $t->timestamp('deleted_at')->nullable();
         });
 
+        Schema::connection('tenant')->create('horse_feeding_plan_items', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('horse_id', 26);
+            $t->string('meal', 16);
+            $t->string('feed_type', 120);
+            $t->decimal('amount_kg', 5, 2);
+            $t->string('unit', 20)->default('kg');
+            $t->text('notes')->nullable();
+            $t->boolean('is_active')->default(true);
+            $t->unsignedSmallInteger('sort_order')->default(0);
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+        });
+
         Schema::connection('tenant')->create('health_records', function ($t) {
             $t->string('id', 26)->primary();
             $t->string('horse_id', 26);

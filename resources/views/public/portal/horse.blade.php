@@ -49,6 +49,11 @@
         .services .meta { display: block; color: #9ca3af; font-size: .8rem; }
         .cost-summary { padding: 1rem; background: color-mix(in srgb, var(--primary) 10%, white); border-radius: 8px; margin-top: 1rem; display: flex; flex-direction: column; gap: .15rem; }
         .cost-summary .big { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
+        .feeding-meal { padding: .65rem 0; border-bottom: 1px solid #f3f4f6; }
+        .feeding-meal:last-of-type { border-bottom: 0; }
+        .feeding-meal-head { font-weight: 600; color: var(--primary); margin-bottom: .35rem; font-size: .95rem; }
+        .feeding-list { margin: 0; padding-left: 1.25rem; line-height: 1.6; color: #374151; }
+        .feeding-list li { padding: .15rem 0; }
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .65rem; }
         .photo-tile { display: block; position: relative; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 8px; background: #f3f4f6; text-decoration: none; }
         .photo-tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .2s ease; }
@@ -204,6 +209,31 @@
                     <span class="big">{{ number_format($estimated_monthly_cents / 100, 2, ',', ' ') }} zł</span>
                     <small class="muted">{{ __('portal/horse.cost.monthly_disclaimer') }}</small>
                 </div>
+            </div>
+        @endif
+
+        @if ($feeding_plan->isNotEmpty())
+            <div class="card">
+                <h2>{{ __('portal/horse.sections.feeding_plan') }}</h2>
+                @foreach (\App\Enums\FeedingMeal::cases() as $meal)
+                    @if ($feeding_plan->has($meal->value))
+                        <div class="feeding-meal">
+                            <div class="feeding-meal-head">{{ $meal->emoji() }} {{ $meal->label() }}</div>
+                            <ul class="feeding-list">
+                                @foreach ($feeding_plan->get($meal->value) as $item)
+                                    <li>
+                                        <strong>{{ $item->feed_type }}</strong>
+                                        — {{ $item->amountFormatted() }}
+                                        @if ($item->notes)
+                                            <span class="muted small">· {{ $item->notes }}</span>
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                @endforeach
+                <small class="muted">{{ __('portal/horse.feeding_plan.disclaimer') }}</small>
             </div>
         @endif
 
