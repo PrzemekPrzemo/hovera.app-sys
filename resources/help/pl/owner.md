@@ -373,7 +373,30 @@ Klient po zalogowaniu klika „+ Zarezerwuj lekcję" → wybiera swojego konia, 
 
 ---
 
-## 24. Wskazówki
+## 24. Co widzi która rola — matryca uprawnień
+
+Sidebar i strony są **filtrowane wg roli pracownika**. Vet nie zobaczy faktur i karnetów, pracownik nie zobaczy ustawień stajni — zminimalizowany widok = mniejsze ryzyko pomyłki i jaśniejszy interfejs.
+
+| Sekcja | owner | admin | manager | trener | pracownik | vet | viewer |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Konie · Opieka i zdrowie · Plan dnia · Rezerwacje | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Klienci | ✓ | ✓ | ✓ | ✓ | — | — | ✓ |
+| Boksy · Cennik pensji · Budynki · Cykliczne · Instruktorzy · Manaże | ✓ | ✓ | ✓ | ✓ | — | — | ✓ |
+| Specjaliści · Szablony zabiegów | ✓ | ✓ | ✓ | — | — | ✓ | ✓ |
+| Magazyn paszy | ✓ | ✓ | ✓ | — | ✓ | — | ✓ |
+| Faktury · Karnety · Raporty | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| Bulk invoicing | ✓ | ✓ | ✓ | — | — | — | — |
+| Ustawienia (stajni · FV · KSeF · Płatności) · Pracownicy | ✓ | ✓ | — | — | — | — | — |
+| Moje zadania | — | — | — | — | — | ✓ | — |
+| Pomoc | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+> **Master admin** (zewnętrzny support hovera) widzi wszystko niezależnie od roli — używany do impersonacji w celu debugowania.
+
+> **Zmiana roli** = zmiana widoczności od razu po refreshu strony. Możesz przełączać rolę pracownika w **Ustawienia → Pracownicy**.
+
+---
+
+## 25. Wskazówki
 
 - **Skróty z klawiatury** — `?` w panelu pokazuje listę skrótów
 - **Język** — przełącz w user menu (PL / EN / DE / FR); preferencja zapisuje się per user

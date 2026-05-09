@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Filament\App\Pages\Reports;
 
 use App\Enums\CalendarEntryStatus;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\CalendarEntry;
 use App\Models\Tenant\Instructor;
 use App\Services\Reports\MonthRange;
+use App\Services\Tenancy\TenantRoleGate;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
@@ -19,6 +21,14 @@ use Livewire\Attributes\Url;
  */
 class InstructorUtilizationReport extends Page
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::FINANCE_STAFF;
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     protected static ?int $navigationSort = 94;

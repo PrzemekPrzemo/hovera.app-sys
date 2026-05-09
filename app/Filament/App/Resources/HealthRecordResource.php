@@ -7,10 +7,12 @@ namespace App\Filament\App\Resources;
 use App\Enums\HealthRecordType;
 use App\Filament\App\Resources\HealthRecordResource\Pages;
 use App\Filament\Components\PriceInput;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\Specialist;
 use App\Models\Tenant\TreatmentTemplate;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -24,6 +26,14 @@ use Illuminate\Support\Carbon;
 
 class HealthRecordResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::HORSE_AND_CARE_STAFF;
+    }
+
     protected static ?string $model = HealthRecord::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-heart';

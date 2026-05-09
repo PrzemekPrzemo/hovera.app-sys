@@ -6,7 +6,9 @@ namespace App\Filament\App\Resources;
 
 use App\Enums\HealthRecordType;
 use App\Filament\App\Resources\TreatmentTemplateResource\Pages;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\TreatmentTemplate;
+use App\Services\Tenancy\TenantRoleGate;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,6 +17,14 @@ use Filament\Tables\Table;
 
 class TreatmentTemplateResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::SPECIALIST_STAFF;
+    }
+
     protected static ?string $model = TreatmentTemplate::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-bookmark-square';

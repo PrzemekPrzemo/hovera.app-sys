@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\BuildingResource\Pages;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Building;
+use App\Services\Tenancy\TenantRoleGate;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -16,6 +18,14 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BuildingResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::STABLE_OPS_STAFF;
+    }
+
     protected static ?string $model = Building::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';

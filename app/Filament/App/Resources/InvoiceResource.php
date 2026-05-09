@@ -10,6 +10,7 @@ use App\Enums\InvoiceKind;
 use App\Enums\InvoiceStatus;
 use App\Filament\App\Resources\InvoiceResource\Pages;
 use App\Filament\Components\PriceInput;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\InvoiceItem;
@@ -17,6 +18,7 @@ use App\Notifications\InvoiceIssuedClientNotification;
 use App\Services\Invoicing\InvoicePublicLink;
 use App\Services\Ksef\KsefClient;
 use App\Services\Portal\ClientMessageJournal;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -32,6 +34,14 @@ use Illuminate\Validation\ValidationException;
 
 class InvoiceResource extends Resource
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::FINANCE_STAFF;
+    }
+
     protected static ?string $model = Invoice::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';

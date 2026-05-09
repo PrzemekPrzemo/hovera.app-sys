@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\App\Pages\Reports;
 
 use App\Enums\InvoiceStatus;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Invoice;
+use App\Services\Tenancy\TenantRoleGate;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Carbon;
@@ -17,6 +19,14 @@ use Illuminate\Support\Carbon;
  */
 class ReceivablesAgingReport extends Page
 {
+    use RestrictedByTenantRole;
+
+    /** @return list<string> */
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::FINANCE_STAFF;
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-clock';
 
     protected static ?int $navigationSort = 92;
