@@ -61,6 +61,12 @@ Route::middleware(['web', 'throttle:6,1'])
     ->get('/demo', DemoLoginController::class)
     ->name('demo.login');
 
+// In-demo role switcher — guarded by session('demo.is_demo'). 404 outside demo.
+Route::middleware(['web'])
+    ->get('/demo/as/{role}', [DemoLoginController::class, 'switchRole'])
+    ->where('role', 'owner|admin|manager|instructor|employee|vet|viewer')
+    ->name('demo.switch_role');
+
 Route::middleware(['web', 'auth'])->prefix('two-factor')->name('two-factor.')->group(function () {
     Route::get('/setup', [TwoFactorController::class, 'showSetup'])->name('setup');
     Route::post('/setup', [TwoFactorController::class, 'confirmSetup'])->name('setup.confirm');

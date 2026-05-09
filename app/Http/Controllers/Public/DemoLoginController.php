@@ -28,7 +28,36 @@ use Illuminate\Support\Facades\Auth;
  */
 class DemoLoginController extends Controller
 {
+    /** Roles available via /demo/as/{role} for the in-panel role switcher. */
+    public const SWITCHABLE_ROLES = ['owner', 'admin', 'manager', 'instructor', 'employee', 'vet', 'viewer'];
+
     public function __invoke(Request $request): RedirectResponse
+    {
+        return $this->loginAs($request, 'owner', regenerate: true);
+    }
+
+    /**
+     * Role switcher for the demo banner — re-logins the visitor as a
+     * different demo user (manager / trener / pracownik / vet / viewer)
+     * to showcase the role-based visibility matrix without leaving demo.
+     *
+     * Only allowed when the current session already has demo.is_demo set;
+     * otherwise this would be a free auth bypass on production.
+     */
+    public function switchRole(Request $request, string $role): RedirectResponse
+    {
+        if ($request->session()->get('demo.is_demo') !== true) {
+            abort(404);
+        }
+
+        if (! in_array($role, self::SWITCHABLE_ROLES, true)) {
+            abort(404);
+        }
+
+        return $this->loginAs($request, $role, regenerate: false);
+    }
+
+    private function loginAs(Request $request, string $role, bool $regenerate): RedirectResponse
     {
         $slug = (string) config('hovera.demo.slug', 'demo');
 
@@ -37,34 +66,37 @@ class DemoLoginController extends Controller
             abort(503, 'Demo tymczasowo niedostępne — odśwież za chwilę.');
         }
 
-        // Owner of the demo tenant becomes the auto-login target. We pick
-        // the oldest non-revoked owner membership so re-seeding doesn't
-        // change the target if the seeder rotates ownership later.
         $membership = TenantMembership::query()
             ->where('tenant_id', $tenant->id)
-            ->where('role', 'owner')
+            ->where('role', $role)
             ->whereNull('revoked_at')
             ->orderBy('created_at')
             ->first();
 
         if (! $membership) {
-            abort(503, 'Demo tymczasowo niedostępne — owner nieprzypisany.');
+            abort(503, "Demo tymczasowo niedostępne — brak konta o roli '{$role}'.");
         }
 
         $user = User::query()->find($membership->user_id);
         if (! $user) {
-            abort(503, 'Demo tymczasowo niedostępne — konto ownera usunięte.');
+            abort(503, 'Demo tymczasowo niedostępne — konto użytkownika usunięte.');
         }
 
-        // Migrate the session before login so the existing CSRF token /
-        // anonymous data don't bleed across visitors. AuthenticateSession
-        // will pick the new ID up on the next request.
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Pierwszy entry-point regeneruje sesję od nowa (CSRF token, session
+        // ID). Role switch wewnątrz demo zachowuje sesję, tylko zmienia
+        // auth user i flagę roli.
+        if ($regenerate) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        } else {
+            Auth::logout();
+            $request->session()->regenerate();
+        }
 
         Auth::login($user);
         $request->session()->put('current_tenant_id', $tenant->id);
         $request->session()->put('demo.is_demo', true);
+        $request->session()->put('demo.role', $role);
         $request->session()->put('demo.expires_at', now()->addHours(2)->toIso8601String());
 
         return redirect('/app');

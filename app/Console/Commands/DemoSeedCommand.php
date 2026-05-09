@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Actions\Tenants\CreateTenant;
+use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
+use App\Models\Central\TenantMembership;
+use App\Models\Central\User;
 use App\Tenancy\TenantManager;
 use Database\Seeders\Demo\HoveraDemoSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DemoSeedCommand extends Command
 {
@@ -76,9 +81,15 @@ class DemoSeedCommand extends Command
         $this->info('Generuję demo dane…');
         $seeder->run();
 
+        // Plan Pro — odblokowuje vanity domain section + KSeF + bulk
+        // invoicing + raporty bez limitów. Demo bez tego wygląda jak free.
+        $proPlan = Plan::query()->where('code', 'pro')->first();
+
         // Ustaw branding + public profile dla demo tenant'a — żeby /s/{slug}
         // miało pełną treść (logo, opis, kontakt, godziny, lista instruktorów).
+        // Online booking ON żeby /book i self-booking w portalu działały.
         $tenant->forceFill([
+            'plan_id' => $proPlan?->id ?? $tenant->plan_id,
             'branding' => [
                 'primary_color' => '#A8956B', // Hovera ochre
                 'logo_url' => null,
@@ -98,9 +109,22 @@ class DemoSeedCommand extends Command
                     'opening_hours' => 'Pn–Pt: 9:00–20:00 · Sob–Nd: 8:00–18:00',
                     'show_box_availability' => true,
                     'show_instructors' => true,
+                    'show_pricing' => true,
+                ],
+                'public_booking' => [
+                    'enabled' => true,
+                    'lesson_duration_minutes' => 60,
+                    'working_hours_start' => '09:00',
+                    'working_hours_end' => '20:00',
+                    'advance_min_hours' => 4,
+                    'advance_max_days' => 30,
                 ],
             ]),
         ])->save();
+
+        // Multi-role demo users — dzięki temu odwiedzający /demo może
+        // zobaczyć panel z perspektywy każdej roli (matryca uprawnień).
+        $this->ensureDemoMembers($tenant);
 
         // Cache resetuję (`/s/{slug}` ma cache 5 min)
         Cache::forget("public_site:{$tenant->slug}");
@@ -110,6 +134,7 @@ class DemoSeedCommand extends Command
         $this->info('✓ Demo gotowe.');
         $this->line('');
         $this->line('  Panel stajni:    '.config('app.url').'/app  (login: '.$this->option('owner-email').')');
+        $this->line('  Demo URL:        '.config('app.url').'/demo  (auto-login bez rejestracji)');
         $this->line('  Public site:     '.config('app.url').'/'.config('hovera.public_site.prefix', 's').'/'.$tenant->slug);
         $this->line('  Tenant slug:     '.$tenant->slug);
         $this->line('  DB:              '.$tenant->db_name);
@@ -118,5 +143,46 @@ class DemoSeedCommand extends Command
         $this->line('  W trybie produkcyjnym mailer wysyłałby link na '.$this->option('owner-email').'.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Tworzy 5 dodatkowych userów (manager / instructor / employee / vet
+     * / viewer) z odpowiednimi rolami, żeby demo użytkownik mógł
+     * zobaczyć panel z perspektywy każdej roli (różnice w sidebarze).
+     *
+     * Każdy user ma random password — nie da się ich zalogować przez
+     * standardowy login form. Wejście tylko przez /demo (które loguje
+     * jako owner) lub przez nawigację demo-roles (osobny flow).
+     */
+    private function ensureDemoMembers(Tenant $tenant): void
+    {
+        $members = [
+            ['email' => 'manager@hovera.app', 'name' => 'Demo Manager', 'role' => 'manager'],
+            ['email' => 'trener@hovera.app', 'name' => 'Demo Trener', 'role' => 'instructor'],
+            ['email' => 'pracownik@hovera.app', 'name' => 'Demo Pracownik', 'role' => 'employee'],
+            ['email' => 'vet@hovera.app', 'name' => 'Demo Weterynarz', 'role' => 'vet'],
+            ['email' => 'viewer@hovera.app', 'name' => 'Demo Viewer', 'role' => 'viewer'],
+        ];
+
+        foreach ($members as $m) {
+            $user = User::query()->firstOrCreate(
+                ['email' => $m['email']],
+                [
+                    'id' => (string) Str::ulid(),
+                    'name' => $m['name'],
+                    'password' => Hash::make(Str::random(40)),
+                    'is_master_admin' => false,
+                ],
+            );
+
+            TenantMembership::query()->updateOrCreate(
+                ['tenant_id' => $tenant->id, 'user_id' => $user->id],
+                [
+                    'id' => (string) Str::ulid(),
+                    'role' => $m['role'],
+                    'joined_at' => now(),
+                ],
+            );
+        }
     }
 }

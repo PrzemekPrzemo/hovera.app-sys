@@ -9,16 +9,23 @@ use App\Models\Tenant\BoardingService;
 use App\Models\Tenant\Box;
 use App\Models\Tenant\BoxAssignment;
 use App\Models\Tenant\CalendarEntry;
+use App\Models\Tenant\CalendarEntryParticipant;
 use App\Models\Tenant\Client;
+use App\Models\Tenant\FeedItem;
+use App\Models\Tenant\FeedStockMovement;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\HorseDocument;
+use App\Models\Tenant\HorseFeedingPlanItem;
 use App\Models\Tenant\HorseMessage;
+use App\Models\Tenant\HorsePhoto;
+use App\Models\Tenant\HorseWeightMeasurement;
 use App\Models\Tenant\Instructor;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\InvoiceItem;
 use App\Models\Tenant\Pass;
 use App\Models\Tenant\PassUse;
 use App\Models\Tenant\Payment;
+use App\Models\Tenant\TreatmentTemplate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -79,6 +86,15 @@ class HoveraDemoSeeder
             $this->seedHealthAndActivities($horses);
             $this->seedDocumentsAndMessages($horses, $clients);
             $this->seedInvoicesAndPayments($clients, $horses);
+
+            // Modules added in PR rounds 1+2 — without these the demo
+            // panel feels incomplete and most "what's new" sections look empty.
+            $this->seedFeedingPlans($horses);
+            $this->seedFeedInventory();
+            $this->seedHorseWeights($horses);
+            $this->seedHorsePhotos($horses);
+            $this->seedExtraTreatmentTemplates();
+            $this->seedGroupLessons($horses, $clients, $instructors, $arenas);
         });
     }
 
@@ -515,6 +531,248 @@ class HoveraDemoSeeder
                     'provider_ref' => 'DEMO-'.Str::upper(Str::random(8)),
                     'status' => 'succeeded',
                     'paid_at' => $invoice->paid_at,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * @param  array<int, Horse>  $horses
+     */
+    private function seedFeedingPlans(array $horses): void
+    {
+        // Pierwszych 8 koni dostaje pełny plan, reszta ma minimalny
+        // (rano + wieczór). Przykład tego, jak owner może dostosować
+        // dietę per koń.
+        $fullPlan = [
+            ['meal' => 'breakfast', 'feed' => 'Owies', 'amount' => 2.0, 'unit' => 'kg', 'notes' => null],
+            ['meal' => 'breakfast', 'feed' => 'Siano łąkowe', 'amount' => 5.0, 'unit' => 'kg', 'notes' => 'porcja w siatce'],
+            ['meal' => 'midday', 'feed' => 'Marchew', 'amount' => 1.0, 'unit' => 'kg', 'notes' => null],
+            ['meal' => 'evening', 'feed' => 'Mash Cool Mix', 'amount' => 1.5, 'unit' => 'kg', 'notes' => 'namoczyć 30 min przed podaniem'],
+            ['meal' => 'evening', 'feed' => 'Siano łąkowe', 'amount' => 6.0, 'unit' => 'kg', 'notes' => null],
+        ];
+        $minimalPlan = [
+            ['meal' => 'breakfast', 'feed' => 'Siano łąkowe', 'amount' => 4.0, 'unit' => 'kg', 'notes' => null],
+            ['meal' => 'evening', 'feed' => 'Siano łąkowe', 'amount' => 5.0, 'unit' => 'kg', 'notes' => null],
+        ];
+
+        foreach ($horses as $i => $horse) {
+            $plan = $i < 8 ? $fullPlan : $minimalPlan;
+            foreach ($plan as $sort => $row) {
+                HorseFeedingPlanItem::create([
+                    'id' => (string) Str::ulid(),
+                    'horse_id' => $horse->id,
+                    'meal' => $row['meal'],
+                    'feed_type' => $row['feed'],
+                    'amount_kg' => $row['amount'],
+                    'unit' => $row['unit'],
+                    'notes' => $row['notes'],
+                    'is_active' => true,
+                    'sort_order' => $sort,
+                ]);
+            }
+        }
+    }
+
+    private function seedFeedInventory(): void
+    {
+        // 6 pozycji magazynu — 2 z nich celowo poniżej threshold żeby
+        // owner zobaczył sidebar badge "Magazyn paszy 2".
+        $items = [
+            // [name, unit, threshold, current_stock_kg]
+            ['Owies', 'kg', 100.0, 320.0],          // OK
+            ['Siano łąkowe', 'bel', 20.0, 12.0],    // ⚠ poniżej progu
+            ['Mash Cool Mix', 'kg', 30.0, 75.0],    // OK
+            ['Marchew', 'kg', 50.0, 18.0],          // ⚠ poniżej progu
+            ['Buraki cukrowe', 'kg', 40.0, 60.0],   // OK
+            ['Lizawka mineralna', 'szt.', 5.0, 14.0], // OK
+        ];
+
+        foreach ($items as $sort => [$name, $unit, $threshold, $stock]) {
+            $item = FeedItem::create([
+                'id' => (string) Str::ulid(),
+                'name' => $name,
+                'unit' => $unit,
+                'low_stock_threshold' => $threshold,
+                'is_active' => true,
+                'sort_order' => $sort,
+            ]);
+
+            // Jedna duża dostawa miesiąc temu — buduje stan początkowy.
+            FeedStockMovement::create([
+                'id' => (string) Str::ulid(),
+                'feed_item_id' => $item->id,
+                'delta' => $stock + 30,
+                'kind' => 'purchase',
+                'movement_date' => now()->subDays(30)->toDateString(),
+                'notes' => 'Dostawa od dostawcy Y',
+            ]);
+            // Konsumpcja w ostatnich tygodniach — spadek do current.
+            FeedStockMovement::create([
+                'id' => (string) Str::ulid(),
+                'feed_item_id' => $item->id,
+                'delta' => -30,
+                'kind' => 'consumption',
+                'movement_date' => now()->subDays(7)->toDateString(),
+                'notes' => null,
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<int, Horse>  $horses
+     */
+    private function seedHorseWeights(array $horses): void
+    {
+        // 8 koni × 6 miesięcznych pomiarów. Trend per koń:
+        //  - 0,3,6:  stabilnie ±2 kg
+        //  - 1,4,7:  przyrost +5 kg/mc (treningowy program)
+        //  - 2,5:    spadek -3 kg/mc (jakaś kontuzja, owner widzi alert)
+        foreach (array_slice($horses, 0, 8) as $idx => $horse) {
+            $base = 520 + ($idx * 8);
+
+            for ($monthAgo = 6; $monthAgo >= 0; $monthAgo--) {
+                $delta = match ($idx % 3) {
+                    0 => rand(-2, 2),
+                    1 => (6 - $monthAgo) * 5,
+                    2 => -((6 - $monthAgo) * 3),
+                };
+                HorseWeightMeasurement::create([
+                    'id' => (string) Str::ulid(),
+                    'horse_id' => $horse->id,
+                    'measured_at' => now()->subMonths($monthAgo)->toDateString(),
+                    'weight_kg' => round($base + $delta, 1),
+                    'girth_cm' => round(180 + (($base + $delta - 520) * 0.05), 1),
+                    'notes' => $monthAgo === 0 && ($idx % 3 === 2)
+                        ? 'Spadek wagi — skonsultować z weterynarzem'
+                        : null,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * @param  array<int, Horse>  $horses
+     */
+    private function seedHorsePhotos(array $horses): void
+    {
+        // Demo bez prawdziwych zdjęć — generujemy placeholdery przez GD
+        // (1×1 px PNG z hex kolorem stajni). Owner po wgraniu prawdziwych
+        // zobaczy galerię zamiast szarych kafli.
+        if (! function_exists('imagecreate')) {
+            return; // GD niedostępne, pomijamy
+        }
+
+        foreach (array_slice($horses, 0, 6) as $horse) {
+            for ($p = 1; $p <= 3; $p++) {
+                $captionOptions = ['Zdjęcie portretowe', 'Trening dżeppingu', 'Padok', 'Po lekcji', 'Dzień zawodów'];
+                $caption = $captionOptions[($p - 1) % count($captionOptions)];
+
+                $img = imagecreate(400, 400);
+                $bg = imagecolorallocate($img, rand(120, 200), rand(140, 180), rand(110, 160));
+                imagefilledrectangle($img, 0, 0, 400, 400, $bg);
+                $textColor = imagecolorallocate($img, 255, 255, 255);
+                imagestring($img, 5, 130, 180, substr($horse->name, 0, 12), $textColor);
+
+                ob_start();
+                imagepng($img);
+                $blob = (string) ob_get_clean();
+                imagedestroy($img);
+
+                $path = "tenants/demo/horses/{$horse->id}/photos/demo-{$p}.png";
+                Storage::disk('local')->put($path, $blob);
+
+                HorsePhoto::create([
+                    'id' => (string) Str::ulid(),
+                    'horse_id' => $horse->id,
+                    'file_path' => $path,
+                    'original_name' => "{$horse->name}-{$p}.png",
+                    'mime' => 'image/png',
+                    'size_bytes' => strlen($blob),
+                    'caption' => $caption,
+                    'sort_order' => $p,
+                    'uploaded_by_role' => 'stable',
+                ]);
+            }
+        }
+    }
+
+    private function seedExtraTreatmentTemplates(): void
+    {
+        // Dorzucamy 2 customowe szablony oprócz 6 standardowych z migracji,
+        // pokazując ownerowi że można edytować/dodać własne.
+        $extras = [
+            ['name' => 'Przegląd po sezonie', 'type' => 'check_up', 'interval' => 90, 'summary' => 'Sezonowy przegląd po intensywnym treningu', 'notes' => 'Skupić się na stawach, plecach, palpacja kręgosłupa.'],
+            ['name' => 'Iniekcja stawowa', 'type' => 'medication', 'interval' => 180, 'summary' => 'Iniekcja kwasu hialuronowego', 'notes' => 'Po konsultacji z weterynarzem; nie wcześniej niż 6 mies. od poprzedniej.'],
+        ];
+
+        foreach ($extras as $sort => $tpl) {
+            TreatmentTemplate::updateOrCreate(
+                ['name' => $tpl['name']],
+                [
+                    'id' => (string) Str::ulid(),
+                    'name' => $tpl['name'],
+                    'type' => $tpl['type'],
+                    'interval_days' => $tpl['interval'],
+                    'default_summary' => $tpl['summary'],
+                    'default_notes' => $tpl['notes'],
+                    'is_active' => true,
+                    'sort_order' => 100 + $sort,
+                ]
+            );
+        }
+    }
+
+    /**
+     * @param  array<int, Horse>  $horses
+     * @param  array<int, Client>  $clients
+     * @param  array<int, Instructor>  $instructors
+     * @param  array<int, Arena>  $arenas
+     */
+    private function seedGroupLessons(array $horses, array $clients, array $instructors, array $arenas): void
+    {
+        // 3 lekcje grupowe: zeszłotygodniowa (mieszane attendance), jutrzejsza
+        // (wszyscy expected) i za 2 tygodnie. Pokazuje frekwencję, multi-uczestnik UI.
+        $lessons = [
+            ['starts' => now()->subDays(2)->setTime(17, 0), 'mixed' => true, 'title' => 'Lekcja grupowa — początkujący'],
+            ['starts' => now()->addDay()->setTime(17, 0), 'mixed' => false, 'title' => 'Lekcja grupowa — średnio-zaawansowani'],
+            ['starts' => now()->addDays(14)->setTime(18, 0), 'mixed' => false, 'title' => 'Lekcja grupowa — początkujący'],
+        ];
+
+        foreach ($lessons as $lesson) {
+            $entry = CalendarEntry::create([
+                'id' => (string) Str::ulid(),
+                'type' => 'lesson_group',
+                'title' => $lesson['title'],
+                'starts_at' => $lesson['starts'],
+                'ends_at' => $lesson['starts']->copy()->addMinutes(60),
+                'instructor_id' => $instructors[1]->id,
+                'arena_id' => $arenas[0]->id,
+                'horse_id' => null,
+                'client_id' => null,
+                'status' => $lesson['starts']->isPast() ? 'completed' : 'confirmed',
+            ]);
+
+            // 4 uczestników na lekcję.
+            $participantClients = array_slice($clients, 0, 4);
+            $participantHorses = array_slice($horses, 0, 4);
+            foreach ($participantClients as $idx => $client) {
+                $attendance = match (true) {
+                    ! $lesson['mixed'] => 'expected',
+                    $idx === 0 => 'present',
+                    $idx === 1 => 'present',
+                    $idx === 2 => 'late',
+                    default => 'absent',
+                };
+                CalendarEntryParticipant::create([
+                    'id' => (string) Str::ulid(),
+                    'calendar_entry_id' => $entry->id,
+                    'client_id' => $client->id,
+                    'horse_id' => $participantHorses[$idx]->id ?? null,
+                    'attendance_status' => $attendance,
+                    'notes' => $idx === 3 && $lesson['mixed']
+                        ? 'Nieobecny — zwolnienie lekarskie'
+                        : null,
                 ]);
             }
         }
