@@ -54,4 +54,6 @@ return [
     'health_entries' => 'Health entries',
     'activity' => 'activity',
     'activities' => 'Activities',
+    'horse_weight_measurement' => 'weight measurement',
+    'horse_weight_measurements' => 'Weight log',
 ];

@@ -61,4 +61,6 @@ return [
     'health_entries' => 'Wpisy zdrowotne',
     'activity' => 'aktywność',
     'activities' => 'Aktywności',
+    'horse_weight_measurement' => 'pomiar wagi',
+    'horse_weight_measurements' => 'Waga konia',
 ];
