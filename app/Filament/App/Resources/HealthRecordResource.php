@@ -10,6 +10,7 @@ use App\Filament\Components\PriceInput;
 use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\Specialist;
+use App\Models\Tenant\TreatmentTemplate;
 use App\Services\TenantAuditLogger;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -60,6 +61,18 @@ class HealthRecordResource extends Resource
                         ->options(fn () => Horse::query()->orderBy('name')->pluck('name', 'id'))
                         ->required()
                         ->searchable(),
+                    Forms\Components\Select::make('treatment_template_id')
+                        ->label(__('app/health.form.label.template'))
+                        ->helperText(__('app/health.form.helper.template'))
+                        ->options(fn () => TreatmentTemplate::query()
+                            ->active()
+                            ->orderBy('sort_order')
+                            ->pluck('name', 'id'))
+                        ->dehydrated(false)
+                        ->placeholder(__('app/health.form.label.template_placeholder'))
+                        ->reactive()
+                        ->afterStateUpdated(self::applyTemplate())
+                        ->columnSpanFull(),
                     Forms\Components\Select::make('type')
                         ->label(__('app/health.form.label.type'))
                         ->options(HealthRecordType::options())
@@ -178,6 +191,39 @@ class HealthRecordResource extends Resource
             'create' => Pages\CreateHealthRecord::route('/create'),
             'edit' => Pages\EditHealthRecord::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * When the user picks a TreatmentTemplate, fill type / summary /
+     * details / next_due_at from the template. Always overwrites — the
+     * user explicitly chose a preset, so they want its values.
+     */
+    private static function applyTemplate(): callable
+    {
+        return function (?string $state, Forms\Get $get, Forms\Set $set) {
+            if (! $state) {
+                return;
+            }
+
+            $template = TreatmentTemplate::query()->find($state);
+            if (! $template) {
+                return;
+            }
+
+            $set('type', $template->type->value);
+
+            if ($template->default_summary) {
+                $set('summary', $template->default_summary);
+            }
+            if ($template->default_notes) {
+                $set('details', $template->default_notes);
+            }
+
+            if ($template->interval_days !== null) {
+                $performedAt = $get('performed_at') ? Carbon::parse($get('performed_at')) : now();
+                $set('next_due_at', $performedAt->copy()->addDays($template->interval_days)->toDateString());
+            }
+        };
     }
 
     /**

@@ -67,6 +67,11 @@ class Horse extends TenantModel
         return $this->hasMany(StableActivity::class)->orderByDesc('performed_at');
     }
 
+    public function weightMeasurements(): HasMany
+    {
+        return $this->hasMany(HorseWeightMeasurement::class)->orderByDesc('measured_at');
+    }
+
     public function messages(): HasMany
     {
         return $this->hasMany(HorseMessage::class)->orderByDesc('sent_at');

@@ -33,6 +33,8 @@ return [
     'instructors' => 'Instructors',
     'health_record' => 'health record',
     'health_records' => 'Care & health',
+    'treatment_template' => 'treatment template',
+    'treatment_templates' => 'Treatment templates',
     'calendar_entry' => 'booking',
     'calendar_entries' => 'Bookings',
     'recurring_entry' => 'recurring session',
@@ -52,6 +54,8 @@ return [
     'health_entries' => 'Health entries',
     'activity' => 'activity',
     'activities' => 'Activities',
+    'horse_weight_measurement' => 'weight measurement',
+    'horse_weight_measurements' => 'Weight log',
     'feed_item' => 'feed item',
     'feed_items' => 'Feed inventory',
 ];

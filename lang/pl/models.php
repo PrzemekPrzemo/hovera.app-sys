@@ -39,6 +39,8 @@ return [
     'instructors' => 'Instruktorzy',
     'health_record' => 'wpis zdrowotny',
     'health_records' => 'Opieka i zdrowie',
+    'treatment_template' => 'szablon zabiegu',
+    'treatment_templates' => 'Szablony zabiegów',
     'calendar_entry' => 'rezerwacja',
     'calendar_entries' => 'Rezerwacje',
     'recurring_entry' => 'cykliczne zajęcie',
@@ -59,6 +61,8 @@ return [
     'health_entries' => 'Wpisy zdrowotne',
     'activity' => 'aktywność',
     'activities' => 'Aktywności',
+    'horse_weight_measurement' => 'pomiar wagi',
+    'horse_weight_measurements' => 'Waga konia',
     'feed_item' => 'pozycja paszowa',
     'feed_items' => 'Magazyn paszy',
 ];
