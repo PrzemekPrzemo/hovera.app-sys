@@ -149,10 +149,27 @@ Menu użytkownika (prawy górny róg) → **Polski / English / Deutsch / França
 
 ---
 
-## 9a. Nowości
+## 9a. Nowości — co dorzuciliśmy ostatnio
 
-- **Szablony zabiegów** — w formularzu nowego wpisu zdrowotnego pojawia się select „Szablon zabiegu". Wybór szablonu (np. „Kucie/korekcja") auto-wypełnia typ, opis, sugerowany termin następnej wizyty (np. +42 dni od dziś). Twoja stajnia ma 6 standardowych PL + może dodać własne.
-- **Plakietki w terminarzu** — przy oznaczaniu wizyty jako wykonanej, jeśli ustawisz „następną wizytę" → automatycznie utworzy się rezerwacja w kalendarzu jako *Oczekuje* — Ty lub stajnia ją potwierdzicie.
+- **Szablony zabiegów** — w formularzu nowego wpisu zdrowotnego pojawia się select „Szablon zabiegu". Wybór szablonu (np. „Kucie/korekcja") auto-wypełnia typ, opis, sugerowany termin następnej wizyty (np. +42 dni od dziś). Stajnia ma 6 standardowych PL + może dodać własne. Możesz też zarządzać szablonami w **Stajnia → Szablony zabiegów**.
+- **Auto-utworzenie kolejnej wizyty** — przy oznaczaniu wizyty jako wykonanej, jeśli ustawisz „następną wizytę" → automatycznie utworzy się rezerwacja w kalendarzu jako *Oczekuje*.
+- **Eksport `.ics` (subskrypcja Twojego kalendarza)** — w **Stajnia → Instruktorzy** (jeśli masz konto pracownika i jesteś na liście) lub w karcie specjalisty → akcja **„Kalendarz .ics"**. Modal pokazuje URL feedu — wklej w **Google Calendar** („Inne kalendarze → + → Z URL"), **Outlook** lub **Apple Calendar**. Lekcje synchronizują się automatycznie co kilka godzin. Window: 6 mies. wstecz + 12 wprzód.
+- **Karta wagi konia** — tab **Waga** w karcie konia pokazuje historię pomiarów z kolumną „Zmiana" (🟢 przyrost / 🟡 spadek / ⚪ stabilnie). Pomocne przy ocenie kondycji przed zabiegiem.
+- **Galeria zdjęć konia** — tab **Galeria** z miniaturkami. Pomocne przed wizytą — możesz zerknąć jak koń wygląda.
+- **Dashboard „Dziś"** (`/app`) — po zalogowaniu widzisz na górze 4 kafelki: Rezerwacje dziś, Wolne boksy, **Przeterminowane zabiegi** (kliknij → filtr w Opiece i zdrowiu), Niezapłacone FV. Pod nimi tabela aktywnych dzisiejszych rezerwacji.
+
+---
+
+## 9b. Co widzisz w panelu — Twoja rola
+
+Sidebar jest filtrowany po roli. Jako **vet** widzisz:
+
+- ✓ Konie, Opieka i zdrowie, Plan dnia (kalendarz), Rezerwacje
+- ✓ Specjaliści, Szablony zabiegów
+- ✓ Moje zadania (jeśli twoje konto jest powiązane z rekordem Specialist)
+- ✗ Klienci, Boksy, Cennik, Faktury, Karnety, Magazyn paszy, Raporty, Ustawienia, Pracownicy
+
+Jeśli musisz coś sprawdzić w sekcji „X której nie widzisz" — poproś admina stajni o krótkotrwałą zmianę roli, albo niech sam wyciągnie informację.
 
 ---
 

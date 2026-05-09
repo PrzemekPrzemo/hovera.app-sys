@@ -150,9 +150,30 @@ Menu użytkownika (prawy górny róg) → **Polski / English / Deutsch / França
 
 ## 9a. Nowe moduły, które Cię dotyczą
 
-- **Plan żywienia konia** — w karcie konia tab „Plan żywienia" mówi dokładnie kto co o jakiej porze ma jeść. Dodawanie/edycja przez Trenera/Managera; Pracownik czyta i wykonuje.
-- **Magazyn paszy** — `/app/feed-inventory`. Codzienne wydania: klik „+ Ruch magazynowy" → typ „Wydanie / spożycie" → ilość (np. 12 kg) → zatwierdź. Stan się odejmuje. Gdy stan spadnie poniżej progu — w sidebarze pokaże się badge alertu.
-- **Wpisy aktywności i waga konia** — Trener/Pracownik może wpisać miesięczny pomiar wagi w tabie „Waga konia" (kg + opcjonalnie obwód klatki). Wykres trendu pomaga zauważyć spadki/przyrosty.
+- **Plan żywienia konia** — w karcie konia tab „Plan żywienia" mówi dokładnie kto co o jakiej porze ma jeść. Dodawanie/edycja przez Trenera/Managera; Pracownik czyta i wykonuje. Klient widzi to też w portalu (transparentność diety).
+- **Magazyn paszy** — `/app/feed-inventory`. Codzienne wydania: klik **„+ Ruch magazynowy"** → typ „Wydanie / spożycie" → ilość (np. 12 kg) → zatwierdź. Stan automatycznie się odejmuje. Gdy stan spadnie poniżej progu — w sidebarze obok „Magazyn paszy" pojawia się badge z liczbą pozycji w alercie.
+- **Karta wagi konia** — Trener/Pracownik wpisuje miesięczny pomiar w tabie **Waga konia** (kg + opcjonalnie obwód klatki). Kolumna „Zmiana" pokazuje czy koń tyje (🟢) / chudnie (🟡) / jest stabilny (⚪).
+- **Galeria zdjęć konia** — tab **Galeria** z miniaturkami; klient widzi grid w portalu.
+- **Dashboard „Dziś"** (`/app`) — 4 kafelki na górze (Rezerwacje dziś / Wolne boksy / Przeterminowane zabiegi / Niezapłacone FV) + tabela aktywnych rezerwacji. Szybki przegląd co dziś robisz.
+
+---
+
+## 9b. Co widzisz w panelu — Twoja rola
+
+Sidebar jest filtrowany. Co widzisz, zależy od roli:
+
+| | Trener | Pracownik | Manager | Tylko podgląd |
+|---|:-:|:-:|:-:|:-:|
+| Konie · Opieka i zdrowie · Plan dnia · Rezerwacje | ✓ | ✓ | ✓ | ✓ |
+| Klienci | ✓ | — | ✓ | ✓ |
+| Boksy · Cennik · Cykliczne · Instruktorzy · Manaże | ✓ | — | ✓ | ✓ |
+| Magazyn paszy | — | ✓ | ✓ | ✓ |
+| Specjaliści · Szablony zabiegów | — | — | ✓ | ✓ |
+| Faktury · Karnety · Raporty | — | — | ✓ | ✓ |
+| Bulk invoicing | — | — | ✓ | — |
+| Ustawienia · Pracownicy | — | — | — | — |
+
+> Brak sekcji w sidebarze nie oznacza błędu — Twoja rola jej nie potrzebuje. Jeśli musisz coś zmienić w niedostępnej sekcji, poproś admina/managera.
 
 ---
 

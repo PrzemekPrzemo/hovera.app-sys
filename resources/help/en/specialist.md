@@ -149,10 +149,27 @@ User menu (top-right) → **Polski / English / Deutsch / Français**. The prefer
 
 ---
 
-## 9a. What's new
+## 9a. What's new — recently added
 
-- **Treatment templates** — when creating a health record, a "Treatment template" select appears. Picking one (e.g. "Shoeing") auto-fills type, summary, suggested next-due date. Your stable starts with 6 PL standards and can add custom.
-- **Auto-create next visit** — when marking a visit as done, set "next visit" date and the system creates a *Requested* calendar entry — you or the stable confirms it.
+- **Treatment templates** — when creating a health record, a "Treatment template" select appears. Picking one (e.g. "Shoeing") auto-fills type, summary, suggested next-due date. Stables start with 6 PL standards and can add custom. Manage templates in **Stable → Treatment templates**.
+- **Auto-create next visit** — when marking a visit as done, set "next visit" date and the system creates a *Requested* calendar entry.
+- **Calendar `.ics` feed (subscription)** — in **Stable → Instructors** (if your account is on the list) or your specialist record → action **"Calendar feed (.ics)"**. The modal shows a feed URL — paste into **Google Calendar** ("Other calendars → + → From URL"), **Outlook** or **Apple Calendar**. Lessons sync every few hours. Window: 6 mo back + 12 mo forward.
+- **Horse weight log** — the **Weight** tab on the horse profile shows a history with a "Change" column (🟢 gain / 🟡 loss / ⚪ stable). Useful for pre-visit condition assessment.
+- **Photo gallery** — **Gallery** tab with thumbnails. Handy to peek before a visit.
+- **"Today" dashboard** (`/app`) — 4 KPI tiles up top after login: Bookings today, Vacant boxes, **Overdue care** (click → filter in Care & health), Unpaid invoices. Below: today's active bookings table.
+
+---
+
+## 9b. What you see in the panel — your role
+
+The sidebar is filtered by role. As **vet** you see:
+
+- ✓ Horses, Care & health, Day plan (calendar), Bookings
+- ✓ Specialists, Treatment templates
+- ✓ My tasks (if your account is linked to a Specialist record)
+- ✗ Clients, Boxes, Boarding pricing, Invoices, Passes, Feed inventory, Reports, Settings, Team
+
+If you need something from a section you can't see — ask the stable admin for a short-term role change or have them pull the info.
 
 ---
 

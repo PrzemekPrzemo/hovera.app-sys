@@ -150,9 +150,28 @@ Menu utilisateur (haut à droite) → **Polski / English / Deutsch / Français**
 
 ## 9a. Nouveaux modules qui vous concernent
 
-- **Plan d'alimentation du cheval** — l'onglet « Plan d'alimentation » sur la fiche du cheval indique précisément quoi donner et quand. Instructeur/Manager édite ; Employé lit et exécute.
-- **Stock de fourrage** — `/app/feed-inventory`. Sortie quotidienne : « + Mouvement » → « Consommation » → quantité → valider. Le stock diminue. Les articles sous le seuil affichent un badge.
-- **Poids du cheval** — Instructeur/Employé peut enregistrer la pesée mensuelle dans l'onglet « Poids » (kg + sangle optionnelle).
+- **Plan d'alimentation** — onglet « Plan d'alimentation » sur la fiche cheval. Instructeur/Manager édite ; Employé lit et exécute. Le propriétaire le voit dans le portail.
+- **Stock de fourrage** — `/app/feed-inventory`. Sortie quotidienne : **« + Mouvement »** → « Consommation » → quantité → valider. Stock diminue. Articles sous le seuil → badge dans la barre latérale.
+- **Poids du cheval** — onglet **Poids** (kg + sangle optionnelle). Colonne « Évolution » : 🟢 prise / 🟡 perte / ⚪ stable.
+- **Galerie photos** — onglet **Galerie** ; propriétaire voit la grille dans le portail.
+- **Tableau « Aujourd'hui »** (`/app`) — 4 tuiles KPI + tableau des réservations du jour.
+
+---
+
+## 9b. Ce que vous voyez dans le panneau — votre rôle
+
+La barre latérale est filtrée par rôle :
+
+| | Instructeur | Employé | Manager | Lecture seule |
+|---|:-:|:-:|:-:|:-:|
+| Chevaux · Soins · Plan du jour · Réservations | ✓ | ✓ | ✓ | ✓ |
+| Clients | ✓ | — | ✓ | ✓ |
+| Boxes · Tarifs · Récurrentes · Instructeurs · Manèges | ✓ | — | ✓ | ✓ |
+| Stock fourrage | — | ✓ | ✓ | ✓ |
+| Spécialistes · Modèles de soins | — | — | ✓ | ✓ |
+| Factures · Cartes · Rapports | — | — | ✓ | ✓ |
+| Facturation en masse | — | — | ✓ | — |
+| Paramètres · Employés | — | — | — | — |
 
 ---
 

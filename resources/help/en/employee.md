@@ -150,9 +150,30 @@ User menu (top-right) → **Polski / English / Deutsch / Français**. The prefer
 
 ## 9a. New modules relevant for you
 
-- **Horse feeding plan** — the "Feeding plan" tab on the horse profile says exactly what to feed and when. Trainer/Manager edits; Employee reads and executes.
-- **Feed inventory** — `/app/feed-inventory`. Daily issuance: click "+ Stock movement" → "Consumption" → amount → confirm. Stock decreases. Below-threshold items show a sidebar badge.
-- **Horse weight** — Trainer/Employee can log monthly weight in the "Weight log" tab (kg + optional heart girth). Trend column flags gain/loss.
+- **Horse feeding plan** — the "Feeding plan" tab on the horse profile says exactly what to feed and when. Trainer/Manager edits; Employee reads and executes. Owner also sees this in the client portal (diet transparency).
+- **Feed inventory** — `/app/feed-inventory`. Daily issuance: click **"+ Stock movement"** → "Consumption" → amount → confirm. Stock auto-decreases. Below-threshold items show a sidebar badge counter.
+- **Horse weight log** — Trainer/Employee logs monthly weight in the **Weight** tab (kg + optional heart girth). "Change" column flags 🟢 gain / 🟡 loss / ⚪ stable.
+- **Photo gallery** — **Gallery** tab with thumbnails; the owner sees a grid in the portal.
+- **"Today" dashboard** (`/app`) — 4 KPI tiles up top + today's bookings table. Quick view of what's on today.
+
+---
+
+## 9b. What you see in the panel — your role
+
+The sidebar is filtered. Visible sections depend on role:
+
+| | Trainer | Employee | Manager | View-only |
+|---|:-:|:-:|:-:|:-:|
+| Horses · Care & health · Day plan · Bookings | ✓ | ✓ | ✓ | ✓ |
+| Clients | ✓ | — | ✓ | ✓ |
+| Boxes · Pricing · Recurring · Instructors · Arenas | ✓ | — | ✓ | ✓ |
+| Feed inventory | — | ✓ | ✓ | ✓ |
+| Specialists · Treatment templates | — | — | ✓ | ✓ |
+| Invoices · Passes · Reports | — | — | ✓ | ✓ |
+| Bulk invoicing | — | — | ✓ | — |
+| Settings · Team | — | — | — | — |
+
+> Missing sections in the sidebar isn't a bug — your role doesn't need them. If you must change something in a locked section, ask the admin/manager.
 
 ---
 

@@ -151,8 +151,23 @@ Benutzermenü (oben rechts) → **Polski / English / Deutsch / Français**. Prä
 
 ## 9a. Neuerungen
 
-- **Behandlungsvorlagen** — beim Anlegen eines Pflegeeintrags erscheint ein Select „Behandlungsvorlage". Auswahl (z. B. „Beschlag") füllt Typ, Beschreibung und Folgetermin (z. B. heute + 42 Tage) automatisch.
-- **Auto-Folgetermin** — beim Markieren als „erledigt" einen Folgetermin setzen → System erstellt automatisch eine *Angefragt*-Buchung im Kalender.
+- **Behandlungsvorlagen** — beim Anlegen eines Pflegeeintrags erscheint ein Select „Behandlungsvorlage". Auswahl (z. B. „Beschlag") füllt Typ, Beschreibung und Folgetermin automatisch. Verwaltung unter **Stall → Behandlungsvorlagen**.
+- **Auto-Folgetermin** — beim Markieren als erledigt → System erstellt eine *Angefragt*-Buchung im Kalender.
+- **Kalender-Feed (`.ics`)** — in **Stall → Trainer** (wenn auf der Liste) oder im Spezialisten-Eintrag → Aktion **„Kalender .ics"**. Modal zeigt Feed-URL — in Google Calendar / Outlook / Apple einfügen über „Kalender per URL". Sync alle paar Stunden. Fenster: 6 Mo zurück + 12 Mo voraus.
+- **Pferdegewicht** — Tab **Gewicht** im Pferdeprofil zeigt Historie mit Spalte „Änderung" (🟢 Zunahme / 🟡 Abnahme / ⚪ stabil).
+- **Fotogalerie** — Tab **Galerie**. Praktisch vor dem Besuch.
+- **„Heute"-Dashboard** (`/app`) — 4 KPI-Kacheln oben (Buchungen heute, Freie Boxen, **Überfällige Behandlungen**, Offene Rechnungen) + Tabelle der heutigen Buchungen.
+
+---
+
+## 9b. Was Sie im Panel sehen — Ihre Rolle
+
+Sidebar ist nach Rolle gefiltert. Als **Tierarzt** sehen Sie:
+
+- ✓ Pferde, Pflege & Gesundheit, Tagesplan, Buchungen
+- ✓ Spezialisten, Behandlungsvorlagen
+- ✓ Meine Aufgaben (wenn Konto mit Spezialisten-Datensatz verknüpft)
+- ✗ Kunden, Boxen, Pensionspreise, Rechnungen, Mehrfachkarten, Futterlager, Berichte, Einstellungen, Mitarbeiter
 
 ---
 
