@@ -105,6 +105,8 @@ class TenantSettings extends Page implements HasForms
             'pp_show_box_availability' => (bool) ($publicProfile['show_box_availability'] ?? true),
             'pp_show_instructors' => (bool) ($publicProfile['show_instructors'] ?? false),
             'pp_show_pricing' => (bool) ($publicProfile['show_pricing'] ?? false),
+            'custom_domain' => $tenant->custom_domain,
+            'custom_domain_verified_at' => $tenant->custom_domain_verified_at?->toDateTimeString(),
             'pb_enabled' => (bool) ($publicBooking['enabled'] ?? false),
             'pb_lesson_duration_minutes' => $publicBooking['lesson_duration_minutes'] ?? 60,
             'pb_working_hours_start' => $publicBooking['working_hours_start'] ?? '09:00',
@@ -235,6 +237,31 @@ class TenantSettings extends Page implements HasForms
                             ->label(__('app/tenant_settings.form.label.pp_social_tiktok'))->url()->placeholder('https://tiktok.com/@twoja-stajnia'),
                     ]),
 
+                Forms\Components\Section::make(__('app/tenant_settings.form.section.custom_domain'))
+                    ->description(__('app/tenant_settings.form.section.custom_domain_description'))
+                    ->collapsed()
+                    ->visible(fn () => app(TenantManager::class)->current()?->planAllowsVanityDomain() ?? false)
+                    ->schema([
+                        Forms\Components\TextInput::make('custom_domain')
+                            ->label(__('app/tenant_settings.form.label.custom_domain'))
+                            ->placeholder('mojastajnia.pl')
+                            ->helperText(__('app/tenant_settings.form.helper.custom_domain'))
+                            ->regex('/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/')
+                            ->validationMessages(['regex' => __('app/tenant_settings.form.helper.custom_domain_invalid')])
+                            ->maxLength(255),
+                        Forms\Components\Placeholder::make('custom_domain_dns')
+                            ->label(__('app/tenant_settings.form.label.custom_domain_dns'))
+                            ->content(fn () => new HtmlString(self::dnsInstructions())),
+                        Forms\Components\Placeholder::make('custom_domain_verified_at')
+                            ->label(__('app/tenant_settings.form.label.custom_domain_verified_at'))
+                            ->content(fn () => app(TenantManager::class)->current()?->custom_domain_verified_at?->translatedFormat('d.m.Y H:i') ?? __('app/tenant_settings.form.helper.custom_domain_unverified')),
+                    ]),
+
+                Forms\Components\Placeholder::make('custom_domain_locked')
+                    ->label('')
+                    ->content(fn () => new HtmlString('<div class="rounded-md bg-amber-50 dark:bg-amber-900/30 p-3 text-sm text-amber-700 dark:text-amber-300">'.__('app/tenant_settings.form.helper.custom_domain_plan_locked').'</div>'))
+                    ->visible(fn () => ! (app(TenantManager::class)->current()?->planAllowsVanityDomain() ?? false)),
+
                 Forms\Components\Section::make(__('app/tenant_settings.form.section.embeds'))
                     ->description(__('app/tenant_settings.form.section.embeds_description'))
                     ->collapsed()
@@ -338,6 +365,21 @@ class TenantSettings extends Page implements HasForms
             'settings' => $settings,
         ];
 
+        // Custom domain — gated by plan feature. When the field is empty
+        // OR the value changes, reset the verified_at flag. Master admin
+        // re-flips it after DNS confirmation.
+        if ($tenant->planAllowsVanityDomain()) {
+            $newDomain = $data['custom_domain'] !== null
+                ? strtolower(trim((string) $data['custom_domain']))
+                : null;
+            $newDomain = $newDomain === '' ? null : $newDomain;
+
+            $changes['custom_domain'] = $newDomain;
+            if ($newDomain !== $tenant->custom_domain) {
+                $changes['custom_domain_verified_at'] = null;
+            }
+        }
+
         // Reload via Tenant model so JSON casts apply to `branding`.
         Tenant::findOrFail($tenant->id)
             ->forceFill($changes)
@@ -382,6 +424,29 @@ class TenantSettings extends Page implements HasForms
      * Buduje gotowy do skopiowania snippet HTML z iframe dla danego widgetu.
      * Wstawiany jako Placeholder content w form sekcji "Widgety".
      */
+    /**
+     * Renders DNS setup instructions for the custom domain section.
+     * Tells the owner exactly which CNAME to point at app.hovera.app
+     * and which TXT record to add for verification.
+     */
+    private static function dnsInstructions(): string
+    {
+        $appHost = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'app.hovera.app';
+        $tenant = app(TenantManager::class)->current();
+        $verifyToken = $tenant ? hash('sha256', 'hovera-domain-verify:'.$tenant->id) : '';
+        $verifyToken = substr($verifyToken, 0, 32);
+
+        return '<div style="display:flex; flex-direction:column; gap:.65rem; font-size:.85rem;">'
+            .'<div><strong>'.e(__('app/tenant_settings.form.helper.dns_step_1')).'</strong></div>'
+            .'<pre style="background:#f9fafb; padding:.6rem .8rem; border-radius:6px; font-family:ui-monospace,monospace; font-size:.8rem; margin:0; overflow-x:auto;">'
+            .'CNAME    @    '.e($appHost).'</pre>'
+            .'<div><strong>'.e(__('app/tenant_settings.form.helper.dns_step_2')).'</strong></div>'
+            .'<pre style="background:#f9fafb; padding:.6rem .8rem; border-radius:6px; font-family:ui-monospace,monospace; font-size:.8rem; margin:0; overflow-x:auto;">'
+            .'TXT      _hovera-verify    hovera-verify='.e($verifyToken).'</pre>'
+            .'<div style="color:#6b7280;">'.e(__('app/tenant_settings.form.helper.dns_step_3')).'</div>'
+            .'</div>';
+    }
+
     private static function embedSnippet(string $widget, int $height): HtmlString
     {
         $tenant = app(TenantManager::class)->current();

@@ -17,6 +17,8 @@ return [
             'embeds_description' => 'Each widget is an iframe — copy the HTML and paste it into your Wordpress / Squarespace / wherever.',
             'online_booking' => 'Online booking',
             'online_booking_description' => 'Clients book lessons via /s/{slug}/book. The stable confirms requests manually and assigns a horse.',
+            'custom_domain' => 'Custom domain',
+            'custom_domain_description' => 'Use mystable.com instead of app.hovera.app/s/your-stable. Available on the Pro plan.',
         ],
         'label' => [
             'name' => 'Stable name',
@@ -60,6 +62,18 @@ return [
             'pb_advance_min_hours_helper' => 'Clients cannot book closer than X hours from now.',
             'pb_advance_max_days' => 'Max. horizon (days)',
             'pb_advance_max_days_helper' => 'Clients cannot see slots further than X days out.',
+            'custom_domain' => 'Domain',
+            'custom_domain_dns' => 'DNS configuration',
+            'custom_domain_verified_at' => 'Verification status',
+        ],
+        'helper' => [
+            'custom_domain' => 'Enter e.g. "mystable.com" or a subdomain "stable.company.com". After saving, add the DNS records shown below. Master admin enables the domain after DNS confirmation.',
+            'custom_domain_invalid' => 'Invalid domain — only lowercase letters, digits, dots and hyphens.',
+            'custom_domain_unverified' => 'Not verified — contact support@hovera.app once DNS records are in place.',
+            'custom_domain_plan_locked' => 'Custom domain is available on the Pro plan. Contact support@hovera.app to upgrade.',
+            'dns_step_1' => '1. In your domain registrar control panel add a CNAME record (or A/ALIAS for apex):',
+            'dns_step_2' => '2. Add a TXT record to verify domain ownership:',
+            'dns_step_3' => '3. Once records are in place, email support@hovera.app — we verify DNS and enable the domain (usually within 24h).',
         ],
     ],
 

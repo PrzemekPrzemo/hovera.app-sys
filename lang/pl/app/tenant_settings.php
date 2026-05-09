@@ -17,6 +17,8 @@ return [
             'embeds_description' => 'Każdy widget to iframe — skopiuj kod HTML i wklej w swoim Wordpressie / Squarespace / wherever.',
             'online_booking' => 'Online booking',
             'online_booking_description' => 'Klienci rezerwują lekcje przez /s/{slug}/book. Stajnia potwierdza zgłoszenia ręcznie i przydziela konia.',
+            'custom_domain' => 'Własna domena',
+            'custom_domain_description' => 'Zamiast app.hovera.app/s/twoja-stajnia możesz mieć mojastajnia.pl. Dostępne w planie Pro.',
         ],
         'label' => [
             'name' => 'Nazwa stajni',
@@ -60,6 +62,18 @@ return [
             'pb_advance_min_hours_helper' => 'Klient nie może rezerwować na czas bliższy niż X godzin.',
             'pb_advance_max_days' => 'Max horyzont (dni)',
             'pb_advance_max_days_helper' => 'Klient nie widzi terminów odleglejszych niż X dni.',
+            'custom_domain' => 'Domena',
+            'custom_domain_dns' => 'Konfiguracja DNS',
+            'custom_domain_verified_at' => 'Status weryfikacji',
+        ],
+        'helper' => [
+            'custom_domain' => 'Wpisz np. "mojastajnia.pl" lub subdomenę "stajnia.firma.com". Po zapisie dodaj rekordy DNS — instrukcje pojawią się poniżej. Weryfikację domeny włącza master admin po potwierdzeniu DNS.',
+            'custom_domain_invalid' => 'Niepoprawny format domeny — same małe litery, cyfry, kropki i myślniki.',
+            'custom_domain_unverified' => 'Niezweryfikowana — skontaktuj się z support@hovera.app po dodaniu rekordów DNS.',
+            'custom_domain_plan_locked' => 'Własna domena dostępna w planie Pro. Skontaktuj się z support@hovera.app aby przejść na wyższy plan.',
+            'dns_step_1' => '1. W panelu twojego rejestratora domen dodaj rekord CNAME (lub A/ALIAS jeśli to apex):',
+            'dns_step_2' => '2. Dodaj rekord TXT do weryfikacji własności domeny:',
+            'dns_step_3' => '3. Po dodaniu rekordów napisz na support@hovera.app — sprawdzimy DNS i włączymy domenę (zwykle do 24h).',
         ],
     ],
 
