@@ -12,6 +12,7 @@ return [
         'stable' => 'Stajnia',
         'settings' => 'Ustawienia',
         'reports' => 'Raporty',
+        'tools' => 'Narzędzia',
     ],
 
     // Resource labels

@@ -18,7 +18,9 @@ use App\Http\Controllers\Public\PublicSiteController;
 use App\Http\Controllers\Public\SignupController;
 use App\Http\Controllers\Public\StripeWebhookController;
 use App\Http\Controllers\Tenant\BillingController;
+use App\Http\Controllers\Tenant\ImportTemplateController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
+use App\Http\Middleware\InitialiseTenantFromSession;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -150,6 +152,17 @@ Route::middleware(['web', 'auth'])->prefix('app/billing')->name('billing.')->gro
 Route::post('/webhooks/stripe', StripeWebhookController::class)
     ->middleware(['throttle:60,1'])
     ->name('webhooks.stripe');
+
+/*
+ * Import wizard helpers — pobranie szablonu .xlsx (klienci / konie) z jedną
+ * przykładową linią. Trzymane w `web` + `auth` + InitialiseTenantFromSession
+ * żeby route nie wymagał osadzania w panelu Filament; konieczny jest tylko
+ * aktywny tenant w sesji (brak DB lookup, ale spójna konwencja).
+ */
+Route::middleware(['web', 'auth', InitialiseTenantFromSession::class])
+    ->get('/app/import-wizard/template/{entity}', ImportTemplateController::class)
+    ->where('entity', 'clients|horses')
+    ->name('import-wizard.template');
 
 // Language switcher — redirects back to where the user came from.
 Route::middleware('web')
