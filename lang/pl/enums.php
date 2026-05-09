@@ -103,4 +103,11 @@ return [
         'transport_event' => 'Wyjazd / event',
         'other' => 'Inne',
     ],
+
+    'feeding_meal' => [
+        'breakfast' => 'Rano',
+        'midday' => 'Południe',
+        'evening' => 'Wieczór',
+        'night' => 'Noc',
+    ],
 ];

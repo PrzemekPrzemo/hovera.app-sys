@@ -8,6 +8,7 @@ use App\Http\Controllers\Invitations\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\ClientPortalController;
+use App\Http\Controllers\Public\InstructorCalendarController;
 use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicInvoiceController;
@@ -97,6 +98,17 @@ Route::middleware('web')
     ->name('public.tenant');
 
 /*
+ * Public iCalendar feed for an instructor. Token-authenticated so calendar
+ * apps (Google / Outlook / Apple) can subscribe without login. Lightly
+ * throttled because the upstream apps poll every few hours.
+ */
+Route::middleware(['throttle:60,1'])
+    ->get('/'.$publicPrefix.'/{slug}/calendar/instructor/{token}.ics',
+        [InstructorCalendarController::class, 'show'])
+    ->where(['slug' => $slugRegex, 'token' => '[A-Za-z0-9]{40,80}'])
+    ->name('public.instructor_calendar');
+
+/*
  * Embed widgety — pojedyncze sekcje renderowane bez chrome (header/footer)
  * tak żeby stajnia mogła je wstawić jako <iframe> na swojej stronie WWW.
  *   /s/{slug}/embed/box-availability  → "X wolnych boksów" pill
@@ -161,6 +173,7 @@ Route::middleware(['web', 'throttle:30,1'])
         Route::post('/horses/{horse}/documents', [ClientPortalController::class, 'uploadHorseDocument'])->name('horses.documents.upload');
         Route::get('/horses/{horse}/documents/{document}', [ClientPortalController::class, 'downloadHorseDocument'])->name('horses.documents.download');
         Route::delete('/horses/{horse}/documents/{document}', [ClientPortalController::class, 'deleteHorseDocument'])->name('horses.documents.delete');
+        Route::get('/horses/{horse}/photos/{photo}', [ClientPortalController::class, 'viewHorsePhoto'])->name('horses.photos.view');
         Route::get('/messages', [ClientPortalController::class, 'showMessages'])->name('messages.show');
         Route::get('/help', [ClientPortalController::class, 'showHelp'])->name('help.show');
     });

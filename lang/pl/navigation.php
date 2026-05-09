@@ -11,6 +11,7 @@ return [
         'calendar' => 'Kalendarz',
         'stable' => 'Stajnia',
         'settings' => 'Ustawienia',
+        'reports' => 'Raporty',
     ],
 
     // Resource labels
@@ -34,6 +35,7 @@ return [
     'health_records' => 'Opieka i zdrowie',
     'specialists' => 'Specjaliści',
     'treatment_templates' => 'Szablony zabiegów',
+    'feed_inventory' => 'Magazyn paszy',
 
     // Pages (non-resource)
     'pages' => [
