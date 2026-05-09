@@ -161,6 +161,7 @@ Route::middleware(['web', 'throttle:30,1'])
         Route::post('/horses/{horse}/documents', [ClientPortalController::class, 'uploadHorseDocument'])->name('horses.documents.upload');
         Route::get('/horses/{horse}/documents/{document}', [ClientPortalController::class, 'downloadHorseDocument'])->name('horses.documents.download');
         Route::delete('/horses/{horse}/documents/{document}', [ClientPortalController::class, 'deleteHorseDocument'])->name('horses.documents.delete');
+        Route::get('/horses/{horse}/photos/{photo}', [ClientPortalController::class, 'viewHorsePhoto'])->name('horses.photos.view');
         Route::get('/messages', [ClientPortalController::class, 'showMessages'])->name('messages.show');
         Route::get('/help', [ClientPortalController::class, 'showHelp'])->name('help.show');
         Route::get('/book', [ClientPortalController::class, 'showBooking'])->name('book.show');

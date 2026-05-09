@@ -32,6 +32,7 @@ return [
     'health_records' => 'Care & health',
     'specialists' => 'Specialists',
     'treatment_templates' => 'Treatment templates',
+    'feed_inventory' => 'Feed inventory',
 
     'pages' => [
         'profile' => 'Profile',

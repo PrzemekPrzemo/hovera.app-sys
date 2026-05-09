@@ -184,9 +184,11 @@ class HorseResource extends Resource
     {
         return [
             HorseResource\RelationManagers\HealthRecordsRelationManager::class,
+            HorseResource\RelationManagers\FeedingPlanRelationManager::class,
             HorseResource\RelationManagers\ActivitiesRelationManager::class,
             HorseResource\RelationManagers\MessagesRelationManager::class,
             HorseResource\RelationManagers\DocumentsRelationManager::class,
+            HorseResource\RelationManagers\PhotosRelationManager::class,
         ];
     }
 

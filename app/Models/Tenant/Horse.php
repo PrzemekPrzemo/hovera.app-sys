@@ -72,6 +72,13 @@ class Horse extends TenantModel
         return $this->hasMany(HorseWeightMeasurement::class)->orderByDesc('measured_at');
     }
 
+    public function feedingPlanItems(): HasMany
+    {
+        return $this->hasMany(HorseFeedingPlanItem::class)
+            ->orderBy('meal')
+            ->orderBy('sort_order');
+    }
+
     public function messages(): HasMany
     {
         return $this->hasMany(HorseMessage::class)->orderByDesc('sent_at');
@@ -80,6 +87,13 @@ class Horse extends TenantModel
     public function documents(): HasMany
     {
         return $this->hasMany(HorseDocument::class)->orderBy('kind')->orderByDesc('created_at');
+    }
+
+    public function photos(): HasMany
+    {
+        return $this->hasMany(HorsePhoto::class)
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at');
     }
 
     /**
