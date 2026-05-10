@@ -8,9 +8,14 @@
     "require": {
         "php": "^8.2",
         "bacon/bacon-qr-code": "^3.0",
+        "dedoc/scramble": "^0.12",
         "filament/filament": "^3.2",
+        "kreait/laravel-firebase": "^5.10",
+        "laravel-notification-channels/apn": "^7.0",
         "laravel/framework": "^11.31",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
+        "league/flysystem-aws-s3-v3": "^3.28",
         "phpoffice/phpspreadsheet": "^2.3",
         "pragmarx/google2fa": "^8.0",
         "stripe/stripe-php": "^20.1"
