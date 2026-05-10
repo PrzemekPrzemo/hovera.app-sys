@@ -20,6 +20,11 @@
                     {{ $label }}
                 </a>
             @endforeach
+            <a href="{{ url('/demo/as-client') }}"
+               title="Panel klienta — widok właściciela konia (portal /s/demo/portal)"
+               style="background: #3D2E22; color: #F7F4EF; padding: .2rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 600; text-decoration: none; border: 1px solid #3D2E22;">
+                Klient (właściciel konia)
+            </a>
         </div>
     </div>
 @endif
