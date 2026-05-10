@@ -26,11 +26,17 @@ class DemoResetCommand extends Command
     {
         $slug = (string) ($this->option('slug') ?: config('hovera.demo.slug', 'demo'));
 
-        $tenant = Tenant::query()->where('slug', $slug)->first();
+        // withTrashed bo demo tenant może być soft-deleted (np. master admin
+        // skasował przez Filament). DemoSeedCommand też restore'uje (PR #140).
+        $tenant = Tenant::query()->withTrashed()->where('slug', $slug)->first();
         if (! $tenant) {
             $this->warn("Demo tenant '{$slug}' nie istnieje — uruchom najpierw `hovera:demo:seed --slug={$slug}`.");
 
             return self::FAILURE;
+        }
+        if ($tenant->trashed()) {
+            $this->warn("Demo tenant '{$slug}' był soft-deleted — przywracam.");
+            $tenant->restore();
         }
 
         $this->info("Resetuję demo tenant '{$slug}'…");

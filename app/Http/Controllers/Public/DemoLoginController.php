@@ -64,12 +64,20 @@ class DemoLoginController extends Controller
         // Allow trialing too — demo tenant is provisioned by hovera:demo:seed
         // and lives forever in trial state (we never put a Stripe sub on it).
         // Filtering only on 'active' would 503 immediately after every reset.
+        //
+        // withTrashed + auto-restore — żeby przypadkowy soft-delete (np. master
+        // admin klika "Usuń" w /admin/tenants) nie ubijał /demo na stałe.
+        // Demo to publiczny endpoint sprzedażowy, ma być nieubijalny.
         $tenant = Tenant::query()
+            ->withTrashed()
             ->where('slug', $slug)
             ->whereIn('status', ['active', 'trialing'])
             ->first();
         if (! $tenant) {
             abort(503, 'Demo tymczasowo niedostępne — odśwież za chwilę.');
+        }
+        if ($tenant->trashed()) {
+            $tenant->restore();
         }
 
         $membership = TenantMembership::query()
