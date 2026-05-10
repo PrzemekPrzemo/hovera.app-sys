@@ -47,13 +47,27 @@ class AppPanelProvider extends PanelProvider
             ->passwordReset()
             ->colors([
                 // Brand: Ochre #A8956B (primary akcent).
-                // Gray = Stone — ciepły neutralny scale Filamentu, harmonizuje
-                // z ochre i dobrze działa w dark mode. Wcześniej był custom
-                // hex #3D2E22 (deep brown), z którego Filament generował
-                // crushed-dark gradient → dark mode nieczytelny (PR użytkownika
-                // "tryb ciemny jest za ciemny / bardzo nieczytelny").
+                // Gray = custom warm palette — dark mode wcześniej był nieczytelny
+                // (Stone-900 = #1c1917 ~ czerń). Ten scale podnosi dark backgrounds:
+                //   950 → #1f1916 (panel root)
+                //   900 → #2c2520 (main content bg, +50% brightness vs Stone)
+                //   800 → #3d342d (sidebar)
+                //   700 → #5a4d44 (borders, dividers)
+                // Light mode niezmieniony (50–500 ~ Stone).
                 'primary' => Color::hex('#A8956B'),
-                'gray' => Color::Stone,
+                'gray' => [
+                    50 => '247, 244, 239',   // brand cream
+                    100 => '238, 232, 222',
+                    200 => '224, 215, 200',
+                    300 => '200, 184, 164',  // brand taupe
+                    400 => '168, 149, 107',  // brand ochre
+                    500 => '143, 133, 118',  // brand stone
+                    600 => '107, 91, 76',
+                    700 => '90, 77, 68',
+                    800 => '61, 52, 45',
+                    900 => '44, 37, 32',     // main dark bg (lighter than Stone 28,25,23)
+                    950 => '31, 25, 22',     // deepest (lighter than Stone 12,10,9)
+                ],
             ])
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\\Filament\\App\\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\\Filament\\App\\Pages')
