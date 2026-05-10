@@ -9,12 +9,14 @@ use App\Actions\Calendar\CreateCalendarEntry;
 use App\Actions\Calendar\UpdateCalendarEntry;
 use App\Enums\CalendarEntryStatus;
 use App\Enums\CalendarEntryType;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Arena;
 use App\Models\Tenant\CalendarEntry;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\Instructor;
 use App\Services\Calendar\TimetableLoader;
+use App\Services\Tenancy\TenantRoleGate;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -31,6 +33,12 @@ class Calendar extends Page implements HasActions, HasForms
 {
     use InteractsWithActions;
     use InteractsWithForms;
+    use RestrictedByTenantRole;
+
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::HORSE_AND_CARE_STAFF;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
 

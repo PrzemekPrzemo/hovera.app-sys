@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Filament\App\Pages;
 
 use App\Enums\InvoiceKind;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Services\Invoicing\InvoiceNumberGenerator;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
@@ -24,6 +26,12 @@ use Illuminate\Support\Facades\Auth;
 class InvoicingSettings extends Page implements HasForms
 {
     use InteractsWithForms;
+    use RestrictedByTenantRole;
+
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::FINANCE_STAFF;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 

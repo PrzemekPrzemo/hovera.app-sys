@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Filament\App\Pages;
 
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Services\Ksef\KsefCertificateService;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
@@ -34,6 +36,12 @@ use Illuminate\Support\Facades\Crypt;
 class KsefSettings extends Page implements HasForms
 {
     use InteractsWithForms;
+    use RestrictedByTenantRole;
+
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::FINANCE_STAFF;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 

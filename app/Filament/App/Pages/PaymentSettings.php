@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Filament\App\Pages;
 
 use App\Enums\PaymentProvider;
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Services\Payments\Providers\MolliePaymentProvider;
 use App\Services\Payments\Providers\P24PaymentProvider;
 use App\Services\Payments\Providers\PayUPaymentProvider;
 use App\Services\Payments\Providers\StripePaymentProvider;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
@@ -35,6 +37,12 @@ use Illuminate\Support\Facades\Crypt;
 class PaymentSettings extends Page implements HasForms
 {
     use InteractsWithForms;
+    use RestrictedByTenantRole;
+
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::FULL_ADMINS;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
 

@@ -31,7 +31,12 @@ class ClientResource extends Resource
     /** @return list<string> */
     protected static function allowedRoles(): array
     {
-        return TenantRoleGate::FULL_ADMINS_AND_MANAGERS;
+        // STABLE_OPS_STAFF zamiast FULL_ADMINS_AND_MANAGERS:
+        // instructor (trener) widzi swoich uczniów; viewer (obserwator
+        // typu współwłaściciel/inwestor) potrzebuje pełnego oglądu.
+        // CRUD-akcje (edit/delete) egzekwowane są przez Filament resource
+        // table actions które owner/admin/manager domyślnie widzą.
+        return TenantRoleGate::STABLE_OPS_STAFF;
     }
 
     protected static ?string $model = Client::class;
