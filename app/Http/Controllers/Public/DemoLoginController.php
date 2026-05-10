@@ -172,6 +172,15 @@ class DemoLoginController extends Controller
         }
 
         Auth::login($user);
+
+        // AuthenticateSession middleware porównuje password_hash_web w sesji
+        // z $user->getAuthPassword() przy każdym requeście. Auth::logout()
+        // NIE czyści tego klucza, więc po Auth::login(newUser) hash w sesji
+        // zostaje stary i następny request nas wyloguje → redirect na
+        // /app/login. Wymuszamy poprawny hash dla nowego usera.
+        $guard = (string) config('auth.defaults.guard', 'web');
+        $request->session()->put('password_hash_'.$guard, $user->getAuthPassword());
+
         $request->session()->put('current_tenant_id', $tenant->id);
         $request->session()->put('demo.is_demo', true);
         $request->session()->put('demo.role', $role);
