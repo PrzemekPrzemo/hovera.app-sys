@@ -54,4 +54,35 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Przelewy24 — central billing (one-time "opłać fakturę" link)
+    |--------------------------------------------------------------------------
+    | Used by App\Services\Billing\Przelewy24Service for hovera SaaS invoices
+    | (master-admin issues FV → tenant clicks link → P24 hosted payment).
+    | Complementary to Stripe subscription. NOT the per-tenant P24 provider
+    | (that one lives in tenants.settings.payments.p24, encrypted).
+    */
+    'przelewy24' => [
+        'merchant_id' => env('P24_MERCHANT_ID'),
+        'pos_id' => env('P24_POS_ID'),
+        'api_key' => env('P24_API_KEY'),
+        'crc' => env('P24_CRC'),
+        'env' => env('P24_ENV', 'sandbox'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | KSeF (central) — hovera as VAT taxpayer
+    |--------------------------------------------------------------------------
+    | hovera (jako podatnik VAT) wystawia faktury stajniom za subskrypcje;
+    | te FV od 2026-02-01 muszą trafiać do KSeF. Cert + hasło żyją w
+    | central.system_settings (encrypted via SystemSetting::setSecret).
+    | Tutaj tylko domyślny env + NIP fallback.
+    */
+    'ksef_central' => [
+        'env' => env('KSEF_CENTRAL_ENV', 'test'), // test | demo | production
+        'context_nip' => env('KSEF_CENTRAL_NIP'),
+    ],
+
 ];

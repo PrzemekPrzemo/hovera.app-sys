@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Central\SystemSetting;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\Payment;
 use App\Observers\HorseObserver;
 use App\Observers\PaymentObserver;
+use App\Services\Billing\Przelewy24Service;
 use App\Services\Billing\StripeBillingService;
+use App\Services\Ksef\CentralKsefService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -27,6 +30,25 @@ class AppServiceProvider extends ServiceProvider
                 webhookTolerance: (int) ($config['webhook']['tolerance'] ?? 300),
             );
         });
+
+        // Central P24 — hovera SaaS one-time payments. Singleton bo
+        // konfiguracja jest globalna i nie zmienia się per-request.
+        $this->app->singleton(Przelewy24Service::class, function ($app) {
+            $cfg = $app['config']->get('services.przelewy24', []);
+
+            return new Przelewy24Service(
+                merchantId: (int) ($cfg['merchant_id'] ?? 0),
+                posId: (int) ($cfg['pos_id'] ?? ($cfg['merchant_id'] ?? 0)),
+                apiKey: (string) ($cfg['api_key'] ?? ''),
+                crc: (string) ($cfg['crc'] ?? ''),
+                env: (string) ($cfg['env'] ?? 'sandbox'),
+            );
+        });
+
+        // Central KSeF — żaden konstruktor argumentów nie potrzebuje
+        // (cert/NIP czyta z SystemSetting), ale singleton pozwala
+        // testom go zmockować via $this->app->instance().
+        $this->app->singleton(CentralKsefService::class);
     }
 
     public function boot(): void
