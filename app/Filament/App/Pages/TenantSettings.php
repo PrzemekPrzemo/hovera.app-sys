@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Filament\App\Pages;
 
+use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Central\Tenant;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
@@ -27,6 +29,12 @@ use Illuminate\Support\HtmlString;
 class TenantSettings extends Page implements HasForms
 {
     use InteractsWithForms;
+    use RestrictedByTenantRole;
+
+    protected static function allowedRoles(): array
+    {
+        return TenantRoleGate::FULL_ADMINS;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
 
