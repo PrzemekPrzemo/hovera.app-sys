@@ -7,6 +7,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Profile;
 use App\Http\Middleware\EnforceImpersonationExpiry;
 use App\Http\Middleware\InitialiseTenantFromSession;
+use App\Http\Middleware\RedirectIfTenantSuspended;
 use App\Http\Middleware\RedirectIfTrialExpired;
 use App\Services\Tenancy\TenantRoleGate;
 use Filament\Http\Middleware\Authenticate;
@@ -146,6 +147,11 @@ class AppPanelProvider extends PanelProvider
                 // and no Stripe subscription is bound. Must come AFTER
                 // InitialiseTenantFromSession so $tenant is hydrated.
                 RedirectIfTrialExpired::class,
+                // Suspended tenants get bounced to a single landing page
+                // so the owner sees "konto zawieszone, skontaktuj się"
+                // instead of half-rendered panels — ordering matters,
+                // must run after tenant init for the same reason.
+                RedirectIfTenantSuspended::class,
             ]);
     }
 }
