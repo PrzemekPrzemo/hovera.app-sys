@@ -7,7 +7,6 @@ namespace App\Channels;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use NotificationChannels\Apn\ApnAdapter;
-use NotificationChannels\Apn\ApnChannel as PackageApnChannel;
 use Pushok\AuthProvider\Token;
 use Pushok\Client;
 use Pushok\Notification as ApnsNotification;

@@ -9,10 +9,15 @@ use Illuminate\Database\Eloquent\Model;
 class IdempotencyKey extends Model
 {
     protected $connection = 'tenant';
+
     protected $table = 'idempotency_keys';
+
     public $incrementing = false;
+
     protected $primaryKey = 'key';
+
     protected $keyType = 'string';
+
     public $timestamps = false;
 
     protected $fillable = [

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('updated_at')->nullable();
         });
 
-        \DB::table('sync_version_counters')->insert([
+        DB::table('sync_version_counters')->insert([
             'id' => 1,
             'current_version' => 0,
             'updated_at' => now(),
