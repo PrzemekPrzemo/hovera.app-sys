@@ -13,6 +13,7 @@ class DeviceToken extends Model
     use HasUlids;
 
     protected $connection = 'central';
+
     protected $table = 'device_tokens';
 
     protected $fillable = [

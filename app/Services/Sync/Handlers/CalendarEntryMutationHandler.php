@@ -47,7 +47,7 @@ class CalendarEntryMutationHandler implements MutationHandler
             ->scopes(['blockingResources'])
             ->where(function ($q) use ($startsAt, $endsAt) {
                 $q->where('starts_at', '<', $endsAt)
-                  ->where('ends_at', '>', $startsAt);
+                    ->where('ends_at', '>', $startsAt);
             });
 
         if ($excludeId) {

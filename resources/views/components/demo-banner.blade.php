@@ -1,8 +1,16 @@
 @php
     $isDemo = session('demo.is_demo') === true;
+
+    // Ukryj banner gdy użytkownik nie jest zalogowany (np. trafił z /demo na
+    // /app/login wpisując URL ręcznie — sesja `demo.is_demo` została, ale
+    // nie ma auth usera, więc oferowanie zmiany roli mija się z celem).
+    // Portal klienta ma osobny session-namespace (client_portal.{slug}) —
+    // sprawdzamy oba.
+    $portalSlug = (string) config('hovera.demo.slug', 'demo');
+    $isAuthenticated = auth()->check() || session()->has('client_portal.'.$portalSlug);
 @endphp
 
-@if ($isDemo)
+@if ($isDemo && $isAuthenticated)
     <div style="background: linear-gradient(90deg, #A8956B, #8F8576); color: #1F1A17; padding: .65rem 1rem; font-size: .85rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 2px solid #3D2E22;">
         <div style="display: flex; align-items: center; gap: .65rem;">
             <span style="font-size: 1.1rem;">🎬</span>

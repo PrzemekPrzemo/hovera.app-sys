@@ -2,6 +2,39 @@
 
 declare(strict_types=1);
 
+use App\Http\Resources\V1\CalendarEntryResource;
+use App\Http\Resources\V1\ClientMessageResource;
+use App\Http\Resources\V1\HorseResource;
+use App\Http\Resources\V1\InvoiceResource;
+use App\Models\Tenant\Arena;
+use App\Models\Tenant\BoardingService;
+use App\Models\Tenant\Box;
+use App\Models\Tenant\BoxAssignment;
+use App\Models\Tenant\Building;
+use App\Models\Tenant\CalendarEntry;
+use App\Models\Tenant\CalendarEntryParticipant;
+use App\Models\Tenant\Client;
+use App\Models\Tenant\ClientMessage;
+use App\Models\Tenant\FeedItem;
+use App\Models\Tenant\FeedStockMovement;
+use App\Models\Tenant\HealthRecord;
+use App\Models\Tenant\Horse;
+use App\Models\Tenant\HorseDocument;
+use App\Models\Tenant\HorseFeedingPlanItem;
+use App\Models\Tenant\HorseMessage;
+use App\Models\Tenant\HorsePhoto;
+use App\Models\Tenant\HorseWeightMeasurement;
+use App\Models\Tenant\Instructor;
+use App\Models\Tenant\Invoice;
+use App\Models\Tenant\InvoiceItem;
+use App\Models\Tenant\Pass;
+use App\Models\Tenant\PassUse;
+use App\Models\Tenant\Payment;
+use App\Models\Tenant\RecurringCalendarEntry;
+use App\Models\Tenant\Specialist;
+use App\Models\Tenant\StableActivity;
+use App\Models\Tenant\TreatmentTemplate;
+use App\Services\Sync\Handlers\CalendarEntryMutationHandler;
 use App\Services\Sync\SyncRegistry;
 
 /**
@@ -15,147 +48,147 @@ use App\Services\Sync\SyncRegistry;
 return [
     'entities' => [
         'horses' => [
-            'model' => \App\Models\Tenant\Horse::class,
-            'resource' => \App\Http\Resources\V1\HorseResource::class,
+            'model' => Horse::class,
+            'resource' => HorseResource::class,
             'mutate_roles' => ['manager', 'groom'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'horse_photos' => [
-            'model' => \App\Models\Tenant\HorsePhoto::class,
+            'model' => HorsePhoto::class,
             'mutate_roles' => 'any',
             'conflict' => SyncRegistry::CONFLICT_APPEND_ONLY,
         ],
         'horse_documents' => [
-            'model' => \App\Models\Tenant\HorseDocument::class,
+            'model' => HorseDocument::class,
             'mutate_roles' => ['manager', 'groom'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'horse_weight_measurements' => [
-            'model' => \App\Models\Tenant\HorseWeightMeasurement::class,
+            'model' => HorseWeightMeasurement::class,
             'mutate_roles' => ['groom', 'manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'horse_feeding_plan_items' => [
-            'model' => \App\Models\Tenant\HorseFeedingPlanItem::class,
+            'model' => HorseFeedingPlanItem::class,
             'mutate_roles' => ['groom', 'manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'calendar_entries' => [
-            'model' => \App\Models\Tenant\CalendarEntry::class,
-            'resource' => \App\Http\Resources\V1\CalendarEntryResource::class,
+            'model' => CalendarEntry::class,
+            'resource' => CalendarEntryResource::class,
             'mutate_roles' => ['client', 'instructor', 'manager'],
             'conflict' => SyncRegistry::CONFLICT_SERVER_AUTHORITATIVE,
-            'mutation_handler' => \App\Services\Sync\Handlers\CalendarEntryMutationHandler::class,
+            'mutation_handler' => CalendarEntryMutationHandler::class,
         ],
         'recurring_calendar_entries' => [
-            'model' => \App\Models\Tenant\RecurringCalendarEntry::class,
+            'model' => RecurringCalendarEntry::class,
             'mutate_roles' => ['manager'],
             'conflict' => SyncRegistry::CONFLICT_SERVER_AUTHORITATIVE,
         ],
         'calendar_entry_participants' => [
-            'model' => \App\Models\Tenant\CalendarEntryParticipant::class,
+            'model' => CalendarEntryParticipant::class,
             'mutate_roles' => ['instructor', 'manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'arenas' => [
-            'model' => \App\Models\Tenant\Arena::class,
+            'model' => Arena::class,
             'mutate_roles' => ['manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'buildings' => [
-            'model' => \App\Models\Tenant\Building::class,
+            'model' => Building::class,
             'mutate_roles' => ['manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'boxes' => [
-            'model' => \App\Models\Tenant\Box::class,
+            'model' => Box::class,
             'mutate_roles' => ['manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'box_assignments' => [
-            'model' => \App\Models\Tenant\BoxAssignment::class,
+            'model' => BoxAssignment::class,
             'mutate_roles' => ['manager', 'groom'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'clients' => [
-            'model' => \App\Models\Tenant\Client::class,
+            'model' => Client::class,
             'mutate_roles' => ['manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'instructors' => [
-            'model' => \App\Models\Tenant\Instructor::class,
+            'model' => Instructor::class,
             'mutate_roles' => ['manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'specialists' => [
-            'model' => \App\Models\Tenant\Specialist::class,
+            'model' => Specialist::class,
             'mutate_roles' => ['manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'passes' => [
-            'model' => \App\Models\Tenant\Pass::class,
+            'model' => Pass::class,
             'mutate_roles' => ['manager'],
             'conflict' => SyncRegistry::CONFLICT_SERVER_AUTHORITATIVE,
         ],
         'pass_uses' => [
-            'model' => \App\Models\Tenant\PassUse::class,
+            'model' => PassUse::class,
             'mutate_roles' => ['instructor', 'manager'],
             'conflict' => SyncRegistry::CONFLICT_SERVER_AUTHORITATIVE,
         ],
         'invoices' => [
-            'model' => \App\Models\Tenant\Invoice::class,
-            'resource' => \App\Http\Resources\V1\InvoiceResource::class,
+            'model' => Invoice::class,
+            'resource' => InvoiceResource::class,
             'mutate_roles' => null, // read-only from mobile
             'conflict' => SyncRegistry::CONFLICT_SERVER_ONLY,
         ],
         'invoice_items' => [
-            'model' => \App\Models\Tenant\InvoiceItem::class,
+            'model' => InvoiceItem::class,
             'mutate_roles' => null,
             'conflict' => SyncRegistry::CONFLICT_SERVER_ONLY,
         ],
         'payments' => [
-            'model' => \App\Models\Tenant\Payment::class,
+            'model' => Payment::class,
             'mutate_roles' => null,
             'conflict' => SyncRegistry::CONFLICT_SERVER_ONLY,
         ],
         'health_records' => [
-            'model' => \App\Models\Tenant\HealthRecord::class,
+            'model' => HealthRecord::class,
             'mutate_roles' => ['groom', 'manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'treatment_templates' => [
-            'model' => \App\Models\Tenant\TreatmentTemplate::class,
+            'model' => TreatmentTemplate::class,
             'mutate_roles' => ['manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'boarding_services' => [
-            'model' => \App\Models\Tenant\BoardingService::class,
+            'model' => BoardingService::class,
             'mutate_roles' => ['manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'stable_activities' => [
-            'model' => \App\Models\Tenant\StableActivity::class,
+            'model' => StableActivity::class,
             'mutate_roles' => ['manager', 'groom'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'feed_items' => [
-            'model' => \App\Models\Tenant\FeedItem::class,
+            'model' => FeedItem::class,
             'mutate_roles' => ['groom', 'manager'],
             'conflict' => SyncRegistry::CONFLICT_LWW,
         ],
         'feed_stock_movements' => [
-            'model' => \App\Models\Tenant\FeedStockMovement::class,
+            'model' => FeedStockMovement::class,
             'mutate_roles' => ['groom', 'manager'],
             'conflict' => SyncRegistry::CONFLICT_SERVER_AUTHORITATIVE,
         ],
         'client_messages' => [
-            'model' => \App\Models\Tenant\ClientMessage::class,
-            'resource' => \App\Http\Resources\V1\ClientMessageResource::class,
+            'model' => ClientMessage::class,
+            'resource' => ClientMessageResource::class,
             'mutate_roles' => 'any',
             'conflict' => SyncRegistry::CONFLICT_APPEND_ONLY,
         ],
         'horse_messages' => [
-            'model' => \App\Models\Tenant\HorseMessage::class,
+            'model' => HorseMessage::class,
             'mutate_roles' => 'any',
             'conflict' => SyncRegistry::CONFLICT_APPEND_ONLY,
         ],

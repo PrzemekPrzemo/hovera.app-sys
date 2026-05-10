@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Sync;
 
 use App\Models\Central\TenantMembership;
+use App\Services\Sync\Handlers\GenericMutationHandler;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 
@@ -16,8 +17,11 @@ use Illuminate\Support\Facades\Log;
 class SyncRegistry
 {
     public const CONFLICT_LWW = 'lww';                       // last-write-wins per field
+
     public const CONFLICT_APPEND_ONLY = 'append_only';       // create only, no overwrite
+
     public const CONFLICT_SERVER_AUTHORITATIVE = 'server';   // overlap/stock checks reject
+
     public const CONFLICT_SERVER_ONLY = 'server_only';       // mobile cannot mutate
 
     /** @return array<string,array<string,mixed>> */
@@ -83,7 +87,7 @@ class SyncRegistry
     public function mutationHandler(string $entity): string
     {
         return $this->entity($entity)['mutation_handler']
-            ?? \App\Services\Sync\Handlers\GenericMutationHandler::class;
+            ?? GenericMutationHandler::class;
     }
 
     public function resourceClass(string $entity): ?string

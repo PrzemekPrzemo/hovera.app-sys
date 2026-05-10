@@ -10,9 +10,13 @@ use Illuminate\Support\Facades\DB;
 class SyncVersionCounter extends Model
 {
     protected $connection = 'tenant';
+
     protected $table = 'sync_version_counters';
+
     public $incrementing = false;
+
     protected $keyType = 'int';
+
     public $timestamps = false;
 
     /**
