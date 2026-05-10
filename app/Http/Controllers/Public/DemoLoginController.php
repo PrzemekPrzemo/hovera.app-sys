@@ -61,7 +61,13 @@ class DemoLoginController extends Controller
     {
         $slug = (string) config('hovera.demo.slug', 'demo');
 
-        $tenant = Tenant::query()->where('slug', $slug)->where('status', 'active')->first();
+        // Allow trialing too — demo tenant is provisioned by hovera:demo:seed
+        // and lives forever in trial state (we never put a Stripe sub on it).
+        // Filtering only on 'active' would 503 immediately after every reset.
+        $tenant = Tenant::query()
+            ->where('slug', $slug)
+            ->whereIn('status', ['active', 'trialing'])
+            ->first();
         if (! $tenant) {
             abort(503, 'Demo tymczasowo niedostępne — odśwież za chwilę.');
         }
