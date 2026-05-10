@@ -13,6 +13,8 @@ use App\Http\Controllers\Public\InstructorCalendarController;
 use App\Http\Controllers\Public\LegalController;
 use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PricingController;
+use App\Http\Controllers\Public\Przelewy24Controller;
+use App\Http\Controllers\Public\Przelewy24WebhookController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicInvoiceController;
 use App\Http\Controllers\Public\PublicSiteController;
@@ -173,6 +175,25 @@ Route::middleware(['web', 'auth'])->prefix('app/billing')->name('billing.')->gro
 Route::post('/webhooks/stripe', StripeWebhookController::class)
     ->middleware(['throttle:60,1'])
     ->name('webhooks.stripe');
+
+/*
+ * Przelewy24 webhook (CENTRAL hovera billing — NOT per-tenant). CSRF
+ * excluded in bootstrap/app.php; signature (SHA384) verified inside
+ * Przelewy24Service::verifyWebhook. Throttled defensively — P24 nie
+ * powinno przesyłać więcej niż kilka na minutę.
+ */
+Route::post('/webhooks/przelewy24', Przelewy24WebhookController::class)
+    ->middleware(['throttle:60,1'])
+    ->name('webhooks.p24');
+
+/*
+ * P24 return URL — user-facing redirect po sesji P24. Status jest
+ * pobierany async z webhooka (TO jest źródło prawdy), tutaj tylko
+ * pokazujemy "Płatność w toku / OK" + redirect na /app/billing.
+ */
+Route::middleware(['web'])
+    ->get('/payments/p24/return/{invoiceId}', [Przelewy24Controller::class, 'return'])
+    ->name('payments.p24.return');
 
 /*
  * Import wizard helpers — pobranie szablonu .xlsx (klienci / konie) z jedną
