@@ -368,6 +368,7 @@ class HoveraDemoSeeder
                     'performed_at' => $now->copy()->subMonths(rand(4, 8)),
                     'performed_by' => 'dr P. Stomatolog',
                     'summary' => 'Korekcja zębów rocznych',
+                    'next_due_at' => null,
                     'cost_cents' => 35000,
                     'created_at' => $now,
                     'updated_at' => $now,
