@@ -36,8 +36,15 @@
         }
         .toggle button.active { background: var(--ochre); color: white; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
-        .card { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; }
+        .card { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; position: relative; }
         .card.current { border: 2px solid var(--ochre); }
+        .card.suggested { border: 2px solid var(--ochre); box-shadow: 0 4px 18px rgba(168, 149, 107, 0.25); }
+        .card .recommend-badge {
+            position: absolute; top: -10px; right: 12px;
+            background: var(--ochre); color: white; padding: .15rem .6rem;
+            border-radius: 999px; font-size: .7rem; font-weight: 700; letter-spacing: .03em;
+            text-transform: uppercase;
+        }
         .card h3 { margin: 0 0 .5rem; font-size: 1.2rem; }
         .price { font-size: 1.6rem; font-weight: 700; margin: .5rem 0; }
         .price small { font-size: .8rem; font-weight: 400; color: #8c7a64; }
@@ -111,6 +118,7 @@
         @foreach ($plans as $plan)
             @php
                 $isCurrent = $currentPlan && $currentPlan->id === $plan->id && $hasSubscription;
+                $isSuggested = ! $isCurrent && ($suggestedPlan ?? null) === $plan->code;
                 $monthlyPln = number_format($plan->price_monthly_cents / 100, 0, ',', ' ');
                 $yearlyPln = number_format($plan->price_yearly_cents / 100, 0, ',', ' ');
                 $bullets = collect($plan->features ?? [])
@@ -119,7 +127,10 @@
                 $hasMonthlyPrice = ! empty($plan->stripe_price_monthly_id);
                 $hasYearlyPrice = ! empty($plan->stripe_price_yearly_id);
             @endphp
-            <div class="card {{ $isCurrent ? 'current' : '' }}">
+            <div class="card {{ $isCurrent ? 'current' : '' }} {{ $isSuggested ? 'suggested' : '' }}" @if ($isSuggested) data-suggested="1" @endif>
+                @if ($isSuggested)
+                    <span class="recommend-badge">{{ __('billing.suggested_badge') }}</span>
+                @endif
                 <h3>{{ $plan->name }}</h3>
                 <div class="price" data-price-monthly>
                     {{ $monthlyPln }} <small>{{ $plan->currency }} / {{ __('billing.period.month_short') }}</small>
@@ -164,6 +175,11 @@
 
 <script>
     (function () {
+        // Auto-scroll do polecanej karty (po wejściu z banera ?plan=pro).
+        const suggested = document.querySelector('[data-suggested="1"]');
+        if (suggested) {
+            setTimeout(() => suggested.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+        }
         const toggle = document.querySelector('.toggle');
         if (!toggle) return;
         toggle.addEventListener('click', (e) => {

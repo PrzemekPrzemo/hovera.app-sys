@@ -23,6 +23,7 @@ return [
         'yearly' => 'Yearly (-10%)',
         'month_short' => 'mo',
         'year_short' => 'yr',
+        'one_time' => 'One-time',
     ],
     'actions' => [
         'choose' => 'Choose plan',
@@ -50,5 +51,34 @@ return [
     ],
     'footer' => [
         'disclaimer' => 'Payments are processed by Stripe. Your card details are never stored on hovera servers. VAT invoices are generated automatically after each successful charge.',
+    ],
+    'suggested_badge' => 'Recommended',
+    'trial_banner' => [
+        'expires_today' => 'Your trial ends today.',
+        'expires_tomorrow' => 'Trial ends tomorrow.',
+        'days_left' => '{1} :days day of trial left.|[2,*] :days days of trial left.',
+        'pro_pitch' => 'You have full Pro features, but the trial caps you at :horses horses and :clients clients. Pick Pro to lift the cap.',
+        'cta_pro' => 'Pick Pro',
+    ],
+    'limits' => [
+        'title' => 'Plan limit reached',
+        'horses_exceeded' => 'Trial: :limit horses limit — pick a plan to add more.',
+        'clients_exceeded' => 'Trial: :limit clients limit — pick a plan to add more.',
+    ],
+    'email' => [
+        'invoice_paid' => [
+            'subject' => 'Invoice :number — paid, thank you!',
+            'heading' => 'Invoice :number paid',
+            'intro' => 'Thanks! We received payment for your hovera subscription for :stable.',
+            'field_number' => 'Invoice number',
+            'field_plan' => 'Plan',
+            'field_period' => 'Period',
+            'field_total' => 'Gross amount',
+            'field_paid_at' => 'Paid at',
+            'pdf_pending' => 'The PDF invoice will appear in your billing panel shortly. We will also push it to KSeF (if configured).',
+            'cta_billing' => 'Open billing panel',
+            'thanks' => 'Glad to have you with us!',
+            'signoff' => 'Best regards,',
+        ],
     ],
 ];

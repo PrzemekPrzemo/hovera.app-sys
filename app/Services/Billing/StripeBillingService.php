@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services\Billing;
 
+use App\Models\Central\Invoice;
 use App\Models\Central\Plan;
 use App\Models\Central\StripeWebhookEvent;
 use App\Models\Central\Tenant;
+use App\Notifications\InvoicePaidNotification;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 use InvalidArgumentException;
 use RuntimeException;
 use Stripe\Checkout\Session as CheckoutSession;
@@ -248,6 +251,121 @@ class StripeBillingService
         }
 
         $tenant->forceFill($update)->save();
+
+        // Trial 2.0 — wystaw central invoice + powiadom owner'a.
+        // Stripe sam wystawia własny `invoice` per subscription, ale my
+        // chowamy lokalny snapshot żeby (a) pokazać historię w panelu
+        // owner'a, (b) mieć źródło dla KSeF push'a, (c) nie zależeć od
+        // Stripe API w razie odcięcia. Wymagana metadata + plan.
+        $planCode = is_string($session['metadata']['plan_code'] ?? null)
+            ? (string) $session['metadata']['plan_code']
+            : null;
+        $period = is_string($session['metadata']['period'] ?? null)
+            ? (string) $session['metadata']['period']
+            : 'monthly';
+
+        $plan = $planCode !== null ? Plan::where('code', $planCode)->first() : $tenant->plan;
+
+        $stripeInvoiceId = is_string($session['invoice'] ?? null) ? (string) $session['invoice'] : null;
+        $amountTotal = (int) ($session['amount_total'] ?? 0);
+
+        $this->recordCentralInvoice(
+            tenant: $tenant->fresh() ?? $tenant,
+            plan: $plan,
+            period: $period,
+            totalCents: $amountTotal,
+            stripeInvoiceId: $stripeInvoiceId,
+        );
+    }
+
+    /**
+     * Stwórz central invoice (paid) + wyślij InvoicePaidNotification.
+     * Idempotentne po stripe_invoice_id (gdy znamy).
+     */
+    private function recordCentralInvoice(
+        Tenant $tenant,
+        ?Plan $plan,
+        string $period,
+        int $totalCents,
+        ?string $stripeInvoiceId,
+    ): void {
+        if ($stripeInvoiceId !== null) {
+            $existing = Invoice::where('stripe_invoice_id', $stripeInvoiceId)->first();
+            if ($existing !== null) {
+                return;
+            }
+        }
+
+        // VAT 23% PL — net = total / 1.23. Liczymy z grosza, nie z double,
+        // żeby nie zostawiać błędu zaokrąglenia w księgach.
+        $vatRate = 23;
+        $netCents = (int) round($totalCents * 100 / (100 + $vatRate));
+        $vatCents = $totalCents - $netCents;
+
+        $invoice = Invoice::create([
+            'tenant_id' => $tenant->id,
+            'number' => $this->nextInvoiceNumber(),
+            'plan_code' => (string) ($plan?->code ?? 'unknown'),
+            'period' => $period,
+            'currency' => (string) ($plan?->currency ?? $tenant->currency ?? 'PLN'),
+            'amount_cents' => $netCents,
+            'vat_cents' => $vatCents,
+            'total_cents' => $totalCents,
+            'issued_at' => now(),
+            'paid_at' => now(),
+            'stripe_invoice_id' => $stripeInvoiceId,
+            'snapshot' => [
+                'tenant_slug' => $tenant->slug,
+                'tenant_name' => $tenant->legal_name ?: $tenant->name,
+                'tenant_tax_id' => $tenant->tax_id,
+                'plan_code' => $plan?->code,
+                'plan_name' => $plan?->name,
+                'period' => $period,
+                'vat_rate' => $vatRate,
+            ],
+        ]);
+
+        $ownerEmail = $this->ownerEmailFor($tenant);
+        if ($ownerEmail !== null) {
+            try {
+                $totalFormatted = number_format($totalCents / 100, 2, ',', ' ').' '.$invoice->currency;
+                NotificationFacade::route('mail', $ownerEmail)->notify(
+                    new InvoicePaidNotification(
+                        invoice: $invoice,
+                        tenantName: $tenant->name,
+                        totalFormatted: $totalFormatted,
+                    )
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send InvoicePaidNotification', [
+                    'invoice_id' => $invoice->id,
+                    'tenant_id' => $tenant->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Numer faktury w formacie HVR/{YYYY}/{MM}/{NNNN}. Bezpieczny w
+     * race'ach na poziomie aplikacji (mała skala) — w razie kolizji
+     * uniqueness-index na `number` rzuci, caller wtedy retry'ł by.
+     */
+    private function nextInvoiceNumber(): string
+    {
+        $prefix = sprintf('HVR/%s/%s/', now()->format('Y'), now()->format('m'));
+        $last = Invoice::where('number', 'like', $prefix.'%')
+            ->orderByDesc('number')
+            ->value('number');
+
+        $next = 1;
+        if (is_string($last) && $last !== '') {
+            $parts = explode('/', $last);
+            $tail = (int) end($parts);
+            $next = max($next, $tail + 1);
+        }
+
+        return $prefix.str_pad((string) $next, 4, '0', STR_PAD_LEFT);
     }
 
     /**

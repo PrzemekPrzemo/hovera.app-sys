@@ -23,6 +23,7 @@ return [
         'yearly' => 'Rocznie (-10%)',
         'month_short' => 'mies.',
         'year_short' => 'rok',
+        'one_time' => 'Jednorazowo',
     ],
     'actions' => [
         'choose' => 'Wybierz plan',
@@ -50,5 +51,34 @@ return [
     ],
     'footer' => [
         'disclaimer' => 'Płatności obsługuje Stripe. Twoje dane karty nie są przechowywane na serwerach hovera. Faktury VAT generujemy automatycznie po każdym pomyślnym rozliczeniu.',
+    ],
+    'suggested_badge' => 'Rekomendowany',
+    'trial_banner' => [
+        'expires_today' => 'Twój trial kończy się dziś.',
+        'expires_tomorrow' => 'Trial kończy się jutro.',
+        'days_left' => '{1} :days dzień triala pozostało.|[2,4] :days dni triala pozostało.|[5,*] :days dni triala pozostało.',
+        'pro_pitch' => 'Masz pełną funkcjonalność Pro, ale w trialu limit to :horses koni i :clients klientów. Po wyborze planu Pro — bez limitu.',
+        'cta_pro' => 'Wybierz Pro',
+    ],
+    'limits' => [
+        'title' => 'Limit planu osiągnięty',
+        'horses_exceeded' => 'Trial: limit :limit koni — wybierz plan aby dodać więcej.',
+        'clients_exceeded' => 'Trial: limit :limit klientów — wybierz plan aby dodać więcej.',
+    ],
+    'email' => [
+        'invoice_paid' => [
+            'subject' => 'Faktura :number — opłacona, dziękujemy!',
+            'heading' => 'Faktura :number opłacona',
+            'intro' => 'Dziękujemy! Otrzymaliśmy płatność za subskrypcję hovera dla stajni :stable.',
+            'field_number' => 'Numer faktury',
+            'field_plan' => 'Plan',
+            'field_period' => 'Okres',
+            'field_total' => 'Kwota brutto',
+            'field_paid_at' => 'Opłacono',
+            'pdf_pending' => 'Plik PDF z fakturą wkrótce pojawi się w panelu rozliczeń. Faktura zostanie też wysłana do KSeF (jeśli skonfigurowane).',
+            'cta_billing' => 'Otwórz panel rozliczeń',
+            'thanks' => 'Cieszymy się, że zostajesz z nami!',
+            'signoff' => 'Pozdrawiamy,',
+        ],
     ],
 ];

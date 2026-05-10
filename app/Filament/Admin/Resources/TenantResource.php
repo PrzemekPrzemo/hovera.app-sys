@@ -9,6 +9,7 @@ use App\Actions\Tenants\DeleteTenant;
 use App\Filament\Admin\Resources\TenantResource\Pages;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
+use App\Services\Exports\TenantDataExporter;
 use App\Services\MasterAuditLogger;
 use App\Tenancy\TenantManager;
 use Database\Seeders\Demo\HoveraDemoSeeder;
@@ -280,6 +281,37 @@ class TenantResource extends Resource
                     })
                     ->successRedirectUrl('/app')
                     ->modalSubmitActionLabel(__('admin/tenant.action.login_as_owner.submit')),
+                Tables\Actions\Action::make('export_data')
+                    ->label(__('admin/tenant-export.action.label'))
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('warning')
+                    ->visible(fn (Tenant $r) => ! $r->trashed() && Auth::user()?->is_master_admin === true)
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Tenant $r) => __('admin/tenant-export.action.modal_heading', ['name' => $r->name]))
+                    ->modalDescription(__('admin/tenant-export.action.modal_description'))
+                    ->action(function (Tenant $record, TenantDataExporter $exporter, MasterAuditLogger $audit) {
+                        try {
+                            $path = $exporter->export($record);
+                        } catch (\Throwable $e) {
+                            Notification::make()->danger()
+                                ->title(__('admin/tenant-export.toast.failure_title'))
+                                ->body($e->getMessage())
+                                ->send();
+
+                            return null;
+                        }
+
+                        $audit->record('tenant.data_export', 'Tenant', $record->id, $record->id, [
+                            'file' => basename($path),
+                        ]);
+
+                        Notification::make()->success()
+                            ->title(__('admin/tenant-export.toast.success_title'))
+                            ->body(__('admin/tenant-export.toast.success_body', ['file' => basename($path)]))
+                            ->send();
+
+                        return response()->download($path)->deleteFileAfterSend();
+                    }),
                 Tables\Actions\Action::make('seed_demo')
                     ->label(__('admin/tenant.action.seed_demo.label'))
                     ->icon('heroicon-o-sparkles')
