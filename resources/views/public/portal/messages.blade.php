@@ -28,17 +28,19 @@
         .pagination a, .pagination span { display: inline-block; padding: .35rem .7rem; border-radius: 6px; margin-right: .25rem; font-size: .85rem; text-decoration: none; color: #374151; border: 1px solid #e5e7eb; }
         .pagination .active { background: var(--primary); color: #fff; border-color: var(--primary); }
         @media (prefers-color-scheme: dark) {
-            body { background: #0f172a; color: #e5e7eb; }
-            .card { background: #1e293b; }
-            .back { color: #94a3b8; }
-            .subtitle { color: #94a3b8; }
-            .message { border-color: #334155; }
-            .message-head .date, .meta { color: #94a3b8; }
-            .pagination a, .pagination span { background: #0f172a; border-color: #334155; color: #cbd5e1; }
+            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
+            html:not(.is-demo) .card { background: #1e293b; }
+            html:not(.is-demo) .back { color: #94a3b8; }
+            html:not(.is-demo) .subtitle { color: #94a3b8; }
+            html:not(.is-demo) .message { border-color: #334155; }
+            html:not(.is-demo) .message-head .date, .meta { color: #94a3b8; }
+            html:not(.is-demo) .pagination a, .pagination span { background: #0f172a; border-color: #334155; color: #cbd5e1; }
         }
     </style>
 </head>
 <body>
+    <x-demo-light-mode />
+    <x-demo-banner />
     <div class="container">
         <a class="back" href="{{ route('client_portal.dashboard', ['slug' => $tenant->slug]) }}">{{ __('portal/messages.back') }}</a>
 

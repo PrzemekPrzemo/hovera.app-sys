@@ -116,7 +116,7 @@ class AppPanelProvider extends PanelProvider
             // czystą drogą bez nadpisywania całego layoutu.
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
-                fn () => Blade::render('<x-pwa-head />'),
+                fn () => Blade::render('<x-pwa-head /><x-demo-light-mode />'),
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,

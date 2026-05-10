@@ -21,15 +21,17 @@
         .error { color: #b91c1c; font-size: .85rem; margin-top: .35rem; }
         .secondary { display: block; text-align: center; margin-top: 1rem; color: #6b7280; text-decoration: none; font-size: .9rem; }
         @media (prefers-color-scheme: dark) {
-            body { background: #0f172a; color: #e5e7eb; }
-            .card { background: #1e293b; }
-            input[type=email] { background: #0f172a; border-color: #334155; color: #e5e7eb; }
-            label, p { color: #cbd5e1; }
-            .secondary { color: #94a3b8; }
+            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
+            html:not(.is-demo) .card { background: #1e293b; }
+            html:not(.is-demo) input[type=email] { background: #0f172a; border-color: #334155; color: #e5e7eb; }
+            html:not(.is-demo) label, p { color: #cbd5e1; }
+            html:not(.is-demo) .secondary { color: #94a3b8; }
         }
     </style>
 </head>
 <body>
+    <x-demo-light-mode />
+    <x-demo-banner />
     <div class="card">
         <h1>{{ __('portal/login.login.heading', ['tenant' => $tenant->name]) }}</h1>
         <p>{{ __('portal/login.login.intro') }}</p>

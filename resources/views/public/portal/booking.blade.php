@@ -34,17 +34,19 @@
         .errors { padding: .8rem 1rem; background: #fef2f2; color: #991b1b; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
         .errors ul { margin: .25rem 0 0; padding-left: 1rem; }
         @media (prefers-color-scheme: dark) {
-            body { background: #0f172a; color: #e5e7eb; }
-            .card { background: #1e293b; }
-            .back, .subtitle { color: #94a3b8; }
-            .form-row label { color: #cbd5e1; }
-            select, input[type=text], textarea { background: #0f172a; border-color: #334155; color: #e5e7eb; }
-            .slot { background: #0f172a; border-color: #334155; color: #e5e7eb; }
-            .day-pill { background: #0f172a; border-color: #334155; color: #e5e7eb; }
+            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
+            html:not(.is-demo) .card { background: #1e293b; }
+            html:not(.is-demo) .back, .subtitle { color: #94a3b8; }
+            html:not(.is-demo) .form-row label { color: #cbd5e1; }
+            html:not(.is-demo) select, input[type=text], textarea { background: #0f172a; border-color: #334155; color: #e5e7eb; }
+            html:not(.is-demo) .slot { background: #0f172a; border-color: #334155; color: #e5e7eb; }
+            html:not(.is-demo) .day-pill { background: #0f172a; border-color: #334155; color: #e5e7eb; }
         }
     </style>
 </head>
 <body>
+    <x-demo-light-mode />
+    <x-demo-banner />
     <div class="container">
         <a class="back" href="{{ route('client_portal.dashboard', ['slug' => $tenant->slug]) }}">
             {{ __('portal/booking.back') }}

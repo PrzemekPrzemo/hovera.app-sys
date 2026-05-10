@@ -17,15 +17,17 @@
         strong { color: #111827; }
         .secondary { display: block; margin-top: 1.5rem; color: #6b7280; text-decoration: none; font-size: .9rem; }
         @media (prefers-color-scheme: dark) {
-            body { background: #0f172a; color: #e5e7eb; }
-            .card { background: #1e293b; }
-            p { color: #cbd5e1; }
-            strong { color: #f1f5f9; }
-            .secondary { color: #94a3b8; }
+            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
+            html:not(.is-demo) .card { background: #1e293b; }
+            html:not(.is-demo) p { color: #cbd5e1; }
+            html:not(.is-demo) strong { color: #f1f5f9; }
+            html:not(.is-demo) .secondary { color: #94a3b8; }
         }
     </style>
 </head>
 <body>
+    <x-demo-light-mode />
+    <x-demo-banner />
     <div class="card">
         <div class="icon">📧</div>
         <h1>{{ __('portal/login.sent.heading') }}</h1>

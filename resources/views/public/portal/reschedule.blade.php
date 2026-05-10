@@ -27,16 +27,18 @@
         .slot button:hover { border-color: var(--primary); color: var(--primary); }
         .back { display: inline-block; margin-top: 1rem; color: #6b7280; text-decoration: none; font-size: .9rem; }
         @media (prefers-color-scheme: dark) {
-            body { background: #0f172a; color: #e5e7eb; }
-            .card { background: #1e293b; }
-            .meta, .step-label { color: #cbd5e1; }
-            .dates a, .slot button { background: #0f172a; border-color: #334155; color: #e2e8f0; }
-            .dates a:hover, .slot button:hover { background: #1f2937; }
-            .back { color: #94a3b8; }
+            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
+            html:not(.is-demo) .card { background: #1e293b; }
+            html:not(.is-demo) .meta, .step-label { color: #cbd5e1; }
+            html:not(.is-demo) .dates a, .slot button { background: #0f172a; border-color: #334155; color: #e2e8f0; }
+            html:not(.is-demo) .dates a:hover, .slot button:hover { background: #1f2937; }
+            html:not(.is-demo) .back { color: #94a3b8; }
         }
     </style>
 </head>
 <body>
+    <x-demo-light-mode />
+    <x-demo-banner />
     <div class="container">
         <div class="card">
             <h1>{{ __('portal/reschedule.heading') }}</h1>
