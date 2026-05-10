@@ -71,20 +71,22 @@
             .booking .actions { text-align: right; }
         }
         @media (prefers-color-scheme: dark) {
-            body { background: #0f172a; color: #e5e7eb; }
-            header.bar, .section { background: #1e293b; }
-            header.bar .who .stable { color: #94a3b8; }
-            header.bar button, header.bar a.help-link { border-color: #334155; color: #e2e8f0; }
-            header.bar button:hover, header.bar a.help-link:hover { background: #0f172a; }
-            .booking { border-color: #334155; }
-            .booking .what { color: #cbd5e1; }
-            .booking .what .meta { color: #64748b; }
-            .booking .actions a { border-color: #334155; }
-            .booking .actions a:hover { background: #1f2937; }
+            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
+            html:not(.is-demo) header.bar, .section { background: #1e293b; }
+            html:not(.is-demo) header.bar .who .stable { color: #94a3b8; }
+            html:not(.is-demo) header.bar button, header.bar a.help-link { border-color: #334155; color: #e2e8f0; }
+            html:not(.is-demo) header.bar button:hover, header.bar a.help-link:hover { background: #0f172a; }
+            html:not(.is-demo) .booking { border-color: #334155; }
+            html:not(.is-demo) .booking .what { color: #cbd5e1; }
+            html:not(.is-demo) .booking .what .meta { color: #64748b; }
+            html:not(.is-demo) .booking .actions a { border-color: #334155; }
+            html:not(.is-demo) .booking .actions a:hover { background: #1f2937; }
         }
     </style>
 </head>
 <body>
+    <x-demo-light-mode />
+    <x-demo-banner />
     <div class="container">
         <header class="bar">
             <div class="who">

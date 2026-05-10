@@ -110,19 +110,21 @@
             .doc { flex-direction: column; align-items: flex-start; }
         }
         @media (prefers-color-scheme: dark) {
-            body { background: #0f172a; color: #e5e7eb; }
-            .card { background: #1e293b; }
-            .back { color: #94a3b8; }
-            .subtitle { color: #94a3b8; }
-            dl { background: #0f172a; }
-            dt { color: #94a3b8; }
-            .record { border-color: #334155; }
-            .record .summary { color: #cbd5e1; }
-            .record .meta, .record .head .date { color: #64748b; }
+            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
+            html:not(.is-demo) .card { background: #1e293b; }
+            html:not(.is-demo) .back { color: #94a3b8; }
+            html:not(.is-demo) .subtitle { color: #94a3b8; }
+            html:not(.is-demo) dl { background: #0f172a; }
+            html:not(.is-demo) dt { color: #94a3b8; }
+            html:not(.is-demo) .record { border-color: #334155; }
+            html:not(.is-demo) .record .summary { color: #cbd5e1; }
+            html:not(.is-demo) .record .meta, .record .head .date { color: #64748b; }
         }
     </style>
 </head>
 <body>
+    <x-demo-light-mode />
+    <x-demo-banner />
     <div class="container">
         <a class="back" href="{{ route('client_portal.dashboard', ['slug' => $tenant->slug]) }}">{{ __('portal/horse.back') }}</a>
 

@@ -16,13 +16,15 @@
         p { color: #4b5563; line-height: 1.5; }
         a.btn { display: inline-block; margin-top: 1rem; padding: .65rem 1.2rem; background: var(--primary); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; }
         @media (prefers-color-scheme: dark) {
-            body { background: #0f172a; color: #e5e7eb; }
-            .card { background: #1e293b; }
-            p { color: #cbd5e1; }
+            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
+            html:not(.is-demo) .card { background: #1e293b; }
+            html:not(.is-demo) p { color: #cbd5e1; }
         }
     </style>
 </head>
 <body>
+    <x-demo-light-mode />
+    <x-demo-banner />
     <div class="card">
         <div class="icon">⚠️</div>
         <h1>{{ __('portal/login.invalid.heading') }}</h1>

@@ -28,18 +28,20 @@
         .help strong { color: #111827; }
         .help a { color: var(--primary); text-decoration: underline; }
         @media (prefers-color-scheme: dark) {
-            body { background: #0f172a; color: #e5e7eb; }
-            .card { background: #1e293b; }
-            .help h2, .help strong { color: #f3f4f6; }
-            .help p, .help ul, .help ol { color: #cbd5e1; }
-            .help th { background: #0f172a; }
-            .help td { border-color: #334155; }
-            .help code { background: #0f172a; color: #f3f4f6; }
-            .back { color: #94a3b8; }
+            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
+            html:not(.is-demo) .card { background: #1e293b; }
+            html:not(.is-demo) .help h2, .help strong { color: #f3f4f6; }
+            html:not(.is-demo) .help p, .help ul, .help ol { color: #cbd5e1; }
+            html:not(.is-demo) .help th { background: #0f172a; }
+            html:not(.is-demo) .help td { border-color: #334155; }
+            html:not(.is-demo) .help code { background: #0f172a; color: #f3f4f6; }
+            html:not(.is-demo) .back { color: #94a3b8; }
         }
     </style>
 </head>
 <body>
+    <x-demo-light-mode />
+    <x-demo-banner />
     <div class="container">
         <a class="back" href="{{ route('client_portal.dashboard', ['slug' => $tenant->slug]) }}">{{ __('portal/help.back') }}</a>
 
