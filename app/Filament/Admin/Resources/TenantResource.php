@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 
 class TenantResource extends Resource
 {
@@ -192,6 +193,108 @@ class TenantResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('back_office_settings')
+                        ->label(__('admin/back-office.action.settings'))
+                        ->icon('heroicon-o-cog-6-tooth')
+                        ->url(fn (Tenant $r) => url('/admin/tenants/'.$r->id.'/settings')),
+                    Tables\Actions\Action::make('back_office_billing')
+                        ->label(__('admin/back-office.action.billing'))
+                        ->icon('heroicon-o-banknotes')
+                        ->url(fn (Tenant $r) => url('/admin/tenants/'.$r->id.'/billing')),
+                    Tables\Actions\Action::make('back_office_mailer')
+                        ->label(__('admin/back-office.action.mailer'))
+                        ->icon('heroicon-o-envelope')
+                        ->url(fn (Tenant $r) => url('/admin/tenants/'.$r->id.'/mailer')),
+                ])
+                    ->label(__('admin/back-office.action.group'))
+                    ->icon('heroicon-o-wrench-screwdriver')
+                    ->color('primary')
+                    ->button(),
+                Tables\Actions\Action::make('change_plan')
+                    ->label(__('admin/back-office.action.change_plan.label'))
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->visible(fn (Tenant $r) => ! $r->trashed())
+                    ->form([
+                        Forms\Components\Select::make('plan_id')
+                            ->label(__('admin/back-office.action.change_plan.plan_label'))
+                            ->options(fn () => Plan::query()->orderBy('sort_order')->pluck('name', 'id'))
+                            ->required(),
+                        Forms\Components\Select::make('period')
+                            ->label(__('admin/back-office.action.change_plan.period_label'))
+                            ->options(['monthly' => 'monthly', 'yearly' => 'yearly'])
+                            ->default('monthly')
+                            ->required(),
+                        Forms\Components\Textarea::make('reason')
+                            ->label(__('admin/back-office.action.change_plan.reason_label'))
+                            ->required()
+                            ->minLength(5)
+                            ->maxLength(500),
+                    ])
+                    ->requiresConfirmation()
+                    ->action(function (Tenant $record, array $data, MasterAuditLogger $audit) {
+                        $previousPlanId = $record->plan_id;
+                        $record->forceFill(['plan_id' => $data['plan_id']])->save();
+
+                        // Stripe sub update is a placeholder — we record the
+                        // operator's intent and the period, but actually
+                        // changing the Stripe subscription's price item is
+                        // out of scope of this PR (handled by the dedicated
+                        // billing reconciliation job that the Trial 2.0 PR
+                        // is adding).
+                        $audit->record('tenant.plan.change', 'Tenant', $record->id, $record->id, [
+                            'previous_plan_id' => $previousPlanId,
+                            'new_plan_id' => $data['plan_id'],
+                            'period' => $data['period'],
+                            'reason' => $data['reason'],
+                        ]);
+
+                        Notification::make()->success()
+                            ->title(__('admin/back-office.action.change_plan.notification_title'))
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('force_password_reset')
+                    ->label(__('admin/back-office.action.force_reset.label'))
+                    ->icon('heroicon-o-key')
+                    ->color('warning')
+                    ->visible(fn (Tenant $r) => ! $r->trashed())
+                    ->requiresConfirmation()
+                    ->modalDescription(__('admin/back-office.action.force_reset.modal_description'))
+                    ->action(function (Tenant $record, MasterAuditLogger $audit) {
+                        $owner = $record->memberships()
+                            ->whereNull('revoked_at')
+                            ->where('role', 'owner')
+                            ->with('user')
+                            ->first()?->user;
+
+                        if ($owner === null || ! $owner->email) {
+                            Notification::make()->danger()
+                                ->title(__('admin/back-office.action.force_reset.no_owner'))
+                                ->send();
+
+                            return;
+                        }
+
+                        $status = Password::sendResetLink(['email' => $owner->email]);
+
+                        $audit->record('tenant.owner.force_password_reset', 'User', $owner->id, $record->id, [
+                            'owner_email' => $owner->email,
+                            'status' => $status,
+                        ]);
+
+                        if ($status === Password::RESET_LINK_SENT) {
+                            Notification::make()->success()
+                                ->title(__('admin/back-office.action.force_reset.success'))
+                                ->body(__('admin/back-office.action.force_reset.success_body', ['email' => $owner->email]))
+                                ->send();
+                        } else {
+                            Notification::make()->danger()
+                                ->title(__('admin/back-office.action.force_reset.failed'))
+                                ->body((string) $status)
+                                ->send();
+                        }
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('suspend')
                     ->label(__('admin/tenant.action.suspend.label'))

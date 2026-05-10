@@ -142,6 +142,92 @@ class StripeBillingService
     }
 
     /**
+     * Return the most recent Stripe invoices for the tenant's customer.
+     * Used by the master-admin billing-history page. Returns an empty
+     * array when the tenant has never been charged through Stripe so the
+     * UI degrades to a "no invoices" empty state instead of erroring.
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function listInvoices(Tenant $tenant, int $limit = 50): array
+    {
+        if ($tenant->stripe_customer_id === null) {
+            return [];
+        }
+
+        $page = $this->stripe->invoices->all([
+            'customer' => $tenant->stripe_customer_id,
+            'limit' => max(1, min($limit, 100)),
+        ]);
+
+        $rows = [];
+        foreach ($page->data as $invoice) {
+            $rows[] = [
+                'id' => (string) $invoice->id,
+                'number' => (string) ($invoice->number ?? ''),
+                'status' => (string) ($invoice->status ?? 'unknown'),
+                'amount_paid' => (int) ($invoice->amount_paid ?? 0),
+                'amount_due' => (int) ($invoice->amount_due ?? 0),
+                'currency' => strtoupper((string) ($invoice->currency ?? 'PLN')),
+                'created' => isset($invoice->created)
+                    ? Carbon::createFromTimestamp((int) $invoice->created)
+                    : null,
+                'period_start' => isset($invoice->period_start)
+                    ? Carbon::createFromTimestamp((int) $invoice->period_start)
+                    : null,
+                'period_end' => isset($invoice->period_end)
+                    ? Carbon::createFromTimestamp((int) $invoice->period_end)
+                    : null,
+                'hosted_invoice_url' => $invoice->hosted_invoice_url ?? null,
+                'invoice_pdf' => $invoice->invoice_pdf ?? null,
+                'payment_intent' => is_string($invoice->payment_intent ?? null) ? $invoice->payment_intent : null,
+                'charge' => is_string($invoice->charge ?? null) ? $invoice->charge : null,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Refund a paid Stripe invoice. We refund via the underlying charge
+     * because Stripe's refund API targets charges, not invoices. Pass
+     * null to refund the full amount; an int (in minor units) for a
+     * partial refund.
+     *
+     * @return array{id:string,amount:int,status:string}
+     */
+    public function refundInvoice(string $invoiceId, ?int $amountCents = null, ?string $reason = null): array
+    {
+        $invoice = $this->stripe->invoices->retrieve($invoiceId, []);
+
+        $chargeId = is_string($invoice->charge ?? null) ? $invoice->charge : null;
+        if ($chargeId === null) {
+            throw new RuntimeException("Invoice {$invoiceId} has no associated charge — cannot refund.");
+        }
+
+        $params = ['charge' => $chargeId];
+        if ($amountCents !== null) {
+            $params['amount'] = $amountCents;
+        }
+        if ($reason !== null && $reason !== '') {
+            // Stripe allows duplicate / fraudulent / requested_by_customer.
+            // We always send the user-typed reason as metadata; only the
+            // canonical "requested_by_customer" goes in the top-level
+            // field so the dashboard categorises correctly.
+            $params['reason'] = 'requested_by_customer';
+            $params['metadata'] = ['operator_reason' => substr($reason, 0, 480)];
+        }
+
+        $refund = $this->stripe->refunds->create($params);
+
+        return [
+            'id' => (string) $refund->id,
+            'amount' => (int) ($refund->amount ?? 0),
+            'status' => (string) ($refund->status ?? 'unknown'),
+        ];
+    }
+
+    /**
      * Verify signature, dedupe by event id, route to handler. Caller
      * (StripeWebhookController) should always return 200 even on
      * dedupe — Stripe needs that to stop retrying.

@@ -24,6 +24,7 @@ use App\Http\Controllers\Tenant\BillingController;
 use App\Http\Controllers\Tenant\ImportTemplateController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
 use App\Http\Middleware\InitialiseTenantFromSession;
+use App\Tenancy\TenantManager;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -166,6 +167,19 @@ Route::middleware(['web', 'auth'])->prefix('app/billing')->name('billing.')->gro
     Route::get('/return', [BillingController::class, 'return'])->name('return');
     Route::post('/portal', [BillingController::class, 'portal'])->name('portal');
 });
+
+/*
+ * Suspended-tenant landing page. RedirectIfTenantSuspended bounces every
+ * /app/* request here when the master admin has flipped the tenant's
+ * status — keeps the user informed without leaking half-loaded panels.
+ */
+Route::middleware(['web', 'auth'])
+    ->get('/app/suspended', function () {
+        $tenant = app(TenantManager::class)->current();
+
+        return response()->view('tenant.suspended', ['tenant' => $tenant]);
+    })
+    ->name('tenant.suspended');
 
 /*
  * Stripe webhook delivery target. CSRF excluded in bootstrap/app.php;
