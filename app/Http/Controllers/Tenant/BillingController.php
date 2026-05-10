@@ -34,7 +34,7 @@ class BillingController extends Controller
         private readonly TenantManager $tenants,
     ) {}
 
-    public function show(): ViewContract|RedirectResponse|Renderable
+    public function show(Request $request): ViewContract|RedirectResponse|Renderable
     {
         $tenant = $this->resolveTenant();
         if ($tenant === null) {
@@ -48,12 +48,21 @@ class BillingController extends Controller
             ->orderBy('sort_order')
             ->get();
 
+        // `?plan=pro` z banera → highlight tej karty + scroll-into-view.
+        // Whitelistujemy do listy aktywnych public planów żeby nie podbić
+        // jakiegoś hidden Enterprise.
+        $suggested = (string) $request->query('plan', '');
+        $suggestedPlan = $suggested !== '' && $plans->contains(fn ($p) => $p->code === $suggested)
+            ? $suggested
+            : null;
+
         return view('tenant.billing.show', [
             'tenant' => $tenant,
             'currentPlan' => $tenant->plan,
             'plans' => $plans,
             'trialDaysLeft' => $this->trialDaysLeft($tenant),
             'hasSubscription' => $tenant->stripe_subscription_id !== null,
+            'suggestedPlan' => $suggestedPlan,
         ]);
     }
 

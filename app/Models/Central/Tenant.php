@@ -24,6 +24,7 @@ class Tenant extends Model
         'db_host', 'db_port', 'db_name', 'db_username', 'db_password_encrypted',
         'country', 'locale', 'timezone', 'currency',
         'plan_id', 'status', 'trial_ends_at',
+        'trial_max_horses', 'trial_max_clients',
         'stripe_customer_id', 'stripe_subscription_id',
         'current_period_ends_at', 'subscription_ends_at',
         'branding', 'settings',
@@ -43,6 +44,8 @@ class Tenant extends Model
             'custom_domain_verified_at' => 'datetime',
             'health_score' => 'integer',
             'db_port' => 'integer',
+            'trial_max_horses' => 'integer',
+            'trial_max_clients' => 'integer',
         ];
     }
 
@@ -135,5 +138,48 @@ class Tenant extends Model
 
         return $this->trial_ends_at !== null
             && $this->trial_ends_at->isPast();
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * Aktualne limity planu z poprawką na trial — stajnia w trialu
+     * ma WSZYSTKIE feature'y planu Pro, ale konie i klienci są przycięte
+     * do `trial_max_horses` / `trial_max_clients`. Po flipie statusu na
+     * `active` (Stripe webhook), limity przepadają i schodzimy do pełnej
+     * tabeli z `plan->limits`.
+     *
+     * Zwraca tablicę z kluczami:
+     *   - max_horses, max_clients, max_users, max_storage_mb
+     * `-1` traktowane jako unlimited (jak w PlansSeeder).
+     *
+     * @return array<string,int>
+     */
+    public function effectiveLimits(): array
+    {
+        $planLimits = $this->plan?->limits ?? [];
+
+        $defaults = [
+            'max_horses' => (int) ($planLimits['max_horses'] ?? 0),
+            'max_clients' => (int) ($planLimits['max_clients'] ?? 0),
+            'max_users' => (int) ($planLimits['max_users'] ?? 0),
+            'max_storage_mb' => (int) ($planLimits['max_storage_mb'] ?? 0),
+        ];
+
+        if ($this->status !== 'trialing') {
+            return $defaults;
+        }
+
+        if ($this->trial_max_horses !== null) {
+            $defaults['max_horses'] = (int) $this->trial_max_horses;
+        }
+        if ($this->trial_max_clients !== null) {
+            $defaults['max_clients'] = (int) $this->trial_max_clients;
+        }
+
+        return $defaults;
     }
 }

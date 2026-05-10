@@ -10,24 +10,27 @@
     @php
         $color = $daysLeft <= 3 ? '#b91c1c' : ($daysLeft <= 10 ? '#A8956B' : '#3D2E22');
         $bg = $daysLeft <= 3 ? '#fee2e2' : '#F7F4EF';
+        $proUrl = route('billing.show', ['plan' => 'pro']);
+        $maxHorses = (int) ($tenant->trial_max_horses ?? 10);
+        $maxClients = (int) ($tenant->trial_max_clients ?? 5);
     @endphp
-    <div style="background: {{ $bg }}; color: {{ $color }}; padding: .55rem 1rem; font-size: .85rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #E9E2D3;">
-        <div style="display: flex; align-items: center; gap: .5rem;">
+    <div style="background: {{ $bg }}; color: {{ $color }}; padding: .55rem 1rem; font-size: .85rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #E9E2D3; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: .5rem; min-width: 0;">
             <span style="font-size: 1rem;">⏳</span>
             <span>
                 @if ($daysLeft === 0)
-                    <strong>Twój trial kończy się dziś.</strong>
+                    <strong>{{ __('billing.trial_banner.expires_today') }}</strong>
                 @elseif ($daysLeft === 1)
-                    <strong>Trial kończy się jutro.</strong>
+                    <strong>{{ __('billing.trial_banner.expires_tomorrow') }}</strong>
                 @else
-                    <strong>{{ $daysLeft }} dni</strong> triala pozostało.
+                    <strong>{{ trans_choice('billing.trial_banner.days_left', $daysLeft, ['days' => $daysLeft]) }}</strong>
                 @endif
-                Po zakończeniu wybierzesz plan — bez karty kredytowej, możesz zostać na free albo wyjść.
+                {{ __('billing.trial_banner.pro_pitch', ['horses' => $maxHorses, 'clients' => $maxClients]) }}
             </span>
         </div>
-        <a href="mailto:support@hovera.app?subject=Hovera%20-%20wyb%C3%B3r%20planu%20{{ urlencode($tenant->slug) }}"
+        <a href="{{ $proUrl }}"
            style="background: {{ $color }}; color: white; padding: .35rem .85rem; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: .8rem; white-space: nowrap;">
-            Wybierz plan
+            {{ __('billing.trial_banner.cta_pro') }}
         </a>
     </div>
 @endif

@@ -40,9 +40,13 @@ class CreateTenant
         [$dbName, $dbUser] = array_values($this->provisioner->makeIdentifiers($data['slug']));
         $dbPassword = $this->provisioner->generatePassword();
 
+        // Trial 2.0 — domyślnie wszyscy startują z planem Pro (pełen
+        // zestaw feature'ów), ale na trialu obowiązuje hard-cap 10/5
+        // wyrażony przez `trial_max_horses` / `trial_max_clients`.
+        // Jeśli caller jawnie poda `plan_code`, honorujemy.
         $plan = ! empty($data['plan_code'])
             ? Plan::where('code', $data['plan_code'])->first()
-            : null;
+            : Plan::where('code', 'pro')->first();
 
         $tenant = DB::connection('central')->transaction(function () use ($data, $dbName, $dbUser, $dbPassword, $plan) {
             $tenant = new Tenant([
@@ -82,6 +86,10 @@ class CreateTenant
             // ręcznie w panelu admin lub przy upgrade na płatny plan
             // status flipuje na 'active' i trial_ends_at idzie ignored.
             'trial_ends_at' => $tenant->trial_ends_at ?? now()->addDays(30),
+            // Trial 2.0: hard-cap 10 koni / 5 klientów, mimo że plan
+            // formalnie Pro. Override żyje tylko dopóki status=trialing.
+            'trial_max_horses' => $tenant->trial_max_horses ?? 10,
+            'trial_max_clients' => $tenant->trial_max_clients ?? 5,
         ])->save();
 
         $ownerEmail = $data['owner_email'] ?? null;
