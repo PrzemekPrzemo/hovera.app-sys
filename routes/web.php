@@ -81,6 +81,12 @@ Route::middleware(['web'])
     ->where('role', 'owner|admin|manager|instructor|employee|vet|viewer')
     ->name('demo.switch_role');
 
+// Demo "client" view — loguje zwiedzającego do portalu klienta jako sample
+// horse owner. Bez magic linka, instant dostęp. 404 poza demo.
+Route::middleware(['web'])
+    ->get('/demo/as-client', [DemoLoginController::class, 'loginAsClient'])
+    ->name('demo.login_client');
+
 /*
  * Public pricing page — `/pricing`. Czyta plany z central DB (is_public=true)
  * i renderuje porównawczy cennik z toggle miesięcznie/rocznie.

@@ -7,6 +7,9 @@ namespace App\Http\Controllers\Public;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Models\Central\User;
+use App\Models\Tenant\Client;
+use App\Services\Portal\ClientPortalAuth;
+use App\Tenancy\TenantManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -30,6 +33,11 @@ class DemoLoginController extends Controller
 {
     /** Roles available via /demo/as/{role} for the in-panel role switcher. */
     public const SWITCHABLE_ROLES = ['owner', 'admin', 'manager', 'instructor', 'employee', 'vet', 'viewer'];
+
+    public function __construct(
+        private readonly TenantManager $tenants,
+        private readonly ClientPortalAuth $portalAuth,
+    ) {}
 
     public function __invoke(Request $request): RedirectResponse
     {
@@ -55,6 +63,62 @@ class DemoLoginController extends Controller
         }
 
         return $this->loginAs($request, $role, regenerate: false);
+    }
+
+    /**
+     * Loguje zwiedzającego /demo do panelu klienta (portal właściciela konia)
+     * jako sample client. Bez magic-link, bez emaila — od razu na dashboard
+     * `/s/demo/portal`. Pokazuje "po drugiej stronie barykady": rezerwacje,
+     * konie, faktury, wiadomości z perspektywy jeźdźca/właściciela.
+     *
+     * Bezpieczeństwo: wymaga session('demo.is_demo') = true (czyli użytkownik
+     * najpierw wszedł na /demo i zalogował się przynajmniej jako owner) —
+     * inaczej 404, żeby nie udostępniać auth bypass na klienta.
+     */
+    public function loginAsClient(Request $request): RedirectResponse
+    {
+        if ($request->session()->get('demo.is_demo') !== true) {
+            abort(404);
+        }
+
+        $slug = (string) config('hovera.demo.slug', 'demo');
+
+        $tenant = Tenant::query()
+            ->withTrashed()
+            ->where('slug', $slug)
+            ->whereIn('status', ['active', 'trialing'])
+            ->first();
+        if (! $tenant) {
+            abort(503, 'Demo tymczasowo niedostępne — odśwież za chwilę.');
+        }
+        if ($tenant->trashed()) {
+            $tenant->restore();
+        }
+
+        // Klienci siedzą w tenant DB — switch contextu, wybierz pierwszego
+        // z ćwiczeniem (ma bookings + horse) żeby dashboard nie był pusty.
+        $client = $this->tenants->execute($tenant, function () {
+            return Client::query()
+                ->whereHas('horses')
+                ->orderBy('created_at')
+                ->first()
+                ?? Client::query()->orderBy('created_at')->first();
+        });
+
+        if (! $client instanceof Client) {
+            abort(503, 'Demo tymczasowo niedostępne — brak przykładowego klienta.');
+        }
+
+        // Wyloguj z panelu Filament (jeśli aktywny) żeby nie kolidowało
+        // z guard'em portalu — portal trzyma własną sekcję sesji per-tenant.
+        Auth::logout();
+        $this->portalAuth->login($request, $client, $slug);
+
+        $request->session()->put('demo.is_demo', true);
+        $request->session()->put('demo.role', 'client');
+        $request->session()->put('demo.expires_at', now()->addHours(2)->toIso8601String());
+
+        return redirect()->route('client_portal.dashboard', ['slug' => $slug]);
     }
 
     private function loginAs(Request $request, string $role, bool $regenerate): RedirectResponse
