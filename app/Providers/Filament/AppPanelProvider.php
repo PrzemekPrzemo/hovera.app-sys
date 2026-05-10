@@ -45,9 +45,14 @@ class AppPanelProvider extends PanelProvider
             ->login()
             ->passwordReset()
             ->colors([
-                // Brand: Ochre #A8956B (primary akcent), Deep Brown #3D2E22 (gray sidebar)
+                // Brand: Ochre #A8956B (primary akcent).
+                // Gray = Stone — ciepły neutralny scale Filamentu, harmonizuje
+                // z ochre i dobrze działa w dark mode. Wcześniej był custom
+                // hex #3D2E22 (deep brown), z którego Filament generował
+                // crushed-dark gradient → dark mode nieczytelny (PR użytkownika
+                // "tryb ciemny jest za ciemny / bardzo nieczytelny").
                 'primary' => Color::hex('#A8956B'),
-                'gray' => Color::hex('#3D2E22'),
+                'gray' => Color::Stone,
             ])
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\\Filament\\App\\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\\Filament\\App\\Pages')
