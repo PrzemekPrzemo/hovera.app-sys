@@ -1,0 +1,72 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Singular + plural model labels for Filament resources.
+ *
+ * Convention: lowercase singular, capitalized plural (matches Filament's
+ * default usage in breadcrumbs and create-action labels).
+ */
+return [
+    'tenant' => 'конюшня',
+    'tenants' => 'Конюшни',
+    'plan' => 'тариф',
+    'plans' => 'Тарифы',
+    'invitation' => 'приглашение',
+    'invitations' => 'Приглашения',
+    'horse' => 'лошадь',
+    'horses' => 'Лошади',
+    'client' => 'клиент',
+    'clients' => 'Клиенты',
+    'box' => 'денник',
+    'boxes' => 'Денники',
+    'building' => 'здание',
+    'buildings' => 'Здания',
+    'team_member' => 'сотрудник',
+    'team_members' => 'Сотрудники конюшни',
+    'arena' => 'манеж',
+    'arenas' => 'Манежи',
+    'invoice' => 'счёт',
+    'invoices' => 'Счета',
+    'payment' => 'платёж',
+    'payments' => 'Платежи',
+    'pass' => 'абонемент',
+    'passes' => 'Абонементы',
+    'boarding_service' => 'услуга пансиона',
+    'boarding_services' => 'Прайс-лист пансиона',
+    'instructor' => 'инструктор',
+    'instructors' => 'Инструкторы',
+    'health_record' => 'запись о здоровье',
+    'health_records' => 'Уход и здоровье',
+    'treatment_template' => 'шаблон процедуры',
+    'treatment_templates' => 'Шаблоны процедур',
+    'calendar_entry' => 'бронирование',
+    'calendar_entries' => 'Бронирования',
+    'recurring_entry' => 'регулярное занятие',
+    'recurring_entries' => 'Регулярные занятия',
+    'specialist' => 'специалист',
+    'specialists' => 'Специалисты',
+
+    // Relation manager labels
+    'membership' => 'участник',
+    'memberships' => 'Участники',
+    'addon' => 'дополнение',
+    'addons' => 'Дополнения',
+    'message' => 'сообщение',
+    'messages' => 'Сообщения',
+    'document' => 'документ',
+    'documents' => 'Документы',
+    'health_entry' => 'запись',
+    'health_entries' => 'Записи о здоровье',
+    'activity' => 'активность',
+    'activities' => 'Активности',
+    'horse_weight_measurement' => 'измерение веса',
+    'horse_weight_measurements' => 'Вес лошади',
+    'feeding_plan_item' => 'позиция плана кормления',
+    'feeding_plan' => 'План кормления',
+    'feed_item' => 'позиция корма',
+    'feed_items' => 'Склад кормов',
+    'horse_photo' => 'фото',
+    'horse_photos' => 'Галерея фото',
+];
