@@ -65,4 +65,5 @@ return [
     'none' => 'Brak',
     'all' => 'Wszystkie',
     'or' => 'lub',
+    'dismiss' => 'Ukryj',
 ];

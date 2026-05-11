@@ -65,4 +65,5 @@ return [
     'none' => 'None',
     'all' => 'All',
     'or' => 'or',
+    'dismiss' => 'Dismiss',
 ];

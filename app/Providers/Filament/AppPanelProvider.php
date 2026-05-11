@@ -151,7 +151,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 PanelsRenderHook::BODY_START,
-                fn () => Blade::render('<x-trial-banner /><x-demo-banner /><x-impersonation-banner />'),
+                fn () => Blade::render('<x-trial-banner /><x-demo-banner /><x-impersonation-banner /><x-master-ads />'),
             )
             // PWA: manifest + Apple meta + service worker.
             // HEAD_END / BODY_END używamy bo Filament nie ma własnego API

@@ -65,4 +65,5 @@ return [
     'none' => 'Aucun',
     'all' => 'Tous',
     'or' => 'ou',
+    'dismiss' => 'Masquer',
 ];
