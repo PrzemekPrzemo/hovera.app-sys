@@ -77,6 +77,7 @@
 
     <h1>{{ __('billing.page.title') }}</h1>
     <p class="lead">{{ __('billing.page.subtitle', ['stable' => $tenant->name]) }}</p>
+    <p style="font-size: .85rem; opacity: .7; margin-top: -.5rem;">{{ __('billing.vat_notice') }}</p>
 
     @if ($errors->any())
         <div class="alert">
@@ -121,6 +122,8 @@
                 $isSuggested = ! $isCurrent && ($suggestedPlan ?? null) === $plan->code;
                 $monthlyPln = number_format($plan->price_monthly_cents / 100, 0, ',', ' ');
                 $yearlyPln = number_format($plan->price_yearly_cents / 100, 0, ',', ' ');
+                $onboardingFeeCents = (int) ($plan->onboarding_fee_cents ?? 0);
+                $onboardingFeePln = $onboardingFeeCents > 0 ? number_format($onboardingFeeCents / 100, 0, ',', ' ') : null;
                 $bullets = collect($plan->features ?? [])
                     ->filter(fn ($v, $k) => str_starts_with((string) $k, 'bullet_'))
                     ->values();
@@ -134,10 +137,17 @@
                 <h3>{{ $plan->name }}</h3>
                 <div class="price" data-price-monthly>
                     {{ $monthlyPln }} <small>{{ $plan->currency }} / {{ __('billing.period.month_short') }}</small>
+                    <small style="opacity:.65;">{{ __('billing.vat_notice_short') }}</small>
                 </div>
                 <div class="price" data-price-yearly style="display:none;">
                     {{ $yearlyPln }} <small>{{ $plan->currency }} / {{ __('billing.period.year_short') }}</small>
+                    <small style="opacity:.65;">{{ __('billing.vat_notice_short') }}</small>
                 </div>
+                @if ($onboardingFeePln !== null)
+                    <div style="font-size:.85rem; margin: .25rem 0 .5rem; opacity:.85;">
+                        + {{ $onboardingFeePln }} {{ $plan->currency }} {{ __('billing.onboarding_fee_label') }}
+                    </div>
+                @endif
                 @if ($bullets->count())
                     <ul class="features">
                         @foreach ($bullets as $bullet)

@@ -22,6 +22,10 @@ return [
     'custom_price' => 'Wycena indywidualna',
     'custom_price_note' => 'Skontaktujemy się w 24h.',
     'unlimited' => 'bez limitu',
+    'vat_notice' => 'Ceny netto. Do każdej kwoty doliczamy 23% VAT.',
+    'vat_notice_short' => '+ 23% VAT',
+    'onboarding_fee_label' => 'Jednorazowa opłata wdrożeniowa',
+    'onboarding_fee_help' => 'Doliczana raz przy starcie subskrypcji.',
 
     'tagline' => [
         'free' => 'Dla pojedynczego instruktora — sprawdź czy hovera Ci pasuje.',

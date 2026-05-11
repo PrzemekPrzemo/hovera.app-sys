@@ -69,6 +69,9 @@ return [
         'label' => 'Onboarding fee — :plan plan',
         'description' => 'One-time activation fee charged at the start of the subscription.',
     ],
+    'onboarding_fee_label' => 'one-time (onboarding fee)',
+    'vat_notice' => 'Prices are net. 23% VAT is added to every amount.',
+    'vat_notice_short' => '+ 23% VAT',
     'email' => [
         'invoice_paid' => [
             'subject' => 'Invoice :number — paid, thank you!',
