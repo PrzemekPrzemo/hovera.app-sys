@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class LocaleController extends Controller
 {
-    private const SUPPORTED = ['pl', 'en'];
+    private const SUPPORTED = ['pl', 'en', 'fr', 'de', 'ru'];
 
     /**
      * Sets the UI locale (session + per-user preference if logged in)

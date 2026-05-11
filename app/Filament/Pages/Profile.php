@@ -85,17 +85,16 @@ class Profile extends Page implements HasForms
                     ->maxLength(255),
 
                 Forms\Components\Select::make('locale')
-                    ->label('Język')
+                    ->label(__('common.field.locale'))
                     ->options([
                         'pl' => 'Polski',
                         'en' => 'English',
-                        'de' => 'Deutsch',
-                        'nl' => 'Nederlands',
                         'fr' => 'Français',
-                        'it' => 'Italiano',
-                        'es' => 'Español',
+                        'de' => 'Deutsch',
+                        'ru' => 'Русский',
                     ])
-                    ->required(),
+                    ->required()
+                    ->helperText(__('common.field.locale_help')),
 
                 Forms\Components\Select::make('timezone')
                     ->label('Strefa czasowa')
