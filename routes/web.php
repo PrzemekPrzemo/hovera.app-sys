@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Invitations\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\MasterAdController;
 use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\ClientPortalController;
 use App\Http\Controllers\Public\DemoLoginController;
@@ -223,8 +224,16 @@ Route::middleware(['web', 'auth', InitialiseTenantFromSession::class])
 // Language switcher — redirects back to where the user came from.
 Route::middleware('web')
     ->get('/locale/{locale}', LocaleController::class)
-    ->where('locale', 'pl|en')
+    ->where('locale', 'pl|en|fr|de|ru')
     ->name('locale.set');
+
+// Master ads — dismiss + click tracking. Banner renderowany przez render hook
+// (panel /app + /admin). CSRF chroni POST dismiss; click rejestruje GET +
+// redirect na cta_url.
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::post('/master-ads/{ad}/dismiss', [MasterAdController::class, 'dismiss'])->name('master-ads.dismiss');
+    Route::get('/master-ads/{ad}/click', [MasterAdController::class, 'click'])->name('master-ads.click');
+});
 
 /*
  * Public invitation acceptance — the token IS the credential, no auth
