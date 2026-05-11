@@ -8,7 +8,7 @@
     <style>
         :root { --primary: {{ $primary_color }}; }
         * { box-sizing: border-box; }
-        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #1f2937; }
+        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #3a2f25; }
         body { padding: 1rem; }
         .container { max-width: 760px; margin: 0 auto; }
         .back { display: inline-block; margin-bottom: .8rem; color: #6b7280; text-decoration: none; font-size: .9rem; }
@@ -23,19 +23,19 @@
         .help th { background: #f9fafb; padding: .55rem .75rem; text-align: left; font-weight: 600; }
         .help td { padding: .55rem .75rem; border-top: 1px solid #f3f4f6; }
         .help code { background: #f3f4f6; padding: .15rem .4rem; border-radius: 4px; font-family: ui-monospace, monospace; font-size: .9em; }
-        .help pre { background: #1f2937; color: #f3f4f6; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+        .help pre { background: #3a2f25; color: #f3f4f6; padding: 1rem; border-radius: 8px; overflow-x: auto; }
         .help blockquote { border-left: 4px solid var(--primary); background: color-mix(in srgb, var(--primary) 8%, white); padding: .65rem 1rem; margin: 1rem 0; border-radius: 0 6px 6px 0; }
         .help strong { color: #111827; }
         .help a { color: var(--primary); text-decoration: underline; }
         @media (prefers-color-scheme: dark) {
-            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
-            html:not(.is-demo) .card { background: #1e293b; }
+            html:not(.is-demo) body { background: #2a2017; color: #f7f4ef; }
+            html:not(.is-demo) .card { background: #3a2f25; }
             html:not(.is-demo) .help h2, .help strong { color: #f3f4f6; }
-            html:not(.is-demo) .help p, .help ul, .help ol { color: #cbd5e1; }
-            html:not(.is-demo) .help th { background: #0f172a; }
-            html:not(.is-demo) .help td { border-color: #334155; }
-            html:not(.is-demo) .help code { background: #0f172a; color: #f3f4f6; }
-            html:not(.is-demo) .back { color: #94a3b8; }
+            html:not(.is-demo) .help p, .help ul, .help ol { color: #e9e2d3; }
+            html:not(.is-demo) .help th { background: #2a2017; }
+            html:not(.is-demo) .help td { border-color: #5a4d44; }
+            html:not(.is-demo) .help code { background: #2a2017; color: #f3f4f6; }
+            html:not(.is-demo) .back { color: #c8b8a4; }
         }
     </style>
 </head>

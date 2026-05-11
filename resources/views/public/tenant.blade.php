@@ -25,7 +25,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
             background: #fafafa;
-            color: #1f2937;
+            color: #3a2f25;
             line-height: 1.6;
         }
         a { color: var(--primary); text-decoration: none; }
@@ -71,7 +71,7 @@
         ul.social a:hover { background: rgba(255,255,255,.3); text-decoration: none; }
 
         section.card.pricing table { width: 100%; border-collapse: collapse; }
-        section.card.pricing th { text-align: left; padding: .5rem .25rem; color: #6b7280; font-weight: 500; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; border-bottom: 1px solid #e5e7eb; }
+        section.card.pricing th { text-align: left; padding: .5rem .25rem; color: #6b7280; font-weight: 500; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; border-bottom: 1px solid #f7f4ef; }
         section.card.pricing td { padding: .65rem .25rem; border-bottom: 1px solid #f3f4f6; font-size: .95rem; }
         section.card.pricing td.price { text-align: right; font-weight: 600; color: var(--primary); white-space: nowrap; }
         section.card.pricing td.unit { text-align: right; color: #6b7280; font-size: .85rem; white-space: nowrap; }
@@ -184,13 +184,13 @@
         footer.site-footer a { color: #6b7280; }
 
         @media (prefers-color-scheme: dark) {
-            body { background: #0f172a; color: #e5e7eb; }
-            section.card { background: #1e293b; }
+            body { background: #2a2017; color: #f7f4ef; }
+            section.card { background: #3a2f25; }
             section.card h2 { color: #f3f4f6; }
-            section.card .description { color: #cbd5e1; }
-            dl.contact dt { color: #94a3b8; }
+            section.card .description { color: #e9e2d3; }
+            dl.contact dt { color: #c8b8a4; }
             dl.contact dd { color: #f3f4f6; }
-            footer.site-footer a { color: #94a3b8; }
+            footer.site-footer a { color: #c8b8a4; }
         }
     </style>
 </head>

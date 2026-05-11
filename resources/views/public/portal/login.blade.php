@@ -8,7 +8,7 @@
     <style>
         :root { --primary: {{ $primary_color }}; }
         * { box-sizing: border-box; }
-        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #1f2937; }
+        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #3a2f25; }
         body { display: grid; place-items: center; padding: 1.5rem; }
         .card { background: #fff; border-radius: 16px; padding: 2rem; max-width: 420px; width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,.08); }
         h1 { margin: 0 0 .5rem; font-size: 1.4rem; }
@@ -21,11 +21,11 @@
         .error { color: #b91c1c; font-size: .85rem; margin-top: .35rem; }
         .secondary { display: block; text-align: center; margin-top: 1rem; color: #6b7280; text-decoration: none; font-size: .9rem; }
         @media (prefers-color-scheme: dark) {
-            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
-            html:not(.is-demo) .card { background: #1e293b; }
-            html:not(.is-demo) input[type=email] { background: #0f172a; border-color: #334155; color: #e5e7eb; }
-            html:not(.is-demo) label, p { color: #cbd5e1; }
-            html:not(.is-demo) .secondary { color: #94a3b8; }
+            html:not(.is-demo) body { background: #2a2017; color: #f7f4ef; }
+            html:not(.is-demo) .card { background: #3a2f25; }
+            html:not(.is-demo) input[type=email] { background: #2a2017; border-color: #5a4d44; color: #f7f4ef; }
+            html:not(.is-demo) label, p { color: #e9e2d3; }
+            html:not(.is-demo) .secondary { color: #c8b8a4; }
         }
     </style>
 </head>

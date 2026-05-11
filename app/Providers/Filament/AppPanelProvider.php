@@ -47,13 +47,18 @@ class AppPanelProvider extends PanelProvider
             ->passwordReset()
             ->colors([
                 // Brand: Ochre #A8956B (primary akcent).
-                // Gray = custom warm palette — dark mode wcześniej był nieczytelny
-                // (Stone-900 = #1c1917 ~ czerń). Ten scale podnosi dark backgrounds:
-                //   950 → #1f1916 (panel root)
-                //   900 → #2c2520 (main content bg, +50% brightness vs Stone)
-                //   800 → #3d342d (sidebar)
-                //   700 → #5a4d44 (borders, dividers)
-                // Light mode niezmieniony (50–500 ~ Stone).
+                // Gray = custom warm palette — dwa user feedbacky o dark mode:
+                // (1) #160 zmienił z #3D2E22 → Color::Stone (Stone-900 = #1c1917 ~ czerń)
+                // (2) #165 podniósł 900/950 do #2c2520/#1f1916 — dalej za ciemne
+                // Teraz: kolejne rozjaśnienie + uspójnienie z brand book (deep_brown
+                // #3D2E22 jako 800, charcoal #1F1A17 jako 950).
+                //
+                // 950 → #2a2017 (panel root, ledwo widać brąz)
+                // 900 → #3a2f25 (main content bg — wyraźnie warm, czytelny tekst)
+                // 800 → #4d4036 (sidebar)
+                // 700 → #6a5a4d (borders, dividers)
+                //
+                // Light mode (50–500) dalej brand colors hovera: cream/taupe/ochre.
                 'primary' => Color::hex('#A8956B'),
                 'gray' => [
                     50 => '247, 244, 239',   // brand cream
@@ -63,10 +68,10 @@ class AppPanelProvider extends PanelProvider
                     400 => '168, 149, 107',  // brand ochre
                     500 => '143, 133, 118',  // brand stone
                     600 => '107, 91, 76',
-                    700 => '90, 77, 68',
-                    800 => '61, 52, 45',
-                    900 => '44, 37, 32',     // main dark bg (lighter than Stone 28,25,23)
-                    950 => '31, 25, 22',     // deepest (lighter than Stone 12,10,9)
+                    700 => '106, 90, 77',
+                    800 => '77, 64, 54',
+                    900 => '58, 47, 37',     // main dark bg — wyraźnie jaśniejsze niż w #165 (44,37,32)
+                    950 => '42, 32, 23',     // deepest — wyraźnie jaśniejsze niż w #165 (31,25,22)
                 ],
             ])
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\\Filament\\App\\Resources')

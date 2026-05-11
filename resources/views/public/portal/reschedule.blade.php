@@ -8,7 +8,7 @@
     <style>
         :root { --primary: {{ $primary_color }}; }
         * { box-sizing: border-box; }
-        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #1f2937; }
+        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #3a2f25; }
         body { padding: 1rem; }
         .container { max-width: 720px; margin: 0 auto; }
         .card { background: #fff; border-radius: 14px; padding: 1.25rem; box-shadow: 0 4px 18px rgba(0,0,0,.05); margin-bottom: 1rem; }
@@ -17,22 +17,22 @@
         .errors { background: #fee2e2; color: #991b1b; padding: .65rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
         .step-label { font-weight: 600; margin: .8rem 0 .4rem; font-size: .9rem; color: #374151; }
         .dates { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: .5rem; }
-        .dates a { display: block; text-align: center; padding: .55rem; border: 1px solid #e5e7eb; border-radius: 8px; text-decoration: none; color: #374151; font-size: .85rem; }
+        .dates a { display: block; text-align: center; padding: .55rem; border: 1px solid #f7f4ef; border-radius: 8px; text-decoration: none; color: #374151; font-size: .85rem; }
         .dates a.active { border-color: var(--primary); color: var(--primary); font-weight: 600; }
         .dates a:hover { background: #f9fafb; }
         .empty { color: #9ca3af; font-style: italic; padding: .6rem 0; }
         .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: .5rem; margin-top: .5rem; }
         .slot { display: contents; }
-        .slot button { width: 100%; padding: .55rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-size: .9rem; }
+        .slot button { width: 100%; padding: .55rem; background: #fff; border: 1px solid #f7f4ef; border-radius: 8px; cursor: pointer; font-size: .9rem; }
         .slot button:hover { border-color: var(--primary); color: var(--primary); }
         .back { display: inline-block; margin-top: 1rem; color: #6b7280; text-decoration: none; font-size: .9rem; }
         @media (prefers-color-scheme: dark) {
-            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
-            html:not(.is-demo) .card { background: #1e293b; }
-            html:not(.is-demo) .meta, .step-label { color: #cbd5e1; }
-            html:not(.is-demo) .dates a, .slot button { background: #0f172a; border-color: #334155; color: #e2e8f0; }
-            html:not(.is-demo) .dates a:hover, .slot button:hover { background: #1f2937; }
-            html:not(.is-demo) .back { color: #94a3b8; }
+            html:not(.is-demo) body { background: #2a2017; color: #f7f4ef; }
+            html:not(.is-demo) .card { background: #3a2f25; }
+            html:not(.is-demo) .meta, .step-label { color: #e9e2d3; }
+            html:not(.is-demo) .dates a, .slot button { background: #2a2017; border-color: #5a4d44; color: #e9e2d3; }
+            html:not(.is-demo) .dates a:hover, .slot button:hover { background: #3a2f25; }
+            html:not(.is-demo) .back { color: #c8b8a4; }
         }
     </style>
 </head>

@@ -8,7 +8,7 @@
     <style>
         :root { --primary: {{ $primary_color }}; }
         * { box-sizing: border-box; }
-        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #1f2937; }
+        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #3a2f25; }
         body { padding: 1rem; }
         .container { max-width: 720px; margin: 0 auto; }
         .card { background: #fff; border-radius: 14px; padding: 1.25rem; box-shadow: 0 4px 18px rgba(0,0,0,.05); margin-bottom: 1rem; }
@@ -21,20 +21,20 @@
         .message-head { display: flex; justify-content: space-between; gap: .5rem; align-items: baseline; margin-bottom: .25rem; }
         .message-head strong { font-size: .95rem; }
         .message-head .date { color: #6b7280; font-size: .85rem; white-space: nowrap; }
-        .pill { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-right: .35rem; background: #e5e7eb; color: #374151; }
+        .pill { display: inline-block; padding: .15rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-right: .35rem; background: #f7f4ef; color: #374151; }
         .pill.primary { background: color-mix(in srgb, var(--primary) 18%, white); color: var(--primary); }
         .meta { color: #6b7280; font-size: .85rem; margin-top: .15rem; }
         .pagination { margin-top: 1rem; }
-        .pagination a, .pagination span { display: inline-block; padding: .35rem .7rem; border-radius: 6px; margin-right: .25rem; font-size: .85rem; text-decoration: none; color: #374151; border: 1px solid #e5e7eb; }
+        .pagination a, .pagination span { display: inline-block; padding: .35rem .7rem; border-radius: 6px; margin-right: .25rem; font-size: .85rem; text-decoration: none; color: #374151; border: 1px solid #f7f4ef; }
         .pagination .active { background: var(--primary); color: #fff; border-color: var(--primary); }
         @media (prefers-color-scheme: dark) {
-            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
-            html:not(.is-demo) .card { background: #1e293b; }
-            html:not(.is-demo) .back { color: #94a3b8; }
-            html:not(.is-demo) .subtitle { color: #94a3b8; }
-            html:not(.is-demo) .message { border-color: #334155; }
-            html:not(.is-demo) .message-head .date, .meta { color: #94a3b8; }
-            html:not(.is-demo) .pagination a, .pagination span { background: #0f172a; border-color: #334155; color: #cbd5e1; }
+            html:not(.is-demo) body { background: #2a2017; color: #f7f4ef; }
+            html:not(.is-demo) .card { background: #3a2f25; }
+            html:not(.is-demo) .back { color: #c8b8a4; }
+            html:not(.is-demo) .subtitle { color: #c8b8a4; }
+            html:not(.is-demo) .message { border-color: #5a4d44; }
+            html:not(.is-demo) .message-head .date, .meta { color: #c8b8a4; }
+            html:not(.is-demo) .pagination a, .pagination span { background: #2a2017; border-color: #5a4d44; color: #e9e2d3; }
         }
     </style>
 </head>
