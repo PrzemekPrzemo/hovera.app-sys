@@ -50,6 +50,14 @@ return [
         'switcher' => 'Język',
         'pl' => 'Polski',
         'en' => 'English',
+        'fr' => 'Français',
+        'de' => 'Deutsch',
+        'ru' => 'Русский',
+    ],
+
+    'field' => [
+        'locale' => 'Preferowany język',
+        'locale_help' => 'Wybierz domyślny język interfejsu. Możesz w każdej chwili zmienić.',
     ],
 
     'yes' => 'Tak',

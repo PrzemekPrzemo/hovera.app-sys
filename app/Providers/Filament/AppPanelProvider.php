@@ -125,6 +125,21 @@ class AppPanelProvider extends PanelProvider
                     ->url(fn () => route('locale.set', ['locale' => 'en']))
                     ->visible(fn () => app()->getLocale() !== 'en'),
                 MenuItem::make()
+                    ->label(fn () => __('common.language.fr'))
+                    ->icon('heroicon-o-language')
+                    ->url(fn () => route('locale.set', ['locale' => 'fr']))
+                    ->visible(fn () => app()->getLocale() !== 'fr'),
+                MenuItem::make()
+                    ->label(fn () => __('common.language.de'))
+                    ->icon('heroicon-o-language')
+                    ->url(fn () => route('locale.set', ['locale' => 'de']))
+                    ->visible(fn () => app()->getLocale() !== 'de'),
+                MenuItem::make()
+                    ->label(fn () => __('common.language.ru'))
+                    ->icon('heroicon-o-language')
+                    ->url(fn () => route('locale.set', ['locale' => 'ru']))
+                    ->visible(fn () => app()->getLocale() !== 'ru'),
+                MenuItem::make()
                     ->label(fn () => app()->getLocale() === 'pl' ? 'Master admin' : 'Master admin')
                     ->icon('heroicon-o-shield-check')
                     ->url(fn () => '/'.config('hovera.admin.path', 'admin'))

@@ -50,6 +50,14 @@ return [
         'switcher' => 'Language',
         'pl' => 'Polski',
         'en' => 'English',
+        'fr' => 'Français',
+        'de' => 'Deutsch',
+        'ru' => 'Русский',
+    ],
+
+    'field' => [
+        'locale' => 'Preferred language',
+        'locale_help' => 'Choose the default UI language. You can change it anytime.',
     ],
 
     'yes' => 'Yes',
