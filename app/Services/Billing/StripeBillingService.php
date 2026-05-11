@@ -89,14 +89,33 @@ class StripeBillingService
         $priceId = $this->resolvePriceId($plan, $period);
         $customerId = $this->createCustomer($tenant);
 
+        $lineItems = [[
+            'price' => $priceId,
+            'quantity' => 1,
+        ]];
+
+        // Onboarding fee — jednorazowa opłata wdrożeniowa doliczana
+        // do pierwszego checkout. Mode=subscription wspiera mixed
+        // line_items (recurring + one-time price_data).
+        if (($plan->onboarding_fee_cents ?? 0) > 0) {
+            $lineItems[] = [
+                'quantity' => 1,
+                'price_data' => [
+                    'currency' => strtolower((string) ($plan->currency ?? 'PLN')),
+                    'unit_amount' => (int) $plan->onboarding_fee_cents,
+                    'product_data' => [
+                        'name' => __('billing.onboarding_fee.label', ['plan' => $plan->name]),
+                        'description' => __('billing.onboarding_fee.description'),
+                    ],
+                ],
+            ];
+        }
+
         /** @var CheckoutSession $session */
         $session = $this->stripe->checkout->sessions->create([
             'mode' => 'subscription',
             'customer' => $customerId,
-            'line_items' => [[
-                'price' => $priceId,
-                'quantity' => 1,
-            ]],
+            'line_items' => $lineItems,
             'allow_promotion_codes' => true,
             'success_url' => url('/app/billing/return').'?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => url('/app/billing'),

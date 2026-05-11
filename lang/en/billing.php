@@ -65,6 +65,10 @@ return [
         'horses_exceeded' => 'Trial: :limit horses limit — pick a plan to add more.',
         'clients_exceeded' => 'Trial: :limit clients limit — pick a plan to add more.',
     ],
+    'onboarding_fee' => [
+        'label' => 'Onboarding fee — :plan plan',
+        'description' => 'One-time activation fee charged at the start of the subscription.',
+    ],
     'email' => [
         'invoice_paid' => [
             'subject' => 'Invoice :number — paid, thank you!',

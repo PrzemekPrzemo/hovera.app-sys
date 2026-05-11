@@ -70,6 +70,9 @@ class PlanResource extends Resource
                     PriceInput::make('price_monthly_cents', __('admin/plan.form.label.price_monthly')),
                     PriceInput::make('price_yearly_cents', __('admin/plan.form.label.price_yearly'))
                         ->helperText(__('admin/plan.form.helper.price_yearly')),
+                    PriceInput::make('onboarding_fee_cents', __('admin/plan.form.label.onboarding_fee'))
+                        ->helperText(__('admin/plan.form.helper.onboarding_fee'))
+                        ->columnSpanFull(),
                 ]),
             Forms\Components\Section::make(__('admin/plan.form.section.stripe'))
                 ->description(__('admin/plan.form.section.stripe_description'))
