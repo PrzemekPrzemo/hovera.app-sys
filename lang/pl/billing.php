@@ -65,6 +65,10 @@ return [
         'horses_exceeded' => 'Trial: limit :limit koni — wybierz plan aby dodać więcej.',
         'clients_exceeded' => 'Trial: limit :limit klientów — wybierz plan aby dodać więcej.',
     ],
+    'onboarding_fee' => [
+        'label' => 'Opłata wdrożeniowa — plan :plan',
+        'description' => 'Jednorazowa opłata aktywacyjna doliczana przy starcie subskrypcji.',
+    ],
     'email' => [
         'invoice_paid' => [
             'subject' => 'Faktura :number — opłacona, dziękujemy!',

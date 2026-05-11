@@ -19,6 +19,7 @@ class Plan extends Model
     protected $fillable = [
         'code', 'name', 'currency',
         'price_monthly_cents', 'price_yearly_cents',
+        'onboarding_fee_cents',
         'stripe_price_monthly_id', 'stripe_price_yearly_id',
         'limits', 'features',
         'is_active', 'is_public', 'sort_order',
@@ -33,6 +34,7 @@ class Plan extends Model
             'is_public' => 'boolean',
             'price_monthly_cents' => 'integer',
             'price_yearly_cents' => 'integer',
+            'onboarding_fee_cents' => 'integer',
         ];
     }
 
