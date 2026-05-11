@@ -8,7 +8,7 @@
     <style>
         :root { --primary: {{ $primary_color }}; }
         * { box-sizing: border-box; }
-        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #1f2937; }
+        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #3a2f25; }
         body { padding: 1rem; }
         .container { max-width: 720px; margin: 0 auto; }
         .card { background: #fff; border-radius: 14px; padding: 1.25rem; box-shadow: 0 4px 18px rgba(0,0,0,.05); margin-bottom: 1rem; }
@@ -21,11 +21,11 @@
         select:focus, input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent); }
         .empty { color: #9ca3af; font-style: italic; padding: .8rem 0; }
         .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: .5rem; margin-top: .5rem; }
-        .slot { padding: .65rem; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center; text-decoration: none; color: #1f2937; font-weight: 600; background: #fff; cursor: pointer; }
+        .slot { padding: .65rem; border: 1px solid #f7f4ef; border-radius: 8px; text-align: center; text-decoration: none; color: #3a2f25; font-weight: 600; background: #fff; cursor: pointer; }
         .slot:hover { background: color-mix(in srgb, var(--primary) 10%, white); border-color: var(--primary); }
         .slot.selected { background: var(--primary); color: white; border-color: var(--primary); }
         .day-list { display: flex; flex-wrap: wrap; gap: .35rem; margin: .5rem 0 1rem; }
-        .day-pill { padding: .35rem .65rem; border-radius: 999px; border: 1px solid #e5e7eb; color: #374151; font-size: .8rem; text-decoration: none; }
+        .day-pill { padding: .35rem .65rem; border-radius: 999px; border: 1px solid #f7f4ef; color: #374151; font-size: .8rem; text-decoration: none; }
         .day-pill:hover { background: #f3f4f6; }
         .day-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
         button[type=submit] { padding: .8rem 1.2rem; background: var(--primary); color: white; border: 0; border-radius: 8px; font-weight: 600; font-size: .95rem; cursor: pointer; }
@@ -34,13 +34,13 @@
         .errors { padding: .8rem 1rem; background: #fef2f2; color: #991b1b; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
         .errors ul { margin: .25rem 0 0; padding-left: 1rem; }
         @media (prefers-color-scheme: dark) {
-            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
-            html:not(.is-demo) .card { background: #1e293b; }
-            html:not(.is-demo) .back, .subtitle { color: #94a3b8; }
-            html:not(.is-demo) .form-row label { color: #cbd5e1; }
-            html:not(.is-demo) select, input[type=text], textarea { background: #0f172a; border-color: #334155; color: #e5e7eb; }
-            html:not(.is-demo) .slot { background: #0f172a; border-color: #334155; color: #e5e7eb; }
-            html:not(.is-demo) .day-pill { background: #0f172a; border-color: #334155; color: #e5e7eb; }
+            html:not(.is-demo) body { background: #2a2017; color: #f7f4ef; }
+            html:not(.is-demo) .card { background: #3a2f25; }
+            html:not(.is-demo) .back, .subtitle { color: #c8b8a4; }
+            html:not(.is-demo) .form-row label { color: #e9e2d3; }
+            html:not(.is-demo) select, input[type=text], textarea { background: #2a2017; border-color: #5a4d44; color: #f7f4ef; }
+            html:not(.is-demo) .slot { background: #2a2017; border-color: #5a4d44; color: #f7f4ef; }
+            html:not(.is-demo) .day-pill { background: #2a2017; border-color: #5a4d44; color: #f7f4ef; }
         }
     </style>
 </head>

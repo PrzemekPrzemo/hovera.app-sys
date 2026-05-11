@@ -8,7 +8,7 @@
     <style>
         :root { --primary: {{ $primary_color }}; }
         * { box-sizing: border-box; }
-        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #1f2937; }
+        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #3a2f25; }
         body { padding: 1rem; }
         .container { max-width: 720px; margin: 0 auto; }
         header.bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; background: #fff; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,.05); margin-bottom: 1rem; }
@@ -16,9 +16,9 @@
         header.bar .who .stable { display: block; font-size: .8rem; color: #6b7280; font-weight: 400; }
         header.bar form { margin: 0; }
         header.bar .actions { display: flex; align-items: center; gap: .5rem; }
-        header.bar a.help-link { padding: .5rem .9rem; background: transparent; border: 1px solid #e5e7eb; border-radius: 8px; color: #374151; font-size: .85rem; text-decoration: none; }
+        header.bar a.help-link { padding: .5rem .9rem; background: transparent; border: 1px solid #f7f4ef; border-radius: 8px; color: #374151; font-size: .85rem; text-decoration: none; }
         header.bar a.help-link:hover { background: #f3f4f6; }
-        header.bar button { padding: .5rem .9rem; background: transparent; border: 1px solid #e5e7eb; border-radius: 8px; color: #374151; font-size: .85rem; cursor: pointer; }
+        header.bar button { padding: .5rem .9rem; background: transparent; border: 1px solid #f7f4ef; border-radius: 8px; color: #374151; font-size: .85rem; cursor: pointer; }
         header.bar button:hover { background: #f3f4f6; }
         .section { background: #fff; border-radius: 14px; padding: 1.25rem; box-shadow: 0 4px 18px rgba(0,0,0,.05); margin-bottom: 1rem; }
         .section h2 { margin: 0 0 .9rem; font-size: 1.05rem; color: var(--primary); }
@@ -29,7 +29,7 @@
         .booking .when .duration { display: block; font-size: .8rem; color: #6b7280; font-weight: 400; }
         .booking .what { font-size: .9rem; color: #4b5563; }
         .booking .what .meta { display: block; color: #9ca3af; font-size: .8rem; margin-top: .15rem; }
-        .booking .actions a { display: inline-block; padding: .35rem .7rem; border: 1px solid #e5e7eb; border-radius: 6px; color: #b91c1c; font-size: .8rem; text-decoration: none; margin-left: .35rem; }
+        .booking .actions a { display: inline-block; padding: .35rem .7rem; border: 1px solid #f7f4ef; border-radius: 6px; color: #b91c1c; font-size: .8rem; text-decoration: none; margin-left: .35rem; }
         .booking .actions a:hover { background: #fef2f2; }
         .booking .actions a.reschedule { color: var(--primary); }
         .booking .actions a.reschedule:hover { background: color-mix(in srgb, var(--primary) 8%, transparent); }
@@ -64,23 +64,23 @@
         .pill.req { background: #fef3c7; color: #92400e; }
         .pill.conf { background: #d1fae5; color: #065f46; }
         .pill.cancel { background: #fee2e2; color: #991b1b; }
-        .pill.complete { background: #e5e7eb; color: #374151; }
+        .pill.complete { background: #f7f4ef; color: #374151; }
         .pill.no { background: #fee2e2; color: #991b1b; }
         @media (max-width: 540px) {
             .booking { grid-template-columns: 1fr; }
             .booking .actions { text-align: right; }
         }
         @media (prefers-color-scheme: dark) {
-            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
-            html:not(.is-demo) header.bar, .section { background: #1e293b; }
-            html:not(.is-demo) header.bar .who .stable { color: #94a3b8; }
-            html:not(.is-demo) header.bar button, header.bar a.help-link { border-color: #334155; color: #e2e8f0; }
-            html:not(.is-demo) header.bar button:hover, header.bar a.help-link:hover { background: #0f172a; }
-            html:not(.is-demo) .booking { border-color: #334155; }
-            html:not(.is-demo) .booking .what { color: #cbd5e1; }
-            html:not(.is-demo) .booking .what .meta { color: #64748b; }
-            html:not(.is-demo) .booking .actions a { border-color: #334155; }
-            html:not(.is-demo) .booking .actions a:hover { background: #1f2937; }
+            html:not(.is-demo) body { background: #2a2017; color: #f7f4ef; }
+            html:not(.is-demo) header.bar, .section { background: #3a2f25; }
+            html:not(.is-demo) header.bar .who .stable { color: #c8b8a4; }
+            html:not(.is-demo) header.bar button, header.bar a.help-link { border-color: #5a4d44; color: #e9e2d3; }
+            html:not(.is-demo) header.bar button:hover, header.bar a.help-link:hover { background: #2a2017; }
+            html:not(.is-demo) .booking { border-color: #5a4d44; }
+            html:not(.is-demo) .booking .what { color: #e9e2d3; }
+            html:not(.is-demo) .booking .what .meta { color: #8f8576; }
+            html:not(.is-demo) .booking .actions a { border-color: #5a4d44; }
+            html:not(.is-demo) .booking .actions a:hover { background: #3a2f25; }
         }
     </style>
 </head>

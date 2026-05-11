@@ -8,7 +8,7 @@
     <style>
         :root { --primary: {{ $primary_color }}; }
         * { box-sizing: border-box; }
-        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #1f2937; }
+        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #3a2f25; }
         body { padding: 1rem; }
         .container { max-width: 720px; margin: 0 auto; }
         .card { background: #fff; border-radius: 14px; padding: 1.25rem; box-shadow: 0 4px 18px rgba(0,0,0,.05); margin-bottom: 1rem; }
@@ -31,14 +31,14 @@
         .pill.danger { background: #fee2e2; color: #991b1b; }
         .pill.warning { background: #fef3c7; color: #92400e; }
         .pill.primary { background: color-mix(in srgb, var(--primary) 18%, white); color: var(--primary); }
-        .pill.gray { background: #e5e7eb; color: #374151; }
+        .pill.gray { background: #f7f4ef; color: #374151; }
         .pill.activity-feeding { background: #d1fae5; color: #065f46; }
         .pill.activity-grooming { background: color-mix(in srgb, var(--primary) 18%, white); color: var(--primary); }
         .pill.activity-turnout { background: #fef3c7; color: #92400e; }
         .pill.activity-exercise { background: color-mix(in srgb, var(--primary) 30%, white); color: var(--primary); }
         .pill.activity-box_cleaning { background: #e0e7ff; color: #3730a3; }
         .pill.activity-transport_event { background: #fee2e2; color: #991b1b; }
-        .pill.activity-other { background: #e5e7eb; color: #374151; }
+        .pill.activity-other { background: #f7f4ef; color: #374151; }
         .box-info { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: #f9fafb; border-radius: 8px; margin-bottom: 1rem; }
         .box-info .box-pill { background: var(--primary); color: white; padding: .5rem 1rem; border-radius: 8px; font-weight: 700; }
         .box-info .box-meta { color: #6b7280; font-size: .9rem; }
@@ -63,7 +63,7 @@
         .activity:last-of-type { border-bottom: 0; }
         .activity-head { display: flex; justify-content: space-between; gap: .5rem; align-items: baseline; margin-bottom: .25rem; }
         .activity-head .date { color: #6b7280; font-size: .85rem; white-space: nowrap; }
-        .activity-summary { color: #1f2937; font-size: .95rem; margin-top: .15rem; }
+        .activity-summary { color: #3a2f25; font-size: .95rem; margin-top: .15rem; }
         .activity-meta { color: #9ca3af; font-size: .85rem; margin-top: .25rem; }
         .small { font-size: .85rem; line-height: 1.4; }
         h3.muted { font-size: .85rem; color: #6b7280; margin: 1rem 0 .35rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
@@ -84,7 +84,7 @@
         .msg-body { white-space: pre-wrap; line-height: 1.5; }
         .msg-attachments { margin-top: .5rem; display: flex; flex-wrap: wrap; gap: .5rem; }
         .msg-attachments a { font-size: .85rem; padding: .2rem .55rem; background: #f3f4f6; border-radius: 4px; text-decoration: none; color: var(--primary); }
-        .msg-attachments a:hover { background: #e5e7eb; }
+        .msg-attachments a:hover { background: #f7f4ef; }
         .msg-from_stable { background: color-mix(in srgb, var(--primary) 5%, white); margin: 0 -.5rem; padding-left: .5rem; padding-right: .5rem; border-radius: 8px; }
         .doc-form { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; padding: 1rem; background: #f9fafb; border-radius: 8px; margin-bottom: 1rem; }
         .doc-form input[type=text], .doc-form select { padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: 6px; font: inherit; }
@@ -110,15 +110,15 @@
             .doc { flex-direction: column; align-items: flex-start; }
         }
         @media (prefers-color-scheme: dark) {
-            html:not(.is-demo) body { background: #0f172a; color: #e5e7eb; }
-            html:not(.is-demo) .card { background: #1e293b; }
-            html:not(.is-demo) .back { color: #94a3b8; }
-            html:not(.is-demo) .subtitle { color: #94a3b8; }
-            html:not(.is-demo) dl { background: #0f172a; }
-            html:not(.is-demo) dt { color: #94a3b8; }
-            html:not(.is-demo) .record { border-color: #334155; }
-            html:not(.is-demo) .record .summary { color: #cbd5e1; }
-            html:not(.is-demo) .record .meta, .record .head .date { color: #64748b; }
+            html:not(.is-demo) body { background: #2a2017; color: #f7f4ef; }
+            html:not(.is-demo) .card { background: #3a2f25; }
+            html:not(.is-demo) .back { color: #c8b8a4; }
+            html:not(.is-demo) .subtitle { color: #c8b8a4; }
+            html:not(.is-demo) dl { background: #2a2017; }
+            html:not(.is-demo) dt { color: #c8b8a4; }
+            html:not(.is-demo) .record { border-color: #5a4d44; }
+            html:not(.is-demo) .record .summary { color: #e9e2d3; }
+            html:not(.is-demo) .record .meta, .record .head .date { color: #8f8576; }
         }
     </style>
 </head>
