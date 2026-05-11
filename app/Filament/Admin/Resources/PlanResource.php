@@ -71,6 +71,22 @@ class PlanResource extends Resource
                     PriceInput::make('price_yearly_cents', __('admin/plan.form.label.price_yearly'))
                         ->helperText(__('admin/plan.form.helper.price_yearly')),
                 ]),
+            Forms\Components\Section::make(__('admin/plan.form.section.stripe'))
+                ->description(__('admin/plan.form.section.stripe_description'))
+                ->columns(2)
+                ->collapsible()
+                ->schema([
+                    Forms\Components\TextInput::make('stripe_price_monthly_id')
+                        ->label(__('admin/plan.form.label.stripe_price_monthly_id'))
+                        ->maxLength(120)
+                        ->placeholder('price_1Abc...')
+                        ->helperText(__('admin/plan.form.helper.stripe_price_monthly_id')),
+                    Forms\Components\TextInput::make('stripe_price_yearly_id')
+                        ->label(__('admin/plan.form.label.stripe_price_yearly_id'))
+                        ->maxLength(120)
+                        ->placeholder('price_1Xyz...')
+                        ->helperText(__('admin/plan.form.helper.stripe_price_yearly_id')),
+                ]),
             Forms\Components\Section::make(__('admin/plan.form.section.limits'))
                 ->description(__('admin/plan.form.section.limits_description'))
                 ->schema([
