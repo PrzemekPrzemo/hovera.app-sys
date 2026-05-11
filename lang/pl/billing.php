@@ -69,6 +69,9 @@ return [
         'label' => 'Opłata wdrożeniowa — plan :plan',
         'description' => 'Jednorazowa opłata aktywacyjna doliczana przy starcie subskrypcji.',
     ],
+    'onboarding_fee_label' => 'jednorazowo (opłata wdrożeniowa)',
+    'vat_notice' => 'Ceny netto. Do każdej kwoty doliczamy 23% VAT.',
+    'vat_notice_short' => '+ 23% VAT',
     'email' => [
         'invoice_paid' => [
             'subject' => 'Faktura :number — opłacona, dziękujemy!',

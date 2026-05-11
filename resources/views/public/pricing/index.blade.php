@@ -95,6 +95,9 @@
             <h1>{{ __('public/pricing.heading') }}</h1>
             <p class="lede">{{ __('public/pricing.lede') }}</p>
             <span class="differentiator">{{ __('public/pricing.differentiator') }}</span>
+            <div style="margin-top: .65rem; font-size: .85rem; color: #6b7280;">
+                {{ __('public/pricing.vat_notice') }}
+            </div>
         </div>
 
         <div class="toggle-wrap">
@@ -112,9 +115,11 @@
                     $isCustom = ! empty($plan->features['is_custom_pricing']);
                     $monthly = (int) $plan->price_monthly_cents;
                     $yearly = (int) $plan->price_yearly_cents;
+                    $onboardingFee = (int) ($plan->onboarding_fee_cents ?? 0);
                     $monthlyPLN = $monthly === 0 ? 0 : (int) round($monthly / 100);
                     $yearlyPerMonthPLN = $yearly === 0 ? 0 : (int) round(($yearly / 12) / 100);
                     $yearlyTotalPLN = $yearly === 0 ? 0 : (int) round($yearly / 100);
+                    $onboardingFeePLN = $onboardingFee === 0 ? 0 : (int) round($onboardingFee / 100);
                     $bullets = collect($plan->features ?? [])
                         ->filter(fn ($v, $k) => str_starts_with((string) $k, 'bullet_'))
                         ->values()
@@ -135,11 +140,17 @@
                         @else
                             <span class="price" data-monthly="{{ $monthlyPLN }}" data-yearly="{{ $yearlyPerMonthPLN }}">{{ $monthlyPLN }}&nbsp;zł</span>
                             <span class="price-suffix">/{{ __('public/pricing.month_short') }}</span>
+                            <span class="price-suffix" style="opacity:.7;">{{ __('public/pricing.vat_notice_short') }}</span>
                             <div class="price-yearly-note"
                                  data-monthly-text="{{ __('public/pricing.billed_monthly') }}"
                                  data-yearly-text="{{ __('public/pricing.billed_yearly_total', ['total' => $yearlyTotalPLN]) }}">
                                 {{ __('public/pricing.billed_monthly') }}
                             </div>
+                            @if ($onboardingFee > 0)
+                                <div class="price-yearly-note" style="margin-top:.35rem; color: var(--brown); font-weight: 500;">
+                                    + {{ number_format($onboardingFeePLN, 0, ',', ' ') }}&nbsp;zł {{ __('public/pricing.onboarding_fee_label') }}
+                                </div>
+                            @endif
                         @endif
                     </div>
 

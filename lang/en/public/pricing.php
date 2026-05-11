@@ -22,6 +22,10 @@ return [
     'custom_price' => 'Custom pricing',
     'custom_price_note' => 'We reply within 24h.',
     'unlimited' => 'unlimited',
+    'vat_notice' => 'Prices are net. 23% VAT is added to every amount.',
+    'vat_notice_short' => '+ 23% VAT',
+    'onboarding_fee_label' => 'One-time onboarding fee',
+    'onboarding_fee_help' => 'Charged once when the subscription starts.',
 
     'tagline' => [
         'free' => 'For a single instructor — try hovera and see if it fits.',
