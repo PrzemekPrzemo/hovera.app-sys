@@ -2,34 +2,40 @@
 
 declare(strict_types=1);
 
-/*
-| Hovera API routes (mobile / 3rd party)
-|
-| Foundation (Sanctum, sync models, push channels, middleware,
-| docs/API.md) jest gotowa od PR #151 + #152, ale konkretne controllery
-| (Api\V1\AuthController, SyncController, DevicesController, UploadsController)
-| dopiero przed nami.
-|
-| Bootstrap (bootstrap/app.php) referencuje ten plik:
-|     api: __DIR__.'/../routes/api.php'
-| więc nie może go nie być — bez stuba `php artisan optimize` wywala
-| "Failed to open stream: routes/api.php".
-|
-| Endpointy do dodania (patrz docs/API.md):
-|   POST   /api/v1/auth/login
-|   POST   /api/v1/auth/refresh
-|   POST   /api/v1/auth/logout
-|   GET    /api/v1/sync/changes
-|   POST   /api/v1/sync/mutations
-|   POST   /api/v1/uploads/horse-photos
-|   POST   /api/v1/devices
-|   DELETE /api/v1/devices/{token}
-*/
-
+use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\InvoiceController;
+use App\Http\Controllers\Api\V1\SyncController;
+use App\Http\Controllers\Api\V1\UploadController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/health', fn () => response()->json([
-    'status' => 'ok',
-    'service' => 'hovera-api',
-    'version' => 'v1',
-]));
+// Public auth endpoints (no tenant context yet — user picks tenant after login).
+Route::prefix('v1')->group(function () {
+    Route::post('auth/login', [AuthController::class, 'login']);
+});
+
+// Authenticated, tenant-scoped endpoints.
+Route::prefix('v1')
+    ->middleware(['api.tenant', 'api.throttle:120'])
+    ->group(function () {
+        Route::get('auth/me', [AuthController::class, 'me']);
+        Route::post('auth/refresh', [AuthController::class, 'refresh']);
+        Route::post('auth/logout', [AuthController::class, 'logout']);
+
+        Route::post('devices', [DeviceController::class, 'store']);
+        Route::delete('devices/{token}', [DeviceController::class, 'destroy']);
+
+        // Sync surface — stricter rate limit (heavier endpoints).
+        Route::middleware('api.throttle:30')->group(function () {
+            Route::get('sync/changes', [SyncController::class, 'changes']);
+            Route::post('sync/mutations', [SyncController::class, 'mutations']);
+            Route::post('uploads/horse-photos', [UploadController::class, 'horsePhoto']);
+            Route::post('uploads/horse-documents', [UploadController::class, 'horseDocument']);
+        });
+
+        // Read-side resources that mobile clients can request directly
+        // (in addition to the change feed) for screens that need fresh state.
+        Route::get('invoices', [InvoiceController::class, 'index']);
+        Route::get('invoices/{id}', [InvoiceController::class, 'show']);
+        Route::get('invoices/{id}/pdf', [InvoiceController::class, 'pdf']);
+    });
