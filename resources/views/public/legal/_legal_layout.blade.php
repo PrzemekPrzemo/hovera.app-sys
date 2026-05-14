@@ -70,6 +70,7 @@
             <a href="/" class="logo">hovera</a>
             <nav class="main">
                 <a href="/pricing">{{ __('public/legal.nav.pricing') }}</a>
+                <a href="{{ route('help.show') }}">{{ __('pages.help.navigation') }}</a>
                 <a href="{{ route('demo.login') }}">{{ __('public/legal.nav.demo') }}</a>
                 <a href="{{ route('signup.show') }}" class="cta">{{ __('public/legal.nav.signup') }}</a>
             </nav>

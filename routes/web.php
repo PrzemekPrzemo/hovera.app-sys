@@ -10,6 +10,7 @@ use App\Http\Controllers\MasterAdController;
 use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\ClientPortalController;
 use App\Http\Controllers\Public\DemoLoginController;
+use App\Http\Controllers\Public\HelpController;
 use App\Http\Controllers\Public\InstructorCalendarController;
 use App\Http\Controllers\Public\LegalController;
 use App\Http\Controllers\Public\PaymentWebhookController;
@@ -115,6 +116,17 @@ Route::middleware(['web', 'throttle:30,1'])->group(function () {
     Route::get('/regulamin', [LegalController::class, 'terms'])->name('legal.terms');
     Route::get('/polityka-prywatnosci', [LegalController::class, 'privacy'])->name('legal.privacy');
     Route::get('/dpa', [LegalController::class, 'dpa'])->name('legal.dpa');
+
+    // Publiczne centrum pomocy — dostępne BEZ logowania, indeksowane przez
+    // wyszukiwarki. Te same markdownowe instrukcje co w /app/help + osadzone
+    // dokumenty prawne. Kolejność tras istotna: /help/legal i /help/legal/{doc}
+    // przed /help/{persona?}, żeby "legal" nie wpadało do regexu persony.
+    Route::get('/help/legal/{doc?}', [HelpController::class, 'legal'])
+        ->where('doc', 'terms|privacy|dpa')
+        ->name('help.legal');
+    Route::get('/help/{persona?}', [HelpController::class, 'show'])
+        ->where('persona', 'owner|employee|specialist|client')
+        ->name('help.show');
 });
 
 /*

@@ -79,6 +79,9 @@ return [
             'help' => 'Centrum pomocy',
             'report_bug' => 'Zgłoś błąd / sugestię',
         ],
+        'public_lead' => 'Instrukcje obsługi per rola oraz pełna dokumentacja prawna hovera. Dostępne bez logowania, w 5 językach.',
+        'public_cta' => 'Chcesz wypróbować hovera w swojej stajni? 30 dni za darmo, bez karty.',
+        'public_meta_desc' => 'Instrukcje obsługi, regulamin, polityka prywatności i DPA hovera — systemu do zarządzania stajnią jeździecką.',
         'bug_report' => [
             'title' => 'Zgłoś błąd lub sugestię',
             'lead' => 'Twoje zgłoszenie trafi bezpośrednio do zespołu hovera w Todoist — wraz z URL strony, na której jesteś.',

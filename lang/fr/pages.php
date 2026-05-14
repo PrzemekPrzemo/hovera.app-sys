@@ -79,6 +79,9 @@ return [
             'help' => 'Centre d’aide',
             'report_bug' => 'Signaler un bug / une suggestion',
         ],
+        'public_lead' => 'Manuels d’utilisation par rôle et documentation juridique complète de hovera. Disponible sans connexion, en 5 langues.',
+        'public_cta' => 'Envie d’essayer hovera dans votre écurie ? 30 jours gratuits, sans carte.',
+        'public_meta_desc' => 'Manuels d’utilisation, CGU, politique de confidentialité et DPA de hovera — système de gestion d’écurie équestre.',
         'bug_report' => [
             'title' => 'Signaler un bug ou une suggestion',
             'lead' => 'Votre signalement va directement à l’équipe hovera sur Todoist — avec l’URL de la page où vous êtes.',

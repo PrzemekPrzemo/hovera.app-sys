@@ -79,6 +79,9 @@ return [
             'help' => 'Hilfezentrum',
             'report_bug' => 'Fehler / Vorschlag melden',
         ],
+        'public_lead' => 'Bedienungsanleitungen pro Rolle und vollständige Rechtsdokumentation von hovera. Ohne Anmeldung verfügbar, in 5 Sprachen.',
+        'public_cta' => 'Möchten Sie hovera in Ihrem Stall ausprobieren? 30 Tage kostenlos, ohne Karte.',
+        'public_meta_desc' => 'Bedienungsanleitungen, AGB, Datenschutzerklärung und AVV für hovera — Verwaltungssystem für Reitställe.',
         'bug_report' => [
             'title' => 'Fehler oder Vorschlag melden',
             'lead' => 'Ihre Meldung geht direkt an das hovera-Team in Todoist — zusammen mit der URL der Seite, auf der Sie sich befinden.',

@@ -79,6 +79,9 @@ return [
             'help' => 'Help center',
             'report_bug' => 'Report a bug / suggestion',
         ],
+        'public_lead' => 'Per-role user manuals and full legal documentation for hovera. No login required, 5 languages.',
+        'public_cta' => 'Want to try hovera in your stable? 30 days free, no credit card.',
+        'public_meta_desc' => 'User manuals, terms, privacy policy and DPA for hovera — equestrian stable management system.',
         'bug_report' => [
             'title' => 'Report a bug or suggestion',
             'lead' => 'Your report goes straight to the hovera team in Todoist — together with the page URL you are on.',
