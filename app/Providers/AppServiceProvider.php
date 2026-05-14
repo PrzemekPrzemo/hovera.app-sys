@@ -11,6 +11,7 @@ use App\Observers\HorseObserver;
 use App\Observers\PaymentObserver;
 use App\Services\Billing\Przelewy24Service;
 use App\Services\Billing\StripeBillingService;
+use App\Services\Integrations\TodoistClient;
 use App\Services\Ksef\CentralKsefService;
 use Illuminate\Support\ServiceProvider;
 
@@ -49,6 +50,17 @@ class AppServiceProvider extends ServiceProvider
         // (cert/NIP czyta z SystemSetting), ale singleton pozwala
         // testom go zmockować via $this->app->instance().
         $this->app->singleton(CentralKsefService::class);
+
+        // In-panel bug reporter → Todoist. Singleton — config nie zmienia
+        // się per-request, tests mockują via $this->app->instance().
+        $this->app->singleton(TodoistClient::class, function ($app) {
+            $cfg = $app['config']->get('services.todoist', []);
+
+            return new TodoistClient(
+                token: $cfg['token'] ?? null,
+                projectId: (string) ($cfg['hovera_project_id'] ?? ''),
+            );
+        });
     }
 
     public function boot(): void

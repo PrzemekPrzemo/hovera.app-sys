@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" role="img" aria-label="Owner / admin overview">
+  <defs>
+    <linearGradient id="ownerBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F7F4EF"/>
+      <stop offset="100%" stop-color="#EEE8DE"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="160" rx="12" fill="url(#ownerBg)"/>
+  <!-- panel mockup -->
+  <rect x="16" y="16" width="288" height="128" rx="8" fill="#FFFFFF" stroke="#C8B8A4" stroke-width="1"/>
+  <!-- topbar -->
+  <rect x="16" y="16" width="288" height="20" rx="8" fill="#A8956B"/>
+  <rect x="16" y="28" width="288" height="8" fill="#A8956B"/>
+  <circle cx="28" cy="26" r="3" fill="#FFFFFF"/>
+  <circle cx="38" cy="26" r="3" fill="#FFFFFF" fill-opacity="0.7"/>
+  <circle cx="48" cy="26" r="3" fill="#FFFFFF" fill-opacity="0.5"/>
+  <!-- sidebar -->
+  <rect x="16" y="36" width="72" height="108" fill="#6c5640"/>
+  <rect x="24" y="46" width="56" height="6" rx="2" fill="#C8B8A4" fill-opacity="0.8"/>
+  <rect x="24" y="58" width="48" height="6" rx="2" fill="#C8B8A4" fill-opacity="0.5"/>
+  <rect x="24" y="70" width="52" height="6" rx="2" fill="#C8B8A4" fill-opacity="0.5"/>
+  <rect x="24" y="82" width="44" height="6" rx="2" fill="#C8B8A4" fill-opacity="0.5"/>
+  <rect x="24" y="94" width="40" height="6" rx="2" fill="#C8B8A4" fill-opacity="0.5"/>
+  <rect x="24" y="106" width="56" height="6" rx="2" fill="#C8B8A4" fill-opacity="0.5"/>
+  <!-- KPI cards -->
+  <rect x="96" y="46" width="60" height="34" rx="4" fill="#F7F4EF" stroke="#E0D7C8"/>
+  <rect x="100" y="52" width="36" height="4" rx="1" fill="#A8956B"/>
+  <rect x="100" y="62" width="48" height="10" rx="2" fill="#6c5640"/>
+  <rect x="160" y="46" width="60" height="34" rx="4" fill="#F7F4EF" stroke="#E0D7C8"/>
+  <rect x="164" y="52" width="36" height="4" rx="1" fill="#A8956B"/>
+  <rect x="164" y="62" width="40" height="10" rx="2" fill="#6c5640"/>
+  <rect x="224" y="46" width="72" height="34" rx="4" fill="#F7F4EF" stroke="#E0D7C8"/>
+  <rect x="228" y="52" width="48" height="4" rx="1" fill="#A8956B"/>
+  <rect x="228" y="62" width="56" height="10" rx="2" fill="#6c5640"/>
+  <!-- chart -->
+  <rect x="96" y="86" width="200" height="50" rx="4" fill="#F7F4EF" stroke="#E0D7C8"/>
+  <polyline points="104,124 124,114 144,118 164,104 184,108 204,96 224,100 244,90 264,94 284,82" fill="none" stroke="#A8956B" stroke-width="2"/>
+  <circle cx="284" cy="82" r="3" fill="#A8956B"/>
+</svg>

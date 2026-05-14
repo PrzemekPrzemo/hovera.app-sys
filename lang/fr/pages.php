@@ -57,7 +57,44 @@ return [
 
     'help' => [
         'navigation' => 'Aide',
-        'title' => 'Manuel d’utilisation',
+        'title' => 'Centre d’aide',
+        'tab' => [
+            'manual' => 'Manuel d’utilisation',
+            'legal' => 'Documents juridiques',
+        ],
+        'persona' => [
+            'owner' => 'Propriétaire / admin',
+            'owner_desc' => 'Panel complet, finances, équipe, paramètres de l’écurie.',
+            'employee' => 'Employé / moniteur',
+            'employee_desc' => 'Agenda, clients, chevaux — opérations quotidiennes.',
+            'specialist' => 'Vétérinaire / spécialiste',
+            'specialist_desc' => 'Dossiers de santé, visites, traitement des chevaux.',
+            'client' => 'Client de l’écurie',
+            'client_desc' => 'Portail : réservations, cartes, mon cheval.',
+        ],
+        'legal' => [
+            'open_in_new_tab' => 'Ouvrir la version publique',
+        ],
+        'topbar' => [
+            'help' => 'Centre d’aide',
+            'report_bug' => 'Signaler un bug / une suggestion',
+        ],
+        'bug_report' => [
+            'title' => 'Signaler un bug ou une suggestion',
+            'lead' => 'Votre signalement va directement à l’équipe hovera sur Todoist — avec l’URL de la page où vous êtes.',
+            'kind_label' => 'Type',
+            'kind_bug' => 'Bug',
+            'kind_idea' => 'Suggestion / changement',
+            'subject_label' => 'Titre court',
+            'subject_placeholder' => 'ex. Impossible de supprimer une carte',
+            'description_label' => 'Description',
+            'description_placeholder' => 'Que s’est-il passé ? Que devait-il se passer ? Étapes pour reproduire.',
+            'screenshot_label' => 'Capture d’écran (PNG/JPG, optionnel)',
+            'submit' => 'Envoyer le signalement',
+            'cancel' => 'Annuler',
+            'success' => 'Merci — votre signalement a été envoyé.',
+            'error' => 'L’envoi a échoué. Réessayez ou écrivez à support@hovera.app.',
+        ],
     ],
 
     'reports' => [

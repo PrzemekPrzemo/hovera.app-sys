@@ -385,7 +385,7 @@ class ClientPortalController extends Controller
         }
 
         $locale = app()->getLocale();
-        $supported = ['pl', 'en', 'de', 'fr'];
+        $supported = ['pl', 'en', 'de', 'fr', 'ru'];
         $useLocale = in_array($locale, $supported, true) ? $locale : 'pl';
 
         $path = resource_path("help/{$useLocale}/client.md");

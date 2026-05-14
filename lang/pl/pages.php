@@ -57,7 +57,44 @@ return [
 
     'help' => [
         'navigation' => 'Pomoc',
-        'title' => 'Instrukcja obsługi',
+        'title' => 'Centrum pomocy',
+        'tab' => [
+            'manual' => 'Instrukcja obsługi',
+            'legal' => 'Dokumentacja prawna',
+        ],
+        'persona' => [
+            'owner' => 'Właściciel / admin',
+            'owner_desc' => 'Pełen panel, finanse, zespół, ustawienia stajni.',
+            'employee' => 'Pracownik / instruktor',
+            'employee_desc' => 'Kalendarz, klienci, konie — codzienna operacja.',
+            'specialist' => 'Weterynarz / specjalista',
+            'specialist_desc' => 'Karty zdrowia, wizyty, leczenie koni.',
+            'client' => 'Klient stajni',
+            'client_desc' => 'Portal: rezerwacje, karnety, mój koń.',
+        ],
+        'legal' => [
+            'open_in_new_tab' => 'Otwórz wersję publiczną',
+        ],
+        'topbar' => [
+            'help' => 'Centrum pomocy',
+            'report_bug' => 'Zgłoś błąd / sugestię',
+        ],
+        'bug_report' => [
+            'title' => 'Zgłoś błąd lub sugestię',
+            'lead' => 'Twoje zgłoszenie trafi bezpośrednio do zespołu hovera w Todoist — wraz z URL strony, na której jesteś.',
+            'kind_label' => 'Rodzaj',
+            'kind_bug' => 'Błąd',
+            'kind_idea' => 'Sugestia / zmiana',
+            'subject_label' => 'Krótki tytuł',
+            'subject_placeholder' => 'np. Nie da się usunąć karnetu',
+            'description_label' => 'Opis',
+            'description_placeholder' => 'Co się wydarzyło? Co powinno się wydarzyć? Kroki do powtórzenia.',
+            'screenshot_label' => 'Zrzut ekranu (PNG/JPG, opcjonalnie)',
+            'submit' => 'Wyślij zgłoszenie',
+            'cancel' => 'Anuluj',
+            'success' => 'Dziękujemy — zgłoszenie zostało wysłane.',
+            'error' => 'Nie udało się wysłać. Spróbuj ponownie lub napisz na support@hovera.app.',
+        ],
     ],
 
     'reports' => [

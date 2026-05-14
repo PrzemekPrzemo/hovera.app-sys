@@ -16,7 +16,9 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -90,6 +92,12 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn () => route('locale.set', ['locale' => 'ru']))
                     ->visible(fn () => app()->getLocale() !== 'ru'),
             ])
+            // "?" + zgłaszanie błędów również w master adminie — ten sam
+            // komponent co w /app, jeden endpoint, jeden token Todoist.
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn () => Blade::render('<x-help-and-bug-topbar />'),
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
