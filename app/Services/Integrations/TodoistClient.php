@@ -78,7 +78,7 @@ class TodoistClient
             throw new RuntimeException(sprintf(
                 'Todoist API %d: %s',
                 $response->status(),
-                substr($body, 0, 300),
+                substr($body, 0, 2000),
             ));
         }
 
