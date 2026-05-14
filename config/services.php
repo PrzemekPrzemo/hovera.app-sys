@@ -39,6 +39,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Todoist — in-app bug / feedback reporter
+    |--------------------------------------------------------------------------
+    | App\Services\Integrations\TodoistClient posts a task to the Hovera
+    | project whenever a user submits the in-panel bug/idea form.
+    */
+    'todoist' => [
+        'token' => env('TODOIST_API_TOKEN'),
+        'hovera_project_id' => env('TODOIST_HOVERA_PROJECT_ID', '6gcqjRCCQwVPWVXg'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Stripe — central billing (hovera SaaS subscription)
     |--------------------------------------------------------------------------
     | Used by App\Services\Billing\StripeBillingService for the central-DB

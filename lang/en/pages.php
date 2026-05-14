@@ -57,7 +57,44 @@ return [
 
     'help' => [
         'navigation' => 'Help',
-        'title' => 'User manual',
+        'title' => 'Help center',
+        'tab' => [
+            'manual' => 'User manual',
+            'legal' => 'Legal documents',
+        ],
+        'persona' => [
+            'owner' => 'Owner / admin',
+            'owner_desc' => 'Full panel, finance, team, stable settings.',
+            'employee' => 'Employee / instructor',
+            'employee_desc' => 'Calendar, clients, horses — daily operations.',
+            'specialist' => 'Vet / specialist',
+            'specialist_desc' => 'Health records, visits, horse treatment.',
+            'client' => 'Stable client',
+            'client_desc' => 'Portal: bookings, passes, my horse.',
+        ],
+        'legal' => [
+            'open_in_new_tab' => 'Open public version',
+        ],
+        'topbar' => [
+            'help' => 'Help center',
+            'report_bug' => 'Report a bug / suggestion',
+        ],
+        'bug_report' => [
+            'title' => 'Report a bug or suggestion',
+            'lead' => 'Your report goes straight to the hovera team in Todoist — together with the page URL you are on.',
+            'kind_label' => 'Type',
+            'kind_bug' => 'Bug',
+            'kind_idea' => 'Suggestion / change',
+            'subject_label' => 'Short title',
+            'subject_placeholder' => 'e.g. Cannot delete a pass',
+            'description_label' => 'Description',
+            'description_placeholder' => 'What happened? What should have happened? Steps to reproduce.',
+            'screenshot_label' => 'Screenshot (PNG/JPG, optional)',
+            'submit' => 'Send report',
+            'cancel' => 'Cancel',
+            'success' => 'Thanks — your report has been sent.',
+            'error' => 'Sending failed. Please retry or email support@hovera.app.',
+        ],
     ],
 
     'reports' => [

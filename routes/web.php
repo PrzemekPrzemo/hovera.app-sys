@@ -22,6 +22,7 @@ use App\Http\Controllers\Public\PublicSiteController;
 use App\Http\Controllers\Public\SignupController;
 use App\Http\Controllers\Public\StripeWebhookController;
 use App\Http\Controllers\Tenant\BillingController;
+use App\Http\Controllers\Tenant\BugReportController;
 use App\Http\Controllers\Tenant\ImportTemplateController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
 use App\Http\Middleware\InitialiseTenantFromSession;
@@ -220,6 +221,12 @@ Route::middleware(['web', 'auth', InitialiseTenantFromSession::class])
     ->get('/app/import-wizard/template/{entity}', ImportTemplateController::class)
     ->where('entity', 'clients|horses')
     ->name('import-wizard.template');
+
+// In-panel bug / suggestion reporter — POST z modala dostępnego z topbara
+// w obu panelach (/app + /admin). Throttle żeby nikt nie spamował Todoist.
+Route::middleware(['web', 'auth', 'throttle:20,1'])
+    ->post('/bug-reports', [BugReportController::class, 'store'])
+    ->name('bug-reports.store');
 
 // Language switcher — redirects back to where the user came from.
 Route::middleware('web')

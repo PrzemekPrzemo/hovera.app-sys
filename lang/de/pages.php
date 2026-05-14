@@ -57,7 +57,44 @@ return [
 
     'help' => [
         'navigation' => 'Hilfe',
-        'title' => 'Bedienungsanleitung',
+        'title' => 'Hilfezentrum',
+        'tab' => [
+            'manual' => 'Bedienungsanleitung',
+            'legal' => 'Rechtsdokumente',
+        ],
+        'persona' => [
+            'owner' => 'Inhaber / Administrator',
+            'owner_desc' => 'Vollständiges Panel, Finanzen, Team, Stalleinstellungen.',
+            'employee' => 'Mitarbeiter / Trainer',
+            'employee_desc' => 'Kalender, Kunden, Pferde — der tägliche Betrieb.',
+            'specialist' => 'Tierarzt / Spezialist',
+            'specialist_desc' => 'Gesundheitsakten, Besuche, Pferdebehandlung.',
+            'client' => 'Stallkunde',
+            'client_desc' => 'Portal: Buchungen, Karten, mein Pferd.',
+        ],
+        'legal' => [
+            'open_in_new_tab' => 'Öffentliche Version öffnen',
+        ],
+        'topbar' => [
+            'help' => 'Hilfezentrum',
+            'report_bug' => 'Fehler / Vorschlag melden',
+        ],
+        'bug_report' => [
+            'title' => 'Fehler oder Vorschlag melden',
+            'lead' => 'Ihre Meldung geht direkt an das hovera-Team in Todoist — zusammen mit der URL der Seite, auf der Sie sich befinden.',
+            'kind_label' => 'Typ',
+            'kind_bug' => 'Fehler',
+            'kind_idea' => 'Vorschlag / Änderung',
+            'subject_label' => 'Kurzer Titel',
+            'subject_placeholder' => 'z. B. Karte lässt sich nicht löschen',
+            'description_label' => 'Beschreibung',
+            'description_placeholder' => 'Was ist passiert? Was hätte passieren sollen? Schritte zur Reproduktion.',
+            'screenshot_label' => 'Screenshot (PNG/JPG, optional)',
+            'submit' => 'Meldung senden',
+            'cancel' => 'Abbrechen',
+            'success' => 'Danke — Ihre Meldung wurde gesendet.',
+            'error' => 'Senden fehlgeschlagen. Bitte erneut versuchen oder an support@hovera.app schreiben.',
+        ],
     ],
 
     'reports' => [

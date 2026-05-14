@@ -165,6 +165,13 @@ class AppPanelProvider extends PanelProvider
                 PanelsRenderHook::BODY_END,
                 fn () => Blade::render('<x-pwa-register />'),
             )
+            // Centrum pomocy "?" + zgłaszanie błędów. Renderowane na końcu
+            // topbara, między global search a user-menu — by uniknąć kolizji
+            // z natywnymi przyciskami Filamenta używamy TOPBAR_END.
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn () => Blade::render('<x-help-and-bug-topbar />'),
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
