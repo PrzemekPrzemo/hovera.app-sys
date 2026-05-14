@@ -103,7 +103,7 @@ class Help extends Page
     }
 
     /**
-     * @return list<array{key: string, label: string, icon: string, illustration: string}>
+     * @return list<array{key: string, label: string, description: string, icon: string}>
      */
     public function personaCards(): array
     {
@@ -113,28 +113,24 @@ class Help extends Page
                 'label' => __('pages.help.persona.owner'),
                 'description' => __('pages.help.persona.owner_desc'),
                 'icon' => 'heroicon-o-building-storefront',
-                'illustration' => asset('img/help/role-owner.svg'),
             ],
             [
                 'key' => 'employee',
                 'label' => __('pages.help.persona.employee'),
                 'description' => __('pages.help.persona.employee_desc'),
                 'icon' => 'heroicon-o-user-group',
-                'illustration' => asset('img/help/role-employee.svg'),
             ],
             [
                 'key' => 'specialist',
                 'label' => __('pages.help.persona.specialist'),
                 'description' => __('pages.help.persona.specialist_desc'),
                 'icon' => 'heroicon-o-heart',
-                'illustration' => asset('img/help/role-specialist.svg'),
             ],
             [
                 'key' => 'client',
                 'label' => __('pages.help.persona.client'),
                 'description' => __('pages.help.persona.client_desc'),
                 'icon' => 'heroicon-o-identification',
-                'illustration' => asset('img/help/role-client.svg'),
             ],
         ];
     }

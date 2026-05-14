@@ -70,11 +70,16 @@ class TodoistClient
         }
 
         if (! $response->successful()) {
+            $body = (string) $response->body();
             Log::warning('Todoist task create failed', [
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'body' => $body,
             ]);
-            throw new RuntimeException('Todoist API rejected the task: '.$response->status());
+            throw new RuntimeException(sprintf(
+                'Todoist API %d: %s',
+                $response->status(),
+                substr($body, 0, 300),
+            ));
         }
 
         return (string) ($response->json('id') ?? '');
