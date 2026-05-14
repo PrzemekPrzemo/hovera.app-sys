@@ -55,7 +55,7 @@
         >
             <div
                 @click.outside="open = false"
-                class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+                class="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
                 x-transition:enter="transition ease-out duration-150"
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
@@ -134,9 +134,16 @@
                              class="rounded-lg border px-3 py-2 text-sm">
                             <p :class="error ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'" x-text="message"></p>
                             <template x-if="error && detail">
-                                <details class="mt-1">
-                                    <summary class="cursor-pointer text-xs text-red-600 dark:text-red-400 hover:underline">Pokaż szczegóły</summary>
-                                    <pre class="mt-1 max-h-32 overflow-auto whitespace-pre-wrap rounded bg-red-100 p-2 text-xs text-red-900 dark:bg-red-900/40 dark:text-red-200" x-text="detail"></pre>
+                                <details class="mt-1" open>
+                                    <summary class="flex items-center justify-between cursor-pointer text-xs text-red-600 dark:text-red-400 hover:underline">
+                                        <span>Szczegóły z serwera</span>
+                                        <button type="button"
+                                                @click.prevent.stop="copyDetail"
+                                                class="ml-2 rounded border border-red-300 px-1.5 py-0.5 text-[10px] font-medium text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/40">
+                                            <span x-text="copied ? '✓ skopiowano' : 'Kopiuj'"></span>
+                                        </button>
+                                    </summary>
+                                    <pre class="mt-1 max-h-72 overflow-auto whitespace-pre-wrap break-all rounded bg-red-100 p-2 text-[11px] leading-snug text-red-900 dark:bg-red-900/40 dark:text-red-200" x-text="detail"></pre>
                                 </details>
                             </template>
                         </div>
@@ -166,7 +173,22 @@
                 error: false,
                 message: '',
                 detail: '',
+                copied: false,
                 form: { kind: 'bug', subject: '', description: '', screenshot: null },
+                async copyDetail() {
+                    try {
+                        await navigator.clipboard.writeText(this.detail);
+                        this.copied = true;
+                        setTimeout(() => { this.copied = false; }, 1500);
+                    } catch (e) {
+                        const ta = document.createElement('textarea');
+                        ta.value = this.detail;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        try { document.execCommand('copy'); this.copied = true; setTimeout(() => { this.copied = false; }, 1500); } catch (_) {}
+                        document.body.removeChild(ta);
+                    }
+                },
                 async submit() {
                     this.submitting = true;
                     this.error = false;
@@ -244,15 +266,15 @@
                         this.detail = payload?.message || '';
                     } else if (res.status === 502) {
                         this.message = 'Todoist odrzucił zgłoszenie.';
-                        this.detail = payload?.message || rawText.substring(0, 500);
+                        this.detail = payload?.message || rawText;
                     } else if (res.status === 429) {
                         this.message = 'Za dużo zgłoszeń w krótkim czasie — spróbuj za chwilę.';
                     } else if (res.status >= 500) {
                         this.message = 'Błąd serwera (' + res.status + ').';
-                        this.detail = payload?.message || rawText.substring(0, 500);
+                        this.detail = payload?.message || rawText;
                     } else {
                         this.message = config.labels.error + ' (HTTP ' + res.status + ')';
-                        this.detail = payload?.message || rawText.substring(0, 500);
+                        this.detail = payload?.message || rawText;
                     }
                     this.submitting = false;
                 },
