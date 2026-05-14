@@ -19,7 +19,9 @@ use RuntimeException;
  */
 class TodoistClient
 {
-    private const API = 'https://api.todoist.com/rest/v2';
+    // Todoist REST v2 (rest/v2) został wycofany w 2026 i zwraca 410.
+    // Nowy unified API: /api/v1/ (ten sam payload shape dla POST /tasks).
+    private const API = 'https://api.todoist.com/api/v1';
 
     public function __construct(
         private readonly ?string $token,

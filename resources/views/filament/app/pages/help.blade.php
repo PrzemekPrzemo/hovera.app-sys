@@ -27,7 +27,7 @@
         </div>
 
         @if ($this->activeView === 'legal')
-            <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener" class="text-xs text-primary-600 hover:underline dark:text-primary-400">
+            <a href="{{ route('help.legal') }}" target="_blank" rel="noopener" class="text-xs text-primary-600 hover:underline dark:text-primary-400">
                 {{ __('pages.help.legal.open_in_new_tab') }} →
             </a>
         @endif
