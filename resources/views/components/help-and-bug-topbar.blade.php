@@ -4,6 +4,11 @@
      * w AppPanelProvider/AdminPanelProvider. Dwa przyciski:
      *   ?  → /app/help (centrum pomocy)
      *  bug → modal Alpine.js → POST /bug-reports → Todoist
+     *
+     * Modal w scoped inline CSS (.hb-*) — Filament 3 ma własny pre-built
+     * CSS bez naszych custom utility, więc Tailwind classes z gridem,
+     * max-w-md, brand color itd. nie kompilowały się. Inline CSS gwarantuje
+     * identyczny wygląd bez konieczności custom Filament theme.
      */
     $helpUrl = url('/app/help');
     $endpoint = route('bug-reports.store');
@@ -15,6 +20,8 @@
         labels: {
             success: @js(__('pages.help.bug_report.success')),
             error: @js(__('pages.help.bug_report.error')),
+            submit: @js(__('pages.help.bug_report.submit')),
+            submitting: @js('...'),
         },
     })"
     class="fi-topbar-help-block flex items-center gap-1 px-1"
@@ -44,58 +51,46 @@
         </svg>
     </button>
 
-    {{-- Modal — Alpine, teleportowany do body żeby uciec z topbara --}}
+    {{-- Modal — teleportowany do body, inline CSS (.hb-* scope) --}}
     <template x-teleport="body">
         <div
             x-show="open"
             x-transition.opacity
-            class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+            class="hb-overlay"
             x-cloak
             @keydown.escape.window="open = false"
         >
             <div
                 @click.outside="open = false"
-                class="flex w-full max-w-md max-h-[90vh] flex-col rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
-                x-transition:enter="transition ease-out duration-150"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
+                class="hb-modal"
+                x-transition:enter="hb-modal--enter"
+                x-transition:enter-start="hb-modal--enter-start"
+                x-transition:enter-end="hb-modal--enter-end"
             >
-                {{-- Sticky header — zawsze widoczny, nawet przy scrollu treści --}}
-                <div class="flex items-start justify-between gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-800">
-                    <div class="min-w-0">
-                        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-                            {{ __('pages.help.bug_report.title') }}
-                        </h2>
-                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                            {{ __('pages.help.bug_report.lead') }}
-                        </p>
+                <header class="hb-header">
+                    <div class="hb-header__text">
+                        <h2 class="hb-title">{{ __('pages.help.bug_report.title') }}</h2>
+                        <p class="hb-lead">{{ __('pages.help.bug_report.lead') }}</p>
                     </div>
-                    <button type="button" @click="open = false" aria-label="{{ __('pages.help.bug_report.cancel') }}"
-                            class="shrink-0 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    <button type="button" @click="open = false" class="hb-close" aria-label="{{ __('pages.help.bug_report.cancel') }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18 18 6M6 6l12 12"/></svg>
                     </button>
-                </div>
+                </header>
 
-                <form @submit.prevent="submit" class="flex flex-col overflow-hidden">
-                    <div class="overflow-y-auto px-5 py-4 space-y-4">
-                        {{-- Rodzaj — segmentowany toggle (zawsze widoczne obie ramki) --}}
+                <form @submit.prevent="submit" class="hb-form">
+                    <div class="hb-body">
+                        {{-- Rodzaj — segmentowany toggle 2-kolumnowy --}}
                         <div>
-                            <label class="block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('pages.help.bug_report.kind_label') }}</label>
-                            <div class="mt-1.5 grid grid-cols-2 gap-2">
-                                <label class="flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium cursor-pointer transition select-none"
-                                       :class="form.kind === 'bug'
-                                            ? 'border-primary-500 bg-primary-50 text-primary-900 dark:bg-primary-900/30 dark:text-primary-100'
-                                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600'">
-                                    <input type="radio" value="bug" x-model="form.kind" class="sr-only">
-                                    <span>🐛</span>
+                            <label class="hb-label">{{ __('pages.help.bug_report.kind_label') }}</label>
+                            <div class="hb-kind-grid">
+                                <label class="hb-kind" :class="form.kind === 'bug' ? 'is-active' : ''">
+                                    <input type="radio" value="bug" x-model="form.kind">
+                                    <span class="hb-kind__emoji">🐛</span>
                                     <span>{{ __('pages.help.bug_report.kind_bug') }}</span>
                                 </label>
-                                <label class="flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium cursor-pointer transition select-none"
-                                       :class="form.kind === 'idea'
-                                            ? 'border-primary-500 bg-primary-50 text-primary-900 dark:bg-primary-900/30 dark:text-primary-100'
-                                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600'">
-                                    <input type="radio" value="idea" x-model="form.kind" class="sr-only">
-                                    <span>💡</span>
+                                <label class="hb-kind" :class="form.kind === 'idea' ? 'is-active' : ''">
+                                    <input type="radio" value="idea" x-model="form.kind">
+                                    <span class="hb-kind__emoji">💡</span>
                                     <span>{{ __('pages.help.bug_report.kind_idea') }}</span>
                                 </label>
                             </div>
@@ -103,7 +98,7 @@
 
                         {{-- Tytuł --}}
                         <div>
-                            <label for="bug-subject" class="block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('pages.help.bug_report.subject_label') }}</label>
+                            <label for="bug-subject" class="hb-label">{{ __('pages.help.bug_report.subject_label') }}</label>
                             <input
                                 id="bug-subject"
                                 x-ref="subject"
@@ -112,13 +107,13 @@
                                 maxlength="160"
                                 type="text"
                                 placeholder="{{ __('pages.help.bug_report.subject_placeholder') }}"
-                                class="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                                class="hb-input"
                             >
                         </div>
 
                         {{-- Opis --}}
                         <div>
-                            <label for="bug-desc" class="block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('pages.help.bug_report.description_label') }}</label>
+                            <label for="bug-desc" class="hb-label">{{ __('pages.help.bug_report.description_label') }}</label>
                             <textarea
                                 id="bug-desc"
                                 x-model="form.description"
@@ -126,59 +121,55 @@
                                 maxlength="5000"
                                 rows="4"
                                 placeholder="{{ __('pages.help.bug_report.description_placeholder') }}"
-                                class="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                                class="hb-input hb-textarea"
                             ></textarea>
                         </div>
 
                         {{-- Screenshot --}}
                         <div>
-                            <label for="bug-screen" class="block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('pages.help.bug_report.screenshot_label') }}</label>
+                            <label for="bug-screen" class="hb-label">{{ __('pages.help.bug_report.screenshot_label') }}</label>
                             <input
                                 id="bug-screen"
                                 type="file"
                                 accept="image/png,image/jpeg,image/webp"
                                 @change="form.screenshot = $event.target.files[0]"
-                                class="mt-1.5 block w-full text-xs text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-primary-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-700 hover:file:bg-primary-100 dark:text-gray-400 dark:file:bg-primary-900/30 dark:file:text-primary-300 dark:hover:file:bg-primary-900/50"
+                                class="hb-file"
                             >
                         </div>
 
                         {{-- Status message + error detail --}}
                         <template x-if="message">
-                            <div :class="error ? 'border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20' : 'border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-900/20'"
-                                 class="rounded-lg border px-3 py-2">
-                                <p class="text-sm" :class="error ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'" x-text="message"></p>
+                            <div class="hb-status" :class="error ? 'is-error' : 'is-success'">
+                                <p x-text="message"></p>
                                 <template x-if="error && detail">
-                                    <details class="mt-1.5" open>
-                                        <summary class="flex items-center justify-between cursor-pointer text-xs text-red-600 dark:text-red-400 hover:underline">
+                                    <details class="hb-detail" open>
+                                        <summary>
                                             <span>Szczegóły z serwera</span>
                                             <button type="button"
                                                     @click.prevent.stop="copyDetail"
-                                                    class="ml-2 rounded border border-red-300 px-1.5 py-0.5 text-[10px] font-medium text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/40">
+                                                    class="hb-copy">
                                                 <span x-text="copied ? '✓ skopiowano' : 'Kopiuj'"></span>
                                             </button>
                                         </summary>
-                                        <pre class="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded bg-red-100 p-2 text-[11px] leading-snug text-red-900 dark:bg-red-900/40 dark:text-red-200" x-text="detail"></pre>
+                                        <pre x-text="detail"></pre>
                                     </details>
                                 </template>
                             </div>
                         </template>
                     </div>
 
-                    {{-- Sticky footer z akcjami --}}
-                    <div class="flex justify-end gap-2 border-t border-gray-200 bg-gray-50 px-5 py-3 dark:border-gray-800 dark:bg-gray-900/50">
-                        <button type="button" @click="open = false"
-                                class="rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                    <footer class="hb-footer">
+                        <button type="button" @click="open = false" class="hb-btn hb-btn--secondary">
                             {{ __('pages.help.bug_report.cancel') }}
                         </button>
-                        <button type="submit" :disabled="submitting"
-                                class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60">
-                            <svg x-show="submitting" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <button type="submit" :disabled="submitting" class="hb-btn hb-btn--primary">
+                            <svg x-show="submitting" class="hb-spinner" viewBox="0 0 24 24" fill="none">
                                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity=".25"/>
                                 <path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
                             </svg>
-                            <span x-text="submitting ? '...' : @js(__('pages.help.bug_report.submit'))"></span>
+                            <span x-text="submitting ? labels.submitting : labels.submit"></span>
                         </button>
-                    </div>
+                    </footer>
                 </form>
             </div>
         </div>
@@ -186,6 +177,216 @@
 </div>
 
 @once
+    <style>
+        /* Scoped do .hb-* żeby nie kolidowało z resztą panelu Filamenta */
+        .hb-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,.5);
+            padding: 1rem;
+        }
+        .hb-modal {
+            display: flex; flex-direction: column;
+            width: 100%; max-width: 28rem; max-height: 90vh;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,.25);
+            overflow: hidden;
+            font-family: inherit; color: #1f2937;
+        }
+        .hb-modal--enter { transition: all .15s ease-out; }
+        .hb-modal--enter-start { opacity: 0; transform: scale(.95); }
+        .hb-modal--enter-end { opacity: 1; transform: scale(1); }
+
+        .hb-header {
+            display: flex; align-items: flex-start; gap: .75rem;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .hb-header__text { flex: 1; min-width: 0; }
+        .hb-title { margin: 0; font-size: 1rem; font-weight: 600; color: #111827; }
+        .hb-lead { margin: .15rem 0 0; font-size: .8rem; color: #6b7280; line-height: 1.45; }
+        .hb-close {
+            flex-shrink: 0; padding: .25rem;
+            background: transparent; border: 0; color: #9ca3af; cursor: pointer;
+            border-radius: 6px;
+        }
+        .hb-close:hover { background: #f3f4f6; color: #4b5563; }
+        .hb-close svg { width: 20px; height: 20px; }
+
+        .hb-form { display: flex; flex-direction: column; overflow: hidden; }
+        .hb-body {
+            padding: 1rem 1.25rem;
+            overflow-y: auto;
+            display: flex; flex-direction: column; gap: 1rem;
+        }
+
+        .hb-label {
+            display: block;
+            font-size: .7rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: .04em;
+            color: #6b7280;
+            margin-bottom: .35rem;
+        }
+
+        /* Segmentowany kind selector */
+        .hb-kind-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .5rem;
+        }
+        .hb-kind {
+            display: flex; align-items: center; justify-content: center;
+            gap: .4rem;
+            padding: .55rem .75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            background: #fff;
+            font-size: .875rem; font-weight: 500;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all .15s;
+            user-select: none;
+        }
+        .hb-kind:hover { border-color: #d1d5db; }
+        .hb-kind.is-active {
+            border-color: #A8956B;
+            background: #f7f1e3;
+            color: #3D2E22;
+        }
+        .hb-kind input { position: absolute; opacity: 0; pointer-events: none; }
+        .hb-kind__emoji { font-size: 1rem; }
+
+        /* Inputy */
+        .hb-input {
+            display: block; width: 100%;
+            padding: .55rem .75rem;
+            border: 1px solid #d1d5db; border-radius: 10px;
+            background: #fff;
+            font-size: .875rem; font-family: inherit;
+            color: #111827;
+            transition: border-color .15s, box-shadow .15s;
+            box-shadow: 0 1px 2px rgba(0,0,0,.04);
+        }
+        .hb-input::placeholder { color: #9ca3af; }
+        .hb-input:focus {
+            outline: none;
+            border-color: #A8956B;
+            box-shadow: 0 0 0 3px rgba(168,149,107,.25);
+        }
+        .hb-textarea { resize: vertical; min-height: 5rem; line-height: 1.5; }
+
+        /* File input */
+        .hb-file {
+            display: block; width: 100%;
+            font-size: .8rem; color: #6b7280;
+            font-family: inherit;
+        }
+        .hb-file::file-selector-button {
+            margin-right: .75rem;
+            padding: .35rem .75rem;
+            border: 0; border-radius: 6px;
+            background: #f7f1e3;
+            font-size: .75rem; font-weight: 600;
+            color: #6e5b3a;
+            cursor: pointer;
+            transition: background .15s;
+            font-family: inherit;
+        }
+        .hb-file::file-selector-button:hover { background: #efe5cc; }
+
+        /* Status */
+        .hb-status {
+            border: 1px solid; border-radius: 10px;
+            padding: .65rem .85rem;
+            font-size: .8rem;
+        }
+        .hb-status p { margin: 0; }
+        .hb-status.is-success { border-color: #a7f3d0; background: #ecfdf5; color: #047857; }
+        .hb-status.is-error { border-color: #fecaca; background: #fef2f2; color: #b91c1c; }
+        .hb-detail { margin-top: .4rem; }
+        .hb-detail summary {
+            display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+            cursor: pointer; list-style: none;
+            font-size: .72rem; color: #b91c1c;
+        }
+        .hb-detail summary::-webkit-details-marker { display: none; }
+        .hb-detail summary:hover { text-decoration: underline; }
+        .hb-copy {
+            padding: .15rem .45rem;
+            border: 1px solid #fca5a5; border-radius: 4px;
+            background: transparent;
+            font-size: .65rem; font-weight: 600;
+            color: #b91c1c;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .hb-copy:hover { background: #fee2e2; }
+        .hb-detail pre {
+            margin: .4rem 0 0;
+            max-height: 12rem; overflow: auto;
+            white-space: pre-wrap; word-break: break-all;
+            padding: .5rem; border-radius: 6px;
+            background: #fee2e2;
+            font-size: .68rem; line-height: 1.35;
+            color: #7f1d1d;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        /* Footer */
+        .hb-footer {
+            display: flex; justify-content: flex-end; gap: .5rem;
+            padding: .75rem 1.25rem;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+        .hb-btn {
+            display: inline-flex; align-items: center; gap: .4rem;
+            padding: .45rem 1rem;
+            border-radius: 8px;
+            font-size: .875rem; font-weight: 600;
+            cursor: pointer;
+            transition: all .15s;
+            font-family: inherit;
+            border: 1px solid transparent;
+        }
+        .hb-btn:disabled { opacity: .6; cursor: not-allowed; }
+        .hb-btn--secondary { background: #fff; border-color: #d1d5db; color: #374151; }
+        .hb-btn--secondary:hover { background: #f9fafb; }
+        .hb-btn--primary { background: #A8956B; color: #fff; }
+        .hb-btn--primary:hover:not(:disabled) { background: #8f7f5b; }
+        .hb-spinner { width: 16px; height: 16px; animation: hb-spin 1s linear infinite; }
+        @keyframes hb-spin { to { transform: rotate(360deg); } }
+
+        /* Dark mode */
+        @media (prefers-color-scheme: dark) {
+            .hb-modal { background: #1f1a17; color: #e9e2d3; }
+            .hb-header, .hb-footer { border-color: #4a3d31; }
+            .hb-footer { background: #2a221c; }
+            .hb-title { color: #f7f4ef; }
+            .hb-lead, .hb-label { color: #c8b8a4; }
+            .hb-close:hover { background: #2a221c; color: #f7f4ef; }
+            .hb-kind { background: #2a221c; border-color: #4a3d31; color: #c8b8a4; }
+            .hb-kind:hover { border-color: #5a4d3f; }
+            .hb-kind.is-active { background: rgba(168,149,107,.2); color: #f7f4ef; }
+            .hb-input { background: #2a221c; border-color: #4a3d31; color: #f7f4ef; }
+            .hb-input::placeholder { color: #8b7d6a; }
+            .hb-input:focus { border-color: #A8956B; box-shadow: 0 0 0 3px rgba(168,149,107,.3); }
+            .hb-file { color: #c8b8a4; }
+            .hb-file::file-selector-button { background: rgba(168,149,107,.2); color: #d4b896; }
+            .hb-file::file-selector-button:hover { background: rgba(168,149,107,.3); }
+            .hb-btn--secondary { background: #2a221c; border-color: #4a3d31; color: #e9e2d3; }
+            .hb-btn--secondary:hover { background: #3a2e22; }
+            .hb-status.is-success { background: rgba(6,95,70,.25); border-color: rgba(16,185,129,.45); color: #6ee7b7; }
+            .hb-status.is-error { background: rgba(127,29,29,.25); border-color: rgba(220,38,38,.45); color: #fca5a5; }
+        }
+
+        @media (max-width: 640px) {
+            .hb-overlay { padding: .5rem; }
+            .hb-header, .hb-body, .hb-footer { padding-left: 1rem; padding-right: 1rem; }
+        }
+    </style>
+
     <script>
         window.bugReporter = function (config) {
             return {
@@ -195,6 +396,7 @@
                 message: '',
                 detail: '',
                 copied: false,
+                labels: config.labels,
                 form: { kind: 'bug', subject: '', description: '', screenshot: null },
                 async copyDetail() {
                     try {
