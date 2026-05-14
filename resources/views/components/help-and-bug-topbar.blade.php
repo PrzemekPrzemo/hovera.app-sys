@@ -49,113 +49,134 @@
         <div
             x-show="open"
             x-transition.opacity
-            class="fixed inset-0 z-[100] flex items-start justify-center bg-black/50 p-4 pt-16"
+            class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
             x-cloak
             @keydown.escape.window="open = false"
         >
             <div
                 @click.outside="open = false"
-                class="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+                class="flex w-full max-w-md max-h-[90vh] flex-col rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
                 x-transition:enter="transition ease-out duration-150"
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
             >
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {{-- Sticky header — zawsze widoczny, nawet przy scrollu treści --}}
+                <div class="flex items-start justify-between gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                    <div class="min-w-0">
+                        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
                             {{ __('pages.help.bug_report.title') }}
                         </h2>
-                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                             {{ __('pages.help.bug_report.lead') }}
                         </p>
                     </div>
-                    <button type="button" @click="open = false" class="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800">
+                    <button type="button" @click="open = false" aria-label="{{ __('pages.help.bug_report.cancel') }}"
+                            class="shrink-0 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
 
-                <form @submit.prevent="submit" class="mt-4 space-y-3">
-                    <div>
-                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('pages.help.bug_report.kind_label') }}</label>
-                        <div class="mt-1 grid grid-cols-2 gap-2">
-                            <label class="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm cursor-pointer dark:border-gray-700"
-                                :class="form.kind === 'bug' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : ''">
-                                <input type="radio" value="bug" x-model="form.kind" class="text-primary-600">
-                                🐛 {{ __('pages.help.bug_report.kind_bug') }}
-                            </label>
-                            <label class="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm cursor-pointer dark:border-gray-700"
-                                :class="form.kind === 'idea' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : ''">
-                                <input type="radio" value="idea" x-model="form.kind" class="text-primary-600">
-                                💡 {{ __('pages.help.bug_report.kind_idea') }}
-                            </label>
+                <form @submit.prevent="submit" class="flex flex-col overflow-hidden">
+                    <div class="overflow-y-auto px-5 py-4 space-y-4">
+                        {{-- Rodzaj — segmentowany toggle (zawsze widoczne obie ramki) --}}
+                        <div>
+                            <label class="block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('pages.help.bug_report.kind_label') }}</label>
+                            <div class="mt-1.5 grid grid-cols-2 gap-2">
+                                <label class="flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium cursor-pointer transition select-none"
+                                       :class="form.kind === 'bug'
+                                            ? 'border-primary-500 bg-primary-50 text-primary-900 dark:bg-primary-900/30 dark:text-primary-100'
+                                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600'">
+                                    <input type="radio" value="bug" x-model="form.kind" class="sr-only">
+                                    <span>🐛</span>
+                                    <span>{{ __('pages.help.bug_report.kind_bug') }}</span>
+                                </label>
+                                <label class="flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium cursor-pointer transition select-none"
+                                       :class="form.kind === 'idea'
+                                            ? 'border-primary-500 bg-primary-50 text-primary-900 dark:bg-primary-900/30 dark:text-primary-100'
+                                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600'">
+                                    <input type="radio" value="idea" x-model="form.kind" class="sr-only">
+                                    <span>💡</span>
+                                    <span>{{ __('pages.help.bug_report.kind_idea') }}</span>
+                                </label>
+                            </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <label for="bug-subject" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('pages.help.bug_report.subject_label') }}</label>
-                        <input
-                            id="bug-subject"
-                            x-ref="subject"
-                            x-model="form.subject"
-                            required
-                            maxlength="160"
-                            type="text"
-                            placeholder="{{ __('pages.help.bug_report.subject_placeholder') }}"
-                            class="mt-1 block w-full rounded-lg border-gray-300 bg-white text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                        >
-                    </div>
-
-                    <div>
-                        <label for="bug-desc" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('pages.help.bug_report.description_label') }}</label>
-                        <textarea
-                            id="bug-desc"
-                            x-model="form.description"
-                            required
-                            maxlength="5000"
-                            rows="5"
-                            placeholder="{{ __('pages.help.bug_report.description_placeholder') }}"
-                            class="mt-1 block w-full rounded-lg border-gray-300 bg-white text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                        ></textarea>
-                    </div>
-
-                    <div>
-                        <label for="bug-screen" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('pages.help.bug_report.screenshot_label') }}</label>
-                        <input
-                            id="bug-screen"
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp"
-                            @change="form.screenshot = $event.target.files[0]"
-                            class="mt-1 block w-full text-sm text-gray-700 file:mr-3 file:rounded-md file:border-0 file:bg-primary-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-700 hover:file:bg-primary-100 dark:text-gray-300 dark:file:bg-primary-900/30 dark:file:text-primary-300"
-                        >
-                    </div>
-
-                    <template x-if="message">
-                        <div :class="error ? 'border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20' : 'border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-900/20'"
-                             class="rounded-lg border px-3 py-2 text-sm">
-                            <p :class="error ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'" x-text="message"></p>
-                            <template x-if="error && detail">
-                                <details class="mt-1" open>
-                                    <summary class="flex items-center justify-between cursor-pointer text-xs text-red-600 dark:text-red-400 hover:underline">
-                                        <span>Szczegóły z serwera</span>
-                                        <button type="button"
-                                                @click.prevent.stop="copyDetail"
-                                                class="ml-2 rounded border border-red-300 px-1.5 py-0.5 text-[10px] font-medium text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/40">
-                                            <span x-text="copied ? '✓ skopiowano' : 'Kopiuj'"></span>
-                                        </button>
-                                    </summary>
-                                    <pre class="mt-1 max-h-72 overflow-auto whitespace-pre-wrap break-all rounded bg-red-100 p-2 text-[11px] leading-snug text-red-900 dark:bg-red-900/40 dark:text-red-200" x-text="detail"></pre>
-                                </details>
-                            </template>
+                        {{-- Tytuł --}}
+                        <div>
+                            <label for="bug-subject" class="block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('pages.help.bug_report.subject_label') }}</label>
+                            <input
+                                id="bug-subject"
+                                x-ref="subject"
+                                x-model="form.subject"
+                                required
+                                maxlength="160"
+                                type="text"
+                                placeholder="{{ __('pages.help.bug_report.subject_placeholder') }}"
+                                class="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                            >
                         </div>
-                    </template>
 
-                    <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" @click="open = false" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                        {{-- Opis --}}
+                        <div>
+                            <label for="bug-desc" class="block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('pages.help.bug_report.description_label') }}</label>
+                            <textarea
+                                id="bug-desc"
+                                x-model="form.description"
+                                required
+                                maxlength="5000"
+                                rows="4"
+                                placeholder="{{ __('pages.help.bug_report.description_placeholder') }}"
+                                class="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                            ></textarea>
+                        </div>
+
+                        {{-- Screenshot --}}
+                        <div>
+                            <label for="bug-screen" class="block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('pages.help.bug_report.screenshot_label') }}</label>
+                            <input
+                                id="bug-screen"
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                @change="form.screenshot = $event.target.files[0]"
+                                class="mt-1.5 block w-full text-xs text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-primary-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-700 hover:file:bg-primary-100 dark:text-gray-400 dark:file:bg-primary-900/30 dark:file:text-primary-300 dark:hover:file:bg-primary-900/50"
+                            >
+                        </div>
+
+                        {{-- Status message + error detail --}}
+                        <template x-if="message">
+                            <div :class="error ? 'border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20' : 'border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-900/20'"
+                                 class="rounded-lg border px-3 py-2">
+                                <p class="text-sm" :class="error ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'" x-text="message"></p>
+                                <template x-if="error && detail">
+                                    <details class="mt-1.5" open>
+                                        <summary class="flex items-center justify-between cursor-pointer text-xs text-red-600 dark:text-red-400 hover:underline">
+                                            <span>Szczegóły z serwera</span>
+                                            <button type="button"
+                                                    @click.prevent.stop="copyDetail"
+                                                    class="ml-2 rounded border border-red-300 px-1.5 py-0.5 text-[10px] font-medium text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/40">
+                                                <span x-text="copied ? '✓ skopiowano' : 'Kopiuj'"></span>
+                                            </button>
+                                        </summary>
+                                        <pre class="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded bg-red-100 p-2 text-[11px] leading-snug text-red-900 dark:bg-red-900/40 dark:text-red-200" x-text="detail"></pre>
+                                    </details>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- Sticky footer z akcjami --}}
+                    <div class="flex justify-end gap-2 border-t border-gray-200 bg-gray-50 px-5 py-3 dark:border-gray-800 dark:bg-gray-900/50">
+                        <button type="button" @click="open = false"
+                                class="rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
                             {{ __('pages.help.bug_report.cancel') }}
                         </button>
-                        <button type="submit" :disabled="submitting" class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed">
-                            <span x-show="!submitting">{{ __('pages.help.bug_report.submit') }}</span>
-                            <span x-show="submitting">…</span>
+                        <button type="submit" :disabled="submitting"
+                                class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60">
+                            <svg x-show="submitting" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity=".25"/>
+                                <path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                            </svg>
+                            <span x-text="submitting ? '...' : @js(__('pages.help.bug_report.submit'))"></span>
                         </button>
                     </div>
                 </form>
