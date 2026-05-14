@@ -44,15 +44,24 @@ class BugReportController extends Controller
 
         $screenshotUrl = null;
         if ($request->hasFile('screenshot')) {
-            $file = $request->file('screenshot');
-            $filename = sprintf(
-                'bug-reports/%s/%s.%s',
-                now()->format('Y-m'),
-                (string) Str::uuid(),
-                $file->getClientOriginalExtension(),
-            );
-            $path = $file->storeAs('', $filename, 'public');
-            $screenshotUrl = $path !== false ? Storage::disk('public')->url($filename) : null;
+            try {
+                $file = $request->file('screenshot');
+                $filename = sprintf(
+                    'bug-reports/%s/%s.%s',
+                    now()->format('Y-m'),
+                    (string) Str::uuid(),
+                    $file->getClientOriginalExtension(),
+                );
+                $path = $file->storeAs('', $filename, 'public');
+                $screenshotUrl = $path !== false ? Storage::disk('public')->url($filename) : null;
+            } catch (Throwable $e) {
+                // Storage może rzucić jeśli brak symlinka albo brak praw zapisu.
+                // Logujemy, ale task w Todoist i tak wystawiamy — bez screena.
+                Log::warning('Bug report screenshot upload failed', [
+                    'error' => $e->getMessage(),
+                ]);
+                $screenshotUrl = null;
+            }
         }
 
         $emoji = $data['kind'] === 'bug' ? '🐛' : '💡';
@@ -89,6 +98,7 @@ class BugReportController extends Controller
             return response()->json([
                 'ok' => false,
                 'error' => 'integration_not_configured',
+                'message' => 'TODOIST_API_TOKEN nie jest skonfigurowany na serwerze. Dodaj go do .env i wyczyść cache configu.',
             ], 503);
         }
 
@@ -100,11 +110,15 @@ class BugReportController extends Controller
                 priority: $data['kind'] === 'bug' ? 'p2' : 'p3',
             );
         } catch (Throwable $e) {
-            Log::warning('Bug report → Todoist failed', ['error' => $e->getMessage()]);
+            Log::warning('Bug report → Todoist failed', [
+                'error' => $e->getMessage(),
+                'class' => $e::class,
+            ]);
 
             return response()->json([
                 'ok' => false,
                 'error' => 'todoist_failed',
+                'message' => $e->getMessage(),
             ], 502);
         }
 

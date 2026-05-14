@@ -130,7 +130,16 @@
                     </div>
 
                     <template x-if="message">
-                        <p class="text-sm" :class="error ? 'text-red-600' : 'text-emerald-600'" x-text="message"></p>
+                        <div :class="error ? 'border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20' : 'border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-900/20'"
+                             class="rounded-lg border px-3 py-2 text-sm">
+                            <p :class="error ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'" x-text="message"></p>
+                            <template x-if="error && detail">
+                                <details class="mt-1">
+                                    <summary class="cursor-pointer text-xs text-red-600 dark:text-red-400 hover:underline">Pokaż szczegóły</summary>
+                                    <pre class="mt-1 max-h-32 overflow-auto whitespace-pre-wrap rounded bg-red-100 p-2 text-xs text-red-900 dark:bg-red-900/40 dark:text-red-200" x-text="detail"></pre>
+                                </details>
+                            </template>
+                        </div>
                     </template>
 
                     <div class="flex justify-end gap-2 pt-2">
@@ -151,51 +160,103 @@
 @once
     <script>
         window.bugReporter = function (config) {
-                return {
-                    open: false,
-                    submitting: false,
-                    error: false,
-                    message: '',
-                    form: { kind: 'bug', subject: '', description: '', screenshot: null },
-                    async submit() {
-                        this.submitting = true;
-                        this.error = false;
-                        this.message = '';
-                        try {
-                            const fd = new FormData();
-                            fd.append('kind', this.form.kind);
-                            fd.append('subject', this.form.subject);
-                            fd.append('description', this.form.description);
-                            fd.append('source_url', window.location.href);
-                            if (this.form.screenshot) {
-                                fd.append('screenshot', this.form.screenshot);
-                            }
-                            const res = await fetch(config.endpoint, {
-                                method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content
-                                        || document.querySelector('input[name=_token]')?.value
-                                        || '',
-                                    'Accept': 'application/json',
-                                    'X-Requested-With': 'XMLHttpRequest',
-                                },
-                                body: fd,
-                                credentials: 'same-origin',
-                            });
-                            if (!res.ok) throw new Error('http_' + res.status);
-                            this.message = config.labels.success;
-                            this.form = { kind: 'bug', subject: '', description: '', screenshot: null };
-                            const fileEl = document.getElementById('bug-screen');
-                            if (fileEl) fileEl.value = '';
-                            setTimeout(() => { this.open = false; this.message = ''; }, 1500);
-                        } catch (err) {
-                            this.error = true;
-                            this.message = config.labels.error;
-                        } finally {
-                            this.submitting = false;
-                        }
-                    },
-                };
+            return {
+                open: false,
+                submitting: false,
+                error: false,
+                message: '',
+                detail: '',
+                form: { kind: 'bug', subject: '', description: '', screenshot: null },
+                async submit() {
+                    this.submitting = true;
+                    this.error = false;
+                    this.message = '';
+                    this.detail = '';
+
+                    const csrf = document.querySelector('meta[name=csrf-token]')?.content
+                        || document.querySelector('input[name=_token]')?.value
+                        || '';
+
+                    if (!csrf) {
+                        this.error = true;
+                        this.message = 'Brak tokenu CSRF na stronie — odśwież stronę i spróbuj ponownie.';
+                        console.error('[bug-reporter] CSRF token meta tag missing');
+                        this.submitting = false;
+                        return;
+                    }
+
+                    const fd = new FormData();
+                    fd.append('kind', this.form.kind);
+                    fd.append('subject', this.form.subject);
+                    fd.append('description', this.form.description);
+                    fd.append('source_url', window.location.href);
+                    if (this.form.screenshot) {
+                        fd.append('screenshot', this.form.screenshot);
+                    }
+
+                    let res;
+                    try {
+                        res = await fetch(config.endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrf,
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            body: fd,
+                            credentials: 'same-origin',
+                        });
+                    } catch (netErr) {
+                        this.error = true;
+                        this.message = 'Błąd sieci — sprawdź połączenie.';
+                        this.detail = String(netErr);
+                        console.error('[bug-reporter] network error', netErr);
+                        this.submitting = false;
+                        return;
+                    }
+
+                    let payload = null;
+                    const rawText = await res.text();
+                    try { payload = JSON.parse(rawText); } catch (_) {}
+
+                    if (res.ok) {
+                        this.message = config.labels.success;
+                        this.form = { kind: 'bug', subject: '', description: '', screenshot: null };
+                        const fileEl = document.getElementById('bug-screen');
+                        if (fileEl) fileEl.value = '';
+                        setTimeout(() => { this.open = false; this.message = ''; }, 1500);
+                        this.submitting = false;
+                        return;
+                    }
+
+                    this.error = true;
+                    console.error('[bug-reporter] HTTP', res.status, payload || rawText);
+
+                    if (res.status === 419) {
+                        this.message = 'Sesja wygasła (419). Odśwież stronę i spróbuj ponownie.';
+                    } else if (res.status === 422 && payload?.errors) {
+                        const errs = Object.values(payload.errors).flat();
+                        this.message = 'Błąd walidacji: ' + errs.join(' · ');
+                    } else if (res.status === 401 || res.status === 403) {
+                        this.message = 'Brak autoryzacji (' + res.status + '). Zaloguj się ponownie.';
+                    } else if (res.status === 503 && payload?.error === 'integration_not_configured') {
+                        this.message = 'Todoist nie jest skonfigurowany na serwerze (brak TODOIST_API_TOKEN w .env).';
+                        this.detail = payload?.message || '';
+                    } else if (res.status === 502) {
+                        this.message = 'Todoist odrzucił zgłoszenie.';
+                        this.detail = payload?.message || rawText.substring(0, 500);
+                    } else if (res.status === 429) {
+                        this.message = 'Za dużo zgłoszeń w krótkim czasie — spróbuj za chwilę.';
+                    } else if (res.status >= 500) {
+                        this.message = 'Błąd serwera (' + res.status + ').';
+                        this.detail = payload?.message || rawText.substring(0, 500);
+                    } else {
+                        this.message = config.labels.error + ' (HTTP ' + res.status + ')';
+                        this.detail = payload?.message || rawText.substring(0, 500);
+                    }
+                    this.submitting = false;
+                },
+            };
         };
     </script>
 @endonce
