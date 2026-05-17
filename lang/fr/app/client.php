@@ -22,6 +22,8 @@ return [
             'address' => 'Adresse',
             'rodo' => 'RGPD',
             'notes' => 'Notes',
+            'sport' => 'Sport (LiveJumping)',
+            'sport_help' => 'Collez l’URL du profil du cavalier depuis LiveJumping.com — nous afficherons les statistiques et les départs récents.',
         ],
         'label' => [
             'type' => 'Type',
@@ -38,10 +40,22 @@ return [
             'rodo_consent_at' => 'Consentement RGPD donné le',
             'rodo_consent_source' => 'Origine du consentement',
             'notes' => 'Notes internes',
+            'livejumping_profile_url' => 'URL du profil LiveJumping',
+            'livejumping_palmares' => 'Palmarès',
         ],
         'helper' => [
             'armir_producer_id' => 'Numéro de producteur attribué par l’ARMiR lors de l’enregistrement du cheval.',
             'pesel' => 'À saisir uniquement si le propriétaire n’a pas d’EP attribué par l’ARMiR.',
+            'livejumping_profile_url' => 'Copiez l’URL de la page de profil depuis livejumping.com — par exemple https://livejumping.com/rider/12345/anna-kowalska',
+            'livejumping_no_profile' => 'Collez une URL de profil LJ ci-dessus pour voir le palmarès.',
+            'livejumping_fetch_failed' => 'Impossible de récupérer les données depuis LiveJumping (vérifiez l’URL ou réessayez plus tard).',
+        ],
+        'stats' => [
+            'starts' => 'Départs',
+            'wins' => 'Victoires',
+            'placings' => 'Places de tête',
+            'ranking_points' => 'Points de classement',
+            'recent_results' => 'Résultats récents',
         ],
         'gus' => [
             'lookup_label' => 'Récupérer depuis le GUS',

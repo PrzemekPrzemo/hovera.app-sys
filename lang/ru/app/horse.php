@@ -17,6 +17,8 @@ return [
             'boarding' => 'Пансион — начисляемые услуги',
             'boarding_description' => 'Отметьте, какие позиции прайс-листа относятся к этой лошади. Клиент увидит их в портале с месячной ориентировочной суммой.',
             'notes' => 'Заметки',
+            'sport' => 'Спорт (LiveJumping)',
+            'sport_help' => 'Вставьте URL профиля лошади с LiveJumping.com — мы покажем palmares и ближайшие старты.',
         ],
         'label' => [
             'name' => 'Кличка',
@@ -32,11 +34,23 @@ return [
             'color' => 'Масть',
             'birth_date' => 'Дата рождения',
             'boarding_services' => 'Услуги из прайс-листа',
+            'livejumping_profile_url' => 'URL профиля LiveJumping',
+            'livejumping_palmares' => 'Palmares',
         ],
         'helper' => [
             'box' => 'Изменение денника зарегистрирует историю в «Денники → История назначений».',
             'ueln' => 'Universal Equine Life Number',
             'boarding_services' => 'Прайс-лист настраивается в «Конюшня → Прайс-лист пансиона». Переопределение цены для каждой лошади (напр. скидка) задаётся там вручную после создания записи.',
+            'livejumping_profile_url' => 'Скопируйте URL страницы профиля с livejumping.com — напр. https://livejumping.com/horse/12345/romeo',
+            'livejumping_no_profile' => 'Вставьте URL профиля LJ выше, чтобы увидеть palmares.',
+            'livejumping_fetch_failed' => 'Не удалось получить данные с LiveJumping (проверьте URL или попробуйте позже).',
+        ],
+        'stats' => [
+            'starts' => 'Старты',
+            'wins' => 'Победы',
+            'placings' => 'Призовые места',
+            'ranking_points' => 'Очки рейтинга',
+            'recent_results' => 'Последние результаты',
         ],
     ],
 

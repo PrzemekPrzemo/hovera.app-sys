@@ -104,6 +104,28 @@ class Calendar extends Page implements HasActions, HasForms
     }
 
     /**
+     * Pasek z zawodami LiveJumping na bieżący dzień + następne 7 dni —
+     * renderowany na górze widoku kalendarza TYLKO gdy master admin
+     * włączył partnership. Zwraca pustą listę gdy integracja OFF lub
+     * gdy LJ nie ma zawodów w okresie — wtedy blade nie pokazuje paska.
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function getLiveJumpingEvents(): array
+    {
+        $gate = app(\App\Services\Integrations\LiveJumping\LiveJumpingFeatureGate::class);
+        if (! $gate->enabled()) {
+            return [];
+        }
+
+        $from = Carbon::parse($this->date);
+        $to = $from->copy()->addDays(7);
+
+        return app(\App\Services\Integrations\LiveJumping\LiveJumpingClient::class)
+            ->getCompetitions($from, $to);
+    }
+
+    /**
      * "Add a booking" — opens the Filament Action modal. Pre-filled
      * starts_at + ends_at are passed via Livewire arguments from the
      * Blade view (`wire:click="mountAction('createEntry', {...})"`)

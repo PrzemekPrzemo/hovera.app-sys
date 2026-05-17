@@ -22,6 +22,8 @@ return [
             'address' => 'Address',
             'rodo' => 'GDPR',
             'notes' => 'Notes',
+            'sport' => 'Sport (LiveJumping)',
+            'sport_help' => 'Paste the rider profile URL from LiveJumping.com — we will show stats and recent starts.',
         ],
         'label' => [
             'type' => 'Type',
@@ -38,10 +40,22 @@ return [
             'rodo_consent_at' => 'GDPR consent given',
             'rodo_consent_source' => 'Consent source',
             'notes' => 'Internal notes',
+            'livejumping_profile_url' => 'LiveJumping profile URL',
+            'livejumping_palmares' => 'Palmares',
         ],
         'helper' => [
             'armir_producer_id' => 'Producer ID assigned by ARMiR when registering a horse.',
             'pesel' => 'Only if the owner does not have an EP assigned by ARMiR.',
+            'livejumping_profile_url' => 'Copy the profile page URL from livejumping.com — e.g. https://livejumping.com/rider/12345/anna-kowalska',
+            'livejumping_no_profile' => 'Paste an LJ profile URL above to see palmares.',
+            'livejumping_fetch_failed' => 'Could not fetch data from LiveJumping (check the URL or try again later).',
+        ],
+        'stats' => [
+            'starts' => 'Starts',
+            'wins' => 'Wins',
+            'placings' => 'Top placings',
+            'ranking_points' => 'Ranking points',
+            'recent_results' => 'Recent results',
         ],
         'gus' => [
             'lookup_label' => 'Fetch from GUS',

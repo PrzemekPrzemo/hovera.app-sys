@@ -22,6 +22,8 @@ return [
             'address' => 'Адрес',
             'rodo' => 'GDPR',
             'notes' => 'Заметки',
+            'sport' => 'Спорт (LiveJumping)',
+            'sport_help' => 'Вставьте URL профиля всадника с LiveJumping.com — мы покажем статистику и недавние старты.',
         ],
         'label' => [
             'type' => 'Тип',
@@ -38,10 +40,22 @@ return [
             'rodo_consent_at' => 'Согласие GDPR получено',
             'rodo_consent_source' => 'Источник согласия',
             'notes' => 'Внутренние заметки',
+            'livejumping_profile_url' => 'URL профиля LiveJumping',
+            'livejumping_palmares' => 'Palmares',
         ],
         'helper' => [
             'armir_producer_id' => 'Номер производителя, присвоенный в ARMiR при регистрации лошади.',
             'pesel' => 'Введите только если у владельца нет присвоенного EP в ARMiR.',
+            'livejumping_profile_url' => 'Скопируйте URL страницы профиля с livejumping.com — напр. https://livejumping.com/rider/12345/anna-kowalska',
+            'livejumping_no_profile' => 'Вставьте URL профиля LJ выше, чтобы увидеть palmares.',
+            'livejumping_fetch_failed' => 'Не удалось получить данные с LiveJumping (проверьте URL или попробуйте позже).',
+        ],
+        'stats' => [
+            'starts' => 'Старты',
+            'wins' => 'Победы',
+            'placings' => 'Призовые места',
+            'ranking_points' => 'Очки рейтинга',
+            'recent_results' => 'Последние результаты',
         ],
         'gus' => [
             'lookup_label' => 'Получить из GUS',

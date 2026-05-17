@@ -25,4 +25,11 @@ return [
         'empty_heading' => 'Aucune réservation aujourd’hui',
         'empty_desc' => 'Une journée calme — ou le moment idéal pour une promotion !',
     ],
+
+    'livejumping' => [
+        'heading' => 'Starts à venir (LiveJumping)',
+        'description' => 'Chevaux et cavaliers de votre écurie ayant un profil LJ.',
+        'empty' => 'Aucun start à venir. Ajoutez une URL de profil LiveJumping sur une fiche cheval ou client.',
+        'more_count' => '+ :count autres',
+    ],
 ];

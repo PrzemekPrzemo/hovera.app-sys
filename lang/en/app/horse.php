@@ -17,6 +17,8 @@ return [
             'boarding' => 'Boarding — billable services',
             'boarding_description' => 'Pick which pricing items apply to this horse. The client sees them in the portal with the monthly estimate.',
             'notes' => 'Notes',
+            'sport' => 'Sport (LiveJumping)',
+            'sport_help' => 'Paste the horse profile URL from LiveJumping.com — we will show palmares and upcoming starts.',
         ],
         'label' => [
             'name' => 'Name',
@@ -32,11 +34,23 @@ return [
             'color' => 'Color',
             'birth_date' => 'Birth date',
             'boarding_services' => 'Pricing items',
+            'livejumping_profile_url' => 'LiveJumping profile URL',
+            'livejumping_palmares' => 'Palmares',
         ],
         'helper' => [
             'box' => 'Changing the box logs history in "Boxes → Assignment history".',
             'ueln' => 'Universal Equine Life Number',
             'boarding_services' => 'Configure pricing in "Stable → Boarding pricing". Per-horse price overrides (e.g. discount) are set there manually after creating the entry.',
+            'livejumping_profile_url' => 'Copy the profile page URL from livejumping.com — e.g. https://livejumping.com/horse/12345/romeo',
+            'livejumping_no_profile' => 'Paste an LJ profile URL above to see palmares.',
+            'livejumping_fetch_failed' => 'Could not fetch data from LiveJumping (check the URL or try again later).',
+        ],
+        'stats' => [
+            'starts' => 'Starts',
+            'wins' => 'Wins',
+            'placings' => 'Top placings',
+            'ranking_points' => 'Ranking points',
+            'recent_results' => 'Recent results',
         ],
     ],
 

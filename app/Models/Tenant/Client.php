@@ -20,6 +20,7 @@ class Client extends TenantModel
         'rodo_consent_at', 'rodo_consent_source',
         'central_user_id', 'notes', 'metadata',
         'magic_link_token_hash', 'magic_link_expires_at', 'last_logged_in_at',
+        'livejumping_profile_url',
     ];
 
     protected $hidden = [
