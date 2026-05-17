@@ -25,4 +25,11 @@ return [
         'empty_heading' => 'Keine Buchungen für heute',
         'empty_desc' => 'Ruhiger Tag — oder Zeit für eine Werbeaktion!',
     ],
+
+    'livejumping' => [
+        'heading' => 'Anstehende Starts (LiveJumping)',
+        'description' => 'Pferde und Reiter Ihres Stalls mit hinterlegten LJ-Profilen.',
+        'empty' => 'Keine anstehenden Starts. Fügen Sie eine LiveJumping-Profil-URL auf einer Pferde- oder Kundenkarte hinzu.',
+        'more_count' => '+ :count weitere',
+    ],
 ];

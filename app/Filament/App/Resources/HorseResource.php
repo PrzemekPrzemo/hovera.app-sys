@@ -141,7 +141,94 @@ class HorseResource extends Resource
                 ->schema([
                     Forms\Components\Textarea::make('notes')->rows(4),
                 ]),
+
+            // LiveJumping integration — widoczna TYLKO gdy master admin
+            // włączył partnership w /admin/live-jumping-settings. Operator
+            // stajni wkleja URL profilu konia z livejumping.com, hovera
+            // pobiera palmares + nadchodzące starty.
+            Forms\Components\Section::make(__('app/horse.form.section.sport'))
+                ->description(__('app/horse.form.section.sport_help'))
+                ->collapsed()
+                ->icon('heroicon-o-trophy')
+                ->visible(fn () => app(\App\Services\Integrations\LiveJumping\LiveJumpingFeatureGate::class)->enabled())
+                ->schema([
+                    Forms\Components\TextInput::make('livejumping_profile_url')
+                        ->label(__('app/horse.form.label.livejumping_profile_url'))
+                        ->helperText(__('app/horse.form.helper.livejumping_profile_url'))
+                        ->url()
+                        ->maxLength(500)
+                        ->placeholder('https://livejumping.com/horse/...'),
+                    Forms\Components\Placeholder::make('livejumping_palmares')
+                        ->label(__('app/horse.form.label.livejumping_palmares'))
+                        ->content(function (\Filament\Forms\Get $get): \Illuminate\Support\HtmlString {
+                            $url = (string) $get('livejumping_profile_url');
+                            if ($url === '') {
+                                return new \Illuminate\Support\HtmlString(
+                                    '<span class="text-gray-500 text-sm">'.e(__('app/horse.form.helper.livejumping_no_profile')).'</span>'
+                                );
+                            }
+                            $profile = app(\App\Services\Integrations\LiveJumping\LiveJumpingClient::class)
+                                ->getHorseProfile($url);
+                            if ($profile === null) {
+                                return new \Illuminate\Support\HtmlString(
+                                    '<span class="text-amber-600 text-sm">'.e(__('app/horse.form.helper.livejumping_fetch_failed')).'</span>'
+                                );
+                            }
+
+                            return self::renderHorsePalmares($profile);
+                        }),
+                ]),
         ]);
+    }
+
+    /**
+     * Renderuje palmares konia jako HTML — stats + recent results.
+     * Wyciągnięte do osobnej metody, żeby Placeholder content był
+     * kompaktowy i łatwo testowalny.
+     */
+    private static function renderHorsePalmares(array $profile): \Illuminate\Support\HtmlString
+    {
+        $stats = (array) ($profile['stats'] ?? []);
+        $recent = (array) ($profile['recent_results'] ?? []);
+
+        $html = '<div class="space-y-3 text-sm">';
+        $html .= '<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">';
+        foreach (['starts', 'wins', 'placings', 'ranking_points'] as $statKey) {
+            if (! array_key_exists($statKey, $stats)) {
+                continue;
+            }
+            $label = __('app/horse.form.stats.'.$statKey);
+            $value = e((string) $stats[$statKey]);
+            $html .= '<div class="rounded-lg border border-gray-200 dark:border-gray-700 p-2">';
+            $html .= '<div class="text-xs text-gray-500">'.e($label).'</div>';
+            $html .= '<div class="text-lg font-semibold text-gray-900 dark:text-gray-100">'.$value.'</div>';
+            $html .= '</div>';
+        }
+        $html .= '</div>';
+
+        if ($recent !== []) {
+            $html .= '<div>';
+            $html .= '<div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">';
+            $html .= e(__('app/horse.form.stats.recent_results'));
+            $html .= '</div>';
+            $html .= '<ul class="space-y-1">';
+            foreach (array_slice($recent, 0, 10) as $r) {
+                $r = (array) $r;
+                $when = e((string) ($r['date'] ?? ''));
+                $name = e((string) ($r['competition_name'] ?? ''));
+                $class = e((string) ($r['class'] ?? ''));
+                $rank = e((string) ($r['rank'] ?? '—'));
+                $html .= '<li class="flex justify-between gap-3 text-xs">';
+                $html .= '<span class="text-gray-500">'.$when.'</span>';
+                $html .= '<span class="flex-1 truncate text-gray-900 dark:text-gray-100">'.$name.' · '.$class.'</span>';
+                $html .= '<span class="font-semibold">'.$rank.'</span>';
+                $html .= '</li>';
+            }
+            $html .= '</ul></div>';
+        }
+        $html .= '</div>';
+
+        return new \Illuminate\Support\HtmlString($html);
     }
 
     public static function table(Table $table): Table

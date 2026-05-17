@@ -11,6 +11,8 @@ use App\Observers\HorseObserver;
 use App\Observers\PaymentObserver;
 use App\Services\Billing\Przelewy24Service;
 use App\Services\Billing\StripeBillingService;
+use App\Services\Integrations\LiveJumping\LiveJumpingClient;
+use App\Services\Integrations\LiveJumping\LiveJumpingFeatureGate;
 use App\Services\Integrations\TodoistClient;
 use App\Services\Ksef\CentralKsefService;
 use Illuminate\Support\ServiceProvider;
@@ -50,6 +52,13 @@ class AppServiceProvider extends ServiceProvider
         // (cert/NIP czyta z SystemSetting), ale singleton pozwala
         // testom go zmockować via $this->app->instance().
         $this->app->singleton(CentralKsefService::class);
+
+        // LiveJumping integration — partnerski feed wyników/kalendarza
+        // zawodów. Feature gate + client jako singletony; client zaciąga
+        // creds z SystemSetting w runtime (nie w konstruktorze) bo master
+        // admin może je zmienić bez restartu workera.
+        $this->app->singleton(LiveJumpingFeatureGate::class);
+        $this->app->singleton(LiveJumpingClient::class);
 
         // In-panel bug reporter → Todoist. Singleton — config nie zmienia
         // się per-request, tests mockują via $this->app->instance().

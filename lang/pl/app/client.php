@@ -22,6 +22,8 @@ return [
             'address' => 'Adres',
             'rodo' => 'RODO',
             'notes' => 'Notatki',
+            'sport' => 'Sport (LiveJumping)',
+            'sport_help' => 'Wklej URL profilu zawodnika z LiveJumping.com — pokażemy statystyki i ostatnie starty.',
         ],
         'label' => [
             'type' => 'Typ',
@@ -38,10 +40,22 @@ return [
             'rodo_consent_at' => 'Zgoda RODO udzielona',
             'rodo_consent_source' => 'Źródło zgody',
             'notes' => 'Notatki wewnętrzne',
+            'livejumping_profile_url' => 'URL profilu LiveJumping',
+            'livejumping_palmares' => 'Palmares',
         ],
         'helper' => [
             'armir_producer_id' => 'Numer producenta nadany w ARMiR przy rejestracji konia.',
             'pesel' => 'Wpisz tylko jeśli właściciel nie ma nadanego EP w ARMiR.',
+            'livejumping_profile_url' => 'Skopiuj adres strony profilu z livejumping.com — np. https://livejumping.com/rider/12345/anna-kowalska',
+            'livejumping_no_profile' => 'Wklej URL profilu LJ powyżej, aby zobaczyć palmares.',
+            'livejumping_fetch_failed' => 'Nie udało się pobrać danych z LiveJumping (sprawdź URL lub spróbuj później).',
+        ],
+        'stats' => [
+            'starts' => 'Starty',
+            'wins' => 'Zwycięstwa',
+            'placings' => 'Miejsca w czołówce',
+            'ranking_points' => 'Punkty rankingowe',
+            'recent_results' => 'Ostatnie wyniki',
         ],
         'gus' => [
             'lookup_label' => 'Pobierz z GUS',

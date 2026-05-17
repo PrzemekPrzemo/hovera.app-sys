@@ -26,4 +26,11 @@ return [
         'empty_heading' => 'Brak rezerwacji na dziś',
         'empty_desc' => 'Spokojny dzień — albo czas na promocję!',
     ],
+
+    'livejumping' => [
+        'heading' => 'Nadchodzące starty (LiveJumping)',
+        'description' => 'Konie i jeźdźcy ze stajni, którzy mają wpisane profile LJ.',
+        'empty' => 'Brak nadchodzących startów. Dodaj URL profilu LiveJumping w karcie konia lub klienta.',
+        'more_count' => '+ :count kolejnych',
+    ],
 ];

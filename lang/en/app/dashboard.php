@@ -25,4 +25,11 @@ return [
         'empty_heading' => 'No bookings today',
         'empty_desc' => 'A quiet day — or time for a promo!',
     ],
+
+    'livejumping' => [
+        'heading' => 'Upcoming starts (LiveJumping)',
+        'description' => 'Horses and riders from your stable that have LJ profiles set.',
+        'empty' => 'No upcoming starts. Add a LiveJumping profile URL on a horse or client card.',
+        'more_count' => '+ :count more',
+    ],
 ];

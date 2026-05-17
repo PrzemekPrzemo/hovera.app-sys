@@ -20,6 +20,7 @@ class Horse extends TenantModel
         'breed', 'sex', 'color', 'birth_date',
         'owner_client_id', 'box_id', 'cover_image_path',
         'notes', 'metadata',
+        'livejumping_profile_url',
     ];
 
     protected function casts(): array

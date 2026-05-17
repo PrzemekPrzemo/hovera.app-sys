@@ -10,6 +10,10 @@ return [
 
     'calendar' => [
         'navigation' => 'Tagesplan',
+        'livejumping' => [
+            'heading' => 'Wettbewerbe (LiveJumping) — die nächsten 7 Tage',
+            'more' => 'mehr',
+        ],
     ],
 
     'tenant_settings' => [
