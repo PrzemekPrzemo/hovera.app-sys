@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $tenant->name }} — {{ __('public/transporter_profile.title_suffix') }}</title>
     <meta name="description" content="{{ $description ? \Illuminate\Support\Str::limit(strip_tags($description), 155) : __('public/transporter_profile.meta_description_fallback', ['name' => $tenant->name]) }}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ route('public.transporter', ['slug' => $tenant->slug]) }}">
     <meta property="og:title" content="{{ $tenant->name }}">
     @if ($logo_url)
         <meta property="og:image" content="{{ $logo_url }}">
