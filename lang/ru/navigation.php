@@ -13,6 +13,8 @@ return [
         'settings' => 'Настройки',
         'reports' => 'Отчёты',
         'tools' => 'Инструменты',
+        'fleet' => 'Автопарк',
+        'dispatch' => 'Заявки',
     ],
 
     // Resource labels

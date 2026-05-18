@@ -13,6 +13,8 @@ return [
         'settings' => 'Einstellungen',
         'reports' => 'Berichte',
         'tools' => 'Werkzeuge',
+        'fleet' => 'Fuhrpark',
+        'dispatch' => 'Disposition',
     ],
 
     // Resource labels
