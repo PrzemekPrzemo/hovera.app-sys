@@ -3,6 +3,11 @@
 declare(strict_types=1);
 
 return [
+    'tenant_type' => [
+        'stable' => 'Stall',
+        'transporter' => 'Transportunternehmen',
+    ],
+
     'boarding_frequency' => [
         'daily' => 'Täglich',
         'monthly' => 'Monatlich',

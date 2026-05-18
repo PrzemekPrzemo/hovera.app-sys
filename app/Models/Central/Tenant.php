@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models\Central;
 
+use App\Enums\TenantType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +22,7 @@ class Tenant extends Model
     protected $table = 'tenants';
 
     protected $fillable = [
-        'slug', 'name', 'legal_name', 'tax_id',
+        'slug', 'name', 'legal_name', 'tax_id', 'type',
         'db_host', 'db_port', 'db_name', 'db_username', 'db_password_encrypted',
         'country', 'locale', 'timezone', 'currency',
         'plan_id', 'status', 'trial_ends_at',
@@ -34,6 +36,7 @@ class Tenant extends Model
     protected function casts(): array
     {
         return [
+            'type' => TenantType::class,
             'branding' => 'array',
             'settings' => 'array',
             'trial_ends_at' => 'datetime',
@@ -47,6 +50,26 @@ class Tenant extends Model
             'trial_max_horses' => 'integer',
             'trial_max_clients' => 'integer',
         ];
+    }
+
+    public function scopeStables(Builder $query): Builder
+    {
+        return $query->where('type', TenantType::Stable);
+    }
+
+    public function scopeTransporters(Builder $query): Builder
+    {
+        return $query->where('type', TenantType::Transporter);
+    }
+
+    public function isStable(): bool
+    {
+        return $this->type === TenantType::Stable;
+    }
+
+    public function isTransporter(): bool
+    {
+        return $this->type === TenantType::Transporter;
     }
 
     /**

@@ -3,6 +3,11 @@
 declare(strict_types=1);
 
 return [
+    'tenant_type' => [
+        'stable' => 'Конюшня',
+        'transporter' => 'Транспортная компания',
+    ],
+
     'boarding_frequency' => [
         'daily' => 'Ежедневно',
         'monthly' => 'Ежемесячно',
