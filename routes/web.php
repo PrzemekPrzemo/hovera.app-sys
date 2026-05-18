@@ -328,6 +328,17 @@ Route::middleware(['web', 'throttle:30,1'])
     });
 
 /*
+ * Publiczny profil transportera pod /t/{slug} — marketing/SEO landing.
+ * Renderuje tylko zweryfikowanych transporterów (isVerifiedTransporter),
+ * pozostali zwracają 404 (niewidoczni dla świata). CTA na stronie linkuje
+ * do /transport/zapytanie. Patrz docs/TRANSPORT.md §9 faza 7.
+ */
+Route::middleware('web')
+    ->get('/t/{slug}', [\App\Http\Controllers\Public\TransporterProfileController::class, 'show'])
+    ->where('slug', $slugRegex)
+    ->name('public.transporter');
+
+/*
  * Publiczna akceptacja oferty transportowej. URL przesyłany w mailu z PDFem;
  * klient klika "Akceptuję / Odrzucam" bez logowania. Token (48 znaków,
  * Str::random) jest jedyną poświadczeniową. Patrz docs/TRANSPORT.md §9 faza 3
