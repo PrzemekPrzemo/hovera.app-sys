@@ -8,6 +8,15 @@ return [
         'transporter' => 'Транспортная компания',
     ],
 
+    'quote_status' => [
+        'draft' => 'Черновик',
+        'sent' => 'Отправлена',
+        'accepted' => 'Принята',
+        'rejected' => 'Отклонена',
+        'expired' => 'Истекла',
+        'withdrawn' => 'Отозвана',
+    ],
+
     'boarding_frequency' => [
         'daily' => 'Ежедневно',
         'monthly' => 'Ежемесячно',
