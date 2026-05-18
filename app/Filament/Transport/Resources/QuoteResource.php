@@ -13,11 +13,14 @@ use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Filament\Transport\Resources\QuoteResource\Pages;
 use App\Models\Tenant\Driver;
 use App\Models\Tenant\Quote;
+use App\Models\Tenant\TransportInvoice;
 use App\Models\Tenant\Vehicle;
 use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
+use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -25,9 +28,9 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class QuoteResource extends Resource
 {
@@ -250,6 +253,38 @@ class QuoteResource extends Resource
                         ->helperText(__('transport/quote.form.helper.notes'))
                         ->rows(3),
                 ]),
+
+            // Direct-charge payments MVP — patrz docs/TRANSPORT.md §13.
+            // Hovera NIE przyjmuje płatności — wklejony URL prowadzi
+            // bezpośrednio do bramki transportera (Stripe / P24 / BLIK / ...).
+            Forms\Components\Section::make(__('transport/quote.section.payment'))
+                ->description(__('transport/quote.section.payment_description'))
+                ->collapsed(fn (?Quote $record) => $record === null || $record->payment_url === null)
+                ->schema([
+                    Forms\Components\TextInput::make('payment_url')
+                        ->label(__('transport/quote.form.label.payment_url'))
+                        ->helperText(__('transport/quote.form.helper.payment_url'))
+                        ->url()
+                        ->maxLength(2048)
+                        ->placeholder('https://buy.stripe.com/...'),
+                    Forms\Components\TextInput::make('payment_method_label')
+                        ->label(__('transport/quote.form.label.payment_method_label'))
+                        ->helperText(__('transport/quote.form.helper.payment_method_label'))
+                        ->maxLength(80)
+                        ->placeholder(__('transport/quote.form.placeholder.payment_method_label')),
+                    Forms\Components\Textarea::make('payment_notes')
+                        ->label(__('transport/quote.form.label.payment_notes'))
+                        ->helperText(__('transport/quote.form.helper.payment_notes'))
+                        ->rows(2),
+                    Forms\Components\Placeholder::make('payment_completed_status')
+                        ->label(__('transport/quote.form.label.payment_completed_status'))
+                        ->content(fn (?Quote $record) => $record?->payment_completed_at
+                            ? __('transport/quote.form.value.payment_completed_at', [
+                                'date' => $record->payment_completed_at->format('Y-m-d H:i'),
+                            ])
+                            : __('transport/quote.form.value.payment_not_completed'))
+                        ->visible(fn (?Quote $record) => $record !== null),
+                ]),
         ]);
     }
 
@@ -297,12 +332,28 @@ class QuoteResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                Tables\Actions\Action::make('markAsPaid')
+                    ->label(__('transport/quote.action.mark_as_paid'))
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->visible(fn (Quote $q) => $q->status === QuoteStatus::Accepted
+                        && $q->payment_completed_at === null)
+                    ->form([
+                        Forms\Components\Textarea::make('reason')
+                            ->label(__('transport/quote.form.label.mark_as_paid_reason'))
+                            ->helperText(__('transport/quote.form.helper.mark_as_paid_reason'))
+                            ->rows(2),
+                    ])
+                    ->modalHeading(__('transport/quote.action.mark_as_paid_modal_heading'))
+                    ->modalDescription(__('transport/quote.action.mark_as_paid_modal_description'))
+                    ->requiresConfirmation()
+                    ->action(fn (Quote $q, array $data) => self::markAsPaid($q, (string) ($data['reason'] ?? ''))),
                 Tables\Actions\Action::make('issueInvoice')
                     ->label(__('transport/quote.action.issue_invoice'))
                     ->icon('heroicon-o-document-currency-dollar')
                     ->color('success')
                     ->visible(fn (Quote $q) => $q->status === QuoteStatus::Accepted
-                        && ! \App\Models\Tenant\TransportInvoice::query()->where('quote_id', $q->id)->exists())
+                        && ! TransportInvoice::query()->where('quote_id', $q->id)->exists())
                     ->requiresConfirmation()
                     ->action(fn (Quote $q) => self::issueInvoice($q)),
                 Tables\Actions\Action::make('downloadPdf')
@@ -435,15 +486,40 @@ class QuoteResource extends Resource
             ->send();
     }
 
-    public static function downloadPdf(Quote $quote): \Symfony\Component\HttpFoundation\StreamedResponse
+    public static function downloadPdf(Quote $quote): StreamedResponse
     {
         $pdf = app(QuotePdfGenerator::class)->generate($quote);
 
         return response()->streamDownload(
-            callback: fn () => print($pdf),
+            callback: fn () => print ($pdf),
             name: $quote->number.'.pdf',
             headers: ['Content-Type' => 'application/pdf'],
         );
+    }
+
+    /**
+     * Ręczne oznaczenie oferty jako opłaconej. Direct-charge MVP — Hovera
+     * nie ma webhooków od bramek (transporter sam przyjmuje pieniądze), więc
+     * potwierdzenie wpłaty wymaga manualnego kliknięcia. Patrz docs/TRANSPORT.md §13.
+     */
+    public static function markAsPaid(Quote $quote, string $reason = ''): void
+    {
+        if ($quote->payment_completed_at !== null) {
+            return;
+        }
+
+        $quote->forceFill(['payment_completed_at' => now()])->save();
+
+        app(TenantAuditLogger::class)->record('quote.mark_as_paid', 'Quote', (string) $quote->id, [
+            'number' => $quote->number,
+            'reason' => $reason !== '' ? $reason : null,
+        ]);
+
+        Notification::make()
+            ->success()
+            ->title(__('transport/quote.notify.marked_as_paid'))
+            ->body(__('transport/quote.notify.marked_as_paid_body', ['number' => $quote->number]))
+            ->send();
     }
 
     public static function withdrawQuote(Quote $quote): void
@@ -484,7 +560,7 @@ class QuoteResource extends Resource
      */
     public static function ensureTenantVerified(): bool
     {
-        $tenant = app(\App\Tenancy\TenantManager::class)->current();
+        $tenant = app(TenantManager::class)->current();
         if (! $tenant || ! $tenant->isTransporter()) {
             return true;        // gate aplikujemy tylko dla transporterów
         }
@@ -498,7 +574,7 @@ class QuoteResource extends Resource
             ->title(__('transport/quote.notify.verification_required'))
             ->body(__('transport/quote.notify.verification_required_body'))
             ->actions([
-                \Filament\Notifications\Actions\Action::make('openDocuments')
+                Action::make('openDocuments')
                     ->label(__('transport/quote.notify.open_documents'))
                     ->url(route('filament.transport.pages.transporter-documents')),
             ])

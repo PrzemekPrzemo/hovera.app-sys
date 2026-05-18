@@ -16,6 +16,7 @@ return [
         'route' => 'Route',
         'pricing' => 'Pricing',
         'terms' => 'Terms',
+        'payment' => 'Payment',
     ],
 
     'label' => [
@@ -39,7 +40,12 @@ return [
         'net_total' => 'Net total',
         'vat' => 'VAT (:rate%)',
         'gross_total' => 'Gross total',
+        'payment_url' => 'Payment link',
+        'payment_method_label' => 'Method',
+        'payment_instructions' => 'Instructions',
     ],
+
+    'payment_disclaimer' => 'Payment is processed DIRECTLY to :transporter. Hovera is a marketplace intermediary and does NOT accept payments.',
 
     'value' => [
         'yes' => 'Yes',

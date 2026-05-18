@@ -26,6 +26,15 @@ return [
         'reject' => 'Odrzucam',
     ],
 
+    'payment' => [
+        'heading' => 'Płatność',
+        'disclaimer' => 'Płatność realizowana BEZPOŚREDNIO do :transporter. Hovera jest pośrednikiem marketplace i NIE przyjmuje płatności. Reklamacje płatności kieruj bezpośrednio do przewoźnika.',
+        'confirmed' => 'Płatność potwierdzona przez przewoźnika (:date)',
+        'pay_now' => 'Zapłać teraz (:amount :currency)',
+        'instructions_heading' => 'Instrukcje płatności:',
+        'contact_transporter' => 'Skontaktuj się z :transporter aby uzgodnić sposób płatności.',
+    ],
+
     'footer' => 'Bezpieczna strona obsługiwana przez :app',
 
     // KRYTYCZNY disclaimer wyświetlany ZAWSZE nad przyciskami akceptacji/odrzucenia.

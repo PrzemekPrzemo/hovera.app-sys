@@ -10,6 +10,8 @@ return [
         'resources' => 'Ressourcen (optional)',
         'pricing' => 'Preisgestaltung',
         'terms' => 'Bedingungen & Notizen',
+        'payment' => 'Zahlung (direct charge)',
+        'payment_description' => 'Hovera nimmt KEINE Zahlungen entgegen. Der Kunde zahlt direkt an Sie — geben Sie Ihre Gateway-URL ein oder lassen Sie das Feld leer, um auf die Einstellungs-Anweisungen zurückzugreifen.',
     ],
 
     'form' => [
@@ -45,10 +47,26 @@ return [
             'routing_provider' => 'Routenquelle',
             'terms' => 'Geschäftsbedingungen',
             'notes' => 'Interne Notizen',
+            'payment_url' => 'Zahlungs-URL',
+            'payment_method_label' => 'Bezeichnung der Zahlungsmethode',
+            'payment_notes' => 'Zahlungshinweise',
+            'payment_completed_status' => 'Zahlungsstatus',
+            'mark_as_paid_reason' => 'Grund / Transaktionsreferenz (optional)',
         ],
         'helper' => [
             'terms' => 'Für den Kunden sichtbar im Angebot / PDF.',
             'notes' => 'Nur für das Team — nicht an Kunden weitergegeben.',
+            'payment_url' => 'URL Ihres Gateway-Anbieters. Hovera nimmt KEINE Zahlungen entgegen.',
+            'payment_method_label' => 'Kurze Bezeichnung, die dem Kunden unter dem Zahlen-Button angezeigt wird.',
+            'payment_notes' => 'Interne oder kundenseitige Notizen.',
+            'mark_as_paid_reason' => 'Z. B. Überweisungsreferenz — geht ins Audit-Log.',
+        ],
+        'placeholder' => [
+            'payment_method_label' => 'Stripe / Przelewy24 / BLIK / Überweisung',
+        ],
+        'value' => [
+            'payment_completed_at' => 'Bezahlt — bestätigt :date',
+            'payment_not_completed' => 'Unbezahlt — Aktion „Als bezahlt markieren" nach Zahlungseingang.',
         ],
     ],
 
@@ -69,6 +87,9 @@ return [
         'withdraw' => 'Angebot zurückziehen',
         'download_pdf' => 'PDF herunterladen',
         'issue_invoice' => 'Rechnung ausstellen',
+        'mark_as_paid' => 'Als bezahlt markieren',
+        'mark_as_paid_modal_heading' => 'Zahlungseingang bestätigen',
+        'mark_as_paid_modal_description' => 'Hat der Kunde direkt gezahlt? Angebot als bezahlt markieren. Hovera hat nicht vermittelt — manuelle Bestätigung für das Audit-Log und die Kundenansicht.',
     ],
 
     'notify' => [
@@ -83,5 +104,7 @@ return [
         'invoice_issued' => 'Rechnung ausgestellt',
         'invoice_issued_body' => 'Rechnung :number aus diesem Angebot erstellt.',
         'invoice_failed' => 'Rechnung konnte nicht erstellt werden',
+        'marked_as_paid' => 'Angebot als bezahlt markiert',
+        'marked_as_paid_body' => 'Angebot :number — Zahlungseingang bestätigt.',
     ],
 ];

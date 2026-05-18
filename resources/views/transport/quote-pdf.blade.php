@@ -154,6 +154,44 @@
         </div>
     @endif
 
+    {{--
+        Direct-charge payments MVP — patrz docs/TRANSPORT.md §13.
+        W PDF'ie pokazujemy info o płatności (URL / metoda / instrukcje + disclaimer),
+        żeby klient miał wszystko w jednym pliku.
+    --}}
+    @php
+        $paymentInstructions = trim((string) ($settings?->payment_instructions ?? ''));
+        $hasPaymentBlock = $quote->payment_url || $paymentInstructions !== '';
+    @endphp
+    @if ($hasPaymentBlock)
+        <div class="section">
+            <h2>{{ __('transport/pdf.section.payment') }}</h2>
+            <table class="grid">
+                @if ($quote->payment_url)
+                    <tr>
+                        <td class="label">{{ __('transport/pdf.label.payment_url') }}</td>
+                        <td><a href="{{ $quote->payment_url }}">{{ $quote->payment_url }}</a></td>
+                    </tr>
+                @endif
+                @if ($quote->payment_method_label)
+                    <tr>
+                        <td class="label">{{ __('transport/pdf.label.payment_method_label') }}</td>
+                        <td>{{ $quote->payment_method_label }}</td>
+                    </tr>
+                @endif
+                @if (! $quote->payment_url && $paymentInstructions !== '')
+                    <tr>
+                        <td class="label">{{ __('transport/pdf.label.payment_instructions') }}</td>
+                        <td style="white-space: pre-wrap;">{{ $paymentInstructions }}</td>
+                    </tr>
+                @endif
+            </table>
+            <div class="terms" style="margin-top: 8px; background: #fffbeb; border-left-color: #d97706; color: #92400e; font-size: 8.5pt;">
+                {{ __('transport/pdf.payment_disclaimer', ['transporter' => $sellerName]) }}
+            </div>
+        </div>
+    @endif
+
     <div class="footer">
         {{ __('transport/pdf.footer.generated', ['app' => config('app.name')]) }} · {{ now()->format('Y-m-d H:i') }}
     </div>

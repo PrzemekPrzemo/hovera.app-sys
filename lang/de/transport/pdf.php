@@ -16,6 +16,7 @@ return [
         'route' => 'Strecke',
         'pricing' => 'Preisgestaltung',
         'terms' => 'Bedingungen',
+        'payment' => 'Zahlung',
     ],
 
     'label' => [
@@ -39,7 +40,12 @@ return [
         'net_total' => 'Netto-Gesamt',
         'vat' => 'MwSt. (:rate%)',
         'gross_total' => 'Brutto-Gesamt',
+        'payment_url' => 'Zahlungslink',
+        'payment_method_label' => 'Methode',
+        'payment_instructions' => 'Anweisungen',
     ],
+
+    'payment_disclaimer' => 'Die Zahlung erfolgt DIREKT an :transporter. Hovera ist ein Marketplace-Vermittler und nimmt KEINE Zahlungen entgegen.',
 
     'value' => [
         'yes' => 'Ja',

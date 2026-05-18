@@ -10,7 +10,6 @@ use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\TransportSettings as TransportSettingsModel;
 use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
-use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -89,6 +88,9 @@ class TransportSettings extends Page implements HasForms
             'ksef_token' => null,
             'ksef_token_present' => $settings->getKsefToken() !== null,
             'ksef_enabled' => (bool) $settings->ksef_enabled,
+            'default_payment_url_template' => $settings->default_payment_url_template,
+            'default_payment_method_label' => $settings->default_payment_method_label,
+            'payment_instructions' => $settings->payment_instructions,
         ]);
     }
 
@@ -254,6 +256,32 @@ class TransportSettings extends Page implements HasForms
                                 ->action(fn () => $this->testKsefConnection()),
                         ])->columnSpanFull(),
                     ]),
+
+                // Direct-charge payments MVP — patrz docs/TRANSPORT.md §13.
+                // Hovera NIE pośredniczy w płatnościach — to tylko ułatwienie
+                // dla transportera (paste-and-go URL bramki).
+                Forms\Components\Section::make(__('transport/settings.section.payments'))
+                    ->description(__('transport/settings.section.payments_description'))
+                    ->schema([
+                        Forms\Components\Placeholder::make('payments_disclaimer')
+                            ->label('')
+                            ->content(__('transport/settings.section.payments_disclaimer'))
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('default_payment_url_template')
+                            ->label(__('transport/settings.form.label.default_payment_url_template'))
+                            ->helperText(__('transport/settings.form.helper.default_payment_url_template'))
+                            ->url()
+                            ->maxLength(2048)
+                            ->placeholder('https://buy.stripe.com/...?prefilled_email={customer_name}'),
+                        Forms\Components\TextInput::make('default_payment_method_label')
+                            ->label(__('transport/settings.form.label.default_payment_method_label'))
+                            ->helperText(__('transport/settings.form.helper.default_payment_method_label'))
+                            ->maxLength(80),
+                        Forms\Components\Textarea::make('payment_instructions')
+                            ->label(__('transport/settings.form.label.payment_instructions'))
+                            ->helperText(__('transport/settings.form.helper.payment_instructions'))
+                            ->rows(4),
+                    ]),
             ]);
     }
 
@@ -282,6 +310,9 @@ class TransportSettings extends Page implements HasForms
             'ksef_nip' => $form['ksef_nip'] ?: null,
             'ksef_environment' => (string) ($form['ksef_environment'] ?? 'test'),
             'ksef_enabled' => (bool) ($form['ksef_enabled'] ?? false),
+            'default_payment_url_template' => $form['default_payment_url_template'] ?: null,
+            'default_payment_method_label' => $form['default_payment_method_label'] ?: null,
+            'payment_instructions' => $form['payment_instructions'] ?: null,
         ]);
 
         // Token: jeśli user wpisał nowy → szyfrujemy i zapisujemy. Jeśli

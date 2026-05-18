@@ -16,6 +16,7 @@ return [
         'route' => 'Маршрут',
         'pricing' => 'Расчёт',
         'terms' => 'Условия',
+        'payment' => 'Оплата',
     ],
 
     'label' => [
@@ -39,7 +40,12 @@ return [
         'net_total' => 'Итого без НДС',
         'vat' => 'НДС (:rate%)',
         'gross_total' => 'Итого с НДС',
+        'payment_url' => 'Ссылка для оплаты',
+        'payment_method_label' => 'Метод',
+        'payment_instructions' => 'Инструкции',
     ],
+
+    'payment_disclaimer' => 'Оплата производится НАПРЯМУЮ :transporter. Hovera — посредник marketplace и НЕ принимает платежи.',
 
     'value' => [
         'yes' => 'Да',

@@ -16,6 +16,7 @@ return [
         'route' => 'Itinéraire',
         'pricing' => 'Tarification',
         'terms' => 'Conditions',
+        'payment' => 'Paiement',
     ],
 
     'label' => [
@@ -39,7 +40,12 @@ return [
         'net_total' => 'Total HT',
         'vat' => 'TVA (:rate%)',
         'gross_total' => 'Total TTC',
+        'payment_url' => 'Lien de paiement',
+        'payment_method_label' => 'Méthode',
+        'payment_instructions' => 'Instructions',
     ],
+
+    'payment_disclaimer' => 'Le paiement est effectué DIRECTEMENT à :transporter. Hovera est un intermédiaire marketplace et N’accepte PAS les paiements.',
 
     'value' => [
         'yes' => 'Oui',

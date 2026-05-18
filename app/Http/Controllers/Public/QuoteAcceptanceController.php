@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
+use App\Domain\Transport\Leads\QuoteAcceptanceService;
 use App\Domain\Transport\Notifications\QuoteAcceptedNotification;
 use App\Domain\Transport\Notifications\QuoteRejectedNotification;
 use App\Enums\QuoteStatus;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\Quote;
+use App\Models\Tenant\TransportSettings;
 use App\Tenancy\TenantManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,6 +52,9 @@ class QuoteAcceptanceController extends Controller
             'quote' => $quote,
             'slug' => $slug,
             'token' => $token,
+            // Direct-charge payments MVP — settings dla fallback'u (payment_instructions
+            // gdy quote.payment_url nie ustawione). Patrz docs/TRANSPORT.md §13.
+            'transportSettings' => TransportSettings::current(),
         ]);
     }
 
@@ -73,7 +78,7 @@ class QuoteAcceptanceController extends Controller
         // domykamy całe zapytanie — pozostałe TransportLeadResponse → rejected,
         // notyfikacje "lead zamknięty" lecą do innych transporterów. Patrz
         // docs/TRANSPORT.md §5.3.
-        app(\App\Domain\Transport\Leads\QuoteAcceptanceService::class)
+        app(QuoteAcceptanceService::class)
             ->onQuoteAccepted($quote, $this->tenants->tenantOrFail());
 
         $this->notifyOwner($quote, accepted: true);

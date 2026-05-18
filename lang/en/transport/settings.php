@@ -14,6 +14,9 @@ return [
         'tax_currency' => 'Tax & currency',
         'routing' => 'Maps & routing provider',
         'routing_description' => 'OpenRouteService (free) covers 95% of cases. Google and Mapbox require your own API key.',
+        'payments' => 'Payments (direct charge)',
+        'payments_description' => 'Default payment gateway URL and payment instructions — auto-filled on every new quote.',
+        'payments_disclaimer' => 'Hovera does NOT process payments. The customer pays you directly — Hovera only displays the information you enter here on the quote acceptance page. Stripe / Przelewy24 / other — fully your responsibility, your account, your tax filings.',
     ],
 
     'form' => [
@@ -28,11 +31,17 @@ return [
             'currency' => 'Currency',
             'routing_provider' => 'Routing provider',
             'routing_api_key' => 'API key',
+            'default_payment_url_template' => 'Default payment URL template',
+            'default_payment_method_label' => 'Default payment method label',
+            'payment_instructions' => 'Payment instructions (fallback)',
         ],
         'helper' => [
             'rate_per_km_loaded' => 'Leave empty if the same as unloaded.',
             'fuel_surcharge_enabled' => 'We add the difference between current and base price.',
             'routing_api_key' => 'API key for the selected provider. Stored securely in the database.',
+            'default_payment_url_template' => 'Your payment gateway URL. Supported placeholders: {quote_number}, {gross_total_pln}, {customer_name}. Auto-applied to new quotes (you can override per-quote).',
+            'default_payment_method_label' => 'E.g. "Stripe", "Przelewy24", "BLIK / transfer" — shown below the Pay button on the quote page.',
+            'payment_instructions' => 'Text shown on the quote page when no payment URL is set. E.g. bank transfer details: bank, account, transfer title.',
         ],
         'option' => [
             'routing_provider' => [

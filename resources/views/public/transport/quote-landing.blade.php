@@ -34,6 +34,16 @@
         .banner.rejected { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
         .banner.final { background: #f3f4f6; color: var(--muted); border: 1px solid #e5e7eb; font-weight: 400; }
         .terms { margin-top: 1.25rem; padding: 1rem; background: #f7f4ef; border-radius: 10px; font-size: .85rem; line-height: 1.6; white-space: pre-wrap; }
+        .payment { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+        .payment h2 { margin: 0 0 .75rem; font-size: 1.05rem; color: #3D2E22; }
+        .payment-disclaimer { padding: .75rem 1rem; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; border-radius: 10px; font-size: .82rem; line-height: 1.5; margin-bottom: 1rem; }
+        .payment-pay-btn { display: block; padding: 1rem; background: #16a34a; color: #fff; border-radius: 10px; text-align: center; text-decoration: none; font-weight: 700; font-size: 1.05rem; }
+        .payment-pay-btn:hover { background: #15803d; }
+        .payment-method { text-align: center; margin-top: .5rem; font-size: .85rem; color: var(--muted); }
+        .payment-confirmed { padding: 1rem; background: #ecfdf5; color: #047857; border: 1px solid #6ee7b7; border-radius: 10px; text-align: center; font-weight: 600; }
+        .payment-instructions { padding: 1rem; background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; border-radius: 10px; font-size: .9rem; line-height: 1.55; white-space: pre-wrap; }
+        .payment-instructions strong { display: block; margin-bottom: .25rem; }
+        .payment-contact { padding: 1rem; background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; border-radius: 10px; font-size: .9rem; line-height: 1.5; }
         .footer { text-align: center; margin-top: 1.5rem; font-size: .75rem; color: var(--muted); }
         @media (prefers-color-scheme: dark) {
             html, body { background: #1F1A17; color: #F7F4EF; }
@@ -106,6 +116,72 @@
                         @csrf
                         <button type="submit" class="btn btn-reject">✕ {{ __('transport/landing.action.reject') }}</button>
                     </form>
+                </div>
+            @endif
+
+            {{--
+                Direct-charge payments MVP — patrz docs/TRANSPORT.md §13.
+                Pokazujemy sekcję płatności WYŁĄCZNIE gdy oferta jest accepted —
+                klient widzi tu jedną z 4 sytuacji (priorytetowo):
+                  1. payment_completed_at → potwierdzenie przez przewoźnika
+                  2. payment_url → przycisk "Zapłać teraz"
+                  3. payment_instructions (z settings) → fallback z danymi do przelewu
+                  4. nic z powyższych → CTA "skontaktuj się z przewoźnikiem"
+
+                Disclaimer "Hovera NIE przyjmuje płatności" jest ZAWSZE widoczny
+                w sekcji płatności — to wymóg pozycjonowania marketplace'u
+                (patrz §1.1 — Hovera jest pośrednikiem, nie merchantem).
+            --}}
+            @if ($quote->status->value === 'accepted')
+                @php
+                    $tenantName = $tenant->legal_name ?? $tenant->name;
+                    $transportSettings = $transportSettings ?? null;
+                    $paymentInstructions = $quote->payment_completed_at === null && ! $quote->payment_url
+                        ? trim((string) ($transportSettings?->payment_instructions ?? ''))
+                        : '';
+                @endphp
+                <div class="payment" data-testid="payment-section">
+                    <h2>{{ __('transport/landing.payment.heading') }}</h2>
+
+                    <div class="payment-disclaimer" data-testid="payment-disclaimer">
+                        {{ __('transport/landing.payment.disclaimer', ['transporter' => $tenantName]) }}
+                    </div>
+
+                    @if ($quote->payment_completed_at)
+                        <div class="payment-confirmed" data-testid="payment-confirmed">
+                            ✓ {{ __('transport/landing.payment.confirmed', ['date' => $quote->payment_completed_at->format('Y-m-d H:i')]) }}
+                        </div>
+                    @elseif ($quote->payment_url)
+                        <a href="{{ $quote->payment_url }}" target="_blank" rel="noopener noreferrer nofollow" class="payment-pay-btn" data-testid="payment-pay-btn">
+                            {{ __('transport/landing.payment.pay_now', [
+                                'amount' => number_format((float) $quote->gross_total, 2, ',', ' '),
+                                'currency' => $quote->currency,
+                            ]) }}
+                        </a>
+                        @if ($quote->payment_method_label)
+                            <div class="payment-method">{{ $quote->payment_method_label }}</div>
+                        @endif
+                    @elseif ($paymentInstructions !== '')
+                        <div class="payment-instructions" data-testid="payment-instructions">
+                            <strong>{{ __('transport/landing.payment.instructions_heading') }}</strong>
+                            {{ $paymentInstructions }}
+                        </div>
+                    @else
+                        <div class="payment-contact" data-testid="payment-contact">
+                            {{ __('transport/landing.payment.contact_transporter', ['transporter' => $tenantName]) }}
+                            @php
+                                $contactEmail = data_get($tenant->branding, 'contact_email');
+                                $contactPhone = data_get($tenant->branding, 'contact_phone');
+                            @endphp
+                            @if ($contactEmail || $contactPhone)
+                                <div style="margin-top: .5rem;">
+                                    @if ($contactEmail)<a href="mailto:{{ $contactEmail }}">{{ $contactEmail }}</a>@endif
+                                    @if ($contactEmail && $contactPhone) · @endif
+                                    @if ($contactPhone)<a href="tel:{{ $contactPhone }}">{{ $contactPhone }}</a>@endif
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             @endif
         </div>
