@@ -27,4 +27,6 @@ return [
     ],
 
     'footer' => 'Secure page powered by :app',
+
+    'disclaimer_intermediary_html' => '<strong>By accepting this quote you enter into a contract DIRECTLY with :transporter_name :transporter_nip.</strong> Hovera is a marketplace intermediary — NOT a party to this contract, NOT a carrier, and NOT liable for the transport. Please read the <a href="/regulamin-marketplace" target="_blank" style="color:inherit;text-decoration:underline;">transport marketplace terms</a>.',
 ];

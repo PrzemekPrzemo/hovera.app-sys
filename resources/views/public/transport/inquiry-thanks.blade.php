@@ -32,6 +32,12 @@
             <h1>{{ __('public/transport_inquiry.thanks_heading') }}</h1>
             <p>{{ __('public/transport_inquiry.thanks_body', ['email' => $lead->originator_email]) }}</p>
             <div class="lead-meta">{{ __('public/transport_inquiry.thanks_reference') }}: {{ $lead->id }}</div>
+
+            {{-- Przypomnienie: kontaktować się będzie WYBRANY przewoźnik (nie Hovera).
+                 Hovera = tylko pośrednik technologiczny. --}}
+            <p style="margin-top:1.25rem;font-size:.78rem;color:#6b7280;font-style:italic;line-height:1.5;">
+                {!! __('public/transport_inquiry.disclaimer_intermediary_thanks') !!}
+            </p>
         </div>
     </div>
 </body>

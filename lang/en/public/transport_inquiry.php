@@ -44,4 +44,7 @@ return [
     'thanks_heading' => 'Thank you!',
     'thanks_body' => 'We sent your inquiry to transport companies. Offers arrive at :email within 24 hours.',
     'thanks_reference' => 'Reference number',
+
+    'disclaimer_intermediary' => 'Hovera is a marketplace intermediary — it is not a carrier and does not perform transports. The transport contract is concluded DIRECTLY between you and the selected transporter after you accept their quote. Details in the <a href="/regulamin-marketplace" target="_blank">transport marketplace terms</a>.',
+    'disclaimer_intermediary_thanks' => 'The chosen transporter will contact you directly — they are the party to the transport contract. Hovera is only a technology intermediary, not a party and not liable for the transport. Details: <a href="/regulamin-marketplace" target="_blank">marketplace terms</a>.',
 ];

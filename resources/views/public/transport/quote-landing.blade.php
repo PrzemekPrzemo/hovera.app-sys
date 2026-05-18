@@ -85,6 +85,18 @@
             @endif
 
             @if ($quote->status->value === 'sent')
+                {{-- KRYTYCZNY disclaimer: akceptacja oferty = zawarcie umowy
+                     BEZPOŚREDNIO z przewoźnikiem (nie z Hovera). Wyświetlamy
+                     ZAWSZE przed przyciskami akcept/reject. Tenant data: NIP,
+                     adres prawny — z legal_name/tax_id (mogą być NULL → pokazujemy
+                     tyle ile jest). --}}
+                <div style="margin-top:1.25rem;padding:1rem;background:#fef9e7;border:1px solid #f1e4a6;border-radius:10px;font-size:.85rem;line-height:1.55;color:#4a3d10;" role="note" aria-label="Marketplace intermediary disclaimer">
+                    {!! __('transport/landing.disclaimer_intermediary_html', [
+                        'transporter_name' => e($tenant->legal_name ?? $tenant->name),
+                        'transporter_nip' => $tenant->tax_id ? 'NIP: '.e($tenant->tax_id) : '',
+                    ]) !!}
+                </div>
+
                 <div class="actions">
                     <form method="post" action="{{ route('public.transport.quote.accept', ['slug' => $slug, 'token' => $token]) }}">
                         @csrf

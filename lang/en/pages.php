@@ -100,7 +100,7 @@ return [
             'submit' => 'Send report',
             'cancel' => 'Cancel',
             'success' => 'Thanks — your report has been sent.',
-            'error' => 'Sending failed. Please retry or email support@hovera.app.',
+            'error' => 'Sending failed. Please retry or email office@hovera.app.',
         ],
     ],
 

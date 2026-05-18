@@ -117,7 +117,15 @@
 
                 <label class="terms">
                     <input type="checkbox" name="terms" required>
-                    <span>{!! __('public/signup.label.terms') !!}</span>
+                    {{-- Dla tenant-type=transporter rozszerzamy etykietę o link do
+                         Regulaminu marketplace transportowego — Hovera = pośrednik,
+                         a transporter musi mieć tego świadomość przed signupem. --}}
+                    <span>
+                        {!! __('public/signup.label.terms') !!}
+                        @if ($type->value === 'transporter')
+                            {!! __('public/signup.label.terms_marketplace_suffix') !!}
+                        @endif
+                    </span>
                 </label>
 
                 <button type="submit">{{ __('public/signup.action.submit') }}</button>

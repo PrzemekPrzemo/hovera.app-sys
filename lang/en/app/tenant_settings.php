@@ -69,11 +69,11 @@ return [
         'helper' => [
             'custom_domain' => 'Enter e.g. "mystable.com" or a subdomain "stable.company.com". After saving, add the DNS records shown below. Master admin enables the domain after DNS confirmation.',
             'custom_domain_invalid' => 'Invalid domain — only lowercase letters, digits, dots and hyphens.',
-            'custom_domain_unverified' => 'Not verified — contact support@hovera.app once DNS records are in place.',
-            'custom_domain_plan_locked' => 'Custom domain is available on the Pro plan. Contact support@hovera.app to upgrade.',
+            'custom_domain_unverified' => 'Not verified — contact office@hovera.app once DNS records are in place.',
+            'custom_domain_plan_locked' => 'Custom domain is available on the Pro plan. Contact office@hovera.app to upgrade.',
             'dns_step_1' => '1. In your domain registrar control panel add a CNAME record (or A/ALIAS for apex):',
             'dns_step_2' => '2. Add a TXT record to verify domain ownership:',
-            'dns_step_3' => '3. Once records are in place, email support@hovera.app — we verify DNS and enable the domain (usually within 24h).',
+            'dns_step_3' => '3. Once records are in place, email office@hovera.app — we verify DNS and enable the domain (usually within 24h).',
         ],
     ],
 

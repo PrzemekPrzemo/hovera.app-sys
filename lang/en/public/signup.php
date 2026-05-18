@@ -51,6 +51,7 @@ return [
         'owner_name' => 'Your full name',
         'owner_email' => 'Email',
         'terms' => 'I accept the <a href="/regulamin" target="_blank">terms</a> and <a href="/polityka-prywatnosci" target="_blank">privacy policy</a>',
+        'terms_marketplace_suffix' => ' and the <a href="/regulamin-marketplace" target="_blank">transport marketplace terms</a> (Hovera provides technology intermediation services — it is not a carrier nor a party to the transport contract)',
     ],
 
     'placeholder' => [
@@ -79,7 +80,7 @@ return [
         'slug_format' => 'URL can only contain lowercase letters, digits and dashes (no leading/trailing dashes).',
         'slug_taken' => 'That URL is taken — try another, e.g. add a city or initials.',
         'terms' => 'You must accept the terms.',
-        'provisioning_failed' => 'Something went wrong on our side. Try again in a moment or email support@hovera.app.',
+        'provisioning_failed' => 'Something went wrong on our side. Try again in a moment or email office@hovera.app.',
     ],
 
     'thanks_heading' => '✓ Account created',
@@ -89,5 +90,5 @@ return [
     'thanks_step_3' => 'Set a password — this is your first login to the panel.',
     'thanks_step_4' => 'Land in /app with 30 days of trial, no limits.',
     'thanks_no_email' => 'No email after 5 minutes?',
-    'thanks_no_email_help' => 'Check spam. If still nothing — email support@hovera.app, we\'ll help.',
+    'thanks_no_email_help' => 'Check spam. If still nothing — email office@hovera.app, we\'ll help.',
 ];

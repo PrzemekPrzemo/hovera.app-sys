@@ -45,6 +45,8 @@ class LeadClosedNotification extends Notification
             ->action(
                 __('transport/notify_lead_closed.action'),
                 url('/transport/leads'),
-            );
+            )
+            // Stopka prawna — przypomnienie roli Hovera (pośrednik).
+            ->line(__('transport/notify_lead_closed.disclaimer_intermediary'));
     }
 }

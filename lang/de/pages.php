@@ -100,7 +100,7 @@ return [
             'submit' => 'Meldung senden',
             'cancel' => 'Abbrechen',
             'success' => 'Danke — Ihre Meldung wurde gesendet.',
-            'error' => 'Senden fehlgeschlagen. Bitte erneut versuchen oder an support@hovera.app schreiben.',
+            'error' => 'Senden fehlgeschlagen. Bitte erneut versuchen oder an office@hovera.app schreiben.',
         ],
     ],
 

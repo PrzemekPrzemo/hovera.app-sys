@@ -130,6 +130,13 @@
                 </label>
 
                 <button type="submit">{{ __('public/transport_inquiry.action.submit') }}</button>
+
+                {{-- Disclaimer: Hovera = pośrednik marketplace, nie przewoźnik.
+                     Wymagany legal compliance — informuje użytkownika ZANIM wyśle
+                     zapytanie, że umowa będzie z wybranym przewoźnikiem (nie z Hovera). --}}
+                <p style="margin-top:1rem;font-size:.78rem;color:var(--muted);font-style:italic;line-height:1.5;">
+                    {!! __('public/transport_inquiry.disclaimer_intermediary') !!}
+                </p>
             </form>
         </div>
     </div>

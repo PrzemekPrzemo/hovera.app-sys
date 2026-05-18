@@ -30,4 +30,6 @@ return [
 
     'footer_cta_text' => 'Besoin de transporter un cheval ? Envoyez une demande — nous répondons rapidement.',
     'powered_by' => 'powered by hovera.app',
+
+    'disclaimer_intermediary' => 'Profil exploité par <strong>:transporter_name</strong>. Hovera = intermédiaire de marketplace (<a href="/regulamin-marketplace" target="_blank">conditions</a>) — n’effectue pas les transports, n’est pas partie au contrat.',
 ];

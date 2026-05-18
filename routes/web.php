@@ -131,6 +131,7 @@ Route::middleware(['web', 'throttle:30,1'])->group(function () {
     Route::get('/regulamin', [LegalController::class, 'terms'])->name('legal.terms');
     Route::get('/polityka-prywatnosci', [LegalController::class, 'privacy'])->name('legal.privacy');
     Route::get('/dpa', [LegalController::class, 'dpa'])->name('legal.dpa');
+    Route::get('/regulamin-marketplace', [LegalController::class, 'marketplace'])->name('legal.marketplace');
 
     // Publiczne centrum pomocy — dostępne BEZ logowania, indeksowane przez
     // wyszukiwarki. Te same markdownowe instrukcje co w /app/help + osadzone

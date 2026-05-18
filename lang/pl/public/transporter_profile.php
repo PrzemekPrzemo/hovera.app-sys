@@ -30,4 +30,8 @@ return [
 
     'footer_cta_text' => 'Potrzebujesz przewieźć konia? Wyślij zapytanie — odpowiemy szybko.',
     'powered_by' => 'powered by hovera.app',
+
+    // Pod stopką profilu — sygnał że za profilem stoi transporter, Hovera = marketplace.
+    // Klikalny link do regulaminu marketplace; :transporter_name = nazwa firmy (escaped przed wstawieniem).
+    'disclaimer_intermediary' => 'Profil obsługiwany przez <strong>:transporter_name</strong>. Hovera = pośrednik marketplace (<a href="/regulamin-marketplace" target="_blank">regulamin</a>) — nie wykonuje transportów, nie jest stroną umowy przewozu.',
 ];

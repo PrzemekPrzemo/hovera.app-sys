@@ -69,11 +69,11 @@ return [
         'helper' => [
             'custom_domain' => 'Wpisz np. "mojastajnia.pl" lub subdomenę "stajnia.firma.com". Po zapisie dodaj rekordy DNS — instrukcje pojawią się poniżej. Weryfikację domeny włącza master admin po potwierdzeniu DNS.',
             'custom_domain_invalid' => 'Niepoprawny format domeny — same małe litery, cyfry, kropki i myślniki.',
-            'custom_domain_unverified' => 'Niezweryfikowana — skontaktuj się z support@hovera.app po dodaniu rekordów DNS.',
-            'custom_domain_plan_locked' => 'Własna domena dostępna w planie Pro. Skontaktuj się z support@hovera.app aby przejść na wyższy plan.',
+            'custom_domain_unverified' => 'Niezweryfikowana — skontaktuj się z office@hovera.app po dodaniu rekordów DNS.',
+            'custom_domain_plan_locked' => 'Własna domena dostępna w planie Pro. Skontaktuj się z office@hovera.app aby przejść na wyższy plan.',
             'dns_step_1' => '1. W panelu twojego rejestratora domen dodaj rekord CNAME (lub A/ALIAS jeśli to apex):',
             'dns_step_2' => '2. Dodaj rekord TXT do weryfikacji własności domeny:',
-            'dns_step_3' => '3. Po dodaniu rekordów napisz na support@hovera.app — sprawdzimy DNS i włączymy domenę (zwykle do 24h).',
+            'dns_step_3' => '3. Po dodaniu rekordów napisz na office@hovera.app — sprawdzimy DNS i włączymy domenę (zwykle do 24h).',
         ],
     ],
 

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Public;
 use App\Actions\Tenants\CreateTenant;
 use App\Enums\TenantType;
 use App\Models\Central\Tenant;
+use App\Services\MasterAuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -47,7 +48,7 @@ class SignupController extends Controller
         ]);
     }
 
-    public function submit(Request $request, CreateTenant $action): RedirectResponse
+    public function submit(Request $request, CreateTenant $action, MasterAuditLogger $audit): RedirectResponse
     {
         $data = $this->validate($request);
 
@@ -74,6 +75,31 @@ class SignupController extends Controller
                 ->withErrors(['signup' => __('public/signup.errors.provisioning_failed')])
                 ->withInput();
         }
+
+        // Persist proof of ToS acceptance: timestamp + wersja regulaminu
+        // z configu. To pozwala wykryć tenantów którzy zaakceptowali stary
+        // regulamin i potrzebują ponownej zgody po istotnej zmianie.
+        $termsVersion = (string) config('hovera.legal.terms_version', '2026-05');
+        $tenant->forceFill([
+            'terms_accepted_at' => now(),
+            'terms_version' => $termsVersion,
+        ])->save();
+
+        // Pełny audit trail (IP + user-agent + e-mail akceptującego)
+        // do central audit_log_master — sąd / RODO inspector mogą tego
+        // żądać przy sporze o zgodę.
+        $audit->record(
+            action: 'tenant.terms_accepted',
+            targetType: 'Tenant',
+            targetId: (string) $tenant->id,
+            tenantId: (string) $tenant->id,
+            payload: [
+                'version' => $termsVersion,
+                'tenant_type' => $tenant->type?->value,
+                'owner_email' => $data['owner_email'],
+                'accepted_marketplace' => $data['type'] === 'transporter',
+            ],
+        );
 
         return redirect()->route('signup.thanks', ['slug' => $tenant->slug]);
     }

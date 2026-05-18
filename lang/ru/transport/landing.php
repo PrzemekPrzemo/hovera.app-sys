@@ -27,4 +27,6 @@ return [
     ],
 
     'footer' => 'Защищённая страница, предоставлено :app',
+
+    'disclaimer_intermediary_html' => '<strong>Принимая предложение, вы заключаете договор НЕПОСРЕДСТВЕННО с :transporter_name :transporter_nip.</strong> Hovera — посредник маркетплейса, НЕ сторона договора, НЕ перевозчик и НЕ отвечает за исполнение. Ознакомьтесь с <a href="/regulamin-marketplace" target="_blank" style="color:inherit;text-decoration:underline;">регламентом транспортного маркетплейса</a>.',
 ];

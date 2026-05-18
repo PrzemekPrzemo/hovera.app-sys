@@ -61,6 +61,9 @@ class QuoteSentNotification extends Notification
         }
 
         $message->line(__('transport/notify_quote_sent.outro'));
+        // Stopka prawna — Hovera = pośrednik marketplace, nie przewoźnik.
+        // Wymagane przez §2 Regulaminu marketplace transportowego.
+        $message->line(__('transport/notify_quote_sent.disclaimer_intermediary'));
 
         return $message->attachData(
             data: $pdf,

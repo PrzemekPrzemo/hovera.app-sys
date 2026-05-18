@@ -100,7 +100,7 @@ return [
             'submit' => 'Envoyer le signalement',
             'cancel' => 'Annuler',
             'success' => 'Merci — votre signalement a été envoyé.',
-            'error' => 'L’envoi a échoué. Réessayez ou écrivez à support@hovera.app.',
+            'error' => 'L’envoi a échoué. Réessayez ou écrivez à office@hovera.app.',
         ],
     ],
 

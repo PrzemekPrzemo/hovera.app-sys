@@ -32,6 +32,7 @@ class Tenant extends Model
         'current_period_ends_at', 'subscription_ends_at',
         'branding', 'settings',
         'custom_domain', 'custom_domain_verified_at',
+        'terms_accepted_at', 'terms_version',
     ];
 
     protected function casts(): array
@@ -48,6 +49,7 @@ class Tenant extends Model
             'suspended_at' => 'datetime',
             'last_activity_at' => 'datetime',
             'custom_domain_verified_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
             'health_score' => 'integer',
             'db_port' => 'integer',
             'trial_max_horses' => 'integer',

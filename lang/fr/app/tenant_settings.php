@@ -69,11 +69,11 @@ return [
         'helper' => [
             'custom_domain' => 'Saisissez par exemple « monecurie.fr » ou un sous-domaine « ecurie.entreprise.com ». Après enregistrement, ajoutez les enregistrements DNS — les instructions apparaîtront ci-dessous. La vérification du domaine est activée par le master admin après confirmation DNS.',
             'custom_domain_invalid' => 'Format de domaine invalide — uniquement des lettres minuscules, chiffres, points et tirets.',
-            'custom_domain_unverified' => 'Non vérifié — contactez support@hovera.app après avoir ajouté les enregistrements DNS.',
-            'custom_domain_plan_locked' => 'Le domaine personnalisé est disponible avec le plan Pro. Contactez support@hovera.app pour passer à un plan supérieur.',
+            'custom_domain_unverified' => 'Non vérifié — contactez office@hovera.app après avoir ajouté les enregistrements DNS.',
+            'custom_domain_plan_locked' => 'Le domaine personnalisé est disponible avec le plan Pro. Contactez office@hovera.app pour passer à un plan supérieur.',
             'dns_step_1' => '1. Dans l’interface de votre bureau d’enregistrement, ajoutez un enregistrement CNAME (ou A/ALIAS s’il s’agit du domaine racine) :',
             'dns_step_2' => '2. Ajoutez un enregistrement TXT pour vérifier la propriété du domaine :',
-            'dns_step_3' => '3. Une fois les enregistrements ajoutés, écrivez à support@hovera.app — nous vérifions le DNS et activons le domaine (généralement sous 24 h).',
+            'dns_step_3' => '3. Une fois les enregistrements ajoutés, écrivez à office@hovera.app — nous vérifions le DNS et activons le domaine (généralement sous 24 h).',
         ],
     ],
 

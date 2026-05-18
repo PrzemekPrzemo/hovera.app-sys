@@ -13,7 +13,7 @@
 
     <p class="mt-4 text-sm">
         {{ __('admin/back-office.suspended.contact') }}
-        <a href="mailto:support@hovera.app" class="text-primary-600 hover:underline">support@hovera.app</a>
+        <a href="mailto:office@hovera.app" class="text-primary-600 hover:underline">office@hovera.app</a>
     </p>
 
     <div class="mt-6 flex gap-2">

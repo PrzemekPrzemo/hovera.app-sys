@@ -30,4 +30,6 @@ return [
 
     'footer_cta_text' => 'Нужно перевезти лошадь? Отправьте запрос — отвечаем быстро.',
     'powered_by' => 'powered by hovera.app',
+
+    'disclaimer_intermediary' => 'Профиль обслуживается <strong>:transporter_name</strong>. Hovera — посредник маркетплейса (<a href="/regulamin-marketplace" target="_blank">регламент</a>), не выполняет перевозки и не является стороной договора.',
 ];
