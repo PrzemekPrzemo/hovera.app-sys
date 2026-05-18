@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models\Central;
 
 use App\Enums\TenantType;
+use App\Enums\VerificationStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -39,7 +40,7 @@ class Tenant extends Model
     {
         return [
             'type' => TenantType::class,
-            'verification_status' => \App\Enums\VerificationStatus::class,
+            'verification_status' => VerificationStatus::class,
             'verified_at' => 'datetime',
             'branding' => 'array',
             'settings' => 'array',
@@ -67,7 +68,7 @@ class Tenant extends Model
     public function isVerifiedTransporter(): bool
     {
         return $this->isTransporter()
-            && $this->verification_status instanceof \App\Enums\VerificationStatus
+            && $this->verification_status instanceof VerificationStatus
             && $this->verification_status->isVerified();
     }
 
@@ -165,6 +166,70 @@ class Tenant extends Model
     public function isUsable(): bool
     {
         return in_array($this->status, ['trialing', 'active', 'past_due'], true);
+    }
+
+    /**
+     * Uruchamia trial 1-miesięczny w momencie pozytywnej weryfikacji dokumentów
+     * przez master admin'a. Marketing spec (hovera.app/produkt/transport/):
+     * "1 miesiąc gratis NIE od signupu — od momentu pozytywnej weryfikacji
+     * dokumentów". Idempotentne — drugie wywołanie nie resetuje daty.
+     *
+     * Wywoływane z `TransporterResource::verify()` PO `verification_status=Verified`.
+     * Dla stable tenantów / niezweryfikowanych transporterów — no-op.
+     */
+    public function startTrialOnVerification(): void
+    {
+        if (! $this->isTransporter() || ! $this->isVerifiedTransporter()) {
+            return;
+        }
+
+        // Idempotentne — jeśli trial już ustawiony (np. ręcznie przez admin'a
+        // albo z legacy CreateTenant), nie nadpisujemy.
+        if ($this->trial_ends_at !== null) {
+            return;
+        }
+
+        $this->forceFill([
+            'trial_ends_at' => now()->addDays(30),
+            // Status `trialing` żeby `isUsable()` zwracał true i tenant
+            // mógł logować się do panelu.
+            'status' => $this->status === 'provisioning' ? 'trialing' : $this->status,
+        ])->save();
+    }
+
+    /**
+     * Czy ten tenant ma dostęp do modułu transportowego (kalkulator, oferty,
+     * leady, marketplace). Marketing spec: stables dostają moduł BEZPŁATNIE
+     * w ramach swojego planu Hovery (z wyjątkiem `free`); transporterzy
+     * potrzebują własnego planu transport_*.
+     *
+     * Wywoływane jako gate w `app/Filament/Transport/Pages/*` oraz w
+     * `PublicTransportInquiry` (formularz publiczny — bez gate).
+     */
+    public function canUseTransport(): bool
+    {
+        if (! $this->isUsable()) {
+            return false;
+        }
+
+        if ($this->isTransporter()) {
+            // Transporter musi mieć plan z `audience=transporter` (czyli
+            // transport_start / transport_pro / transport_business /
+            // transport_enterprise — albo legacy). Plan_id ≠ null wystarczy
+            // bo CreateTenant gwarantuje plan z audience=transporter.
+            return $this->plan_id !== null;
+        }
+
+        if ($this->isStable()) {
+            // Stable na planie free → upgrade required. Każdy inny stable
+            // plan (solo/stable/pro/enterprise) dostaje moduł transport
+            // w cenie swojego planu Hovery.
+            $code = (string) ($this->plan?->code ?? '');
+
+            return $code !== '' && $code !== 'free';
+        }
+
+        return false;
     }
 
     /**

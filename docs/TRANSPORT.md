@@ -44,7 +44,7 @@ Cel: **dwa rynki naraz, w tym samym ekosystemie.**
 | `tenants.type` | `stable` | `transporter` |
 | Panel Filament | `/app` | `/transport` |
 | Public page | `/s/{slug}` | `/t/{slug}` |
-| Plany Stripe | Starter / Pro / Multi | Solo / Pro / Fleet |
+| Plany Stripe | Starter / Pro / Multi | Start / Pro / Business / Enterprise (PLN/EUR/GBP/AUD/NZD) |
 | Główny resource | Horse, CalendarEntry | Vehicle, Quote, Lead |
 
 Jedna osoba może mieć **i stajnię, i firmę transportową** — multi-tenancy bez zmian,
@@ -89,7 +89,7 @@ migracyjnie mapowany 1:1 na `carrier_liability_insurance` (data fix —
 | # | Decyzja | Co to znaczy |
 |---|---|---|
 | **D1** | **Self-service trial** (jak stajnia) | Transporter rejestruje się sam, ma X dni triala, potem Stripe checkout. Bez kontaktu sprzedaży. |
-| **D2** | **3 plany wg liczby pojazdów** | `Solo` (1 pojazd) / `Pro` (do 5) / `Fleet` (unlimited). Wszystkie plany dają marketplace; różnice w limitach pojazdów + zaawansowane funkcje (np. multi-driver routing) na wyższych. |
+| **D2** | **4 plany wg skali firmy** | `Start` (250 PLN, 4 pojazdów / 4 kierowców) → `Pro` (549 PLN, 12 / 8) → `Business` (999 PLN, 25 / 15) → `Enterprise` (cena indywidualna, no limits). Plany **cumulative** (każdy wyższy zawiera wszystko z niższego). 5 walut: PLN (base) + EUR/GBP/AUD/NZD overlay. Source of truth: `hovera.app/produkt/transport/` (Astro `CarrierOnboarding.astro`). Lock-in 12 mc z gwarancją niezmienności, promocja do 2026-07-31. Patrz §15.4. |
 | **D3** | **Hybrid routing leadu** | Zamawiający wybiera: (a) direct do 1-3 ulubionych transporterów, (b) broadcast do wszystkich z obszaru. Szczegóły → §5. |
 | **D4** | **Migracja istniejącego klienta w całości** | Pojazdy, stawki, oferty, leady, płatności — wszystko jest importowane jednorazowym skryptem ze starej bazy MySQL. |
 | **D5** | **Publiczna mini-strona transportera** (`/t/{slug}`) | Profil marketingowy: logo, opis, obszar obsługi, pojazdy, kontakt, CTA „Zapytaj o ofertę". SEO-friendly. |
@@ -556,6 +556,7 @@ Status na 2026-05-18: faza 1–7 ✅ + post-MVP batch 1 ✅. Pozostają faza 8
 - [x] `DriverResource` (CRUD) — PR #191.
 - [x] Migracja `transport_*` tabel central + per-tenant — PR #192.
 - [x] Stripe products: Solo / Pro / Fleet + gating na `vehicles`/`drivers` count — PR #193.
+- [x] Plans seed updated to match marketing spec (Start/Pro/Business/Enterprise, 5 walut, 6 global add-ons) — see §15.5.
 
 ### Faza 2 — Calculator + Routing ✅ (PR #195–#198)
 
@@ -1097,7 +1098,71 @@ Każdy stan zawiera disclaimer:
 
 Disclaimer ten widoczny też w PDF (sekcja „Płatność") i w mailu („Jak zapłacić").
 
-### 15.4 Co świadomie pominięte (post-MVP)
+### 15.4 Plany & add-ony — source of truth
+
+Plany transportowe są w pełni opisane w **marketingowej specyfikacji**
+(`hovera.app/produkt/transport/` — komponent Astro `CarrierOnboarding.astro`).
+W tym repo trzymamy seedery i kontrolery zgodne 1:1. Każda zmiana w marketingu
+**musi** mieć PR w `hovera.app-sys` aktualizujący `TransportPlansSeeder`,
+`TransportAddonsSeeder` i (jeśli dotyczy struktury) odpowiednie migracje.
+
+**Kanoniczne kody w DB:**
+
+- `transport_start` — 250 PLN / 4 drivers / 4 vehicles / 100 quotes/mc.
+- `transport_pro` — 549 PLN / 8 / 12 / 500. **Most popular.**
+- `transport_business` — 999 PLN / 15 / 25 / unlimited quotes.
+- `transport_enterprise` — cena indywidualna (price_monthly_cents = 0,
+  `features.marketing_cta = 'contact_sales'`). Renderowany w `/pricing/transport`
+  jako CTA "Skontaktuj się" zamiast ceny.
+
+Legacy plany (`transport_solo`, `transport_pro` 349 PLN, `transport_fleet`)
+zostały zsoftbanowane via migrację `2026_05_18_220200_rename_legacy_transport_plans`
+(`*_legacy` suffix, `is_active=false`, `is_public=false`) żeby istniejące Stripe
+subskrypcje nie pękły. Master admin może przepiąć aktywnych klientów na nowe
+plany przez `PlanResource` w admin panelu.
+
+**Multi-currency:** `plans.prices_per_currency` JSON overlay dla EUR/GBP/AUD/NZD.
+Bazowa cena (PLN) w `price_monthly_cents`. Helper `Plan::priceFor($currency, $cycle)`
+zwraca cents lub `null` (Enterprise / nieznana waluta). 5 walut zafixowanych
+w `Plan::supportedCurrencies()`.
+
+**Trial flow:** marketing spec ("1 miesiąc gratis OD WERYFIKACJI, nie od signupu")
+zrealizowany jako:
+- `CreateTenant` ustawia `trial_ends_at = null` dla `TenantType::Transporter`
+  + status `provisioning`.
+- `TransporterResource::verify()` wywołuje `Tenant::startTrialOnVerification()`
+  który ustawia trial 30 dni + status `trialing`. Idempotentny.
+- Notyfikacja `TransporterVerifiedNotification` zawiera linię o aktywacji trialu.
+
+**Stables get transport free:** `Tenant::canUseTransport()` — stable na każdym
+planie ≠ `free` ma dostęp do modułu transport bez dodatkowych opłat (w ramach
+swojego planu Hovery). Free-plan stable musi upgradeować Stable plan żeby wejść
+w transport.
+
+**Add-ony (6 globalnych, `is_global=true`, `plan_id=NULL`):**
+
+| code | type | PLN |
+|---|---|---|
+| `migrate_excel` | one_time | 499 |
+| `migrate_system` | one_time | 1499 |
+| `onboarding_live` | one_time | 9,99 (sym.) |
+| `invoice_setup` | one_time | 299 |
+| `extra_driver` | recurring_monthly | 25/mc |
+| `extra_vehicle` | recurring_monthly | 35/mc |
+
+Każdy z `prices_per_currency` overlay (EUR/GBP/AUD/NZD). Add-ony stosują się
+do każdego planu — odpytujemy `PlanAddon::where('is_global', true)`.
+
+**Lock-in & promocja:** stawki obowiązują przy umowie min. 12 mc z gwarancją
+niezmienności ceny; promocja do 2026-07-31. Klauzule w `lang/pl/public/legal.php`
+sekcja 5 (Opłaty i płatności).
+
+**Stripe Price IDs:** seedery NIE ustawiają `stripe_price_*_id` — trzeba je
+uzupełnić ręcznie po stworzeniu produktów w Stripe Dashboard (komentarz w
+`TransportPlansSeeder` docblocku). Bez tego checkout Stripe nie odpali na
+nowych planach. **TODO przed produkcją.**
+
+### 15.5 Co świadomie pominięte (post-MVP)
 
 - **Stripe Connect API** (Express / Standard accounts) — pełna integracja
   z OAuth flow, encrypted credentials, server-side payment intents.

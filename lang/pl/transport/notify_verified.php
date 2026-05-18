@@ -7,6 +7,7 @@ return [
     'greeting' => 'Świetna wiadomość!',
     'intro' => 'Konto firmy :name zostało zatwierdzone przez zespół hovera.',
     'now_can' => 'Możesz teraz wystawiać oferty, faktury i otrzymywać zapytania z marketplace\'u.',
+    'trial_started' => 'Bezpłatny okres próbny (1 miesiąc) aktywuje się od dziś — pełna funkcjonalność wybranego planu bez opłat.',
     'verified_list_heading' => 'Zweryfikowane dokumenty:',
     'action' => 'Otwórz panel',
 ];

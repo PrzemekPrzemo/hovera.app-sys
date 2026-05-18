@@ -12,18 +12,24 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Tests\TestCase;
 
+/**
+ * Marketing spec sync (2026-05-18): 3 stare plany (Solo/Pro/Fleet)
+ * zastąpione 4 nowymi (Start/Pro/Business/Enterprise). Patrz
+ * docs/TRANSPORT.md §15.5 + hovera.app/produkt/transport/.
+ */
 class TransportPlansTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_seeder_creates_three_transport_plans(): void
+    public function test_seeder_creates_four_transport_plans(): void
     {
         TransportPlansSeeder::seed();
 
-        $this->assertSame(3, Plan::query()->forTransporters()->count());
-        $this->assertNotNull(Plan::query()->where('code', 'transport_solo')->first());
+        $this->assertSame(4, Plan::query()->forTransporters()->count());
+        $this->assertNotNull(Plan::query()->where('code', 'transport_start')->first());
         $this->assertNotNull(Plan::query()->where('code', 'transport_pro')->first());
-        $this->assertNotNull(Plan::query()->where('code', 'transport_fleet')->first());
+        $this->assertNotNull(Plan::query()->where('code', 'transport_business')->first());
+        $this->assertNotNull(Plan::query()->where('code', 'transport_enterprise')->first());
     }
 
     public function test_plan_audience_scopes_segregate_correctly(): void
@@ -45,13 +51,14 @@ class TransportPlansTest extends TestCase
         $this->assertSame(1, Plan::query()->forTransporters()->count());
     }
 
-    public function test_seeded_solo_plan_has_one_vehicle_limit(): void
+    public function test_seeded_start_plan_has_four_vehicle_limit(): void
     {
         TransportPlansSeeder::seed();
 
-        $solo = Plan::query()->where('code', 'transport_solo')->first();
-        $this->assertSame(1, $solo->limits['max_vehicles']);
-        $this->assertSame(['ors'], $solo->limits['routing_providers']);
+        $start = Plan::query()->where('code', 'transport_start')->first();
+        $this->assertSame(4, $start->limits['max_vehicles']);
+        $this->assertSame(4, $start->limits['max_drivers']);
+        $this->assertSame(['ors'], $start->limits['routing_providers']);
     }
 
     public function test_seeded_pro_plan_supports_mapbox(): void
@@ -59,23 +66,44 @@ class TransportPlansTest extends TestCase
         TransportPlansSeeder::seed();
 
         $pro = Plan::query()->where('code', 'transport_pro')->first();
-        $this->assertSame(5, $pro->limits['max_vehicles']);
+        $this->assertSame(12, $pro->limits['max_vehicles']);
         $this->assertContains('mapbox', $pro->limits['routing_providers']);
+        $this->assertSame('most_popular', data_get($pro->features, 'highlight'));
     }
 
-    public function test_seeded_fleet_plan_is_unlimited(): void
+    public function test_seeded_business_plan_unlocks_unlimited_quotes(): void
     {
         TransportPlansSeeder::seed();
 
-        $fleet = Plan::query()->where('code', 'transport_fleet')->first();
-        $this->assertSame(-1, $fleet->limits['max_vehicles']);
-        $this->assertContains('google', $fleet->limits['routing_providers']);
+        $business = Plan::query()->where('code', 'transport_business')->first();
+        $this->assertSame(25, $business->limits['max_vehicles']);
+        $this->assertSame(-1, $business->limits['max_quotes_per_month']);
+        $this->assertContains('google', $business->limits['routing_providers']);
+    }
+
+    public function test_seeded_enterprise_plan_is_unlimited_and_custom_priced(): void
+    {
+        TransportPlansSeeder::seed();
+
+        $enterprise = Plan::query()->where('code', 'transport_enterprise')->first();
+        $this->assertSame(-1, $enterprise->limits['max_vehicles']);
+        $this->assertSame(-1, $enterprise->limits['max_drivers']);
+        $this->assertTrue((bool) data_get($enterprise->features, 'is_custom_pricing'));
+        $this->assertSame('contact_sales', data_get($enterprise->features, 'marketing_cta'));
+    }
+
+    public function test_seeder_is_idempotent(): void
+    {
+        TransportPlansSeeder::seed();
+        TransportPlansSeeder::seed();
+
+        $this->assertSame(4, Plan::query()->forTransporters()->count());
     }
 
     public function test_effective_limits_include_vehicles_and_drivers(): void
     {
         TransportPlansSeeder::seed();
-        $plan = Plan::query()->where('code', 'transport_solo')->first();
+        $plan = Plan::query()->where('code', 'transport_start')->first();
 
         $tenant = new Tenant([
             'slug' => 'test-trans-'.uniqid(),
@@ -92,7 +120,7 @@ class TransportPlansTest extends TestCase
 
         $limits = $tenant->effectiveLimits();
 
-        $this->assertSame(1, $limits['max_vehicles']);
-        $this->assertSame(2, $limits['max_drivers']);
+        $this->assertSame(4, $limits['max_vehicles']);
+        $this->assertSame(4, $limits['max_drivers']);
     }
 }

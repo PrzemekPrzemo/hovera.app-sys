@@ -7,6 +7,7 @@ return [
     'greeting' => 'Great news!',
     'intro' => 'Company :name has been approved by the Hovera team.',
     'now_can' => 'You can now send quotes, issue invoices, and receive marketplace inquiries.',
+    'trial_started' => 'Your 1-month free trial activates today — full functionality of your selected plan, no charge.',
     'verified_list_heading' => 'Verified documents:',
     'action' => 'Open panel',
 ];
