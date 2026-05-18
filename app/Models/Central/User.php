@@ -74,7 +74,9 @@ class User extends Authenticatable implements FilamentUser
             // się zalogować (po PR #65 wszyscy logują się przez /app/login).
             // Master nie ma membership, ale powinien mieć access do panelu
             // klienta (np. żeby zobaczyć perspektywę stajni / debugować).
-            'app' => $this->is_master_admin || $this->activeMemberships()->exists(),
+            // /transport analogicznie — RequireTenantType middleware odbija
+            // niewłaściwy typ tenanta na właściwy panel.
+            'app', 'transport' => $this->is_master_admin || $this->activeMemberships()->exists(),
             default => false,
         };
     }

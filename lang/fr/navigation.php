@@ -13,6 +13,8 @@ return [
         'settings' => 'Paramètres',
         'reports' => 'Rapports',
         'tools' => 'Outils',
+        'fleet' => 'Flotte',
+        'dispatch' => 'Expéditions',
     ],
 
     // Resource labels

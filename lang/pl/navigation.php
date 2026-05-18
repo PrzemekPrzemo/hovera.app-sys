@@ -13,6 +13,9 @@ return [
         'settings' => 'Ustawienia',
         'reports' => 'Raporty',
         'tools' => 'Narzędzia',
+        // Transport module
+        'fleet' => 'Flota',
+        'dispatch' => 'Zlecenia',
     ],
 
     // Resource labels

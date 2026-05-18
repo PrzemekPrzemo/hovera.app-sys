@@ -12,6 +12,8 @@ return [
         'settings' => 'Settings',
         'reports' => 'Reports',
         'tools' => 'Tools',
+        'fleet' => 'Fleet',
+        'dispatch' => 'Dispatch',
     ],
 
     'tenants' => 'Stables',
