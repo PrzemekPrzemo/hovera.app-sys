@@ -1,0 +1,72 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Routing providers
+    |--------------------------------------------------------------------------
+    |
+    | Klucze API dla zewnętrznych dostawców routingu. Per-tenant override
+    | trzyma się w `transport_settings.routing_provider.api_key` (per-tenant DB).
+    | Plan-aware selection — patrz docs/TRANSPORT.md §7.
+    */
+
+    'providers' => [
+        'ors' => [
+            'api_key' => env('TRANSPORT_ORS_KEY', ''),
+            'timeout' => env('TRANSPORT_ORS_TIMEOUT', 15),
+        ],
+        'mapbox' => [
+            'access_token' => env('TRANSPORT_MAPBOX_TOKEN', ''),
+            'timeout' => env('TRANSPORT_MAPBOX_TIMEOUT', 15),
+        ],
+        'google' => [
+            'api_key' => env('TRANSPORT_GOOGLE_ROUTES_KEY', ''),
+            'timeout' => env('TRANSPORT_GOOGLE_TIMEOUT', 15),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Route cache
+    |--------------------------------------------------------------------------
+    | Cache obliczonych tras w `route_cache` (central DB). Trasa Warszawa→Poznań
+    | nie zmienia się z dnia na dzień — TTL 30 dni zbija koszty Google API.
+    */
+
+    'cache' => [
+        'route_ttl_days' => env('TRANSPORT_ROUTE_CACHE_TTL_DAYS', 30),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Voivodeship adjacency
+    |--------------------------------------------------------------------------
+    | Routing leadów w trybie BROADCAST: dispatcher wybiera transporterów z
+    | service_area pasującym do voivodeship leadu LUB sąsiednim. Patrz §5.4.
+    | Konsumowane przez `LeadDispatcher` (faza 6).
+    */
+
+    'voivodeship_adjacency' => [
+        'dolnośląskie' => ['lubuskie', 'wielkopolskie', 'opolskie'],
+        'kujawsko-pomorskie' => ['pomorskie', 'warmińsko-mazurskie', 'mazowieckie', 'łódzkie', 'wielkopolskie'],
+        'lubelskie' => ['podkarpackie', 'świętokrzyskie', 'mazowieckie', 'podlaskie'],
+        'lubuskie' => ['zachodniopomorskie', 'wielkopolskie', 'dolnośląskie'],
+        'łódzkie' => ['mazowieckie', 'świętokrzyskie', 'śląskie', 'opolskie', 'wielkopolskie', 'kujawsko-pomorskie'],
+        'małopolskie' => ['świętokrzyskie', 'podkarpackie', 'śląskie'],
+        'mazowieckie' => ['łódzkie', 'kujawsko-pomorskie', 'warmińsko-mazurskie', 'podlaskie', 'lubelskie', 'świętokrzyskie'],
+        'opolskie' => ['śląskie', 'łódzkie', 'wielkopolskie', 'dolnośląskie'],
+        'podkarpackie' => ['lubelskie', 'świętokrzyskie', 'małopolskie'],
+        'podlaskie' => ['warmińsko-mazurskie', 'mazowieckie', 'lubelskie'],
+        'pomorskie' => ['zachodniopomorskie', 'wielkopolskie', 'kujawsko-pomorskie', 'warmińsko-mazurskie'],
+        'śląskie' => ['opolskie', 'łódzkie', 'świętokrzyskie', 'małopolskie'],
+        'świętokrzyskie' => ['łódzkie', 'mazowieckie', 'lubelskie', 'podkarpackie', 'małopolskie', 'śląskie'],
+        'warmińsko-mazurskie' => ['pomorskie', 'kujawsko-pomorskie', 'mazowieckie', 'podlaskie'],
+        'wielkopolskie' => ['zachodniopomorskie', 'lubuskie', 'dolnośląskie', 'opolskie', 'łódzkie', 'kujawsko-pomorskie', 'pomorskie'],
+        'zachodniopomorskie' => ['pomorskie', 'wielkopolskie', 'lubuskie'],
+    ],
+
+];
