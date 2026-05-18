@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Public;
 
 use App\Models\Central\Tenant;
+use App\Models\Central\TransportReview;
 use App\Models\Central\TransportServiceArea;
 use App\Models\Tenant\Vehicle;
 use App\Tenancy\TenantManager;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
@@ -55,6 +57,18 @@ class TransporterProfileController extends Controller
             fn () => $this->loadServiceAreas($tenant),
         );
 
+        // Marketplace reviews — sekcja "Opinie klientów". Aggregate cached
+        // przez TransportReview::aggregateFor (10 min), busted po nowym
+        // submit'cie. Listę last-10 cache'ujemy razem z aggregate'em.
+        $reviewAggregate = TransportReview::aggregateFor($tenant);
+        $latestReviews = $reviewAggregate['count'] > 0
+            ? Cache::remember(
+                "public_transporter_reviews:{$slug}",
+                now()->addMinutes(10),
+                fn () => $this->loadLatestReviews($tenant),
+            )
+            : [];
+
         return response()->view('public.transport.profile', [
             'tenant' => $tenant,
             'primary_color' => $branding['primary_color'] ?? '#A8956B',
@@ -68,6 +82,8 @@ class TransporterProfileController extends Controller
             'website' => $publicProfile['website'] ?? null,
             'vehicles' => $vehicles,
             'service_areas' => $serviceAreas,
+            'review_aggregate' => $reviewAggregate,
+            'latest_reviews' => $latestReviews,
         ])->header('Cache-Control', 'public, max-age=60, s-maxage=300');
     }
 
@@ -139,6 +155,31 @@ class TransporterProfileController extends Controller
         } catch (\Throwable) {
             return [];
         }
+    }
+
+    /**
+     * Ostatnie 10 opublikowanych recenzji do sekcji "Opinie klientów".
+     * Redagowane imię/nazwisko + brak emaila — RODO data minimisation.
+     *
+     * @return list<array{rating:int, comment:?string, customer:string, submitted_at:?CarbonInterface, transporter_response:?string, transporter_responded_at:?CarbonInterface}>
+     */
+    private function loadLatestReviews(Tenant $tenant): array
+    {
+        return TransportReview::query()
+            ->where('transporter_tenant_id', $tenant->id)
+            ->published()
+            ->orderByDesc('submitted_at')
+            ->limit(10)
+            ->get()
+            ->map(fn (TransportReview $r): array => [
+                'rating' => (int) ($r->rating ?? 0),
+                'comment' => $r->comment,
+                'customer' => TransportReview::redactCustomerName($r->customer_name),
+                'submitted_at' => $r->submitted_at,
+                'transporter_response' => $r->transporter_response,
+                'transporter_responded_at' => $r->transporter_responded_at,
+            ])
+            ->all();
     }
 
     private function resolveTenant(string $slug): ?Tenant

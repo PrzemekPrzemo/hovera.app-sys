@@ -33,3 +33,13 @@ Schedule::command('hovera:demo:reset')
     ->dailyAt('22:00')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Transport reviews — magic-link invite 14 dni po preferred_date dla
+// zaakceptowanych ofert. Idempotent (unique key chroni przed double-send).
+// 09:00 Warsaw — rano, w godzinach roboczych zamawiającego. Patrz
+// docs/TRANSPORT.md §12.
+Schedule::command('transport:dispatch-review-invites')
+    ->dailyAt('09:00')
+    ->timezone('Europe/Warsaw')
+    ->withoutOverlapping()
+    ->onOneServer();

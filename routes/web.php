@@ -27,6 +27,7 @@ use App\Http\Controllers\Public\StripeWebhookController;
 use App\Http\Controllers\Public\TransporterOgImageController;
 use App\Http\Controllers\Public\TransporterProfileController;
 use App\Http\Controllers\Public\TransportInquiryController;
+use App\Http\Controllers\Public\TransportReviewController;
 use App\Http\Controllers\Tenant\BillingController;
 use App\Http\Controllers\Tenant\BugReportController;
 use App\Http\Controllers\Tenant\ImportTemplateController;
@@ -406,6 +407,28 @@ Route::middleware(['web'])
             // znaków psuć.
             ->where('lead', '[0-9A-Za-z]{26}')
             ->name('.thanks');
+    });
+
+/*
+ * Publiczny formularz recenzji marketplace'u — magic link bez autoryzacji.
+ * Invite generowany przez TransportReviewInviteService 14 dni po
+ * preferred_date dla zaakceptowanych ofert. Token (48 znaków, sha256
+ * w DB) jest jedyną poświadczeniową. POST throttle przeciwko
+ * brute-force / spam. Patrz docs/TRANSPORT.md §12.
+ */
+Route::middleware(['web'])
+    ->prefix('/transport/review')
+    ->name('public.transport.review.')
+    ->group(function () {
+        Route::get('/dziekujemy', [TransportReviewController::class, 'thanks'])->name('thanks');
+        Route::get('/wygasl', [TransportReviewController::class, 'expired'])->name('expired');
+        Route::get('/{token}', [TransportReviewController::class, 'show'])
+            ->where('token', '[A-Za-z0-9]{40,80}')
+            ->name('show');
+        Route::post('/{token}', [TransportReviewController::class, 'submit'])
+            ->where('token', '[A-Za-z0-9]{40,80}')
+            ->middleware('throttle:3,60')
+            ->name('submit');
     });
 
 /*

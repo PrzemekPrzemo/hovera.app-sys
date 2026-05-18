@@ -161,6 +161,45 @@ Tak — multi-tenancy. Tworzysz drugi tenant w `Ustawienia → Konto →
 Dodaj firmę`, wybierasz typ `Transporter`. Tenant switcher (góra
 ekranu) przełącza między nimi.
 
+## Jak dostać dobre opinie
+
+Po każdym zaakceptowanym transporcie klient dostaje od Hovery email
+14 dni po `preferred_date` z prośbą o opinię. To real-deal gate —
+anonimowi „użytkownicy" nie mogą wystawić Ci opinii, tylko klienci
+po realnym dealu. Jak zwiększyć szansę na 5 ★:
+
+1. **Komunikuj się.** Mail/SMS dzień przed transportem („Cześć, jutro
+   o 8:00 jesteśmy pod stajnią. Mateusz, kierowca, +48 ...") +
+   krótkie powiadomienie po załadunku i po dotarciu. Klient wie co
+   się dzieje = spokojniejszy.
+2. **Pojazd czysty, kierowca w firmowej koszulce.** Drobiazgi
+   wizerunkowe robią różnicę między 4 ★ a 5 ★.
+3. **Punktualność > wszystko.** Spóźnienie 30 min = -1 ★ średnio.
+   Jeśli wiesz że się spóźnisz, zadzwoń **przed** terminem,
+   nie po.
+4. **Po transporcie:** krótki SMS „Dotarliśmy bezpiecznie, dzięki
+   za zaufanie. Za ~14 dni dostaniesz od Hovery prośbę o opinię —
+   będziemy wdzięczni za parę słów" zwiększa response rate
+   o ~40%.
+
+**Co zrobić z negatywną opinią?**
+
+- Najpierw **odpowiedz publicznie** w panelu „Opinie klientów"
+  (akcja „Odpowiedz publicznie"). Profesjonalna, krótka odpowiedź
+  („Dziękujemy za feedback, wzięliśmy to do siebie — od teraz...")
+  działa lepiej niż brak reakcji. Nawet 1 ★ z dobrą odpowiedzią
+  buduje zaufanie.
+- Tylko gdy opinia jest **fake / zniesławiająca / pomyłka**
+  (np. opinia o innej firmie), użyj „Zgłoś do moderacji". Zespół
+  Hovery zweryfikuje i zdecyduje. **Nie używaj** tej akcji jako
+  „bo mi się nie podoba" — opinia wróci do publikacji, a Ty
+  stracisz wiarygodność.
+
+**Link do opinii** działa 30 dni, jednorazowo. Profil `/t/{slug}`
+pokazuje średnią + ostatnich 10 opinii. Możesz też udostępniać
+link do profilu (Facebook, Google My Business, wizytówki) — opinie
+realne, niewykasowalne przez transportera, dodają wiarygodności.
+
 ## Wsparcie
 
 - **Email supportu:** `support@hovera.app` (czas reakcji: 1 dzień
