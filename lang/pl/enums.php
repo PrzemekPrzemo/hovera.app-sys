@@ -8,6 +8,15 @@ return [
         'transporter' => 'Firma transportowa',
     ],
 
+    'quote_status' => [
+        'draft' => 'Szkic',
+        'sent' => 'Wysłana',
+        'accepted' => 'Zaakceptowana',
+        'rejected' => 'Odrzucona',
+        'expired' => 'Wygasła',
+        'withdrawn' => 'Wycofana',
+    ],
+
     'boarding_frequency' => [
         'daily' => 'Dziennie',
         'monthly' => 'Miesięcznie',
