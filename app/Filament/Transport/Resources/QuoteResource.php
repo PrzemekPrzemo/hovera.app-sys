@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Filament\Transport\Resources;
 
+use App\Domain\Transport\Notifications\QuoteSentNotification;
 use App\Domain\Transport\Quotes\QuoteNumberGenerator;
+use App\Domain\Transport\Quotes\QuotePdfGenerator;
 use App\Enums\QuoteStatus;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Filament\Transport\Resources\QuoteResource\Pages;
@@ -22,6 +24,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\Str;
 
 class QuoteResource extends Resource
@@ -292,6 +296,11 @@ class QuoteResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                Tables\Actions\Action::make('downloadPdf')
+                    ->label(__('transport/quote.action.download_pdf'))
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->action(fn (Quote $q) => self::downloadPdf($q)),
                 Tables\Actions\Action::make('send')
                     ->label(__('transport/quote.action.send'))
                     ->icon('heroicon-o-paper-airplane')
@@ -334,15 +343,54 @@ class QuoteResource extends Resource
             'accept_token' => $quote->accept_token ?: Str::random(48),
         ])->save();
 
+        $emailed = false;
+        if ($quote->customer_email) {
+            try {
+                NotificationFacade::route('mail', $quote->customer_email)
+                    ->notify(new QuoteSentNotification($quote));
+                $emailed = true;
+            } catch (\Throwable $e) {
+                report($e);
+                Notification::make()
+                    ->warning()
+                    ->title(__('transport/quote.notify.sent_no_email'))
+                    ->body($e->getMessage())
+                    ->send();
+            }
+        }
+
         app(TenantAuditLogger::class)->record('quote.send', 'Quote', (string) $quote->id, [
             'number' => $quote->number,
+            'emailed' => $emailed,
         ]);
 
-        Notification::make()
-            ->success()
-            ->title(__('transport/quote.notify.sent'))
-            ->body($quote->number)
-            ->send();
+        if ($emailed) {
+            Notification::make()
+                ->success()
+                ->title(__('transport/quote.notify.sent'))
+                ->body(__('transport/quote.notify.sent_body', [
+                    'number' => $quote->number,
+                    'email' => $quote->customer_email,
+                ]))
+                ->send();
+        } elseif (! $quote->customer_email) {
+            Notification::make()
+                ->info()
+                ->title(__('transport/quote.notify.sent'))
+                ->body(__('transport/quote.notify.sent_no_customer_email', ['number' => $quote->number]))
+                ->send();
+        }
+    }
+
+    public static function downloadPdf(Quote $quote): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $pdf = app(QuotePdfGenerator::class)->generate($quote);
+
+        return response()->streamDownload(
+            callback: fn () => print($pdf),
+            name: $quote->number.'.pdf',
+            headers: ['Content-Type' => 'application/pdf'],
+        );
     }
 
     public static function withdrawQuote(Quote $quote): void

@@ -97,6 +97,27 @@ return [
             ],
         ],
 
+        // Dedykowany mailer dla powiadomień modułu transportu (oferty do
+        // klientów, dispatcher do kierowców) — osobne creds + osobny
+        // From, żeby separacja reputacji domeny. Patrz docs/TRANSPORT.md §6.
+        //
+        // UWAGA na podwójną semantykę słowa 'transport':
+        //   - klucz tablicy 'transport' = nazwa mailera (Mail::mailer('transport'))
+        //   - klucz wewnętrzny 'transport' = nazwa drivera (smtp/ses/...)
+        'transport' => [
+            'transport' => env('TRANSPORT_MAIL_DRIVER', 'smtp'),
+            'host' => env('TRANSPORT_MAIL_HOST'),
+            'port' => env('TRANSPORT_MAIL_PORT', 587),
+            'username' => env('TRANSPORT_MAIL_USERNAME'),
+            'password' => env('TRANSPORT_MAIL_PASSWORD'),
+            'encryption' => env('TRANSPORT_MAIL_ENCRYPTION', 'tls'),
+            'timeout' => null,
+            'from' => [
+                'address' => env('TRANSPORT_MAIL_FROM_ADDRESS', 'transport@hovera.app'),
+                'name' => env('TRANSPORT_MAIL_FROM_NAME', 'Hovera Transport'),
+            ],
+        ],
+
     ],
 
     /*

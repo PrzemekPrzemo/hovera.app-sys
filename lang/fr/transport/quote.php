@@ -67,10 +67,14 @@ return [
     'action' => [
         'send' => 'Envoyer au client',
         'withdraw' => 'Retirer le devis',
+        'download_pdf' => 'Télécharger le PDF',
     ],
 
     'notify' => [
         'sent' => 'Devis envoyé',
+        'sent_body' => 'Devis :number envoyé à :email avec le PDF en pièce jointe.',
+        'sent_no_email' => 'Devis enregistré mais email non envoyé — vérifiez la configuration SMTP "transport".',
+        'sent_no_customer_email' => 'Devis :number prêt (pas d’email client — téléchargez le PDF et envoyez manuellement).',
         'withdrawn' => 'Devis retiré',
     ],
 ];

@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'title' => 'Oferta transportowa :number',
+    'number_label' => 'OFERTA NR',
+    'issued' => 'Wystawiona',
+    'valid_until' => 'Ważna do',
+
+    'heading' => 'Oferta transportu koni',
+    'subtitle' => 'Wycena obowiązuje na podany termin oraz w okresie ważności.',
+
+    'section' => [
+        'customer' => 'Klient',
+        'route' => 'Trasa',
+        'pricing' => 'Wycena',
+        'terms' => 'Warunki',
+    ],
+
+    'label' => [
+        'name' => 'Imię i nazwisko',
+        'company' => 'Firma',
+        'tax_id' => 'NIP',
+        'email' => 'E-mail',
+        'phone' => 'Telefon',
+        'address' => 'Adres',
+        'from' => 'Skąd',
+        'to' => 'Dokąd',
+        'date' => 'Data',
+        'distance' => 'Dystans',
+        'duration' => 'Czas przejazdu',
+        'round_trip' => 'Z powrotem',
+        'component' => 'Pozycja',
+        'amount' => 'Kwota',
+        'base_cost' => 'Koszt podstawowy',
+        'fuel_surcharge' => 'Dopłata paliwowa',
+        'minimum_adjustment' => 'Dobór do opłaty minimalnej',
+        'net_total' => 'Razem netto',
+        'vat' => 'VAT (:rate%)',
+        'gross_total' => 'Razem brutto',
+    ],
+
+    'value' => [
+        'yes' => 'Tak',
+        'no' => 'Nie',
+    ],
+
+    'footer' => [
+        'generated' => 'Dokument wygenerowany przez :app',
+    ],
+];

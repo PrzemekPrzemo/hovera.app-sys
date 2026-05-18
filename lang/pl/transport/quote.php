@@ -67,10 +67,14 @@ return [
     'action' => [
         'send' => 'Wyślij do klienta',
         'withdraw' => 'Wycofaj ofertę',
+        'download_pdf' => 'Pobierz PDF',
     ],
 
     'notify' => [
         'sent' => 'Oferta wysłana',
+        'sent_body' => 'Oferta :number wysłana na :email z PDFem w załączniku.',
+        'sent_no_email' => 'Oferta zapisana, ale email nie poszedł — sprawdź konfigurację SMTP "transport".',
+        'sent_no_customer_email' => 'Oferta :number gotowa do wysyłki (klient nie ma maila — pobierz PDF i wyślij ręcznie).',
         'withdrawn' => 'Oferta wycofana',
     ],
 ];

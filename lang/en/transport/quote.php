@@ -67,10 +67,14 @@ return [
     'action' => [
         'send' => 'Send to customer',
         'withdraw' => 'Withdraw quote',
+        'download_pdf' => 'Download PDF',
     ],
 
     'notify' => [
         'sent' => 'Quote sent',
+        'sent_body' => 'Quote :number sent to :email with PDF attached.',
+        'sent_no_email' => 'Quote saved but email did not send — check "transport" SMTP config.',
+        'sent_no_customer_email' => 'Quote :number ready (no customer email — download PDF and send manually).',
         'withdrawn' => 'Quote withdrawn',
     ],
 ];
