@@ -7,7 +7,9 @@ namespace App\Services\Billing;
 use App\Exceptions\PlanLimitExceeded;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\Client;
+use App\Models\Tenant\Driver;
 use App\Models\Tenant\Horse;
+use App\Models\Tenant\Vehicle;
 
 /**
  * Centralny enforcement limitów planu — używamy tego z Filament
@@ -48,6 +50,32 @@ class PlanLimitChecker
         $current = Client::query()->count();
         if ($current >= $limit) {
             throw PlanLimitExceeded::clients($limit);
+        }
+    }
+
+    public function assertCanAddVehicle(Tenant $tenant): void
+    {
+        $limit = $tenant->effectiveLimits()['max_vehicles'] ?? 0;
+        if ($limit < 0) {
+            return;
+        }
+
+        $current = Vehicle::query()->count();
+        if ($current >= $limit) {
+            throw PlanLimitExceeded::vehicles($limit);
+        }
+    }
+
+    public function assertCanAddDriver(Tenant $tenant): void
+    {
+        $limit = $tenant->effectiveLimits()['max_drivers'] ?? 0;
+        if ($limit < 0) {
+            return;
+        }
+
+        $current = Driver::query()->count();
+        if ($current >= $limit) {
+            throw PlanLimitExceeded::drivers($limit);
         }
     }
 }

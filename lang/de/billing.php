@@ -64,6 +64,8 @@ return [
         'title' => 'Tariflimit erreicht',
         'horses_exceeded' => 'Testphase: Limit :limit Pferde — wählen Sie einen Tarif, um weitere hinzuzufügen.',
         'clients_exceeded' => 'Testphase: Limit :limit Kunden — wählen Sie einen Tarif, um weitere hinzuzufügen.',
+        'vehicles_exceeded' => 'Limit von :limit Fahrzeugen im aktuellen Tarif — upgraden, um weitere hinzuzufügen.',
+        'drivers_exceeded' => 'Limit von :limit Fahrern im aktuellen Tarif — upgraden, um weitere hinzuzufügen.',
     ],
     'onboarding_fee' => [
         'label' => 'Einrichtungsgebühr — Tarif :plan',

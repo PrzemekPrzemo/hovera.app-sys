@@ -43,6 +43,24 @@ class PlanLimitExceeded extends RuntimeException
         );
     }
 
+    public static function vehicles(int $limit): self
+    {
+        return new self(
+            message: __('billing.limits.vehicles_exceeded', ['limit' => $limit]),
+            resource: 'vehicle',
+            limit: $limit,
+        );
+    }
+
+    public static function drivers(int $limit): self
+    {
+        return new self(
+            message: __('billing.limits.drivers_exceeded', ['limit' => $limit]),
+            resource: 'driver',
+            limit: $limit,
+        );
+    }
+
     /**
      * Filament hook — gdy wyjątek poleci z resource action, pokaż
      * notification i abortuj akcję halt'em (Filament konwencja).

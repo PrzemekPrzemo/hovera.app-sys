@@ -169,14 +169,14 @@ class Tenant extends Model
     }
 
     /**
-     * Aktualne limity planu z poprawką na trial — stajnia w trialu
-     * ma WSZYSTKIE feature'y planu Pro, ale konie i klienci są przycięte
-     * do `trial_max_horses` / `trial_max_clients`. Po flipie statusu na
-     * `active` (Stripe webhook), limity przepadają i schodzimy do pełnej
-     * tabeli z `plan->limits`.
+     * Aktualne limity planu z poprawką na trial — tenant w trialu
+     * ma WSZYSTKIE feature'y wybranego planu, ale konie/pojazdy/klienci
+     * są przycięte do trial_*. Po flipie statusu na `active` (Stripe
+     * webhook), limity przepadają i schodzimy do pełnej tabeli z `plan->limits`.
      *
      * Zwraca tablicę z kluczami:
      *   - max_horses, max_clients, max_users, max_storage_mb
+     *   - max_vehicles, max_drivers (transporter)
      * `-1` traktowane jako unlimited (jak w PlansSeeder).
      *
      * @return array<string,int>
@@ -190,6 +190,8 @@ class Tenant extends Model
             'max_clients' => (int) ($planLimits['max_clients'] ?? 0),
             'max_users' => (int) ($planLimits['max_users'] ?? 0),
             'max_storage_mb' => (int) ($planLimits['max_storage_mb'] ?? 0),
+            'max_vehicles' => (int) ($planLimits['max_vehicles'] ?? 0),
+            'max_drivers' => (int) ($planLimits['max_drivers'] ?? 0),
         ];
 
         if ($this->status !== 'trialing') {
