@@ -72,6 +72,32 @@ class MapboxGeocoder
             displayName: (string) ($feature['place_name'] ?? $query),
             coords: new Coords((float) $lat, (float) $lng),
             countryCode: $countryCode,
+            voivodeship: $this->extractVoivodeship($feature),
         );
+    }
+
+    /**
+     * Mapbox feature ma `context` array — region (voivodeship) jest jednym
+     * z elementów z `id` zaczynającym się od "region.". Dla PL Mapbox zwraca
+     * nazwę polską (np. "Mazowieckie"). Lowercase'ujemy żeby pasowało do
+     * config('transport.voivodeship_adjacency') keys i transport_service_areas.
+     */
+    private function extractVoivodeship(array $feature): ?string
+    {
+        $context = $feature['context'] ?? [];
+        if (! is_array($context)) {
+            return null;
+        }
+
+        foreach ($context as $entry) {
+            $id = (string) ($entry['id'] ?? '');
+            if (str_starts_with($id, 'region.')) {
+                $text = (string) ($entry['text_pl'] ?? $entry['text'] ?? '');
+
+                return $text !== '' ? mb_strtolower($text) : null;
+            }
+        }
+
+        return null;
     }
 }
