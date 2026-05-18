@@ -6,12 +6,16 @@
     <title>{{ $tenant->name }} — {{ __('public/transporter_profile.title_suffix') }}</title>
     <meta name="description" content="{{ $description ? \Illuminate\Support\Str::limit(strip_tags($description), 155) : __('public/transporter_profile.meta_description_fallback', ['name' => $tenant->name]) }}">
     <meta property="og:title" content="{{ $tenant->name }}">
-    @if ($logo_url)
-        <meta property="og:image" content="{{ $logo_url }}">
-    @endif
-    @if ($hero_image_url)
-        <meta property="og:image" content="{{ $hero_image_url }}">
-    @endif
+    {{-- Pre-rendered 1200x630 PNG OG image — branded social-share card.
+         Generowane on-demand przez TransporterOgImageController + cache na
+         storage/app/public/og-images/transporter/{slug}.png. Wcześniejszy
+         logo_url/hero_image_url były za małe (max 220px) dla unfurl'i. --}}
+    <meta property="og:image" content="{{ route('public.transporter.og_image', ['slug' => $tenant->slug]) }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ route('public.transporter.og_image', ['slug' => $tenant->slug]) }}">
     <link rel="icon" href="{{ asset('favicon.svg') }}">
     <style>
         :root { --primary: {{ $primary_color }}; --bg: #F7F4EF; --text: #1F1A17; --muted: #6b7280; --border: #d4cdb8; --card: #fff; }
