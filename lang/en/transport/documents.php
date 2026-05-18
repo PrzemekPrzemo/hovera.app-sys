@@ -50,4 +50,42 @@ return [
     'footer' => [
         'allowed_formats' => 'Accepted: PDF, JPG, PNG. Maximum 10 MB per file. All files stored in encrypted EU storage.',
     ],
+
+    'section' => [
+        'pwl_required' => 'PWL documents (required for verification)',
+        'pwl_optional' => 'Optional documents',
+        'legacy' => 'Legacy documents (do not count toward PWL)',
+    ],
+
+    'helper' => [
+        'pwl_authorization_choice' => 'Choose Type 1 OR Type 2 — depending on your transport profile. Type 2 (> 8h) also covers Type 1.',
+        'pwl_vehicle_per_vehicle' => 'Issued per vehicle. If you operate a fleet, upload a merged PDF covering all vehicles.',
+        'wash_log_period' => 'Keep up to date — entries older than 12 months are treated as outdated.',
+    ],
+
+    'checklist' => [
+        'heading' => 'PWL required documents checklist',
+        'progress' => ':done of :total documents verified',
+        'missing_intro' => 'Missing:',
+        'all_complete' => 'All required documents verified.',
+        'pwl_authorization_alternative' => 'PWL authorization (Type 1 OR Type 2)',
+    ],
+
+    'admin' => [
+        'verify_doc' => 'Approve document',
+        'reject_doc' => 'Reject document',
+        'verify_doc_confirm' => 'Approve this document? Once approved, the transporter can no longer delete it.',
+        'rejection_reason_required' => 'Rejection reason (visible to the transporter)',
+        'notify_doc_verified' => 'Document approved',
+        'notify_doc_rejected' => 'Document rejected',
+        'cannot_verify_tenant' => 'First verify all required PWL documents (:done/:total). See the checklist below.',
+    ],
+
+    'expiry_notify' => [
+        'subject' => 'Document :type expires in :days days',
+        'greeting' => 'Hi,',
+        'intro' => 'The document ":type" for company :name expires on :date (in :days days).',
+        'cta' => 'Upload a new one in the panel — otherwise your account may be temporarily suspended on the expiry date.',
+        'action' => 'Open documents',
+    ],
 ];

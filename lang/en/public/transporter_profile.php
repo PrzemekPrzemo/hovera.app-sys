@@ -32,4 +32,8 @@ return [
     'powered_by' => 'powered by hovera.app',
 
     'disclaimer_intermediary' => 'Profile operated by <strong>:transporter_name</strong>. Hovera = marketplace intermediary (<a href="/regulamin-marketplace" target="_blank">terms</a>) — does not perform transports, not a party to the transport contract.',
+
+    'verified_badge_label' => 'Verified by Hovera',
+    'verified_badge_tooltip' => 'Hovera verified the validity of: road carrier profession license, PWL T1/T2 authorization, driver and handler certificates, vehicle approval certificate, washing/disinfection log and carrier liability insurance. Hovera verified the documents — it does NOT take responsibility for the actual execution of the transport (see marketplace terms).',
+    'verified_badge_link_label' => 'marketplace terms',
 ];

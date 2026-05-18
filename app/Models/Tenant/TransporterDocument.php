@@ -24,6 +24,7 @@ class TransporterDocument extends TenantModel
         'file_path', 'file_size', 'file_mime', 'original_filename',
         'expires_at', 'issued_at',
         'verified_by_user_id', 'verified_at', 'rejection_reason',
+        'expiry_notified_at',
         'notes',
     ];
 
@@ -34,6 +35,7 @@ class TransporterDocument extends TenantModel
             'expires_at' => 'date',
             'issued_at' => 'date',
             'verified_at' => 'datetime',
+            'expiry_notified_at' => 'datetime',
             'file_size' => 'integer',
         ];
     }

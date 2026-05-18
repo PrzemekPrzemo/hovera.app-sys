@@ -17,9 +17,15 @@ class TransporterVerifiedNotification extends Notification
 {
     use Queueable;
 
+    /**
+     * @param  list<string>  $verifiedDocuments  Lista etykiet zweryfikowanych
+     *                                           dokumentów (PL/EN/...). Wstrzykiwane
+     *                                           przez TransporterResource::verify.
+     */
     public function __construct(
         public readonly Tenant $tenant,
         public readonly string $notes = '',
+        public readonly array $verifiedDocuments = [],
     ) {}
 
     /** @return array<int, string> */
@@ -37,6 +43,13 @@ class TransporterVerifiedNotification extends Notification
             ->greeting(__('transport/notify_verified.greeting'))
             ->line(__('transport/notify_verified.intro', ['name' => $this->tenant->name]))
             ->line(__('transport/notify_verified.now_can'));
+
+        if (! empty($this->verifiedDocuments)) {
+            $message->line(__('transport/notify_verified.verified_list_heading'));
+            foreach ($this->verifiedDocuments as $label) {
+                $message->line('• '.$label);
+            }
+        }
 
         if ($this->notes !== '') {
             $message->line('"'.$this->notes.'"');

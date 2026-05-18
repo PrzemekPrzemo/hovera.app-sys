@@ -61,4 +61,15 @@ return [
         'rejected' => 'Аккаунт отклонён',
         'rejected_body' => 'Компания :name отклонена. Они получили письмо с причиной.',
     ],
+
+    // @todo native review.
+    'documents' => [
+        'title' => 'Документы верификации',
+        'column' => [
+            'type' => 'Тип документа',
+            'status' => 'Статус',
+            'filename' => 'Файл',
+            'uploaded_at' => 'Загружено',
+        ],
+    ],
 ];

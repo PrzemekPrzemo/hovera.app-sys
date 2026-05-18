@@ -7,5 +7,6 @@ return [
     'greeting' => 'Gute Nachricht!',
     'intro' => 'Das Unternehmen :name wurde vom Hovera-Team freigegeben.',
     'now_can' => 'Sie können nun Angebote versenden, Rechnungen ausstellen und Marktplatzanfragen erhalten.',
+    'verified_list_heading' => 'Freigegebene Dokumente:',
     'action' => 'Panel öffnen',
 ];

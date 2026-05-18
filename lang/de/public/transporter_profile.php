@@ -32,4 +32,9 @@ return [
     'powered_by' => 'powered by hovera.app',
 
     'disclaimer_intermediary' => 'Profil betrieben von <strong>:transporter_name</strong>. Hovera = Marketplace-Vermittler (<a href="/regulamin-marketplace" target="_blank">Ordnung</a>) — führt keine Transporte durch, keine Vertragspartei.',
+
+    // @todo native review — maschinell übersetzt aus PL/EN.
+    'verified_badge_label' => 'Von Hovera verifiziert',
+    'verified_badge_tooltip' => 'Hovera hat die Gültigkeit folgender Dokumente verifiziert: Genehmigung zum Kraftverkehrsunternehmer-Beruf, PWL-Genehmigung T1/T2, Kompetenznachweise für Fahrer/Tierbetreuer, Zulassungszertifikat des Transportmittels, Wasch-/Desinfektionsbuch und Frachtführer-Haftpflicht. Hovera hat die Dokumente verifiziert — übernimmt aber KEINE Verantwortung für die tatsächliche Durchführung des Transports (siehe Marketplace-Bedingungen).',
+    'verified_badge_link_label' => 'Marketplace-Bedingungen',
 ];

@@ -6,6 +6,7 @@ return [
     'subject' => 'Your Hovera account needs corrections',
     'greeting' => 'Hi,',
     'intro' => 'After reviewing the documents, company :name was not approved. Reason:',
+    'failed_list_heading' => 'Documents that failed verification:',
     'next_steps' => 'Upload corrected documents in your panel — the Hovera team will re-check after upload.',
     'action' => 'Open documents',
 ];

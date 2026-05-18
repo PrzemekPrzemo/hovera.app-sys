@@ -61,4 +61,15 @@ return [
         'rejected' => 'Konto abgelehnt',
         'rejected_body' => 'Unternehmen :name abgelehnt. Es erhielt eine E-Mail mit der Begründung.',
     ],
+
+    // @todo native review.
+    'documents' => [
+        'title' => 'Verifizierungsdokumente',
+        'column' => [
+            'type' => 'Dokumenttyp',
+            'status' => 'Status',
+            'filename' => 'Datei',
+            'uploaded_at' => 'Hochgeladen',
+        ],
+    ],
 ];

@@ -9,6 +9,7 @@ use App\Enums\VerificationStatus;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\TransporterDocument;
 use App\Tenancy\TenantManager;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -166,19 +167,89 @@ class DocumentUploadService
         $tenant->forceFill(['verification_status' => VerificationStatus::Pending])->save();
     }
 
+    /**
+     * Reguła weryfikacji PWL: wszystkie typy `isRequiredForPwlVerification()`
+     * muszą być wgrane w status pending/verified, z wyjątkiem pary T1/T2
+     * — która jest alternatywą (transporter wybiera dokładnie jeden zależnie
+     * od profilu transportów, < 8h vs > 8h). KRS/CEIDG jest legacy-required
+     * przez `isRequired()` (zachowane dla wstecznej kompatybilności).
+     */
     public function hasAllRequired(): bool
     {
-        foreach (TransporterDocumentType::requiredCases() as $type) {
-            $exists = TransporterDocument::query()
-                ->where('document_type', $type->value)
-                ->whereIn('status', [TransporterDocument::STATUS_PENDING, TransporterDocument::STATUS_VERIFIED])
-                ->exists();
-            if (! $exists) {
+        // KRS / CEIDG — legacy required (część `requiredCases()`).
+        if (! $this->hasDocumentOfType(TransporterDocumentType::CompanyRegistration)) {
+            return false;
+        }
+
+        // PWL: każdy typ poza T1/T2.
+        foreach (TransporterDocumentType::pwlRequiredCases() as $type) {
+            if (in_array($type, [
+                TransporterDocumentType::PwlAuthorizationT1,
+                TransporterDocumentType::PwlAuthorizationT2,
+            ], true)) {
+                continue;
+            }
+            if (! $this->hasDocumentOfType($type)) {
                 return false;
             }
         }
 
-        return true;
+        // T1 albo T2 — co najmniej jeden.
+        return $this->hasPwlAuthorization();
+    }
+
+    /**
+     * Czy transporter ma wgrane co najmniej jedno z autoryzacji PWL T1/T2.
+     */
+    public function hasPwlAuthorization(): bool
+    {
+        return $this->hasDocumentOfType(TransporterDocumentType::PwlAuthorizationT1)
+            || $this->hasDocumentOfType(TransporterDocumentType::PwlAuthorizationT2);
+    }
+
+    /**
+     * Czy wszystkie wymagane PWL dokumenty są STATUS_VERIFIED (nie tylko wgrane).
+     * Używane przez master admin'a — blokuje verify tenanta dopóki nie ma
+     * pełnego zatwierdzonego kompletu.
+     */
+    public function hasAllRequiredVerified(): bool
+    {
+        // KRS / CEIDG
+        if (! $this->hasVerifiedDocumentOfType(TransporterDocumentType::CompanyRegistration)) {
+            return false;
+        }
+
+        foreach (TransporterDocumentType::pwlRequiredCases() as $type) {
+            if (in_array($type, [
+                TransporterDocumentType::PwlAuthorizationT1,
+                TransporterDocumentType::PwlAuthorizationT2,
+            ], true)) {
+                continue;
+            }
+            if (! $this->hasVerifiedDocumentOfType($type)) {
+                return false;
+            }
+        }
+
+        // T1 lub T2 musi być verified
+        return $this->hasVerifiedDocumentOfType(TransporterDocumentType::PwlAuthorizationT1)
+            || $this->hasVerifiedDocumentOfType(TransporterDocumentType::PwlAuthorizationT2);
+    }
+
+    private function hasDocumentOfType(TransporterDocumentType $type): bool
+    {
+        return TransporterDocument::query()
+            ->where('document_type', $type->value)
+            ->whereIn('status', [TransporterDocument::STATUS_PENDING, TransporterDocument::STATUS_VERIFIED])
+            ->exists();
+    }
+
+    private function hasVerifiedDocumentOfType(TransporterDocumentType $type): bool
+    {
+        return TransporterDocument::query()
+            ->where('document_type', $type->value)
+            ->where('status', TransporterDocument::STATUS_VERIFIED)
+            ->exists();
     }
 
     private function assertAllowed(UploadedFile $file): void
@@ -195,7 +266,7 @@ class DocumentUploadService
         }
     }
 
-    private function disk(): \Illuminate\Contracts\Filesystem\Filesystem
+    private function disk(): Filesystem
     {
         return Storage::disk((string) config('transport.documents.disk', 'local'));
     }

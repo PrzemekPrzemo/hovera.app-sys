@@ -34,4 +34,10 @@ return [
     // Pod stopką profilu — sygnał że za profilem stoi transporter, Hovera = marketplace.
     // Klikalny link do regulaminu marketplace; :transporter_name = nazwa firmy (escaped przed wstawieniem).
     'disclaimer_intermediary' => 'Profil obsługiwany przez <strong>:transporter_name</strong>. Hovera = pośrednik marketplace (<a href="/regulamin-marketplace" target="_blank">regulamin</a>) — nie wykonuje transportów, nie jest stroną umowy przewozu.',
+
+    // Badge „Zweryfikowany przez Hovera" — widoczny tylko gdy Tenant::isVerifiedTransporter() === true.
+    // Hover/tooltip rozwija pełną listę zweryfikowanych dokumentów + link do §12 regulaminu marketplace.
+    'verified_badge_label' => 'Zweryfikowany przez Hovera',
+    'verified_badge_tooltip' => 'Hovera zweryfikowała aktualność: zezwolenia na zawód przewoźnika drogowego, PWL T1/T2, świadectw kierowców, świadectwa pojazdu, książki mycia i OC. Hovera dokonała weryfikacji dokumentów — NIE odpowiada za faktyczną realizację transportu (patrz regulamin marketplace).',
+    'verified_badge_link_label' => 'regulamin marketplace',
 ];

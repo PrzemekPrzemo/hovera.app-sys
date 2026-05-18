@@ -54,6 +54,14 @@
         .footer-cta .cta { background: var(--primary); color: #fff; }
         .powered { text-align: center; padding: 1.5rem; color: var(--muted); font-size: .82rem; }
         .powered a { color: var(--muted); text-decoration: none; }
+        /* Badge „Zweryfikowany przez Hovera" — pokazujemy tylko gdy tenant
+           ma verification_status=verified. Tooltip z pełną listą sprawdzonych
+           dokumentów + linkiem do regulaminu marketplace (§12 disclaimer). */
+        .verified-badge { display: inline-flex; align-items: center; gap: .4rem; margin-top: .9rem; padding: .35rem .85rem; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; color: #fff; font-size: .85rem; font-weight: 600; cursor: help; position: relative; }
+        .verified-badge::before { content: "✓"; font-weight: 700; }
+        .verified-badge .tooltip { visibility: hidden; opacity: 0; position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); background: #2a221c; color: #E9E2D3; padding: .85rem 1rem; border-radius: 8px; width: 320px; max-width: 90vw; font-size: .78rem; font-weight: 400; line-height: 1.4; text-align: left; box-shadow: 0 8px 24px rgba(0,0,0,.3); z-index: 10; }
+        .verified-badge:hover .tooltip, .verified-badge:focus-within .tooltip { visibility: visible; opacity: 1; }
+        .verified-badge .tooltip a { color: #E9E2D3; text-decoration: underline; }
         @media (prefers-color-scheme: dark) {
             html, body { background: #1F1A17; color: #F7F4EF; }
             .vehicle, .contact, .footer-cta, .voiv { background: #2a221c; color: #E9E2D3; border-color: #4a3d31; }
@@ -105,6 +113,20 @@
             <a href="{{ route('public.transport.inquiry', ['transporter' => $tenant->slug]) }}" class="cta">
                 {{ __('public/transporter_profile.cta_inquiry') }}
             </a>
+            @if ($tenant->isVerifiedTransporter())
+                {{-- Badge widoczny tylko dla verified tenant'ów. Tooltip rozwija
+                     listę dokumentów PWL które Hovera zweryfikowała + link do
+                     §12 regulaminu marketplace (disclaimer „Hovera nie odpowiada
+                     za realizację transportu"). --}}
+                <div class="verified-badge" tabindex="0" aria-label="{{ __('public/transporter_profile.verified_badge_label') }}">
+                    {{ __('public/transporter_profile.verified_badge_label') }}
+                    <span class="tooltip">
+                        {{ __('public/transporter_profile.verified_badge_tooltip') }}
+                        <br><br>
+                        <a href="/regulamin-marketplace" target="_blank" rel="noopener">{{ __('public/transporter_profile.verified_badge_link_label') }}</a>
+                    </span>
+                </div>
+            @endif
         </div>
     </section>
 

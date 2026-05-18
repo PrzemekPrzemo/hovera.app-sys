@@ -50,17 +50,36 @@ return [
 
     'transporter_document_type' => [
         'company_registration' => 'Company registration',
-        'company_registration_description' => 'Business registry entry (CRO/KRS/CEIDG equivalent, PDF or image).',
-        'animal_transport_cert' => 'Animal transport certificate',
-        'animal_transport_cert_description' => 'EU Reg. 1/2005 certificate — required for horse transport.',
-        'insurance_ocp' => 'Carrier liability insurance',
-        'insurance_ocp_description' => 'Carrier liability policy (OCP equivalent).',
+        'company_registration_description' => 'Business registry entry (KRS / CEIDG in PL, equivalent elsewhere — PDF or image).',
+
+        // Legacy — deprecated, hidden in new UI but preserved for backward compatibility.
+        'animal_transport_cert' => 'Animal transport certificate (legacy)',
+        'animal_transport_cert_description' => 'Old EU 1/2005 certificate — replaced by the PWL Vehicle Approval Certificate.',
+        'insurance_ocp' => 'Carrier liability insurance (legacy)',
+        'insurance_ocp_description' => 'Replaced by the new "Carrier Liability Insurance" entry in the PWL list.',
         'insurance_ocs' => 'Cargo insurance',
-        'insurance_ocs_description' => 'Cargo insurance — covers damage to the transported animal.',
-        'vehicle_registration' => 'Vehicle registration',
-        'vehicle_registration_description' => 'Vehicle registration document scan — we check next-inspection date.',
+        'insurance_ocs_description' => 'Cargo insurance — covers damage to the transported animal. Optional but recommended.',
+        'vehicle_registration' => 'Vehicle registration (legacy)',
+        'vehicle_registration_description' => 'Replaced by the PWL Vehicle Approval Certificate.',
+
+        // PWL — Polish intra-EU live animal transport regime.
+        'road_carrier_license' => 'Road Carrier Profession License',
+        'road_carrier_license_description' => 'Issued by the GITD (national road authority) or the local starosta under EU Reg. 1071/2009 and the Polish Road Transport Act of 2001.',
+        'pwl_authorization_type1' => 'PWL Carrier Authorization — Type 1 (< 8h)',
+        'pwl_authorization_type1_description' => 'PIW (district veterinary inspectorate) authorization for transports up to 8 hours. Pick Type 1 if you only run short journeys.',
+        'pwl_authorization_type2' => 'PWL Carrier Authorization — Type 2 (> 8h)',
+        'pwl_authorization_type2_description' => 'PIW authorization for long journeys above 8 hours. Also covers Type 1 use cases.',
+        'pwl_driver_handler_certificate' => 'PWL Driver and Handler Competence Certificate',
+        'pwl_driver_handler_certificate_description' => 'Article 6 of EU Reg. 1/2005 — certificate of competence for drivers and animal handlers. Upload the full team set.',
+        'pwl_vehicle_approval_certificate' => 'PWL Vehicle Approval Certificate',
+        'pwl_vehicle_approval_certificate_description' => 'EU Reg. 1/2005 article 18 (< 8h) or article 19 (> 8h). Required for every vehicle used for horse transport.',
+        'wash_disinfection_log' => 'Washing and Disinfection Log',
+        'wash_disinfection_log_description' => 'Required by the Polish Animal Health Protection Act of 2004. Upload current entries from the last 12 months.',
+        'carrier_liability_insurance' => 'Carrier Liability Insurance',
+        'carrier_liability_insurance_description' => 'Road carrier liability policy. We check the expiry date and guarantee amount.',
+
         'other' => 'Other document',
-        'other_description' => 'Custom — labour inspection certificate, EU community licence, etc.',
+        'other_description' => 'Custom — labour inspection certificate, EU community licence, top-up cargo policy, etc.',
     ],
 
     'boarding_frequency' => [

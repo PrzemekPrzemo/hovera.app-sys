@@ -10,11 +10,18 @@ ersten angenommenen Angebot.
 
 ## Wie es funktioniert
 
-- **Registrierung → Dokumentenprüfung → Aktivierung → Angebote senden.**
-  Die Kontoerstellung erfolgt sofort, aber das Senden von Angeboten an
-  Kunden ist gesperrt, bis das Hovera-Team Ihre Dokumente verifiziert
-  hat (Frachtführerhaftpflicht, Transportlizenz, Steuernummer,
-  Fahrzeugzulassung). Üblicherweise 1 Werktag.
+- **Registrierung → PWL-Dokumente hochladen → Verifizierung → Aktivierung → Angebote senden.**
+  Die Kontoerstellung erfolgt sofort, aber das Senden von Angeboten ist
+  gesperrt, bis das Hovera-Team alle **6 PWL-Dokumente** verifiziert hat.
+  Üblicherweise 1–2 Werktage. Vollständige Liste mit Bezugsquellen
+  unten im Abschnitt „PWL-Dokumente".
+
+<!-- @todo native review — Abschnitt PWL-Dokumente derzeit nur in PL/EN ausgeführt; bitte EN-Version übersetzen. -->
+> **PWL documents (English version):** see `resources/help/en/transporter.md`
+> for the full list of 6 required documents (Road Carrier Profession License,
+> PWL Authorization T1/T2, Driver/Handler Competence Certificate, Vehicle
+> Approval Certificate, Washing/Disinfection Log, Carrier Liability Insurance)
+> with regulatory references and how-to-obtain notes.
 - **Hovera ist ein vermittelnder Marktplatz, KEIN Transportunternehmen.**
   Wir besitzen keine Fahrzeuge, beschäftigen keine Fahrer, übernehmen
   keine Haftung für die Transportausführung. Wir verbinden Sie mit

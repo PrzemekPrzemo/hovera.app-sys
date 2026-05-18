@@ -61,4 +61,15 @@ return [
         'rejected' => 'Konto odrzucone',
         'rejected_body' => 'Konto firmy :name odrzucone. Firma otrzymała mail z powodem.',
     ],
+
+    // Sekcja Dokumenty — relation manager w master adminie.
+    'documents' => [
+        'title' => 'Dokumenty weryfikacyjne',
+        'column' => [
+            'type' => 'Typ dokumentu',
+            'status' => 'Status',
+            'filename' => 'Plik',
+            'uploaded_at' => 'Wgrany',
+        ],
+    ],
 ];

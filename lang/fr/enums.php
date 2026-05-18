@@ -49,18 +49,39 @@ return [
     ],
 
     'transporter_document_type' => [
+        // @todo native review — traduction automatique depuis PL/EN.
         'company_registration' => 'Registre de la société',
-        'company_registration_description' => 'Extrait du registre du commerce (PDF/JPG).',
-        'animal_transport_cert' => 'Certificat de transport d’animaux',
-        'animal_transport_cert_description' => 'Règlement UE 1/2005 — obligatoire pour le transport de chevaux.',
-        'insurance_ocp' => 'Assurance RC transporteur',
-        'insurance_ocp_description' => 'Responsabilité civile du transporteur routier.',
+        'company_registration_description' => 'Extrait du registre du commerce (KRS / CEIDG en PL, équivalent ailleurs — PDF/JPG).',
+
+        // Legacy — obsolètes, masqués dans la nouvelle UI mais conservés pour la rétrocompatibilité.
+        'animal_transport_cert' => 'Certificat de transport d’animaux (legacy)',
+        'animal_transport_cert_description' => 'Ancien certificat UE 1/2005 — remplacé par le Certificat d’agrément du moyen de transport PWL.',
+        'insurance_ocp' => 'Assurance RC transporteur (legacy)',
+        'insurance_ocp_description' => 'Remplacée par la nouvelle entrée « Assurance RC transporteur » dans la liste PWL.',
         'insurance_ocs' => 'Assurance marchandises',
-        'insurance_ocs_description' => 'Assurance pour les dommages à l’animal transporté.',
-        'vehicle_registration' => 'Carte grise du véhicule',
-        'vehicle_registration_description' => 'Scan de la carte grise — date du prochain contrôle.',
+        'insurance_ocs_description' => 'Assurance pour les dommages à l’animal transporté. Optionnelle mais recommandée.',
+        'vehicle_registration' => 'Carte grise du véhicule (legacy)',
+        'vehicle_registration_description' => 'Remplacée par le Certificat d’agrément du moyen de transport PWL.',
+
+        // PWL — régime polonais de transport intra-UE d’animaux vivants.
+        // @todo native review — traduction automatique des textes réglementaires polonais.
+        'road_carrier_license' => 'Licence d’exercice de la profession de Transporteur Routier',
+        'road_carrier_license_description' => 'Délivrée par GITD ou le starosta selon Règl. UE 1071/2009 et la loi polonaise sur le transport routier de 2001.',
+        'pwl_authorization_type1' => 'Autorisation transporteur PWL — Type 1 (< 8h)',
+        'pwl_authorization_type1_description' => 'Autorisation PIW (inspection vétérinaire) pour transports de courte durée (≤ 8h). Choisir Type 1 pour les courts trajets uniquement.',
+        'pwl_authorization_type2' => 'Autorisation transporteur PWL — Type 2 (> 8h)',
+        'pwl_authorization_type2_description' => 'Autorisation PIW pour les trajets longs (> 8h). Couvre également les usages Type 1.',
+        'pwl_driver_handler_certificate' => 'Certificat de compétence des conducteurs et convoyeurs (PWL)',
+        'pwl_driver_handler_certificate_description' => 'Article 6 du Règl. UE 1/2005 — certificat de compétence pour conducteurs et convoyeurs. Téléverser pour toute l’équipe.',
+        'pwl_vehicle_approval_certificate' => 'Certificat d’agrément du moyen de transport (PWL)',
+        'pwl_vehicle_approval_certificate_description' => 'Règl. UE 1/2005 art. 18 (< 8h) ou art. 19 (> 8h). Obligatoire pour chaque véhicule utilisé.',
+        'wash_disinfection_log' => 'Registre de lavage et désinfection du moyen de transport',
+        'wash_disinfection_log_description' => 'Obligatoire selon la loi polonaise sur la protection de la santé animale de 2004. Téléverser les entrées des 12 derniers mois.',
+        'carrier_liability_insurance' => 'Assurance RC transporteur',
+        'carrier_liability_insurance_description' => 'Police de responsabilité civile du transporteur routier. Nous vérifions date d’expiration et montant de garantie.',
+
         'other' => 'Autre document',
-        'other_description' => 'Licence communautaire, certificat d’inspection du travail, etc.',
+        'other_description' => 'Licence communautaire, certificat d’inspection du travail, police cargo complémentaire, etc.',
     ],
 
     'boarding_frequency' => [

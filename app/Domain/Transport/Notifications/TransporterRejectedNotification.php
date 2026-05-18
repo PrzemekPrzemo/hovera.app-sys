@@ -17,9 +17,14 @@ class TransporterRejectedNotification extends Notification
 {
     use Queueable;
 
+    /**
+     * @param  list<string>  $failedDocuments  Etykiety dokumentów, które
+     *                                         spowodowały odrzucenie konta.
+     */
     public function __construct(
         public readonly Tenant $tenant,
         public readonly string $reason,
+        public readonly array $failedDocuments = [],
     ) {}
 
     /** @return array<int, string> */
@@ -30,13 +35,22 @@ class TransporterRejectedNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        $message = (new MailMessage)
             ->mailer('transport')
             ->error()
             ->subject(__('transport/notify_rejected.subject'))
             ->greeting(__('transport/notify_rejected.greeting'))
             ->line(__('transport/notify_rejected.intro', ['name' => $this->tenant->name]))
-            ->line('"'.$this->reason.'"')
+            ->line('"'.$this->reason.'"');
+
+        if (! empty($this->failedDocuments)) {
+            $message->line(__('transport/notify_rejected.failed_list_heading'));
+            foreach ($this->failedDocuments as $label) {
+                $message->line('• '.$label);
+            }
+        }
+
+        return $message
             ->line(__('transport/notify_rejected.next_steps'))
             ->action(
                 __('transport/notify_rejected.action'),

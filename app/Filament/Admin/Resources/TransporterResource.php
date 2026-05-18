@@ -7,15 +7,18 @@ namespace App\Filament\Admin\Resources;
 use App\Actions\Impersonation\StartImpersonation;
 use App\Domain\Transport\Notifications\TransporterRejectedNotification;
 use App\Domain\Transport\Notifications\TransporterVerifiedNotification;
+use App\Domain\Transport\Verification\VerificationChecklist;
+use App\Domain\Transport\Verification\VerificationChecklistService;
 use App\Enums\TenantType;
 use App\Enums\VerificationStatus;
 use App\Filament\Admin\Resources\TenantResource\RelationManagers\InvitationsRelationManager;
 use App\Filament\Admin\Resources\TenantResource\RelationManagers\MembershipsRelationManager;
 use App\Filament\Admin\Resources\TransporterResource\Pages;
+use App\Filament\Admin\Resources\TransporterResource\RelationManagers\TransporterDocumentsRelationManager;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
-use App\Models\Central\TenantMembership;
 use App\Services\MasterAuditLogger;
+use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -205,7 +208,26 @@ class TransporterResource extends Resource
                             ->label(__('admin/transporter.form.label.verification_notes'))
                             ->rows(3),
                     ])
-                    ->action(fn (Tenant $record, array $data) => self::verify($record, (string) ($data['notes'] ?? '')))
+                    ->action(function (Tenant $record, array $data) {
+                        // Auto-block: nie pozwalamy zatwierdzić tenanta dopóki nie wszystkie
+                        // wymagane PWL dokumenty mają status=verified.
+                        $checklist = self::checklistFor($record);
+                        if (! $checklist->isComplete()) {
+                            Notification::make()
+                                ->danger()
+                                ->title(__('transport/documents.admin.cannot_verify_tenant', [
+                                    'done' => $checklist->verifiedCount,
+                                    'total' => $checklist->totalRequired,
+                                ]))
+                                ->body(__('transport/documents.checklist.missing_intro').' '.implode(', ', $checklist->missingLabels))
+                                ->persistent()
+                                ->send();
+
+                            return;
+                        }
+
+                        self::verify($record, (string) ($data['notes'] ?? ''));
+                    })
                     ->requiresConfirmation(),
                 Tables\Actions\Action::make('reject')
                     ->label(__('admin/transporter.action.reject'))
@@ -269,6 +291,7 @@ class TransporterResource extends Resource
     public static function getRelations(): array
     {
         return [
+            TransporterDocumentsRelationManager::class,
             MembershipsRelationManager::class,
             InvitationsRelationManager::class,
         ];
@@ -282,8 +305,49 @@ class TransporterResource extends Resource
         ];
     }
 
+    /**
+     * Buduje checklistę PWL w kontekście danego tenanta — pomocnik do akcji
+     * verify w master adminie. Bezpiecznie przepina TenantManager; jeśli
+     * tenant DB nie jest dostępna (testy bez tenant migracji) — zwraca
+     * pustą checklistę (verifiedCount = 0, totalRequired = 0, isComplete = true)
+     * żeby nie wybuchać produkcji ani testów feature.
+     */
+    public static function checklistFor(Tenant $tenant): VerificationChecklist
+    {
+        try {
+            app(TenantManager::class)->setCurrent($tenant);
+
+            return app(VerificationChecklistService::class)->build();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return new VerificationChecklist(
+                items: [],
+                verifiedCount: 0,
+                totalRequired: 0,
+                missingLabels: [],
+            );
+        }
+    }
+
     public static function verify(Tenant $tenant, string $notes = ''): void
     {
+        // Lista zweryfikowanych dokumentów — przekazywana do notyfikacji
+        // żeby mail do owner'a wyliczał konkretnie co przeszło. Try/catch
+        // bo w testach feature tenant DB może nie istnieć.
+        $verifiedTypes = [];
+        try {
+            app(TenantManager::class)->setCurrent($tenant);
+            $checklist = app(VerificationChecklistService::class)->build();
+            foreach ($checklist->items as $item) {
+                if ($item->isVerified()) {
+                    $verifiedTypes[] = $item->label;
+                }
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         $tenant->forceFill([
             'verification_status' => VerificationStatus::Verified,
             'verified_at' => now(),
@@ -296,10 +360,10 @@ class TransporterResource extends Resource
             targetType: 'Tenant',
             targetId: (string) $tenant->id,
             tenantId: (string) $tenant->id,
-            payload: ['slug' => $tenant->slug],
+            payload: ['slug' => $tenant->slug, 'verified_docs' => $verifiedTypes],
         );
 
-        self::notifyOwner($tenant, new TransporterVerifiedNotification($tenant, $notes));
+        self::notifyOwner($tenant, new TransporterVerifiedNotification($tenant, $notes, $verifiedTypes));
 
         Notification::make()
             ->success()
