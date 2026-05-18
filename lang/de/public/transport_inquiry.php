@@ -8,6 +8,9 @@ return [
     'subtitle' => 'Füllen Sie das Formular aus — wir senden Ihre Anfrage an verifizierte Transporteure. Angebote kommen per E-Mail.',
     'errors_heading' => 'Bitte prüfen:',
 
+    'direct_target_banner' => 'Sie senden diese Anfrage direkt an :name. Nur dieses Unternehmen wird antworten.',
+    'direct_target_switch_to_broadcast' => 'Ich möchte sie an alle passenden Transporteure senden',
+
     'label' => [
         'customer_name' => 'Name',
         'customer_email' => 'E-Mail',

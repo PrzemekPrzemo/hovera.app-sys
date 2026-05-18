@@ -8,6 +8,9 @@ return [
     'subtitle' => 'Wypełnij formularz — wyślemy zapytanie do zweryfikowanych firm transportowych w Twoim regionie. Otrzymasz oferty mailem.',
     'errors_heading' => 'Sprawdź formularz:',
 
+    'direct_target_banner' => 'Wysyłasz zapytanie bezpośrednio do :name. Otrzymasz odpowiedź tylko od tej firmy.',
+    'direct_target_switch_to_broadcast' => 'Wolę wysłać do wszystkich pasujących przewoźników',
+
     'label' => [
         'customer_name' => 'Imię i nazwisko',
         'customer_email' => 'E-mail',

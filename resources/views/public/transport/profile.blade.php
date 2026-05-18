@@ -75,7 +75,7 @@
             @else
                 <div class="tagline">{{ __('public/transporter_profile.default_tagline') }}</div>
             @endif
-            <a href="{{ route('public.transport.inquiry') }}" class="cta">
+            <a href="{{ route('public.transport.inquiry', ['transporter' => $tenant->slug]) }}" class="cta">
                 {{ __('public/transporter_profile.cta_inquiry') }}
             </a>
         </div>
@@ -186,7 +186,7 @@
         <p style="margin: 0 0 1.25rem; font-size: 1.05rem; color: #3D2E22;">
             {{ __('public/transporter_profile.footer_cta_text') }}
         </p>
-        <a href="{{ route('public.transport.inquiry') }}" class="cta">
+        <a href="{{ route('public.transport.inquiry', ['transporter' => $tenant->slug]) }}" class="cta">
             {{ __('public/transporter_profile.cta_inquiry') }}
         </a>
     </div>

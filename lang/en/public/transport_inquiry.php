@@ -8,6 +8,9 @@ return [
     'subtitle' => 'Fill the form — we will send your request to verified carriers in your region. Offers arrive by email.',
     'errors_heading' => 'Please review:',
 
+    'direct_target_banner' => 'You are sending this inquiry directly to :name. Only this company will reply.',
+    'direct_target_switch_to_broadcast' => 'I prefer to send it to all matching carriers',
+
     'label' => [
         'customer_name' => 'Full name',
         'customer_email' => 'Email',

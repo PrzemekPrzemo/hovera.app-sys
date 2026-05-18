@@ -27,6 +27,9 @@
         button[type=submit]:hover { filter: brightness(0.95); }
         .errors { background: #fef2f2; color: #991b1b; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .88rem; }
         .errors ul { margin: .25rem 0 0; padding-left: 1.25rem; }
+        .direct-banner { background: color-mix(in srgb, var(--primary) 12%, #fff); border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border)); color: #3D2E22; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: .9rem; line-height: 1.5; }
+        .direct-banner a { color: var(--primary); text-decoration: underline; }
+        .direct-banner strong { color: #3D2E22; }
         @media (prefers-color-scheme: dark) {
             html, body { background: #1F1A17; color: #F7F4EF; }
             .card { background: #2a221c; }
@@ -44,6 +47,14 @@
             <h1>{{ __('public/transport_inquiry.heading') }}</h1>
             <div class="subtitle">{{ __('public/transport_inquiry.subtitle') }}</div>
 
+            @if (! empty($targetTransporter))
+                <div class="direct-banner">
+                    {!! __('public/transport_inquiry.direct_target_banner', ['name' => '<strong>'.e($targetTransporter->name).'</strong>']) !!}
+                    <br>
+                    <a href="{{ route('public.transport.inquiry') }}">{{ __('public/transport_inquiry.direct_target_switch_to_broadcast') }}</a>
+                </div>
+            @endif
+
             @if ($errors->any())
                 <div class="errors">
                     <strong>{{ __('public/transport_inquiry.errors_heading') }}</strong>
@@ -57,6 +68,9 @@
 
             <form method="post" action="{{ route('public.transport.inquiry.submit') }}">
                 @csrf
+                @if (! empty($targetTransporter))
+                    <input type="hidden" name="transporter" value="{{ $targetTransporter->slug }}">
+                @endif
 
                 <div class="row-two">
                     <div class="form-row">

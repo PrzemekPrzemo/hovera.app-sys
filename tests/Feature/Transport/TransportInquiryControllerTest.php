@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Transport;
 
+use App\Enums\TenantType;
+use App\Enums\VerificationStatus;
+use App\Models\Central\Tenant;
 use App\Models\Central\TransportLead;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -155,6 +160,144 @@ class TransportInquiryControllerTest extends TestCase
         ])->assertSessionHasErrors(['address']);
 
         $this->assertSame(0, TransportLead::count());
+    }
+
+    public function test_direct_mode_creates_lead_targeting_specific_transporter(): void
+    {
+        $this->mockGeocoder();
+        $transporter = $this->makeTransporter('konie-trans', VerificationStatus::Verified);
+
+        $response = $this->post('/transport/zapytanie?transporter=konie-trans', [
+            'customer_name' => 'Jan Kowalski',
+            'customer_email' => 'jan@example.com',
+            'pickup_address' => 'Warszawa, Marymoncka 1',
+            'dropoff_address' => 'Kraków, Krakusa 1',
+            'preferred_date' => now()->addDays(5)->toDateString(),
+            'horse_count' => 1,
+            'terms' => '1',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertSame(1, TransportLead::count());
+
+        $lead = TransportLead::first();
+        $this->assertSame('direct', $lead->mode);
+        $this->assertSame([$transporter->id], $lead->targeted_transporter_ids);
+        $this->assertSame('open', $lead->status);
+    }
+
+    public function test_direct_mode_via_hidden_input_after_validation_redirect(): void
+    {
+        // Hidden input survives form re-submit (np. po geocoding error i poprawce).
+        // Wysyłamy bez query-stringa — tylko POST body niesie slug.
+        $this->mockGeocoder();
+        $transporter = $this->makeTransporter('konie-trans', VerificationStatus::Verified);
+
+        $this->post('/transport/zapytanie', [
+            'transporter' => 'konie-trans',
+            'customer_name' => 'Jan Kowalski',
+            'customer_email' => 'jan@example.com',
+            'pickup_address' => 'Warszawa, Marymoncka 1',
+            'dropoff_address' => 'Kraków, Krakusa 1',
+            'preferred_date' => now()->addDays(5)->toDateString(),
+            'horse_count' => 1,
+            'terms' => '1',
+        ])->assertRedirect();
+
+        $lead = TransportLead::first();
+        $this->assertSame('direct', $lead->mode);
+        $this->assertSame([$transporter->id], $lead->targeted_transporter_ids);
+    }
+
+    public function test_unverified_transporter_param_falls_back_to_broadcast(): void
+    {
+        $this->mockGeocoder();
+        $this->makeTransporter('niezweryfikowany', VerificationStatus::Pending);
+
+        $this->post('/transport/zapytanie?transporter=niezweryfikowany', [
+            'customer_name' => 'Jan Kowalski',
+            'customer_email' => 'jan@example.com',
+            'pickup_address' => 'Warszawa, Marymoncka 1',
+            'dropoff_address' => 'Kraków, Krakusa 1',
+            'preferred_date' => now()->addDays(5)->toDateString(),
+            'horse_count' => 1,
+            'terms' => '1',
+        ])->assertRedirect();
+
+        $lead = TransportLead::first();
+        $this->assertSame('broadcast', $lead->mode);
+        $this->assertNull($lead->targeted_transporter_ids);
+    }
+
+    public function test_unknown_transporter_param_falls_back_to_broadcast(): void
+    {
+        $this->mockGeocoder();
+
+        $this->post('/transport/zapytanie?transporter=nie-istnieje', [
+            'customer_name' => 'Jan Kowalski',
+            'customer_email' => 'jan@example.com',
+            'pickup_address' => 'Warszawa, Marymoncka 1',
+            'dropoff_address' => 'Kraków, Krakusa 1',
+            'preferred_date' => now()->addDays(5)->toDateString(),
+            'horse_count' => 1,
+            'terms' => '1',
+        ])->assertRedirect();
+
+        $lead = TransportLead::first();
+        $this->assertSame('broadcast', $lead->mode);
+        $this->assertNull($lead->targeted_transporter_ids);
+    }
+
+    public function test_show_displays_direct_banner_when_transporter_query_present(): void
+    {
+        $this->makeTransporter('konie-trans', VerificationStatus::Verified);
+
+        $response = $this->get('/transport/zapytanie?transporter=konie-trans');
+
+        $response->assertOk()
+            ->assertSee('Firma Konie trans', false)        // tenant name w banerze
+            ->assertSee('bezpośrednio', false)             // fragment polish banner text
+            ->assertSee('name="transporter"', false)       // hidden input survives POST
+            ->assertSee('value="konie-trans"', false);
+    }
+
+    public function test_show_skips_direct_banner_for_unverified_transporter(): void
+    {
+        $this->makeTransporter('niezweryfikowany', VerificationStatus::Pending);
+
+        $response = $this->get('/transport/zapytanie?transporter=niezweryfikowany');
+
+        $response->assertOk()
+            ->assertDontSee('bezpośrednio', false)
+            ->assertDontSee('name="transporter"', false);
+    }
+
+    public function test_profile_cta_includes_transporter_slug(): void
+    {
+        $this->makeTransporter('konie-trans', VerificationStatus::Verified);
+
+        $response = $this->get('/t/konie-trans');
+
+        $response->assertOk()
+            ->assertSee('transporter=konie-trans', false);
+    }
+
+    private function makeTransporter(string $slug, VerificationStatus $vs, string $status = 'active'): Tenant
+    {
+        // Cache spójny z TransporterProfileController/InquiryController — czyścimy
+        // wpis aby świeżo utworzony tenant nie zderzył się z null-em z poprzedniego testu.
+        Cache::forget("public_transporter:{$slug}");
+
+        return Tenant::create([
+            'slug' => $slug,
+            'name' => 'Firma '.ucfirst(str_replace('-', ' ', $slug)),
+            'type' => TenantType::Transporter,
+            'verification_status' => $vs,
+            'db_name' => 't_'.str_replace('-', '_', $slug),
+            'db_username' => 't_'.str_replace('-', '_', $slug),
+            'db_password_encrypted' => Crypt::encryptString('x'),
+            'status' => $status,
+        ]);
     }
 
     /**

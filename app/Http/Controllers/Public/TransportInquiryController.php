@@ -7,11 +7,13 @@ namespace App\Http\Controllers\Public;
 use App\Domain\Transport\Geocoding\Exceptions\GeocodingException;
 use App\Domain\Transport\Geocoding\MapboxGeocoder;
 use App\Domain\Transport\Leads\LeadDispatcher;
+use App\Models\Central\Tenant;
 use App\Models\Central\TransportLead;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -25,6 +27,14 @@ use Illuminate\View\View;
  *   POST /transport/zapytanie          → submit + redirect na dziekujemy
  *   GET  /transport/zapytanie/dziekujemy/{lead}  → potwierdzenie
  *
+ * Tryby:
+ *   • Bez query → mode=broadcast, dispatcher rozsyła do wszystkich pasujących
+ *     transporterów w voivodeship (+ adjacent).
+ *   • `?transporter={slug}` (z CTA na /t/{slug}) → mode=direct, lead targetuje
+ *     tylko tego konkretnego transportera. Jeśli slug nie rozwiązuje się do
+ *     verified+aktywnego transportera, po cichu fallback na broadcast — nie
+ *     chcemy 404'ować formularza tylko dlatego, że ktoś podstrzelił URL.
+ *
  * Throttle POST 5/h z IP (anti-spam, mocniej niż signup bo lead = mail
  * leci do transporterów).
  */
@@ -32,6 +42,8 @@ class TransportInquiryController extends Controller
 {
     public function show(Request $request): View
     {
+        $targetTransporter = $this->resolveTransporterFromRequest($request);
+
         return view('public.transport.inquiry', [
             'old' => [
                 'customer_name' => (string) old('customer_name'),
@@ -44,6 +56,7 @@ class TransportInquiryController extends Controller
                 'horse_count' => (int) old('horse_count', 1),
                 'notes' => (string) old('notes'),
             ],
+            'targetTransporter' => $targetTransporter,
         ]);
     }
 
@@ -60,9 +73,13 @@ class TransportInquiryController extends Controller
                 ->withInput();
         }
 
+        $targetTransporter = $this->resolveTransporterFromRequest($request);
+        $isDirect = $targetTransporter !== null;
+
         $lead = TransportLead::create([
             'id' => (string) Str::ulid(),
-            'mode' => 'broadcast',
+            'mode' => $isDirect ? 'direct' : 'broadcast',
+            'targeted_transporter_ids' => $isDirect ? [$targetTransporter->id] : null,
             'originator_name' => $data['customer_name'],
             'originator_email' => $data['customer_email'],
             'originator_phone' => $data['customer_phone'] ?? null,
@@ -97,6 +114,43 @@ class TransportInquiryController extends Controller
         $lead = TransportLead::query()->where('id', $leadId)->firstOrFail();
 
         return view('public.transport.inquiry-thanks', ['lead' => $lead]);
+    }
+
+    /**
+     * Resolve `?transporter={slug}` (lub hidden input z POST) do Tenant model,
+     * pod warunkiem że slug istnieje, jest aktywny i przeszedł weryfikację.
+     * Niespełnienie któregokolwiek warunku → null (silent fallback do broadcast).
+     *
+     * Cache key spójny z TransporterProfileController::resolveTenant — share'ujemy
+     * te same 5-minutowe wpisy, więc kliknięcie CTA na profilu nie generuje
+     * dodatkowej query.
+     */
+    private function resolveTransporterFromRequest(Request $request): ?Tenant
+    {
+        $slug = (string) $request->input('transporter', '');
+
+        if ($slug === '' || ! preg_match('/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/', $slug)) {
+            return null;
+        }
+
+        $tenant = Cache::remember(
+            "public_transporter:{$slug}",
+            now()->addMinutes(5),
+            function () use ($slug) {
+                $candidate = Tenant::query()
+                    ->where('slug', $slug)
+                    ->whereIn('status', ['trialing', 'active', 'past_due'])
+                    ->first();
+
+                if (! $candidate || ! $candidate->isVerifiedTransporter()) {
+                    return null;
+                }
+
+                return $candidate;
+            },
+        );
+
+        return $tenant instanceof Tenant ? $tenant : null;
     }
 
     /**
