@@ -23,6 +23,7 @@ class Tenant extends Model
 
     protected $fillable = [
         'slug', 'name', 'legal_name', 'tax_id', 'type',
+        'verification_status', 'verified_at', 'verified_by_user_id', 'verification_notes',
         'db_host', 'db_port', 'db_name', 'db_username', 'db_password_encrypted',
         'country', 'locale', 'timezone', 'currency',
         'plan_id', 'status', 'trial_ends_at',
@@ -37,6 +38,8 @@ class Tenant extends Model
     {
         return [
             'type' => TenantType::class,
+            'verification_status' => \App\Enums\VerificationStatus::class,
+            'verified_at' => 'datetime',
             'branding' => 'array',
             'settings' => 'array',
             'trial_ends_at' => 'datetime',
@@ -50,6 +53,20 @@ class Tenant extends Model
             'trial_max_horses' => 'integer',
             'trial_max_clients' => 'integer',
         ];
+    }
+
+    /**
+     * Czy transporter ma zweryfikowane konto i może wystawiać oferty/FV,
+     * widnieć na publicznym profilu i otrzymywać leady z marketplace'u.
+     * Patrz docs/TRANSPORT.md (verification flow).
+     *
+     * Stable tenant'y nie mają tego flagu — zwracamy false (irrelevant).
+     */
+    public function isVerifiedTransporter(): bool
+    {
+        return $this->isTransporter()
+            && $this->verification_status instanceof \App\Enums\VerificationStatus
+            && $this->verification_status->isVerified();
     }
 
     public function scopeStables(Builder $query): Builder

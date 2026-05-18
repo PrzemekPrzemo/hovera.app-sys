@@ -17,6 +17,28 @@ return [
         'withdrawn' => 'Отозвана',
     ],
 
+    'verification_status' => [
+        'pending' => 'Ожидаются документы',
+        'under_review' => 'На проверке',
+        'verified' => 'Подтверждено',
+        'rejected' => 'Отклонено',
+    ],
+
+    'transporter_document_type' => [
+        'company_registration' => 'Регистрация компании',
+        'company_registration_description' => 'Выписка из реестра (PDF/JPG).',
+        'animal_transport_cert' => 'Сертификат перевозки животных',
+        'animal_transport_cert_description' => 'Регламент ЕС 1/2005 — обязателен для перевозки лошадей.',
+        'insurance_ocp' => 'Страхование ответственности перевозчика',
+        'insurance_ocp_description' => 'Страхование гражданской ответственности автоперевозчика.',
+        'insurance_ocs' => 'Страхование груза',
+        'insurance_ocs_description' => 'Страхование ущерба перевозимому животному.',
+        'vehicle_registration' => 'Свидетельство о регистрации ТС',
+        'vehicle_registration_description' => 'Скан свидетельства — проверяем дату следующего ТО.',
+        'other' => 'Иной документ',
+        'other_description' => 'Лицензия ЕС, справка инспекции труда и т. п.',
+    ],
+
     'boarding_frequency' => [
         'daily' => 'Ежедневно',
         'monthly' => 'Ежемесячно',

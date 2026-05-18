@@ -17,6 +17,28 @@ return [
         'withdrawn' => 'Zurückgezogen',
     ],
 
+    'verification_status' => [
+        'pending' => 'Dokumente ausstehend',
+        'under_review' => 'In Prüfung',
+        'verified' => 'Verifiziert',
+        'rejected' => 'Abgelehnt',
+    ],
+
+    'transporter_document_type' => [
+        'company_registration' => 'Handelsregister',
+        'company_registration_description' => 'Handelsregisterauszug (PDF/JPG).',
+        'animal_transport_cert' => 'Tiertransport-Zertifikat',
+        'animal_transport_cert_description' => 'EU-VO 1/2005 — Pflicht für Pferdetransporte.',
+        'insurance_ocp' => 'Frachtführer-Haftpflicht',
+        'insurance_ocp_description' => 'Haftpflichtversicherung des Frachtführers.',
+        'insurance_ocs' => 'Transportversicherung (Ladung)',
+        'insurance_ocs_description' => 'Versicherung gegen Schäden am transportierten Tier.',
+        'vehicle_registration' => 'Fahrzeugschein',
+        'vehicle_registration_description' => 'Scan des Fahrzeugscheins — wir prüfen das nächste HU-Datum.',
+        'other' => 'Sonstiges Dokument',
+        'other_description' => 'Z. B. Gemeinschaftslizenz, Bescheinigung der Gewerbeaufsicht.',
+    ],
+
     'boarding_frequency' => [
         'daily' => 'Täglich',
         'monthly' => 'Monatlich',

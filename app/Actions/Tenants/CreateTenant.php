@@ -60,6 +60,12 @@ class CreateTenant
                 'slug' => $data['slug'],
                 'name' => $data['name'],
                 'type' => $type,
+                // Transporter startuje z verification_status=pending — musi wgrać
+                // dokumenty zanim master admin go zweryfikuje. Stable tenant
+                // dostaje NULL (irrelevant).
+                'verification_status' => $type === TenantType::Transporter
+                    ? \App\Enums\VerificationStatus::Pending
+                    : null,
                 'country' => $data['country'],
                 'locale' => $data['locale'],
                 'timezone' => $data['timezone'],
