@@ -6,12 +6,18 @@ namespace Tests\Feature\Transport;
 
 use App\Domain\Transport\Dashboard\TransportDashboardService;
 use App\Enums\QuoteStatus;
+use App\Enums\TenantType;
 use App\Enums\TransportInvoiceKind;
 use App\Enums\TransportInvoiceStatus;
+use App\Models\Central\Tenant;
+use App\Models\Central\TransportLead;
+use App\Models\Central\TransportLeadResponse;
 use App\Models\Tenant\Quote;
 use App\Models\Tenant\TransportInvoice;
+use App\Tenancy\TenantManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -129,6 +135,219 @@ class TransportDashboardServiceTest extends TestCase
 
         $this->assertCount(1, $result['today']);
         $this->assertCount(1, $result['tomorrow']);
+    }
+
+    public function test_upcoming_transports_week_returns_next_7_days_accepted_only(): void
+    {
+        $today = Carbon::today();
+
+        // Accepted w oknie 0–7 dni — wszystkie powinny się pojawić
+        $q1 = $this->makeQuote(QuoteStatus::Accepted, ['preferred_date' => $today]);
+        $q2 = $this->makeQuote(QuoteStatus::Accepted, ['preferred_date' => $today->copy()->addDays(3)]);
+        $q3 = $this->makeQuote(QuoteStatus::Accepted, ['preferred_date' => $today->copy()->addDays(7)]);
+
+        // Poza oknem — nie pojawi się
+        $this->makeQuote(QuoteStatus::Accepted, ['preferred_date' => $today->copy()->addDays(8)]);
+        $this->makeQuote(QuoteStatus::Accepted, ['preferred_date' => $today->copy()->subDay()]);   // przeszły
+
+        // Niewłaściwy status
+        $this->makeQuote(QuoteStatus::Draft, ['preferred_date' => $today]);
+        $this->makeQuote(QuoteStatus::Sent, ['preferred_date' => $today]);
+        $this->makeQuote(QuoteStatus::Rejected, ['preferred_date' => $today]);
+
+        $result = app(TransportDashboardService::class)->upcomingTransportsWeek(7, 10);
+
+        $ids = $result->pluck('id')->all();
+        $this->assertEqualsCanonicalizing([$q1->id, $q2->id, $q3->id], $ids);
+        $this->assertSame($q1->id, $result->first()->id);   // sorted by preferred_date asc
+    }
+
+    public function test_upcoming_transports_week_respects_limit(): void
+    {
+        $today = Carbon::today();
+        // 12 ofert w oknie
+        for ($i = 0; $i < 12; $i++) {
+            $this->makeQuote(QuoteStatus::Accepted, ['preferred_date' => $today->copy()->addDays($i % 7)]);
+        }
+
+        $result = app(TransportDashboardService::class)->upcomingTransportsWeek(7, 10);
+
+        $this->assertCount(10, $result);
+    }
+
+    public function test_top_paid_invoices_returns_paid_in_last_90_days_sorted_by_amount(): void
+    {
+        $today = Carbon::today();
+
+        // 3 paid w oknie — różne kwoty
+        $i1 = $this->makeInvoice(['status' => TransportInvoiceStatus::Paid, 'total_cents' => 100_000, 'paid_at' => $today->copy()->subDays(10)]);
+        $i2 = $this->makeInvoice(['status' => TransportInvoiceStatus::Paid, 'total_cents' => 500_000, 'paid_at' => $today->copy()->subDays(20)]);
+        $i3 = $this->makeInvoice(['status' => TransportInvoiceStatus::Paid, 'total_cents' => 250_000, 'paid_at' => $today->copy()->subDays(30)]);
+
+        // Paid ale > 90 dni — pomijamy
+        $this->makeInvoice(['status' => TransportInvoiceStatus::Paid, 'total_cents' => 999_999, 'paid_at' => $today->copy()->subDays(120)]);
+
+        // Issued (nie paid) — pomijamy
+        $this->makeInvoice(['status' => TransportInvoiceStatus::Issued, 'total_cents' => 888_888]);
+
+        $list = app(TransportDashboardService::class)->topPaidInvoices(5, 90);
+        $ids = $list->pluck('id')->all();
+
+        $this->assertCount(3, $list);
+        $this->assertSame([$i2->id, $i3->id, $i1->id], $ids);   // 500, 250, 100
+    }
+
+    public function test_top_paid_invoices_respects_limit(): void
+    {
+        for ($i = 0; $i < 7; $i++) {
+            $this->makeInvoice([
+                'status' => TransportInvoiceStatus::Paid,
+                'total_cents' => 10_000 * ($i + 1),
+                'paid_at' => Carbon::today()->subDays($i + 1),
+            ]);
+        }
+
+        $list = app(TransportDashboardService::class)->topPaidInvoices(5, 90);
+        $this->assertCount(5, $list);
+    }
+
+    public function test_lead_flow_kpi_counts_week_window_and_win_rate(): void
+    {
+        $tenant = $this->makeTransporter();
+        app(TenantManager::class)->setCurrent($tenant);
+
+        $now = Carbon::now();
+        $lead = $this->makeCentralLead('mazowieckie', 'małopolskie');
+
+        // Bieżący tydzień: 3 odpowiedzi (1 accepted, 2 pending)
+        $this->makeResponse($tenant->id, $lead->id, 'accepted', $now->copy()->subDays(2));
+        $this->makeResponse($tenant->id, $this->makeCentralLead('mazowieckie', 'śląskie')->id, 'pending', $now->copy()->subDays(3));
+        $this->makeResponse($tenant->id, $this->makeCentralLead('mazowieckie', 'śląskie')->id, 'pending', $now->copy()->subDays(5));
+
+        // Poprzedni tydzień: 1 odpowiedź — żeby delta była +200%
+        $this->makeResponse($tenant->id, $this->makeCentralLead('łódzkie', 'pomorskie')->id, 'rejected', $now->copy()->subDays(10));
+
+        // Inny transporter — nie wpada
+        $other = $this->makeTransporter();
+        $this->makeResponse($other->id, $lead->id, 'accepted', $now->copy()->subDay());
+
+        $kpi = app(TransportDashboardService::class)->leadFlowKpi();
+
+        $this->assertSame(3, $kpi['leads_week']);
+        // (3 - 1) / 1 * 100 = 200.0
+        $this->assertSame(200.0, $kpi['leads_week_delta']);
+
+        // Win rate 30d: accepted=1, total=4 (1+2+1) → 25.0%
+        $this->assertSame(25.0, $kpi['win_rate_30d']);
+    }
+
+    public function test_lead_flow_kpi_returns_null_win_rate_when_no_responses(): void
+    {
+        $tenant = $this->makeTransporter();
+        app(TenantManager::class)->setCurrent($tenant);
+
+        $kpi = app(TransportDashboardService::class)->leadFlowKpi();
+
+        $this->assertSame(0, $kpi['leads_week']);
+        $this->assertSame(0.0, $kpi['leads_week_delta']);   // 0 vs 0
+        $this->assertNull($kpi['win_rate_30d']);
+        $this->assertNull($kpi['win_rate_30d_delta']);
+    }
+
+    public function test_top_voivodeship_pairs_aggregates_by_pickup_and_dropoff(): void
+    {
+        $tenant = $this->makeTransporter();
+        app(TenantManager::class)->setCurrent($tenant);
+
+        $now = Carbon::now();
+
+        // 2× mazowieckie → małopolskie
+        $l1 = $this->makeCentralLead('mazowieckie', 'małopolskie');
+        $l2 = $this->makeCentralLead('mazowieckie', 'małopolskie');
+        $this->makeResponse($tenant->id, $l1->id, 'pending', $now->copy()->subDays(5));
+        $this->makeResponse($tenant->id, $l2->id, 'accepted', $now->copy()->subDays(10));
+
+        // 1× mazowieckie → pomorskie
+        $l3 = $this->makeCentralLead('mazowieckie', 'pomorskie');
+        $this->makeResponse($tenant->id, $l3->id, 'pending', $now->copy()->subDays(15));
+
+        // Inny transporter — pomijamy
+        $other = $this->makeTransporter();
+        $l4 = $this->makeCentralLead('śląskie', 'pomorskie');
+        $this->makeResponse($other->id, $l4->id, 'pending', $now->copy()->subDay());
+
+        // Poza oknem 90 dni
+        $l5 = $this->makeCentralLead('mazowieckie', 'małopolskie');
+        $this->makeResponse($tenant->id, $l5->id, 'pending', $now->copy()->subDays(120));
+
+        $pairs = app(TransportDashboardService::class)->topVoivodeshipPairs(10, 90);
+
+        $this->assertCount(2, $pairs);
+        $this->assertSame('mazowieckie', $pairs[0]['from']);
+        $this->assertSame('małopolskie', $pairs[0]['to']);
+        $this->assertSame(2, $pairs[0]['count']);
+        // share = 2/3 * 100 = 66.7
+        $this->assertEqualsWithDelta(66.7, $pairs[0]['share'], 0.1);
+    }
+
+    public function test_top_voivodeship_pairs_returns_empty_when_no_tenant(): void
+    {
+        app(TenantManager::class)->forget();
+
+        $pairs = app(TransportDashboardService::class)->topVoivodeshipPairs(10, 90);
+
+        $this->assertSame([], $pairs);
+    }
+
+    private function makeTransporter(): Tenant
+    {
+        return Tenant::create([
+            'slug' => 't-'.uniqid(),
+            'name' => 'Firma Transportowa',
+            'type' => TenantType::Transporter,
+            'db_name' => 't_'.uniqid(),
+            'db_username' => 't_'.uniqid(),
+            'db_password_encrypted' => Crypt::encryptString('x'),
+            'status' => 'active',
+        ]);
+    }
+
+    private function makeCentralLead(string $pickupV, string $dropoffV): TransportLead
+    {
+        return TransportLead::create([
+            'id' => (string) Str::ulid(),
+            'mode' => 'broadcast',
+            'pickup_address' => 'Test pickup',
+            'pickup_lat' => 0, 'pickup_lng' => 0,
+            'pickup_voivodeship' => $pickupV,
+            'dropoff_address' => 'Test dropoff',
+            'dropoff_lat' => 0, 'dropoff_lng' => 0,
+            'dropoff_voivodeship' => $dropoffV,
+            'preferred_date' => Carbon::now()->addDays(5)->toDateString(),
+            'horse_count' => 1,
+            'status' => 'open',
+            'expires_at' => Carbon::now()->addDays(14),
+        ]);
+    }
+
+    private function makeResponse(string $tenantId, string $leadId, string $status, Carbon $createdAt): TransportLeadResponse
+    {
+        $r = TransportLeadResponse::create([
+            'id' => (string) Str::ulid(),
+            'lead_id' => $leadId,
+            'transporter_tenant_id' => $tenantId,
+            'price_net' => 800,
+            'price_gross' => 984,
+            'currency' => 'PLN',
+            'proposed_date' => Carbon::now()->addDays(5)->toDateString(),
+            'status' => $status,
+            'responded_at' => $createdAt,
+        ]);
+
+        // RefreshDatabase + auto created_at = now, ale my chcemy w przeszłość
+        TransportLeadResponse::query()->where('id', $r->id)->update(['created_at' => $createdAt]);
+
+        return $r->fresh();
     }
 
     private function makeQuote(QuoteStatus $status, array $overrides = []): Quote

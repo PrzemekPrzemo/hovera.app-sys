@@ -84,9 +84,13 @@ class TransportPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Transport/Widgets'), for: 'App\\Filament\\Transport\\Widgets')
             ->widgets([
                 \App\Filament\Transport\Widgets\TransportKpiWidget::class,
+                \App\Filament\Transport\Widgets\LeadsKpiWidget::class,
                 \App\Filament\Transport\Widgets\UpcomingTransportsWidget::class,
+                \App\Filament\Transport\Widgets\UpcomingTransportsWeekWidget::class,
                 \App\Filament\Transport\Widgets\PendingInvoicesWidget::class,
+                \App\Filament\Transport\Widgets\TopPaidInvoicesWidget::class,
                 \App\Filament\Transport\Widgets\TopCorridorsWidget::class,
+                \App\Filament\Transport\Widgets\RoutesHeatmapWidget::class,
             ])
             ->navigationGroups([
                 NavigationGroup::make(fn () => __('navigation.group.fleet'))->collapsible(),
