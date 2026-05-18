@@ -6,6 +6,7 @@ return [
     // Admin panel groups
     'group' => [
         'stables' => 'Écuries',
+        'transport_admin' => 'Transport',
         'configuration' => 'Configuration',
         'finances' => 'Finances',
         'calendar' => 'Calendrier',

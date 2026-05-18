@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'group' => [
         'stables' => 'Stables',
+        'transport_admin' => 'Transport',
         'configuration' => 'Configuration',
         'finances' => 'Finances',
         'calendar' => 'Calendar',

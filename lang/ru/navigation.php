@@ -6,6 +6,7 @@ return [
     // Admin panel groups
     'group' => [
         'stables' => 'Конюшни',
+        'transport_admin' => 'Транспорт',
         'configuration' => 'Конфигурация',
         'finances' => 'Финансы',
         'calendar' => 'Календарь',

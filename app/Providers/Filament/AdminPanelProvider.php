@@ -63,6 +63,7 @@ class AdminPanelProvider extends PanelProvider
             // albo na grupie albo na itemach — wybieramy ikony per-resource.
             ->navigationGroups([
                 NavigationGroup::make(fn () => __('navigation.group.stables'))->collapsible(),
+                NavigationGroup::make(fn () => __('navigation.group.transport_admin'))->collapsible(),
                 NavigationGroup::make(fn () => __('navigation.group.configuration'))->collapsed()->collapsible(),
             ])
             ->userMenuItems([
