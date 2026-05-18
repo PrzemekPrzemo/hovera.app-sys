@@ -76,6 +76,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Favorites
+    |--------------------------------------------------------------------------
+    | Max ulubionych transporterów per stajnia. OP3 z planu. Domyślnie 5 —
+    | wystarczy żeby pokryć typowy wybór, mało żeby user nie produkował
+    | listy o niskiej istotności decyzyjnej.
+    */
+
+    'favorites' => [
+        'limit' => env('TRANSPORT_FAVORITES_LIMIT', 5),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Voivodeship adjacency
     |--------------------------------------------------------------------------
     | Routing leadów w trybie BROADCAST: dispatcher wybiera transporterów z
