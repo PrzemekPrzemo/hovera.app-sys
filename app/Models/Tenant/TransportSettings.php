@@ -24,6 +24,7 @@ class TransportSettings extends Model
     protected $fillable = [
         'rate_per_km', 'rate_per_km_loaded', 'minimum_charge',
         'fuel_consumption_l_per_100km', 'fuel_surcharge_enabled', 'fuel_base_price_pln',
+        'manual_fuel_price_pln',
         'vat_rate', 'currency',
         'routing_provider',
     ];
@@ -37,6 +38,7 @@ class TransportSettings extends Model
             'fuel_consumption_l_per_100km' => 'decimal:2',
             'fuel_surcharge_enabled' => 'boolean',
             'fuel_base_price_pln' => 'decimal:2',
+            'manual_fuel_price_pln' => 'decimal:2',
             'vat_rate' => 'decimal:2',
             'routing_provider' => 'array',
         ];
