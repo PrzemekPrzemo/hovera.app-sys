@@ -69,6 +69,13 @@ class QuoteAcceptanceController extends Controller
             'accepted_at' => now(),
         ])->save();
 
+        // Marketplace close-out: jeśli quote powstała z lead'a (lead_id set),
+        // domykamy całe zapytanie — pozostałe TransportLeadResponse → rejected,
+        // notyfikacje "lead zamknięty" lecą do innych transporterów. Patrz
+        // docs/TRANSPORT.md §5.3.
+        app(\App\Domain\Transport\Leads\QuoteAcceptanceService::class)
+            ->onQuoteAccepted($quote, $this->tenants->tenantOrFail());
+
         $this->notifyOwner($quote, accepted: true);
 
         return redirect()->route('public.transport.quote', ['slug' => $slug, 'token' => $token])
