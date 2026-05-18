@@ -24,6 +24,21 @@ return [
         'rejected' => 'Abgelehnt',
     ],
 
+    'transport_invoice_kind' => [
+        'fv' => 'Rechnung (USt)',
+        'fv_proforma' => 'Pro-forma-Rechnung',
+        'fv_korekta' => 'Korrekturrechnung',
+    ],
+
+    'transport_invoice_status' => [
+        'draft' => 'Entwurf',
+        'issued' => 'Ausgestellt',
+        'paid' => 'Bezahlt',
+        'overdue' => 'Überfällig',
+        'void' => 'Storniert',
+        'cancelled' => 'Annulliert',
+    ],
+
     'transporter_document_type' => [
         'company_registration' => 'Handelsregister',
         'company_registration_description' => 'Handelsregisterauszug (PDF/JPG).',

@@ -24,6 +24,21 @@ return [
         'rejected' => 'Отклонено',
     ],
 
+    'transport_invoice_kind' => [
+        'fv' => 'Счёт-фактура (НДС)',
+        'fv_proforma' => 'Счёт пр​о форма',
+        'fv_korekta' => 'Корректировочный счёт',
+    ],
+
+    'transport_invoice_status' => [
+        'draft' => 'Черновик',
+        'issued' => 'Выставлен',
+        'paid' => 'Оплачен',
+        'overdue' => 'Просрочен',
+        'void' => 'Аннулирован',
+        'cancelled' => 'Отменён',
+    ],
+
     'transporter_document_type' => [
         'company_registration' => 'Регистрация компании',
         'company_registration_description' => 'Выписка из реестра (PDF/JPG).',

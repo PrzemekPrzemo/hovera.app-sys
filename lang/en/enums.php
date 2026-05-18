@@ -24,6 +24,21 @@ return [
         'rejected' => 'Rejected',
     ],
 
+    'transport_invoice_kind' => [
+        'fv' => 'Invoice (VAT)',
+        'fv_proforma' => 'Pro forma invoice',
+        'fv_korekta' => 'Correction invoice',
+    ],
+
+    'transport_invoice_status' => [
+        'draft' => 'Draft',
+        'issued' => 'Issued',
+        'paid' => 'Paid',
+        'overdue' => 'Overdue',
+        'void' => 'Void',
+        'cancelled' => 'Cancelled',
+    ],
+
     'transporter_document_type' => [
         'company_registration' => 'Company registration',
         'company_registration_description' => 'Business registry entry (CRO/KRS/CEIDG equivalent, PDF or image).',
