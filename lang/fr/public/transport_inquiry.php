@@ -8,6 +8,9 @@ return [
     'subtitle' => 'Remplissez le formulaire — nous enverrons votre demande à des transporteurs vérifiés. Les offres arrivent par e-mail.',
     'errors_heading' => 'Vérifiez :',
 
+    'direct_target_banner' => 'Vous envoyez cette demande directement à :name. Seule cette entreprise répondra.',
+    'direct_target_switch_to_broadcast' => 'Je préfère l\'envoyer à tous les transporteurs correspondants',
+
     'label' => [
         'customer_name' => 'Nom complet',
         'customer_email' => 'E-mail',

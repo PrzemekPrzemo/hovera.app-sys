@@ -8,6 +8,9 @@ return [
     'subtitle' => 'Заполните форму — отправим запрос верифицированным перевозчикам. Предложения придут на email.',
     'errors_heading' => 'Проверьте форму:',
 
+    'direct_target_banner' => 'Вы отправляете запрос напрямую :name. Ответит только эта компания.',
+    'direct_target_switch_to_broadcast' => 'Я хочу отправить всем подходящим перевозчикам',
+
     'label' => [
         'customer_name' => 'ФИО',
         'customer_email' => 'Email',
