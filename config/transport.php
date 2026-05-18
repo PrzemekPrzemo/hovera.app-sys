@@ -61,6 +61,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Verification documents
+    |--------------------------------------------------------------------------
+    | Storage dla dokumentów weryfikacyjnych transportera (KRS, świadectwo
+    | transportu zwierząt, OCP/OCS, dowód rejestracyjny). Default disk
+    | 'local' (storage/app/transporter-docs/{tenant_id}/...) — na produkcji
+    | warto wskazać S3-compatible bucket z restricted ACL.
+    */
+
+    'documents' => [
+        'disk' => env('TRANSPORT_DOCUMENTS_DISK', 'local'),
+        'max_size_mb' => env('TRANSPORT_DOCUMENTS_MAX_SIZE_MB', 10),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Voivodeship adjacency
     |--------------------------------------------------------------------------
     | Routing leadów w trybie BROADCAST: dispatcher wybiera transporterów z

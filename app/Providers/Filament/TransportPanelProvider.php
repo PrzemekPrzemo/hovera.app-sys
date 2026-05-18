@@ -129,7 +129,7 @@ class TransportPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 PanelsRenderHook::BODY_START,
-                fn () => Blade::render('<x-trial-banner /><x-impersonation-banner />'),
+                fn () => Blade::render('<x-trial-banner /><x-impersonation-banner /><x-transport-verification-banner />'),
             )
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
