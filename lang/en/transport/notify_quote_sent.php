@@ -11,4 +11,9 @@ return [
     'action_accept' => 'View quote / Accept online',
     'outro' => 'For questions or to confirm the booking — just reply to this email. Thank you!',
     'disclaimer_intermediary' => '— — — This message concerns a quote from an independent carrier using the Hovera platform. Hovera (Sendormeco Holding sp. z o.o.) is a marketplace intermediary — not a party to the transport contract and not liable for the transport. Marketplace terms: https://app.hovera.app/regulamin-marketplace',
+    'payment_heading' => 'How to pay',
+    'payment_url_intro' => 'Once you accept, you can pay directly:',
+    'payment_pay_link' => 'Pay now',
+    'payment_method' => 'Method: :method',
+    'payment_disclaimer' => 'Payment is processed directly to :transporter. Hovera is a marketplace intermediary and does not accept payments.',
 ];

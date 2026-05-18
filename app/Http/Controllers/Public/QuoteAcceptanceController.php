@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
+use App\Domain\Transport\Leads\QuoteAcceptanceService;
 use App\Domain\Transport\Notifications\QuoteAcceptedNotification;
 use App\Domain\Transport\Notifications\QuoteRejectedNotification;
 use App\Enums\QuoteStatus;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\Quote;
+use App\Models\Tenant\TransportSettings;
 use App\Tenancy\TenantManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,11 +47,23 @@ class QuoteAcceptanceController extends Controller
             abort(404);
         }
 
+        // Direct-charge payments MVP — settings dla fallback'u (payment_instructions
+        // gdy quote.payment_url nie ustawione). Patrz docs/TRANSPORT.md §15.
+        // Try/catch: w starszych tenant DB tabela `transport_settings` może
+        // jeszcze nie istnieć (migracja wjedzie z merge'm) — wtedy fallback do
+        // null, sekcja płatności po prostu pokaże "skontaktuj się z przewoźnikiem".
+        try {
+            $transportSettings = TransportSettings::current();
+        } catch (\Throwable) {
+            $transportSettings = null;
+        }
+
         return view('public.transport.quote-landing', [
             'tenant' => $this->tenants->tenantOrFail(),
             'quote' => $quote,
             'slug' => $slug,
             'token' => $token,
+            'transportSettings' => $transportSettings,
         ]);
     }
 
@@ -73,7 +87,7 @@ class QuoteAcceptanceController extends Controller
         // domykamy całe zapytanie — pozostałe TransportLeadResponse → rejected,
         // notyfikacje "lead zamknięty" lecą do innych transporterów. Patrz
         // docs/TRANSPORT.md §5.3.
-        app(\App\Domain\Transport\Leads\QuoteAcceptanceService::class)
+        app(QuoteAcceptanceService::class)
             ->onQuoteAccepted($quote, $this->tenants->tenantOrFail());
 
         $this->notifyOwner($quote, accepted: true);

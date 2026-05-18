@@ -10,6 +10,8 @@ return [
         'resources' => 'Zasoby (opcjonalne)',
         'pricing' => 'Wycena',
         'terms' => 'Warunki i uwagi',
+        'payment' => 'Płatność (direct charge)',
+        'payment_description' => 'Hovera NIE przyjmuje płatności. Klient płaci bezpośrednio do Ciebie — wklej link do swojej bramki lub zostaw puste i wypełnij instrukcje w ustawieniach.',
     ],
 
     'form' => [
@@ -45,10 +47,26 @@ return [
             'routing_provider' => 'Źródło trasy',
             'terms' => 'Warunki handlowe',
             'notes' => 'Notatki wewnętrzne',
+            'payment_url' => 'Link do płatności',
+            'payment_method_label' => 'Etykieta metody płatności',
+            'payment_notes' => 'Notatki o płatności',
+            'payment_completed_status' => 'Status płatności',
+            'mark_as_paid_reason' => 'Powód / numer transakcji (opcjonalnie)',
         ],
         'helper' => [
             'terms' => 'Tekst widoczny dla klienta na ofercie / PDF.',
             'notes' => 'Notatki tylko dla zespołu — nie idą do klienta.',
+            'payment_url' => 'Wklej link do swojej bramki (Stripe / Przelewy24 / link bankowy). Hovera NIE pośredniczy w płatności — klient płaci bezpośrednio do Ciebie.',
+            'payment_method_label' => 'Krótki opis widoczny dla klienta pod przyciskiem (np. „Stripe", „Przelewy24", „BLIK").',
+            'payment_notes' => 'Notatki wewnętrzne lub dla klienta (np. „Zaliczka 30% do piątku").',
+            'mark_as_paid_reason' => 'Np. numer przelewu lub data wpływu — trafi do logu audytu.',
+        ],
+        'placeholder' => [
+            'payment_method_label' => 'Stripe / Przelewy24 / BLIK / Przelew tradycyjny',
+        ],
+        'value' => [
+            'payment_completed_at' => 'Opłacone — potwierdzone :date',
+            'payment_not_completed' => 'Nieopłacone — użyj akcji „Oznacz jako opłacone" po wpływie środków.',
         ],
     ],
 
@@ -69,6 +87,9 @@ return [
         'withdraw' => 'Wycofaj ofertę',
         'download_pdf' => 'Pobierz PDF',
         'issue_invoice' => 'Wystaw fakturę',
+        'mark_as_paid' => 'Oznacz jako opłacone',
+        'mark_as_paid_modal_heading' => 'Potwierdzenie wpływu płatności',
+        'mark_as_paid_modal_description' => 'Klient zapłacił bezpośrednio do Ciebie? Zaznacz ofertę jako opłaconą. Hovera nie pośredniczyła w transakcji — to ręczne potwierdzenie idzie tylko do logu audytu i do widoku klienta.',
     ],
 
     'notify' => [
@@ -83,5 +104,7 @@ return [
         'invoice_issued' => 'Faktura wystawiona',
         'invoice_issued_body' => 'Faktura :number wystawiona ze snapshotu oferty.',
         'invoice_failed' => 'Nie udało się wystawić faktury',
+        'marked_as_paid' => 'Oferta oznaczona jako opłacona',
+        'marked_as_paid_body' => 'Oferta :number — potwierdzenie wpływu zapisane.',
     ],
 ];

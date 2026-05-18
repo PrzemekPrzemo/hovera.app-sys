@@ -30,6 +30,7 @@ class Quote extends TenantModel
         'sent_at', 'accepted_at', 'rejected_at', 'expired_at', 'withdrawn_at',
         'lead_id', 'response_id',
         'pdf_url',
+        'payment_url', 'payment_method_label', 'payment_completed_at', 'payment_notes',
     ];
 
     protected function casts(): array
@@ -59,6 +60,7 @@ class Quote extends TenantModel
             'rejected_at' => 'datetime',
             'expired_at' => 'datetime',
             'withdrawn_at' => 'datetime',
+            'payment_completed_at' => 'datetime',
         ];
     }
 

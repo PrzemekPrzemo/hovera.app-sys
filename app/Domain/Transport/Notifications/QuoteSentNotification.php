@@ -6,6 +6,8 @@ namespace App\Domain\Transport\Notifications;
 
 use App\Domain\Transport\Quotes\QuotePdfGenerator;
 use App\Models\Tenant\Quote;
+use App\Models\Tenant\TransportSettings;
+use App\Tenancy\TenantManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -60,6 +62,11 @@ class QuoteSentNotification extends Notification
             $message->action(__('transport/notify_quote_sent.action_accept'), $acceptUrl);
         }
 
+        // Direct-charge payments MVP — patrz docs/TRANSPORT.md §13. Tu klient
+        // dostaje info "jak zapłacić" już w mailu (z disclaimerem, że Hovera
+        // nie pośredniczy). Priorytet: URL → instrukcje z settings → nic.
+        $this->appendPaymentSection($message);
+
         $message->line(__('transport/notify_quote_sent.outro'));
         // Stopka prawna — Hovera = pośrednik marketplace, nie przewoźnik.
         // Wymagane przez §2 Regulaminu marketplace transportowego.
@@ -72,9 +79,52 @@ class QuoteSentNotification extends Notification
         );
     }
 
+    /**
+     * Dokleja sekcję "Jak zapłacić" do mailowej notyfikacji. Priorytet:
+     *   1. payment_url (z quote) — link do bramki transportera
+     *   2. payment_instructions (z settings) — np. dane do przelewu
+     *   3. nic → mail bez tej sekcji
+     * Disclaimer "Hovera NIE przyjmuje płatności" zawsze, gdy renderujemy
+     * cokolwiek z płatnościami. Patrz docs/TRANSPORT.md §13.
+     */
+    private function appendPaymentSection(MailMessage $message): void
+    {
+        $tenant = app(TenantManager::class)->current();
+        $sellerName = (string) ($tenant?->legal_name ?: $tenant?->name ?: 'Hovera Transport');
+
+        if ($this->quote->payment_url) {
+            $message->line('');
+            $message->line('**'.__('transport/notify_quote_sent.payment_heading').'**');
+            $message->line(__('transport/notify_quote_sent.payment_url_intro'));
+            $message->line('['.__('transport/notify_quote_sent.payment_pay_link').']('.$this->quote->payment_url.')');
+            if ($this->quote->payment_method_label) {
+                $message->line(__('transport/notify_quote_sent.payment_method', [
+                    'method' => $this->quote->payment_method_label,
+                ]));
+            }
+            $message->line('');
+            $message->line('_'.__('transport/notify_quote_sent.payment_disclaimer', [
+                'transporter' => $sellerName,
+            ]).'_');
+
+            return;
+        }
+
+        $instructions = trim((string) (TransportSettings::current()->payment_instructions ?? ''));
+        if ($instructions !== '') {
+            $message->line('');
+            $message->line('**'.__('transport/notify_quote_sent.payment_heading').'**');
+            $message->line($instructions);
+            $message->line('');
+            $message->line('_'.__('transport/notify_quote_sent.payment_disclaimer', [
+                'transporter' => $sellerName,
+            ]).'_');
+        }
+    }
+
     private function buildAcceptUrl(): ?string
     {
-        $tenant = app(\App\Tenancy\TenantManager::class)->current();
+        $tenant = app(TenantManager::class)->current();
         if (! $tenant || ! $this->quote->accept_token) {
             return null;
         }

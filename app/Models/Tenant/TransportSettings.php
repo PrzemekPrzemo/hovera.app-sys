@@ -29,6 +29,7 @@ class TransportSettings extends Model
         'vat_rate', 'currency',
         'routing_provider',
         'ksef_token_encrypted', 'ksef_environment', 'ksef_nip', 'ksef_enabled',
+        'default_payment_url_template', 'default_payment_method_label', 'payment_instructions',
     ];
 
     /**
