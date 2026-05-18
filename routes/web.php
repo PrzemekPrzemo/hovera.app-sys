@@ -16,6 +16,7 @@ use App\Http\Controllers\Public\LegalController;
 use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PricingController;
 use App\Http\Controllers\Public\Przelewy24Controller;
+use App\Http\Controllers\Public\QuoteAcceptanceController;
 use App\Http\Controllers\Public\Przelewy24WebhookController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicInvoiceController;
@@ -323,6 +324,26 @@ Route::middleware(['web', 'throttle:30,1'])
         // Customer-facing cancel link (signed URL with TTL = booking start time)
         Route::get('/cancel/{entry}', [BookingCancellationController::class, 'show'])->name('cancel.show');
         Route::post('/cancel/{entry}', [BookingCancellationController::class, 'submit'])->name('cancel.submit');
+    });
+
+/*
+ * Publiczna akceptacja oferty transportowej. URL przesyłany w mailu z PDFem;
+ * klient klika "Akceptuję / Odrzucam" bez logowania. Token (48 znaków,
+ * Str::random) jest jedyną poświadczeniową. Patrz docs/TRANSPORT.md §9 faza 3
+ * punkt 4. POST throttle przeciwko brute-force zgadywaniu.
+ */
+Route::middleware(['web'])
+    ->prefix('/transport/quote/{slug}/{token}')
+    ->where(['slug' => $slugRegex, 'token' => '[A-Za-z0-9]{40,80}'])
+    ->name('public.transport.')
+    ->group(function () {
+        Route::get('/', [QuoteAcceptanceController::class, 'show'])->name('quote');
+        Route::post('/accept', [QuoteAcceptanceController::class, 'accept'])
+            ->middleware('throttle:10,1')
+            ->name('quote.accept');
+        Route::post('/reject', [QuoteAcceptanceController::class, 'reject'])
+            ->middleware('throttle:10,1')
+            ->name('quote.reject');
     });
 
 /*
