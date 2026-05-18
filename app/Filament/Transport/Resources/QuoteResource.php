@@ -337,6 +337,12 @@ class QuoteResource extends Resource
 
     public static function sendQuote(Quote $quote): void
     {
+        // Verification gate — patrz docs/TRANSPORT.md (feedback prod).
+        // Transporter bez `verified` nie może wysyłać ofert do klientów.
+        if (! self::ensureTenantVerified()) {
+            return;
+        }
+
         $quote->forceFill([
             'status' => QuoteStatus::Sent,
             'sent_at' => now(),
@@ -418,5 +424,40 @@ class QuoteResource extends Resource
                 'number' => $record->number,
             ]);
         };
+    }
+
+    /**
+     * Sprawdza czy aktywny tenant ma `verified` status. Jeśli nie —
+     * pokazuje friendly notyfikację z CTA do dokumentów weryfikacyjnych
+     * i zwraca false (caller ma przerwać akcję). Master admin ze
+     * status=null/inny też dostaje informację.
+     *
+     * Reused: faza C dla TransportInvoiceResource, faza 6 dla LeadDispatcher,
+     * faza 7 dla public profile gate.
+     */
+    public static function ensureTenantVerified(): bool
+    {
+        $tenant = app(\App\Tenancy\TenantManager::class)->current();
+        if (! $tenant || ! $tenant->isTransporter()) {
+            return true;        // gate aplikujemy tylko dla transporterów
+        }
+
+        if ($tenant->isVerifiedTransporter()) {
+            return true;
+        }
+
+        Notification::make()
+            ->danger()
+            ->title(__('transport/quote.notify.verification_required'))
+            ->body(__('transport/quote.notify.verification_required_body'))
+            ->actions([
+                \Filament\Notifications\Actions\Action::make('openDocuments')
+                    ->label(__('transport/quote.notify.open_documents'))
+                    ->url(route('filament.transport.pages.transporter-documents')),
+            ])
+            ->persistent()
+            ->send();
+
+        return false;
     }
 }

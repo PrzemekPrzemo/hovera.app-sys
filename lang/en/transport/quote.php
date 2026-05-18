@@ -76,5 +76,8 @@ return [
         'sent_no_email' => 'Quote saved but email did not send — check "transport" SMTP config.',
         'sent_no_customer_email' => 'Quote :number ready (no customer email — download PDF and send manually).',
         'withdrawn' => 'Quote withdrawn',
+        'verification_required' => 'Account not verified',
+        'verification_required_body' => 'To send a quote to a customer, you must first complete account verification — upload the required documents.',
+        'open_documents' => 'Open documents',
     ],
 ];

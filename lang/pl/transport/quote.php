@@ -76,5 +76,8 @@ return [
         'sent_no_email' => 'Oferta zapisana, ale email nie poszedł — sprawdź konfigurację SMTP "transport".',
         'sent_no_customer_email' => 'Oferta :number gotowa do wysyłki (klient nie ma maila — pobierz PDF i wyślij ręcznie).',
         'withdrawn' => 'Oferta wycofana',
+        'verification_required' => 'Konto nie jest zweryfikowane',
+        'verification_required_body' => 'Aby wysłać ofertę do klienta, musisz najpierw przejść weryfikację konta — wgraj wymagane dokumenty.',
+        'open_documents' => 'Otwórz dokumenty',
     ],
 ];
