@@ -24,6 +24,21 @@ return [
         'rejected' => 'Odrzucone',
     ],
 
+    'transport_invoice_kind' => [
+        'fv' => 'Faktura VAT',
+        'fv_proforma' => 'Faktura pro forma',
+        'fv_korekta' => 'Faktura korygująca',
+    ],
+
+    'transport_invoice_status' => [
+        'draft' => 'Szkic',
+        'issued' => 'Wystawiona',
+        'paid' => 'Zapłacona',
+        'overdue' => 'Przeterminowana',
+        'void' => 'Anulowana',
+        'cancelled' => 'Wycofana',
+    ],
+
     'transporter_document_type' => [
         'company_registration' => 'Dane rejestrowe firmy',
         'company_registration_description' => 'Wpis do KRS lub CEIDG (PDF, JPG).',

@@ -24,6 +24,21 @@ return [
         'rejected' => 'Rejeté',
     ],
 
+    'transport_invoice_kind' => [
+        'fv' => 'Facture (TVA)',
+        'fv_proforma' => 'Facture pro forma',
+        'fv_korekta' => 'Facture rectificative',
+    ],
+
+    'transport_invoice_status' => [
+        'draft' => 'Brouillon',
+        'issued' => 'Émise',
+        'paid' => 'Payée',
+        'overdue' => 'En retard',
+        'void' => 'Annulée',
+        'cancelled' => 'Retirée',
+    ],
+
     'transporter_document_type' => [
         'company_registration' => 'Registre de la société',
         'company_registration_description' => 'Extrait du registre du commerce (PDF/JPG).',
