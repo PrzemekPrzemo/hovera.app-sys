@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Transport\Pages;
 
+use App\Domain\Transport\Ksef\TransporterKsefService;
 use App\Domain\Transport\Routing\RoutingProviderProbe;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\TransportSettings as TransportSettingsModel;
@@ -67,6 +68,8 @@ class TransportSettings extends Page implements HasForms
         $settings = TransportSettingsModel::current();
         $routing = (array) ($settings->routing_provider ?? ['provider' => 'ors']);
 
+        $tenant = app(TenantManager::class)->current();
+
         $this->form->fill([
             'rate_per_km' => $settings->rate_per_km,
             'rate_per_km_loaded' => $settings->rate_per_km_loaded,
@@ -78,6 +81,14 @@ class TransportSettings extends Page implements HasForms
             'currency' => $settings->currency,
             'routing_provider' => $routing['provider'] ?? 'ors',
             'routing_api_key' => $routing['api_key'] ?? null,
+            // KSeF: token NIGDY nie wraca do UI w czystej formie. Pokazujemy
+            // tylko czy jest ustawiony — wartość pozostawiamy pustą; jeśli
+            // user nic nie wpisze przy save, zachowujemy istniejący token.
+            'ksef_nip' => $settings->ksef_nip ?? ($tenant?->tax_id),
+            'ksef_environment' => $settings->ksef_environment ?? 'test',
+            'ksef_token' => null,
+            'ksef_token_present' => $settings->getKsefToken() !== null,
+            'ksef_enabled' => (bool) $settings->ksef_enabled,
         ]);
     }
 
@@ -189,6 +200,60 @@ class TransportSettings extends Page implements HasForms
                                 }),
                         ])->columnSpanFull(),
                     ]),
+
+                Forms\Components\Section::make(__('transport/ksef.section.title'))
+                    ->description(__('transport/ksef.section.description'))
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\Placeholder::make('ksef_disclaimer')
+                            ->columnSpanFull()
+                            ->label('')
+                            ->content(__('transport/ksef.section.disclaimer')),
+
+                        Forms\Components\TextInput::make('ksef_nip')
+                            ->label(__('transport/ksef.form.label.nip'))
+                            ->helperText(__('transport/ksef.form.helper.nip'))
+                            ->regex('/^\d{10}$/')
+                            ->maxLength(16),
+
+                        Forms\Components\Select::make('ksef_environment')
+                            ->label(__('transport/ksef.form.label.environment'))
+                            ->options([
+                                'test' => __('transport/ksef.form.option.environment.test'),
+                                'demo' => __('transport/ksef.form.option.environment.demo'),
+                                'production' => __('transport/ksef.form.option.environment.production'),
+                            ])
+                            ->default('test')
+                            ->required()
+                            ->native(false),
+
+                        Forms\Components\Hidden::make('ksef_token_present')
+                            ->dehydrated(false),
+
+                        Forms\Components\TextInput::make('ksef_token')
+                            ->label(__('transport/ksef.form.label.token'))
+                            ->helperText(fn (Forms\Get $get) => $get('ksef_token_present')
+                                ? __('transport/ksef.form.helper.token_set')
+                                : __('transport/ksef.form.helper.token_empty'))
+                            ->password()
+                            ->revealable()
+                            ->maxLength(255)
+                            ->columnSpanFull(),
+
+                        Forms\Components\Toggle::make('ksef_enabled')
+                            ->label(__('transport/ksef.form.label.enabled'))
+                            ->helperText(__('transport/ksef.form.helper.enabled'))
+                            ->inline(false)
+                            ->columnSpanFull(),
+
+                        Forms\Components\Actions::make([
+                            Forms\Components\Actions\Action::make('testKsefConnection')
+                                ->label(__('transport/ksef.action.test_connection'))
+                                ->icon('heroicon-o-signal')
+                                ->color('info')
+                                ->action(fn () => $this->testKsefConnection()),
+                        ])->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -214,7 +279,25 @@ class TransportSettings extends Page implements HasForms
                 'provider' => (string) $form['routing_provider'],
                 'api_key' => $form['routing_api_key'] ?: null,
             ]),
-        ])->save();
+            'ksef_nip' => $form['ksef_nip'] ?: null,
+            'ksef_environment' => (string) ($form['ksef_environment'] ?? 'test'),
+            'ksef_enabled' => (bool) ($form['ksef_enabled'] ?? false),
+        ]);
+
+        // Token: jeśli user wpisał nowy → szyfrujemy i zapisujemy. Jeśli
+        // zostawił puste → zachowujemy istniejący (UI nigdy nie pokazuje
+        // czystej wartości, więc puste = "nie ruszać", nie "kasuj").
+        $newToken = (string) ($form['ksef_token'] ?? '');
+        if ($newToken !== '') {
+            $settings->setKsefToken($newToken);
+        }
+
+        // Defensive: nie pozwalamy włączyć KSeF bez tokenu (UX safety net).
+        if ($settings->getKsefToken() === null) {
+            $settings->ksef_enabled = false;
+        }
+
+        $settings->save();
 
         app(TenantAuditLogger::class)->record(
             'transport.settings_updated',
@@ -253,6 +336,37 @@ class TransportSettings extends Page implements HasForms
         Notification::make()
             ->danger()
             ->title(__('transport/api_config.notify.failure'))
+            ->body($result['message'])
+            ->persistent()
+            ->send();
+    }
+
+    /**
+     * Akcja „Test connection" w sekcji KSeF — wywołuje najtańszy
+     * auth-only endpoint MF (Session/Status), tylko po to żeby
+     * potwierdzić że token + środowisko są kompatybilne.
+     *
+     * NIE zapisuje konfiguracji — to oddzielne wywołanie save().
+     */
+    public function testKsefConnection(): void
+    {
+        abort_unless(self::canAccess(), 403);
+
+        $result = app(TransporterKsefService::class)->testConnection();
+
+        if ($result['success']) {
+            Notification::make()
+                ->success()
+                ->title(__('transport/ksef.notify.test_ok'))
+                ->body($result['message'])
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->danger()
+            ->title(__('transport/ksef.notify.test_failed'))
             ->body($result['message'])
             ->persistent()
             ->send();

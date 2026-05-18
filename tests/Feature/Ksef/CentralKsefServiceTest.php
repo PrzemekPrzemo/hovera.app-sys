@@ -88,10 +88,16 @@ class CentralKsefServiceTest extends TestCase
 
     private function makeInvoice(Tenant $tenant): Invoice
     {
+        // `plan_code` i `period` to NOT NULL w schemacie (migracja
+        // 2026_05_10_202700) — fixture musi je dostarczyć, bo Invoice
+        // model nie ma sensownych defaultów (model jest cienki, defaults
+        // siedzą w BillingService).
         return Invoice::create([
             'tenant_id' => $tenant->id,
             'number' => 'HVR/2026/05/0001',
             'kind' => 'regular',
+            'plan_code' => 'starter',
+            'period' => 'monthly',
             'currency' => 'PLN',
             'subtotal_cents' => 20244,
             'vat_cents' => 4656,

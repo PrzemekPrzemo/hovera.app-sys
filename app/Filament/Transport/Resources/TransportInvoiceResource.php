@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Filament\Transport\Resources;
 
 use App\Domain\Transport\Invoices\TransportInvoicePdfGenerator;
+use App\Domain\Transport\Ksef\KsefNotConfiguredException;
+use App\Domain\Transport\Ksef\TransporterKsefService;
 use App\Domain\Transport\Notifications\TransportInvoiceSentNotification;
 use App\Enums\TransportInvoiceKind;
 use App\Enums\TransportInvoiceStatus;
+use App\Enums\TransportKsefStatus;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Filament\Transport\Resources\TransportInvoiceResource\Pages;
 use App\Models\Tenant\TransportInvoice;
@@ -20,9 +23,10 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Faktury transportowe (Filament) — list/view + akcje (download PDF,
@@ -136,6 +140,26 @@ class TransportInvoiceResource extends Resource
                 ->schema([
                     Forms\Components\Textarea::make('notes')->rows(3),
                 ]),
+
+            Forms\Components\Section::make(__('transport/ksef.section.invoice_title'))
+                ->description(__('transport/ksef.section.invoice_description'))
+                ->columns(3)
+                ->schema([
+                    Forms\Components\TextInput::make('ksef_status')
+                        ->label(__('transport/ksef.form.label.invoice_status'))
+                        ->disabled()
+                        ->formatStateUsing(fn ($state) => $state instanceof TransportKsefStatus
+                            ? $state->label()
+                            : (TransportKsefStatus::tryFrom((string) $state)?->label()
+                                ?? __('transport/ksef.status.not_submitted'))),
+                    Forms\Components\TextInput::make('ksef_reference_number')
+                        ->label(__('transport/ksef.form.label.reference_number'))
+                        ->disabled(),
+                    Forms\Components\DateTimePicker::make('ksef_submitted_at')
+                        ->label(__('transport/ksef.form.label.submitted_at'))
+                        ->disabled(),
+                ])
+                ->visible(fn ($record) => $record !== null),
         ]);
     }
 
@@ -174,6 +198,18 @@ class TransportInvoiceResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (TransportInvoiceStatus $state) => $state->label())
                     ->color(fn (TransportInvoiceStatus $state) => $state->color()),
+                Tables\Columns\TextColumn::make('ksef_status')
+                    ->label(__('transport/ksef.table.column.status'))
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state instanceof TransportKsefStatus
+                        ? $state->label()
+                        : (TransportKsefStatus::tryFrom((string) ($state ?? 'not_submitted'))
+                            ?? TransportKsefStatus::NotSubmitted)->label())
+                    ->color(fn ($state) => $state instanceof TransportKsefStatus
+                        ? $state->color()
+                        : (TransportKsefStatus::tryFrom((string) ($state ?? 'not_submitted'))
+                            ?? TransportKsefStatus::NotSubmitted)->color())
+                    ->toggleable(),
             ])
             ->defaultSort('issued_at', 'desc')
             ->filters([
@@ -203,7 +239,30 @@ class TransportInvoiceResource extends Resource
                     ->visible(fn (TransportInvoice $i) => in_array($i->status, [TransportInvoiceStatus::Issued, TransportInvoiceStatus::Overdue], true))
                     ->requiresConfirmation()
                     ->action(fn (TransportInvoice $i) => self::markPaid($i)),
+                Tables\Actions\Action::make('ksefSubmit')
+                    ->label(__('transport/ksef.action.submit'))
+                    ->icon('heroicon-o-cloud-arrow-up')
+                    ->color('warning')
+                    ->visible(fn (TransportInvoice $i) => self::ksefCanSubmit($i))
+                    ->requiresConfirmation()
+                    ->modalDescription(__('transport/ksef.action.submit_confirm'))
+                    ->action(fn (TransportInvoice $i) => self::ksefSubmit($i)),
+                Tables\Actions\Action::make('ksefRefresh')
+                    ->label(__('transport/ksef.action.refresh'))
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('info')
+                    ->visible(fn (TransportInvoice $i) => self::ksefCanRefresh($i))
+                    ->action(fn (TransportInvoice $i) => self::ksefRefresh($i)),
                 Tables\Actions\ViewAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkAction::make('ksefSubmitBulk')
+                    ->label(__('transport/ksef.action.submit_bulk'))
+                    ->icon('heroicon-o-cloud-arrow-up')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalDescription(__('transport/ksef.action.submit_bulk_confirm'))
+                    ->action(fn ($records) => self::ksefSubmitBulk($records)),
             ]);
     }
 
@@ -220,12 +279,12 @@ class TransportInvoiceResource extends Resource
         ];
     }
 
-    public static function downloadPdf(TransportInvoice $invoice): \Symfony\Component\HttpFoundation\StreamedResponse
+    public static function downloadPdf(TransportInvoice $invoice): StreamedResponse
     {
         $pdf = app(TransportInvoicePdfGenerator::class)->generate($invoice);
 
         return response()->streamDownload(
-            callback: fn () => print($pdf),
+            callback: fn () => print ($pdf),
             name: $invoice->number.'.pdf',
             headers: ['Content-Type' => 'application/pdf'],
         );
@@ -291,6 +350,136 @@ class TransportInvoiceResource extends Resource
             ->success()
             ->title(__('transport/invoice_resource.notify.marked_paid'))
             ->body($invoice->number)
+            ->send();
+    }
+
+    /**
+     * Action visibility: submit jest dostępny tylko gdy FV ma status
+     * (issued / overdue / paid — czyli wystawiona) AND KSeF jest jeszcze
+     * not_submitted AND transporter ma włączoną integrację. Draft i void
+     * nie idą do KSeF (sens biznesowy: KSeF = oficjalne wystawienie).
+     */
+    public static function ksefCanSubmit(TransportInvoice $invoice): bool
+    {
+        if (in_array($invoice->status, [TransportInvoiceStatus::Draft, TransportInvoiceStatus::Void, TransportInvoiceStatus::Cancelled], true)) {
+            return false;
+        }
+
+        $current = self::ksefStatusOf($invoice);
+        if ($current !== TransportKsefStatus::NotSubmitted) {
+            return false;
+        }
+
+        return app(TransporterKsefService::class)->isEnabledForCurrentTransporter();
+    }
+
+    public static function ksefCanRefresh(TransportInvoice $invoice): bool
+    {
+        $current = self::ksefStatusOf($invoice);
+
+        return in_array($current, [TransportKsefStatus::Submitted, TransportKsefStatus::Error], true)
+            && app(TransporterKsefService::class)->isEnabledForCurrentTransporter();
+    }
+
+    private static function ksefStatusOf(TransportInvoice $invoice): TransportKsefStatus
+    {
+        $status = $invoice->ksef_status;
+        if ($status instanceof TransportKsefStatus) {
+            return $status;
+        }
+        if (is_string($status) && $status !== '') {
+            return TransportKsefStatus::tryFrom($status) ?? TransportKsefStatus::NotSubmitted;
+        }
+
+        return TransportKsefStatus::NotSubmitted;
+    }
+
+    public static function ksefSubmit(TransportInvoice $invoice): void
+    {
+        try {
+            $result = app(TransporterKsefService::class)->submit($invoice);
+        } catch (KsefNotConfiguredException $e) {
+            Notification::make()
+                ->warning()
+                ->title(__('transport/ksef.notify.not_configured'))
+                ->body($e->getMessage())
+                ->send();
+
+            return;
+        }
+
+        if ($result->isSuccess()) {
+            Notification::make()
+                ->success()
+                ->title(__('transport/ksef.notify.submitted'))
+                ->body($invoice->number.' → '.$result->referenceNumber)
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->danger()
+            ->title(__('transport/ksef.notify.submit_failed'))
+            ->body($result->errorMessage ?: __('transport/ksef.notify.unknown_error'))
+            ->persistent()
+            ->send();
+    }
+
+    public static function ksefRefresh(TransportInvoice $invoice): void
+    {
+        try {
+            $result = app(TransporterKsefService::class)->refreshStatus($invoice);
+        } catch (KsefNotConfiguredException $e) {
+            Notification::make()
+                ->warning()
+                ->title(__('transport/ksef.notify.not_configured'))
+                ->body($e->getMessage())
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title(__('transport/ksef.notify.status_refreshed'))
+            ->body($result->status->label())
+            ->success()
+            ->send();
+    }
+
+    public static function ksefSubmitBulk(Collection $records): void
+    {
+        // Limit 50 — KSeF MF API jest rate-limited, nie chcemy
+        // odpalać 500 wywołań z jednego klika.
+        $records = $records->take(50);
+
+        $service = app(TransporterKsefService::class);
+        $ok = 0;
+        $fail = 0;
+
+        foreach ($records as $invoice) {
+            if (! self::ksefCanSubmit($invoice)) {
+                $fail++;
+
+                continue;
+            }
+            try {
+                $result = $service->submit($invoice);
+                $result->isSuccess() ? $ok++ : $fail++;
+            } catch (KsefNotConfiguredException) {
+                Notification::make()
+                    ->warning()
+                    ->title(__('transport/ksef.notify.not_configured'))
+                    ->send();
+
+                return;
+            }
+        }
+
+        Notification::make()
+            ->title(__('transport/ksef.notify.bulk_done'))
+            ->body(__('transport/ksef.notify.bulk_done_body', ['ok' => $ok, 'fail' => $fail]))
+            ->success()
             ->send();
     }
 }

@@ -6,6 +6,7 @@ namespace App\Models\Tenant;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Crypt;
 
 /**
  * Singleton — jeden wiersz per tenant DB. Pobierany przez ::current(),
@@ -27,7 +28,17 @@ class TransportSettings extends Model
         'manual_fuel_price_pln',
         'vat_rate', 'currency',
         'routing_provider',
+        'ksef_token_encrypted', 'ksef_environment', 'ksef_nip', 'ksef_enabled',
     ];
+
+    /**
+     * Tokenu KSeF NIE pokazujemy nigdzie poza świadomym getKsefToken().
+     * Serializowanie modelu (toArray / API / debug dump) musi go pomijać,
+     * inaczej trafiłby do logów aplikacji albo telemetrii.
+     *
+     * @var list<string>
+     */
+    protected $hidden = ['ksef_token_encrypted'];
 
     protected function casts(): array
     {
@@ -41,7 +52,65 @@ class TransportSettings extends Model
             'manual_fuel_price_pln' => 'decimal:2',
             'vat_rate' => 'decimal:2',
             'routing_provider' => 'array',
+            'ksef_enabled' => 'boolean',
         ];
+    }
+
+    /**
+     * Pobierz odszyfrowany token KSeF transportera. Zwraca null, jeśli
+     * token nie został jeszcze ustawiony albo szyfrowanie zostało
+     * zinstalowane na nowym kluczu (np. po rotacji APP_KEY) — wtedy
+     * trzeba poprosić transportera o ponowne wprowadzenie tokenu.
+     *
+     * UWAGA: nigdy nie loguj wyniku. Jeśli musisz pokazać w logu fakt
+     * obecności tokenu, użyj redactedTokenPreview().
+     */
+    public function getKsefToken(): ?string
+    {
+        $encrypted = $this->getRawOriginal('ksef_token_encrypted');
+        if (! is_string($encrypted) || $encrypted === '') {
+            return null;
+        }
+
+        try {
+            return Crypt::decryptString($encrypted);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * Szyfruje i zapisuje token. Pusty / null → kasuje token i wyłącza
+     * integrację (defensive — nie zostawiamy częściowej konfiguracji).
+     */
+    public function setKsefToken(?string $token): void
+    {
+        if ($token === null || trim($token) === '') {
+            $this->ksef_token_encrypted = null;
+            $this->ksef_enabled = false;
+
+            return;
+        }
+
+        $this->ksef_token_encrypted = Crypt::encryptString(trim($token));
+    }
+
+    /**
+     * Bezpieczny do logowania podgląd tokenu — pierwsze 3 i ostatnie 3
+     * znaki, reszta gwiazdki. Używany przez TransporterKsefService gdy
+     * raportujemy błąd ops-om bez ujawniania pełnego sekretu.
+     */
+    public function redactedTokenPreview(): ?string
+    {
+        $token = $this->getKsefToken();
+        if ($token === null) {
+            return null;
+        }
+        if (strlen($token) <= 8) {
+            return str_repeat('*', strlen($token));
+        }
+
+        return substr($token, 0, 3).str_repeat('*', 8).substr($token, -3);
     }
 
     /**
