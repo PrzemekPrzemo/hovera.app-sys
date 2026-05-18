@@ -17,6 +17,11 @@ class EditQuote extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('downloadPdf')
+                ->label(__('transport/quote.action.download_pdf'))
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->action(fn () => QuoteResource::downloadPdf($this->record)),
             Actions\Action::make('send')
                 ->label(__('transport/quote.action.send'))
                 ->icon('heroicon-o-paper-airplane')

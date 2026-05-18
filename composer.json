@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "bacon/bacon-qr-code": "^3.0",
+        "barryvdh/laravel-dompdf": "^3.0",
         "dedoc/scramble": "^0.12",
         "filament/filament": "^3.2",
         "kreait/laravel-firebase": "^5.10",

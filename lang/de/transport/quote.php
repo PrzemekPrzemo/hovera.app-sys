@@ -67,10 +67,14 @@ return [
     'action' => [
         'send' => 'An Kunden senden',
         'withdraw' => 'Angebot zurückziehen',
+        'download_pdf' => 'PDF herunterladen',
     ],
 
     'notify' => [
         'sent' => 'Angebot versendet',
+        'sent_body' => 'Angebot :number an :email mit PDF im Anhang gesendet.',
+        'sent_no_email' => 'Angebot gespeichert, E-Mail jedoch nicht gesendet — prüfen Sie die SMTP-Konfiguration "transport".',
+        'sent_no_customer_email' => 'Angebot :number bereit (keine Kunden-E-Mail — PDF herunterladen und manuell senden).',
         'withdrawn' => 'Angebot zurückgezogen',
     ],
 ];
