@@ -62,4 +62,7 @@ return [
     'feed_items' => 'Feed inventory',
     'horse_photo' => 'photo',
     'horse_photos' => 'Photo gallery',
+
+    'vehicle' => 'vehicle',
+    'vehicles' => 'Vehicles',
 ];

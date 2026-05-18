@@ -40,6 +40,8 @@ return [
     'treatment_templates' => 'Modèles de soins',
     'feed_inventory' => 'Stock de fourrage',
 
+    'vehicles' => 'Véhicules',
+
     // Pages (non-resource)
     'pages' => [
         'profile' => 'Profil',

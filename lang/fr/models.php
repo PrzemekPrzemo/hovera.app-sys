@@ -69,4 +69,7 @@ return [
     'feed_items' => 'Stock de fourrage',
     'horse_photo' => 'photo',
     'horse_photos' => 'Galerie de photos',
+
+    'vehicle' => 'véhicule',
+    'vehicles' => 'Véhicules',
 ];

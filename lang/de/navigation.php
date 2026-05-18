@@ -40,6 +40,8 @@ return [
     'treatment_templates' => 'Behandlungsvorlagen',
     'feed_inventory' => 'Futterlager',
 
+    'vehicles' => 'Fahrzeuge',
+
     // Pages (non-resource)
     'pages' => [
         'profile' => 'Profil',

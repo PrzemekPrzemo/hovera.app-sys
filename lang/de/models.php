@@ -69,4 +69,7 @@ return [
     'feed_items' => 'Futterlager',
     'horse_photo' => 'Foto',
     'horse_photos' => 'Fotogalerie',
+
+    'vehicle' => 'Fahrzeug',
+    'vehicles' => 'Fahrzeuge',
 ];
