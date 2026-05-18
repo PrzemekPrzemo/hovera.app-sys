@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Transport\Pages;
 
 use App\Domain\Transport\Verification\DocumentUploadService;
+use App\Domain\Transport\Verification\VerificationChecklistService;
 use App\Enums\TransporterDocumentType;
 use App\Enums\VerificationStatus;
 use App\Filament\Concerns\RestrictedByTenantRole;
@@ -17,6 +18,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Livewire\WithFileUploads;
 
@@ -64,7 +66,7 @@ class TransporterDocuments extends Page implements HasForms
      * Live upload bindings — jeden slot per typ dokumentu.
      * Klucze = TransporterDocumentType::value.
      *
-     * @var array<string, \Illuminate\Http\UploadedFile|null>
+     * @var array<string, UploadedFile|null>
      */
     public array $files = [];
 
@@ -78,6 +80,10 @@ class TransporterDocuments extends Page implements HasForms
     {
         abort_unless(self::canAccess(), 403);
 
+        // Iterujemy po wszystkich case'ach — także po deprecated — bo użytkownik
+        // może mieć stary dokument w DB którego chce zarządzić. UI ukrywa
+        // niepotrzebne sloty (uiCases) + sekcję „legacy" pokazuje tylko gdy
+        // tenant ma jakieś starsze rekordy.
         foreach (TransporterDocumentType::cases() as $type) {
             $this->files[$type->value] = null;
             $this->expiresAt[$type->value] = null;
@@ -170,21 +176,49 @@ class TransporterDocuments extends Page implements HasForms
         $service = app(DocumentUploadService::class);
         $tenant = app(TenantManager::class)->tenantOrFail();
         $byType = $service->latestByType();
+        $checklist = app(VerificationChecklistService::class)->build();
 
-        $missingRequired = 0;
-        foreach (TransporterDocumentType::requiredCases() as $type) {
-            $doc = $byType[$type->value] ?? null;
-            if (! $doc || $doc->status === TransporterDocument::STATUS_REJECTED) {
-                $missingRequired++;
+        // „Brakuje X" — w panelu transportera prosty licznik pendingów + missingów.
+        // Reguła PWL nie liczy T1 i T2 osobno (alternatywa) — bierzemy z checklisty.
+        $missingRequired = $checklist->totalRequired - $checklist->verifiedCount;
+
+        // Sekcje UI: rozróżniamy required PWL od opcjonalnych i legacy.
+        $pwlRequired = [];
+        $optional = [];
+        $legacy = [];
+
+        foreach (TransporterDocumentType::cases() as $type) {
+            if ($type === TransporterDocumentType::Other) {
+                $optional[] = $type;
+
+                continue;
             }
+            if ($type->isDeprecated()) {
+                // Pokazuj tylko gdy tenant faktycznie ma stary dokument w DB.
+                if (($byType[$type->value] ?? null) !== null) {
+                    $legacy[] = $type;
+                }
+
+                continue;
+            }
+            if ($type->isRequiredForPwlVerification() || $type === TransporterDocumentType::CompanyRegistration) {
+                $pwlRequired[] = $type;
+
+                continue;
+            }
+            $optional[] = $type;
         }
 
         return [
             'tenant' => $tenant,
-            'documentTypes' => TransporterDocumentType::cases(),
+            'documentTypes' => TransporterDocumentType::uiCases(),
+            'pwlRequiredTypes' => $pwlRequired,
+            'optionalTypes' => $optional,
+            'legacyTypes' => $legacy,
             'docs' => $byType,
             'missingRequired' => $missingRequired,
             'verificationStatus' => $tenant->verification_status ?? VerificationStatus::Pending,
+            'checklist' => $checklist,
         ];
     }
 

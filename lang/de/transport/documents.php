@@ -50,4 +50,43 @@ return [
     'footer' => [
         'allowed_formats' => 'Akzeptiert: PDF, JPG, PNG. Maximal 10 MB pro Datei. Alle Dateien in verschlüsseltem EU-Speicher.',
     ],
+
+    // @todo native review — maschinell übersetzt aus PL/EN.
+    'section' => [
+        'pwl_required' => 'PWL-Dokumente (pflicht für Verifizierung)',
+        'pwl_optional' => 'Optionale Dokumente',
+        'legacy' => 'Legacy-Dokumente (zählen nicht für PWL)',
+    ],
+
+    'helper' => [
+        'pwl_authorization_choice' => 'Typ 1 ODER Typ 2 wählen — je nach Transportprofil. Typ 2 (> 8h) deckt auch Typ 1 ab.',
+        'pwl_vehicle_per_vehicle' => 'Pro Fahrzeug ausgestellt. Bei Flotte: zusammengeführtes PDF aller Fahrzeuge hochladen.',
+        'wash_log_period' => 'Aktuell halten — Einträge älter als 12 Monate gelten als veraltet.',
+    ],
+
+    'checklist' => [
+        'heading' => 'PWL-Dokumenten-Checkliste',
+        'progress' => ':done von :total Dokumenten verifiziert',
+        'missing_intro' => 'Fehlt:',
+        'all_complete' => 'Alle Pflichtdokumente verifiziert.',
+        'pwl_authorization_alternative' => 'PWL-Genehmigung (Typ 1 ODER Typ 2)',
+    ],
+
+    'admin' => [
+        'verify_doc' => 'Dokument freigeben',
+        'reject_doc' => 'Dokument ablehnen',
+        'verify_doc_confirm' => 'Dokument freigeben? Nach Freigabe kann der Transporteur es nicht mehr löschen.',
+        'rejection_reason_required' => 'Ablehnungsgrund (für Transporteur sichtbar)',
+        'notify_doc_verified' => 'Dokument freigegeben',
+        'notify_doc_rejected' => 'Dokument abgelehnt',
+        'cannot_verify_tenant' => 'Bitte zuerst alle PWL-Pflichtdokumente verifizieren (:done/:total). Siehe Checkliste unten.',
+    ],
+
+    'expiry_notify' => [
+        'subject' => 'Dokument :type läuft in :days Tagen ab',
+        'greeting' => 'Hallo,',
+        'intro' => 'Das Dokument „:type" für die Firma :name läuft am :date (in :days Tagen) ab.',
+        'cta' => 'Bitte ein neues im Panel hochladen — sonst kann Ihr Konto am Ablaufdatum vorübergehend gesperrt werden.',
+        'action' => 'Dokumente öffnen',
+    ],
 ];

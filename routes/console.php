@@ -43,3 +43,12 @@ Schedule::command('transport:dispatch-review-invites')
     ->timezone('Europe/Warsaw')
     ->withoutOverlapping()
     ->onOneServer();
+
+// PWL document expiry watchdog — codziennie o 04:00 (zaraz po snapshot-health)
+// sprawdza wszystkie verified dokumenty transportera w oknie 30 dni przed
+// `expires_at` i wysyła mail do owner'a. Per-document expiry_notified_at
+// zapewnia idempotencję; re-upload (nowy `updated_at`) re-armuje notify.
+Schedule::command('transporter:docs-expiry-notify')
+    ->dailyAt('04:00')
+    ->withoutOverlapping()
+    ->onOneServer();

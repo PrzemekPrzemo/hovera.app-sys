@@ -50,4 +50,44 @@ return [
     'footer' => [
         'allowed_formats' => 'Akceptujemy: PDF, JPG, PNG. Maksymalnie 10 MB per plik. Wszystkie pliki przechowywane są w szyfrowanym storage UE.',
     ],
+
+    // PWL = Przewóz Wewnątrzwspólnotowy Zwierząt Żywych. Sekcja na liście
+    // dokumentów odróżniająca legacy slots (KRS, dawne) od ścisłego zestawu PWL.
+    'section' => [
+        'pwl_required' => 'Dokumenty PWL (wymagane do weryfikacji)',
+        'pwl_optional' => 'Dokumenty opcjonalne',
+        'legacy' => 'Dokumenty legacy (nie zaliczają się do PWL)',
+    ],
+
+    'helper' => [
+        'pwl_authorization_choice' => 'Wybierz Typ 1 LUB Typ 2 — zależnie od profilu transportów. Typ 2 (> 8h) pokrywa również Typ 1.',
+        'pwl_vehicle_per_vehicle' => 'Dokument wystawiany per pojazd. Jeśli masz flotę, wgraj scaloną wersję PDF dla wszystkich pojazdów.',
+        'wash_log_period' => 'Wgrywaj na bieżąco — wpisy starsze niż 12 miesięcy są traktowane jako nieaktualne.',
+    ],
+
+    'checklist' => [
+        'heading' => 'Lista wymaganych dokumentów PWL',
+        'progress' => ':done z :total dokumentów zweryfikowanych',
+        'missing_intro' => 'Brakuje:',
+        'all_complete' => 'Wszystkie wymagane dokumenty zatwierdzone.',
+        'pwl_authorization_alternative' => 'Zezwolenie PWL (Typ 1 LUB Typ 2)',
+    ],
+
+    'admin' => [
+        'verify_doc' => 'Zatwierdź dokument',
+        'reject_doc' => 'Odrzuć dokument',
+        'verify_doc_confirm' => 'Zatwierdzić ten dokument? Po zatwierdzeniu nie można go już usunąć przez transportera.',
+        'rejection_reason_required' => 'Powód odrzucenia (widoczny dla transportera)',
+        'notify_doc_verified' => 'Dokument zatwierdzony',
+        'notify_doc_rejected' => 'Dokument odrzucony',
+        'cannot_verify_tenant' => 'Najpierw zweryfikuj wszystkie wymagane dokumenty PWL (:done/:total). Zobacz listę poniżej.',
+    ],
+
+    'expiry_notify' => [
+        'subject' => 'Dokument :type wygasa za :days dni',
+        'greeting' => 'Cześć!',
+        'intro' => 'Dokument „:type" w koncie firmy :name wygasa :date (za :days dni).',
+        'cta' => 'Wgraj nowy w panelu — inaczej Twoje konto może zostać tymczasowo zawieszone w momencie wygaśnięcia.',
+        'action' => 'Otwórz dokumenty',
+    ],
 ];

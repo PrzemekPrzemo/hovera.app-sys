@@ -7,5 +7,6 @@ return [
     'greeting' => 'Świetna wiadomość!',
     'intro' => 'Konto firmy :name zostało zatwierdzone przez zespół hovera.',
     'now_can' => 'Możesz teraz wystawiać oferty, faktury i otrzymywać zapytania z marketplace\'u.',
+    'verified_list_heading' => 'Zweryfikowane dokumenty:',
     'action' => 'Otwórz panel',
 ];

@@ -7,5 +7,6 @@ return [
     'greeting' => 'Bonne nouvelle !',
     'intro' => 'La société :name a été approuvée par l’équipe Hovera.',
     'now_can' => 'Vous pouvez désormais envoyer des devis, émettre des factures et recevoir des demandes du marketplace.',
+    'verified_list_heading' => 'Documents vérifiés :',
     'action' => 'Ouvrir le panel',
 ];

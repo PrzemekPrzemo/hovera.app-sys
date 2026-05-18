@@ -50,6 +50,38 @@ Cel: **dwa rynki naraz, w tym samym ekosystemie.**
 Jedna osoba może mieć **i stajnię, i firmę transportową** — multi-tenancy bez zmian,
 istniejący tenant-switcher obsługuje to natywnie.
 
+### 1.4 Onboarding transportera — dokumenty PWL (obowiązkowe)
+
+Każdy nowy transporter musi przed pierwszą ofertą wgrać 6 dokumentów PWL
+(Przewóz Wewnątrzwspólnotowy Zwierząt Żywych) — bez kompletu konto pozostaje
+w statusie `pending` / `under_review`, nie może wysyłać ofert ani faktur.
+Sprawdzany jest komplet PWL plus rejestr firmy (KRS / CEIDG).
+
+| # | Dokument | Wydaje | Podstawa prawna |
+|---|----------|--------|-----------------|
+| 1 | Zezwolenie na wykonywanie zawodu Przewoźnika Drogowego | GITD / starosta | Rozp. WE 1071/2009 + ustawa o transporcie drogowym z 2001 r. |
+| 2 | Zezwolenie dla Przewoźnika Typ 1 (< 8h) **LUB** Typ 2 (> 8h) PWL | PIW (Powiatowy Inspektorat Weterynarii) | Rozp. WE 1/2005 |
+| 3 | Licencje dla kierowców i osób obsługujących (PWL) | PIW | Rozp. WE 1/2005 art. 6 |
+| 4 | Świadectwo Zatwierdzenia Środka Transportu (PWL) | PIW | Rozp. WE 1/2005 art. 18 (< 8h) lub art. 19 (> 8h) |
+| 5 | Książka mycia i dezynfekcji Środka Transportu | własne prowadzenie + kontrola PIW | Ustawa o ochronie zdrowia zwierząt z 11.03.2004 |
+| 6 | OC Przewoźnika | komercyjny ubezpieczyciel | dobrowolna w PL, ale wymagana przez Hovera marketplace |
+
+**Reguła T1/T2:** transporter wybiera jeden z dwóch (zależnie od profilu transportów).
+Posiadanie Typu 2 pokrywa również użycia Typu 1. UI w `/transport/transporter-documents`
+pokazuje oba sloty obok siebie z helper textem.
+
+**Reguła expiry:** wszystkie 6 dokumentów PWL mają termin ważności. Cron
+`transporter:docs-expiry-notify` (codziennie 04:00, patrz `routes/console.php`)
+wysyła mail do owner'a 30 dni przed `expires_at`. Idempotencja przez
+`expiry_notified_at` na rekordzie dokumentu; re-upload nowej wersji
+re-armuje notify (porównanie z `updated_at`).
+
+**Legacy mapping:** dawniejsze typy `insurance_ocp`, `animal_transport_cert`,
+`vehicle_registration` zostały zachowane jako deprecated dla wstecznej
+kompatybilności rekordów w istniejących tenant DB. `insurance_ocp` jest
+migracyjnie mapowany 1:1 na `carrier_liability_insurance` (data fix —
+`2026_05_18_140000_remap_legacy_transporter_document_types.php`).
+
 ---
 
 ## 2. Decyzje produktowe (zafixowane)
@@ -760,22 +792,44 @@ powoływać w kolejnych pracach):
 Master admin (`/admin`, gated po `is_master_admin = true`) ma pełen wgląd
 i sterowanie nad transporterami w central DB. Trzy główne resource'y:
 
-### 15.1 `TransporterResource` (PR #206)
+### 13.1 `TransporterResource` (PR #206 + PWL extension)
 
 `app/Filament/Admin/Resources/TransporterResource.php` — Eloquent query
 scope'owany do `tenants.type = transporter`. Funkcje:
 
 - **List view:** wszyscy transporterzy z kolumną statusu (`pending` /
   `verified` / `rejected`), sort by `verified_at`, filter by status.
-- **Verify action:** ustawia `verified_at = now()`, wysyła
-  `TransporterVerifiedNotification`, wpis w audit log z `action =
-  transporter.verify`.
+- **`TransporterDocumentsRelationManager`:** tabela dokumentów PWL per
+  transporter — czytamy z tenant DB (TenantManager::setCurrent przed
+  query). Akcje per-row: „Zatwierdź dokument" / „Odrzuć" (modal z `reason`).
+  Każda akcja wpis w audit log: `transporter_document.verify` /
+  `transporter_document.reject`.
+- **Verify action (auto-block):** master admin nie może zatwierdzić
+  tenant'a (status `verified`) dopóki wszystkie wymagane PWL dokumenty
+  nie mają indywidualnego statusu `verified`. Sprawdza
+  `VerificationChecklistService::isComplete()`; jeśli false — toast
+  „Najpierw zweryfikuj wszystkie wymagane dokumenty PWL (X/Y). Brakuje: …".
+- **Verify success:** wysyła `TransporterVerifiedNotification` z LISTĄ
+  zweryfikowanych dokumentów (mail do owner'a wymienia konkretnie co
+  przeszło — transparentność prawna). Wpis audit log
+  `transporter.verify` z `payload.verified_docs`.
 - **Reject action:** modal z polem `reason`, ustawia `verified_at = null`
-  + zapisuje powód, wysyła `TransporterRejectedNotification`.
+  + zapisuje powód, wysyła `TransporterRejectedNotification`. Mail
+  zawiera listę dokumentów które nie przeszły weryfikacji.
 - **Impersonation:** master admin może wejść w panel `/transport` jako dany
   transporter (przez istniejący `ImpersonationController`) — dla supportu
   i debug.
 
+**Checklist widget (transporter side + master admin side):**
+`app/Domain/Transport/Verification/VerificationChecklistService.php` buduje
+deterministyczną listę slotów PWL (KRS, zezwolenie zawód, PWL T1/T2
+[alternatywa — wybiera „lepszy" status z dwóch], świadectwo kierowców,
+świadectwo pojazdu, książka mycia, OC). Każdy slot zwraca status
+`verified` / `pending` / `rejected` / `missing`. Widget renderowany w
+`/transport/transporter-documents` (X/Y wgranych) i w master adminie
+(tooltip blokady verify-tenant).
+
+### 13.2 `TenantResource` (audience filter)
 ### 15.2 `TenantResource` (audience filter)
 
 Bazowa lista wszystkich tenantów (stajnie + transporterzy) z filtrem

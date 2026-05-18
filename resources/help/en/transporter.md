@@ -6,11 +6,10 @@ quote.
 
 ## How it works
 
-- **Sign-up → document verification → activation → sending quotes.**
-  Account creation is instant, but sending quotes to customers is
-  blocked until our team verifies your documents (carrier liability
-  insurance, transport licence, tax ID, vehicle registration). Usually
-  one business day.
+- **Sign-up → PWL document upload → verification → activation → sending quotes.**
+  Account creation is instant, but sending quotes to customers is blocked
+  until our team verifies **all 6 PWL documents**. Usually 1–2 business days.
+  Full document list with how-to-obtain notes below in "PWL documents".
 - **Hovera is an intermediary marketplace, NOT a transport company.**
   We do not own vehicles, do not employ drivers, do not take liability
   for transport execution. We connect you with customers and provide
@@ -20,6 +19,46 @@ quote.
   You issue the invoice under your own tax ID, your own numbering,
   through your own KSeF (or local e-invoicing). Hovera is not a party
   to the transport contract.
+
+## PWL documents (required for verification)
+
+PWL = Polish intra-EU live animal transport regime. Every horse carrier
+operating in Poland must hold 6 documents that Hovera verifies before
+activating the account. Upload them at `/transport/transporter-documents`
+("Account verification" in the left sidebar).
+
+1. **Road Carrier Profession License** — issued by GITD (national road
+   authority) or the local starosta. Basis: EU Reg. 1071/2009 + Polish
+   Road Transport Act of 2001.
+
+2. **PWL Carrier Authorization — Type 1 OR Type 2** — issued by PIW
+   (district veterinary inspectorate). Basis: EU Reg. 1/2005.
+   - **Type 1** — transports up to 8 hours. Choose if you only run short
+     regional journeys.
+   - **Type 2** — transports above 8 hours. Also covers Type 1 usage.
+
+3. **PWL Driver and Handler Competence Certificate** — basis: EU Reg.
+   1/2005 article 6. Issued by PIW after training and exam. Upload the
+   full team bundle.
+
+4. **PWL Vehicle Approval Certificate** — issued per vehicle. Basis:
+   EU Reg. 1/2005 article 18 (< 8h) or article 19 (> 8h).
+
+5. **Washing and Disinfection Log** — basis: Polish Animal Health
+   Protection Act of 11 March 2004. Your own ongoing log — entries from
+   the last 12 months.
+
+6. **Carrier Liability Insurance** — commercial insurer (PZU, Warta,
+   Allianz, Generali — all run transport lines). Hovera checks expiry
+   date and guarantee amount.
+
+**Verification rule:** all 6 types + business registration (KRS / CEIDG)
+must be marked "verified" by Hovera before your account transitions to
+`verified` status. Missing or rejected documents block activation.
+
+**Expiry reminder cron:** 30 days before any PWL document expires you
+receive an email with a link to the panel. Upload the new version —
+Hovera will re-verify; your account stays active in the meantime.
 
 ## First steps after activation
 

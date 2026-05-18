@@ -32,4 +32,9 @@ return [
     'powered_by' => 'powered by hovera.app',
 
     'disclaimer_intermediary' => 'Profil exploité par <strong>:transporter_name</strong>. Hovera = intermédiaire de marketplace (<a href="/regulamin-marketplace" target="_blank">conditions</a>) — n’effectue pas les transports, n’est pas partie au contrat.',
+
+    // @todo native review — traduction automatique depuis PL/EN.
+    'verified_badge_label' => 'Vérifié par Hovera',
+    'verified_badge_tooltip' => 'Hovera a vérifié la validité de : licence d’exercice de la profession de transporteur routier, autorisation PWL T1/T2, certificats de compétence des conducteurs/convoyeurs, certificat d’agrément du moyen de transport, registre de lavage/désinfection et assurance RC transporteur. Hovera a vérifié les documents — elle N’ASSUME PAS la responsabilité de l’exécution réelle du transport (voir conditions du marketplace).',
+    'verified_badge_link_label' => 'conditions du marketplace',
 ];

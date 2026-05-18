@@ -61,4 +61,14 @@ return [
         'rejected' => 'Account rejected',
         'rejected_body' => 'Company :name rejected. They received an email with the reason.',
     ],
+
+    'documents' => [
+        'title' => 'Verification documents',
+        'column' => [
+            'type' => 'Document type',
+            'status' => 'Status',
+            'filename' => 'File',
+            'uploaded_at' => 'Uploaded',
+        ],
+    ],
 ];

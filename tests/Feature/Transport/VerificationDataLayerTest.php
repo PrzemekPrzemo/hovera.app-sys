@@ -112,11 +112,19 @@ class VerificationDataLayerTest extends TestCase
     public function test_required_document_types_excludes_other(): void
     {
         $required = TransporterDocumentType::requiredCases();
-        $this->assertCount(5, $required);
+        // Rozszerzone w PR PWL: KRS (legacy) + 7 PWL cases (Road carrier license,
+        // T1, T2, Driver cert, Vehicle approval cert, Wash log, Carrier liability) = 8.
+        // Legacy AnimalTransportCert / InsuranceOcp / VehicleRegistration są deprecated
+        // i wyłączone z required set (zachowane jako case dla wstecznej kompatybilności DB).
+        $this->assertCount(8, $required);
         $this->assertNotContains(TransporterDocumentType::Other, $required);
         $this->assertContains(TransporterDocumentType::CompanyRegistration, $required);
-        $this->assertContains(TransporterDocumentType::AnimalTransportCert, $required);
-        $this->assertContains(TransporterDocumentType::InsuranceOcp, $required);
+        $this->assertContains(TransporterDocumentType::RoadCarrierLicense, $required);
+        $this->assertContains(TransporterDocumentType::CarrierLiabilityInsurance, $required);
+
+        // Deprecated nie pojawiają się w required set.
+        $this->assertNotContains(TransporterDocumentType::AnimalTransportCert, $required);
+        $this->assertNotContains(TransporterDocumentType::InsuranceOcp, $required);
     }
 
     public function test_document_type_expires_by_law(): void

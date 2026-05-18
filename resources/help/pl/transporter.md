@@ -6,11 +6,11 @@ oferty.
 
 ## Jak to działa
 
-- **Rejestracja → weryfikacja dokumentów → aktywacja → wystawianie ofert.**
+- **Rejestracja → wgrywanie dokumentów PWL → weryfikacja → aktywacja → wystawianie ofert.**
   Założenie konta jest natychmiastowe, ale wysyłka ofert do klientów jest
-  zablokowana do czasu zweryfikowania dokumentów przez zespół Hovera
-  (OC przewoźnika, licencja, NIP, dowód rejestracyjny pojazdów).
-  Zwykle 1 dzień roboczy.
+  zablokowana do czasu zweryfikowania **wszystkich 6 dokumentów PWL** przez
+  zespół Hovera. Zwykle 1–2 dni robocze. Pełna lista dokumentów + skąd je
+  zdobyć — niżej w sekcji „Dokumenty PWL".
 - **Hovera to marketplace pośredniczący, NIE firma transportowa.**
   Nie posiadamy pojazdów, nie zatrudniamy kierowców, nie ponosimy
   odpowiedzialności za realizację transportu. Łączymy Cię z klientami
@@ -19,6 +19,55 @@ oferty.
 - **Umowy transportowe są bezpośrednio z klientami końcowymi.** To Ty
   wystawiasz fakturę swoim NIPem, swoją numeracją, swoim KSeF-em. Hovera
   nie pojawia się jako strona umowy.
+
+## Dokumenty PWL (wymagane do weryfikacji)
+
+PWL = Przewóz Wewnątrzwspólnotowy Zwierząt Żywych. Każdy transporter koni
+w Polsce musi mieć 6 dokumentów, które Hovera sprawdza przed aktywacją konta.
+Wgraj je w panelu `/transport/transporter-documents` (lewy sidebar →
+„Weryfikacja konta").
+
+1. **Zezwolenie na wykonywanie zawodu Przewoźnika Drogowego**
+   Wydaje GITD (Główny Inspektorat Transportu Drogowego) lub starosta.
+   Podstawa: Rozporządzenie WE 1071/2009 + ustawa o transporcie drogowym
+   z 2001 r. Jeśli nie masz — wniosek przez `gitd.gov.pl` lub starostwo
+   powiatowe; trwa zwykle 30 dni.
+
+2. **Zezwolenie dla Przewoźnika Typ 1 LUB Typ 2 (PWL)**
+   Wydaje PIW (Powiatowy Inspektorat Weterynarii). Podstawa: Rozp. WE 1/2005.
+   - **Typ 1** — transporty do 8 godzin. Wybierz jeśli wykonujesz wyłącznie
+     krótkie trasy regionalne.
+   - **Typ 2** — transporty powyżej 8 godzin. Pokrywa również Typ 1
+     (czyli z Typem 2 możesz wozić również krótko).
+   Wniosek przez właściwy terenowo PIW (lista: `wetgiw.gov.pl`).
+
+3. **Licencje dla kierowców i osób obsługujących (PWL)**
+   Świadectwo kompetencji dla każdego kierowcy i osoby obsługującej
+   zwierzęta. Podstawa: Rozp. WE 1/2005 art. 6. Wydaje PIW po szkoleniu
+   + egzaminie. Wgraj komplet dla całego zespołu (jeden PDF scalony OK).
+
+4. **Świadectwo Zatwierdzenia Środka Transportu (PWL)**
+   Wystawiane per pojazd. Podstawa: Rozp. WE 1/2005 — art. 18 dla
+   transportów < 8h, art. 19 dla > 8h. Wydaje PIW po inspekcji pojazdu.
+   Jeśli masz flotę — wgraj scalony PDF.
+
+5. **Książka mycia i dezynfekcji Środka Transportu**
+   Podstawa: Ustawa o ochronie zdrowia zwierząt z 11 marca 2004 r. Twoja
+   ewidencja bieżąca — wpisy z ostatnich 12 miesięcy. Skan lub fotokopie
+   ostatnich stron.
+
+6. **OC Przewoźnika**
+   Polisa odpowiedzialności cywilnej przewoźnika drogowego. Komercyjny
+   ubezpieczyciel (PZU, Warta, Allianz, Generali — wszystkie mają linię
+   transportową). Hovera sprawdza datę ważności i sumę gwarancyjną.
+
+**Reguła weryfikacji:** wszystkie 6 typów + dane rejestrowe firmy (KRS / CEIDG)
+muszą mieć status „zweryfikowany" przez Hovera, zanim Twoje konto przechodzi
+w `verified`. Brakujące lub odrzucone dokumenty blokują aktywację.
+
+**Cron przypomnień:** 30 dni przed wygaśnięciem dowolnego dokumentu PWL
+dostajesz mail z linkiem do panelu. Wgraj nową wersję — Hovera ponownie
+zweryfikuje, w międzyczasie konto pozostaje aktywne.
 
 ## Pierwsze kroki po aktywacji
 

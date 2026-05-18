@@ -61,4 +61,15 @@ return [
         'rejected' => 'Compte refusé',
         'rejected_body' => 'Société :name refusée. Elle a reçu un e-mail avec le motif.',
     ],
+
+    // @todo native review.
+    'documents' => [
+        'title' => 'Documents de vérification',
+        'column' => [
+            'type' => 'Type de document',
+            'status' => 'Statut',
+            'filename' => 'Fichier',
+            'uploaded_at' => 'Téléversé',
+        ],
+    ],
 ];

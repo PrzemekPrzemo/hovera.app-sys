@@ -10,12 +10,20 @@ au premier devis accepté.
 
 ## Comment ça fonctionne
 
-- **Inscription → vérification des documents → activation → envoi de
-  devis.** La création du compte est instantanée, mais l'envoi de
-  devis aux clients est bloqué jusqu'à ce que l'équipe Hovera vérifie
-  vos documents (assurance responsabilité civile du transporteur,
-  licence de transport, numéro fiscal, immatriculation du véhicule).
-  Habituellement 1 jour ouvrable.
+- **Inscription → téléversement des documents PWL → vérification →
+  activation → envoi de devis.** La création du compte est instantanée,
+  mais l'envoi de devis aux clients est bloqué jusqu'à ce que l'équipe
+  Hovera vérifie les **6 documents PWL**. Habituellement 1–2 jours
+  ouvrables. Liste complète avec instructions d'obtention dans la
+  section « Documents PWL » ci-dessous.
+
+<!-- @todo native review — la section Documents PWL est actuellement uniquement en PL/EN ; merci de traduire depuis EN. -->
+> **PWL documents (English version) :** voir
+> `resources/help/en/transporter.md` pour la liste complète des 6 documents
+> requis (Road Carrier Profession License, PWL Authorization T1/T2,
+> Driver/Handler Competence Certificate, Vehicle Approval Certificate,
+> Washing/Disinfection Log, Carrier Liability Insurance) avec références
+> réglementaires et notes d'obtention.
 - **Hovera est une place de marché intermédiaire, PAS une société de
   transport.** Nous ne possédons pas de véhicules, n'employons pas de
   chauffeurs, n'assumons aucune responsabilité quant à l'exécution
