@@ -76,5 +76,8 @@ return [
         'sent_no_email' => 'Angebot gespeichert, E-Mail jedoch nicht gesendet — prüfen Sie die SMTP-Konfiguration "transport".',
         'sent_no_customer_email' => 'Angebot :number bereit (keine Kunden-E-Mail — PDF herunterladen und manuell senden).',
         'withdrawn' => 'Angebot zurückgezogen',
+        'verification_required' => 'Konto nicht verifiziert',
+        'verification_required_body' => 'Um ein Angebot zu senden, muss das Konto zuerst verifiziert werden — laden Sie die Pflichtdokumente hoch.',
+        'open_documents' => 'Dokumente öffnen',
     ],
 ];

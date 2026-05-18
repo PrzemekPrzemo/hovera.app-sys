@@ -76,5 +76,8 @@ return [
         'sent_no_email' => 'Devis enregistré mais email non envoyé — vérifiez la configuration SMTP "transport".',
         'sent_no_customer_email' => 'Devis :number prêt (pas d’email client — téléchargez le PDF et envoyez manuellement).',
         'withdrawn' => 'Devis retiré',
+        'verification_required' => 'Compte non vérifié',
+        'verification_required_body' => 'Pour envoyer un devis, vous devez d’abord vérifier votre compte — téléversez les documents requis.',
+        'open_documents' => 'Ouvrir documents',
     ],
 ];
