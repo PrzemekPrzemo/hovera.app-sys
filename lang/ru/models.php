@@ -78,4 +78,6 @@ return [
     'quotes' => 'Предложения',
     'transport_invoice' => 'транспортный счёт',
     'transport_invoices' => 'Транспортные счета',
+    'transport_lead' => 'заявка',
+    'transport_leads' => 'Заявки',
 ];

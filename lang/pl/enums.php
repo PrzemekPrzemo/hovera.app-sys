@@ -24,6 +24,15 @@ return [
         'rejected' => 'Odrzucone',
     ],
 
+    'transport_lead_status' => [
+        'open' => 'Otwarte',
+        'quoted' => 'Z ofertą',
+        'accepted' => 'Zaakceptowane',
+        'rejected' => 'Odrzucone',
+        'expired' => 'Wygasłe',
+        'cancelled' => 'Anulowane',
+    ],
+
     'transport_invoice_kind' => [
         'fv' => 'Faktura VAT',
         'fv_proforma' => 'Faktura pro forma',

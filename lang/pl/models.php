@@ -79,4 +79,6 @@ return [
     'quotes' => 'Oferty',
     'transport_invoice' => 'faktura transportowa',
     'transport_invoices' => 'Faktury transportowe',
+    'transport_lead' => 'zapytanie',
+    'transport_leads' => 'Zapytania',
 ];

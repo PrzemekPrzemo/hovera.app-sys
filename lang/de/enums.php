@@ -24,6 +24,15 @@ return [
         'rejected' => 'Abgelehnt',
     ],
 
+    'transport_lead_status' => [
+        'open' => 'Offen',
+        'quoted' => 'Angeboten',
+        'accepted' => 'Angenommen',
+        'rejected' => 'Abgelehnt',
+        'expired' => 'Abgelaufen',
+        'cancelled' => 'Storniert',
+    ],
+
     'transport_invoice_kind' => [
         'fv' => 'Rechnung (USt)',
         'fv_proforma' => 'Pro-forma-Rechnung',

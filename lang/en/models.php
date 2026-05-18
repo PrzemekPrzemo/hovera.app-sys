@@ -71,4 +71,6 @@ return [
     'quotes' => 'Quotes',
     'transport_invoice' => 'transport invoice',
     'transport_invoices' => 'Transport invoices',
+    'transport_lead' => 'inquiry',
+    'transport_leads' => 'Inquiries',
 ];
