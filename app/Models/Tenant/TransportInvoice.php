@@ -6,6 +6,7 @@ namespace App\Models\Tenant;
 
 use App\Enums\TransportInvoiceKind;
 use App\Enums\TransportInvoiceStatus;
+use App\Enums\TransportKsefStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -30,6 +31,8 @@ class TransportInvoice extends TenantModel
         'issued_at', 'sale_date', 'due_at', 'paid_at',
         'currency', 'subtotal_cents', 'vat_cents', 'total_cents',
         'ksef_status', 'ksef_reference', 'ksef_sent_at',
+        'ksef_reference_number', 'ksef_submitted_at', 'ksef_accepted_at',
+        'ksef_xml', 'ksef_error_payload',
         'notes', 'pdf_url', 'metadata',
     ];
 
@@ -44,7 +47,11 @@ class TransportInvoice extends TenantModel
             'sale_date' => 'date',
             'due_at' => 'date',
             'paid_at' => 'datetime',
+            'ksef_status' => TransportKsefStatus::class,
             'ksef_sent_at' => 'datetime',
+            'ksef_submitted_at' => 'datetime',
+            'ksef_accepted_at' => 'datetime',
+            'ksef_error_payload' => 'array',
             'subtotal_cents' => 'integer',
             'vat_cents' => 'integer',
             'total_cents' => 'integer',

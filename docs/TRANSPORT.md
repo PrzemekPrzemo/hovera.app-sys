@@ -821,6 +821,45 @@ B2B**. Bez tego transporterzy nie mogą legalnie fakturować po fazie 8.
 **Estymata:** 2–3 tygodnie. Bazujemy na istniejącym `app/Domain/Ksef/`
 (używanym dla faktur stajni / hovery).
 
+#### KSeF (transporter sam wystawia FV) — status MVP
+
+Pierwsza wersja per-transporter KSeF jest w `app/Domain/Transport/Ksef/`
+(`TransporterKsefService`). Decyzje:
+
+- **Hovera = passthrough, NIE wystawca.** Wynika to wprost z §12.5 pkt 1.
+  Każdy transporter ma WŁASNY token KSeF (zdobyty w panelu MF), WŁASNY NIP
+  i wybiera środowisko (test/demo/prod). Hovera nigdzie nie figuruje jako
+  podatnik wystawiający tę FV. Tag `<SystemInfo>` w XML = "Hovera Transport
+  Passthrough" — żeby przy audycie MF było jasne, że jesteśmy tylko
+  software'em.
+- **Storage tokenu.** Kolumna `transport_settings.ksef_token_encrypted`
+  (zaszyfrowana przez `Crypt::encryptString`). Token nigdy nie wraca do UI
+  w czystej formie — po zapisie pole tokenu wyświetla się jako puste
+  z notką "Token jest zapisany; wpisz nowy aby zmienić". Helper
+  `TransportSettings::redactedTokenPreview()` zwraca podgląd typu
+  `abc********xyz` do bezpiecznego logowania ops.
+- **Audit logging = TENANT scope.** Wszystkie wywołania (submit, refresh,
+  reject, error) idą do `audit_log` tenanta przez `TenantAuditLogger`, NIE
+  do `MasterAuditLogger`. To akcja transportera, nie Hovery.
+- **Status FV.** Nowy enum `App\Enums\TransportKsefStatus` z wartościami
+  `not_submitted` (default) → `submitted` → `accepted | rejected | error`.
+  Submit dozwolony tylko dla FV w stanie `issued/paid/overdue`; draft/void
+  blokuje się w UI (nie ma sensu wysyłać szkicu).
+- **Akcje w `TransportInvoiceResource`.** Single-row: „Wyślij do KSeF",
+  „Odśwież status z KSeF". Bulk: „Wyślij zaznaczone do KSeF" z limitem 50
+  (KSeF MF API jest rate-limited). Każda akcja confirm-modal.
+- **Schema:** dwie migracje (`tenant`): `add_ksef_columns_to_transport_settings`
+  (token + nip + environment + enabled) oraz `extend_transport_invoices_ksef_columns`
+  (`ksef_reference_number`, `ksef_submitted_at`, `ksef_accepted_at`,
+  `ksef_xml`, `ksef_error_payload` + index `(ksef_status, ksef_submitted_at)`
+  pod przyszły cron poll).
+- **Co JESZCZE nie zrobione (follow-up PR):** (1) cron pollujący `submitted`
+  starsze niż X minut i odświeżający status; (2) pełen handshake KSeF
+  z `Session/AuthorisationChallenge` + RSA-OAEP — obecna ścieżka traktuje
+  token transportera jako bezpośredni session token (analogicznie do
+  skeletonu `CentralKsefService`); (3) FA(2) XSD walidacja przed POST;
+  (4) korekt KSeF (KOR).
+
 ### 14.2 Reviews / opinie transporterów
 
 **Co:** po `accepted` leadzie, zamawiający dostaje link do oceny (1–5 + opis),
