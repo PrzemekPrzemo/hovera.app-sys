@@ -68,6 +68,7 @@ return [
         'send' => 'An Kunden senden',
         'withdraw' => 'Angebot zurückziehen',
         'download_pdf' => 'PDF herunterladen',
+        'issue_invoice' => 'Rechnung ausstellen',
     ],
 
     'notify' => [
@@ -79,5 +80,8 @@ return [
         'verification_required' => 'Konto nicht verifiziert',
         'verification_required_body' => 'Um ein Angebot zu senden, muss das Konto zuerst verifiziert werden — laden Sie die Pflichtdokumente hoch.',
         'open_documents' => 'Dokumente öffnen',
+        'invoice_issued' => 'Rechnung ausgestellt',
+        'invoice_issued_body' => 'Rechnung :number aus diesem Angebot erstellt.',
+        'invoice_failed' => 'Rechnung konnte nicht erstellt werden',
     ],
 ];

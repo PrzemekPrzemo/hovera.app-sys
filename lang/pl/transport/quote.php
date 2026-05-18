@@ -68,6 +68,7 @@ return [
         'send' => 'Wyślij do klienta',
         'withdraw' => 'Wycofaj ofertę',
         'download_pdf' => 'Pobierz PDF',
+        'issue_invoice' => 'Wystaw fakturę',
     ],
 
     'notify' => [
@@ -79,5 +80,8 @@ return [
         'verification_required' => 'Konto nie jest zweryfikowane',
         'verification_required_body' => 'Aby wysłać ofertę do klienta, musisz najpierw przejść weryfikację konta — wgraj wymagane dokumenty.',
         'open_documents' => 'Otwórz dokumenty',
+        'invoice_issued' => 'Faktura wystawiona',
+        'invoice_issued_body' => 'Faktura :number wystawiona ze snapshotu oferty.',
+        'invoice_failed' => 'Nie udało się wystawić faktury',
     ],
 ];

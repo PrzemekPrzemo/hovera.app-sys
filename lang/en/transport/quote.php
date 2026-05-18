@@ -68,6 +68,7 @@ return [
         'send' => 'Send to customer',
         'withdraw' => 'Withdraw quote',
         'download_pdf' => 'Download PDF',
+        'issue_invoice' => 'Issue invoice',
     ],
 
     'notify' => [
@@ -79,5 +80,8 @@ return [
         'verification_required' => 'Account not verified',
         'verification_required_body' => 'To send a quote to a customer, you must first complete account verification — upload the required documents.',
         'open_documents' => 'Open documents',
+        'invoice_issued' => 'Invoice issued',
+        'invoice_issued_body' => 'Invoice :number created from this quote.',
+        'invoice_failed' => 'Could not issue invoice',
     ],
 ];

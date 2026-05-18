@@ -76,4 +76,6 @@ return [
     'drivers' => 'Fahrer',
     'quote' => 'Angebot',
     'quotes' => 'Angebote',
+    'transport_invoice' => 'Transportrechnung',
+    'transport_invoices' => 'Transportrechnungen',
 ];
