@@ -37,6 +37,7 @@ return [
         'submit' => 'Policz wycenę',
         'calculated' => 'Wycena obliczona.',
         'failed' => 'Nie udało się obliczyć wyceny',
+        'save_as_quote' => 'Zapisz jako ofertę',
     ],
 
     'result' => [

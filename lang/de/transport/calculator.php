@@ -37,6 +37,7 @@ return [
         'submit' => 'Angebot berechnen',
         'calculated' => 'Angebot berechnet.',
         'failed' => 'Berechnung fehlgeschlagen',
+        'save_as_quote' => 'Als Angebot speichern',
     ],
 
     'result' => [

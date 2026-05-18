@@ -193,6 +193,52 @@ class Calculator extends Page implements HasForms
             ->send();
     }
 
+    /**
+     * Zapisuje aktualną wycenę do session i przekierowuje na CreateQuote
+     * (CreateQuote::fillForm konsumuje pending). Wymaga wcześniejszego
+     * udanego `calculate()` — przycisk widoczny tylko gdy mamy `$quotation`.
+     */
+    public function saveAsQuote(): \Illuminate\Http\RedirectResponse
+    {
+        abort_unless(self::canAccess(), 403);
+        abort_unless($this->quotation !== null, 422);
+
+        $q = $this->quotation;
+        $form = $this->data;
+
+        session()->put('transport.calc.pending', [
+            'pickup_address' => $this->fromDisplayName ?? ($form['from_address'] ?? ''),
+            'dropoff_address' => $this->toDisplayName ?? ($form['to_address'] ?? ''),
+            // koordynaty straconych po polyline'ie nie odzyskamy — zostawiamy
+            // user'owi do uzupełnienia w formularzu, albo (lepiej) trzymamy
+            // je w session razem z Quotation. Niestety Coords nie są w
+            // Quotation DTO, więc na razie zera — refactor po pierwszym UX feedbacku.
+            'pickup_lat' => 0.0,
+            'pickup_lng' => 0.0,
+            'dropoff_lat' => 0.0,
+            'dropoff_lng' => 0.0,
+            'preferred_date' => now()->addDays(7)->toDateString(),
+            'round_trip' => (bool) ($form['round_trip'] ?? false),
+            'loaded' => (bool) ($form['loaded'] ?? true),
+            'distance_km' => $q->distanceKm,
+            'duration_seconds' => $q->durationSeconds,
+            'routing_provider' => $q->routingProvider,
+            'polyline' => $q->polyline,
+            'rate_per_km' => $q->rateUsed,
+            'base_cost' => $q->baseCost,
+            'fuel_surcharge' => $q->fuelSurcharge,
+            'minimum_adjustment' => $q->minimumAdjustment,
+            'net_total' => $q->netTotal,
+            'vat_rate' => $q->vatRate,
+            'vat_amount' => $q->vatAmount,
+            'gross_total' => $q->grossTotal,
+            'currency' => $q->currency,
+            'status' => \App\Enums\QuoteStatus::Draft->value,
+        ]);
+
+        return redirect()->to(\App\Filament\Transport\Resources\QuoteResource::getUrl('create'));
+    }
+
     private function fail(string $message): void
     {
         $this->quotation = null;

@@ -40,6 +40,7 @@ return [
 
     'vehicles' => 'Vehicles',
     'drivers' => 'Drivers',
+    'quotes' => 'Quotes',
 
     'pages' => [
         'profile' => 'Profile',

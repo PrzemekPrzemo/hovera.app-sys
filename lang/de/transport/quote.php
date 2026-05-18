@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'section' => [
+        'header' => 'Kopfdaten',
+        'customer' => 'Kunde',
+        'route' => 'Strecke',
+        'resources' => 'Ressourcen (optional)',
+        'pricing' => 'Preisgestaltung',
+        'terms' => 'Bedingungen & Notizen',
+    ],
+
+    'form' => [
+        'label' => [
+            'number' => 'Nummer',
+            'status' => 'Status',
+            'valid_until' => 'Gültig bis',
+            'customer_name' => 'Name',
+            'customer_email' => 'E-Mail',
+            'customer_phone' => 'Telefon',
+            'customer_company' => 'Firma',
+            'customer_tax_id' => 'USt-ID',
+            'customer_address' => 'Rechnungsadresse',
+            'pickup_address' => 'Abholadresse',
+            'dropoff_address' => 'Lieferadresse',
+            'preferred_date' => 'Datum',
+            'preferred_time' => 'Uhrzeit',
+            'round_trip' => 'Hin- und Rückfahrt',
+            'loaded' => 'Beladen (mit Pferd)',
+            'vehicle' => 'Fahrzeug',
+            'driver' => 'Fahrer',
+            'distance_km' => 'Entfernung',
+            'rate_per_km' => 'Tarif',
+            'duration_seconds' => 'Dauer (s)',
+            'base_cost' => 'Grundpreis',
+            'fuel_surcharge' => 'Kraftstoffzuschlag',
+            'minimum_adjustment' => 'Anpassung Mindestpreis',
+            'net_total' => 'Netto',
+            'vat_rate' => 'MwSt.-Satz',
+            'vat_amount' => 'MwSt.-Betrag',
+            'gross_total' => 'Brutto',
+            'currency' => 'Währung',
+            'routing_provider' => 'Routenquelle',
+            'terms' => 'Geschäftsbedingungen',
+            'notes' => 'Interne Notizen',
+        ],
+        'helper' => [
+            'terms' => 'Für den Kunden sichtbar im Angebot / PDF.',
+            'notes' => 'Nur für das Team — nicht an Kunden weitergegeben.',
+        ],
+    ],
+
+    'table' => [
+        'column' => [
+            'number' => 'Nummer',
+            'customer' => 'Kunde',
+            'route' => 'Strecke',
+            'preferred_date' => 'Datum',
+            'gross_total' => 'Brutto',
+            'status' => 'Status',
+            'created_at' => 'Erstellt',
+        ],
+    ],
+
+    'action' => [
+        'send' => 'An Kunden senden',
+        'withdraw' => 'Angebot zurückziehen',
+    ],
+
+    'notify' => [
+        'sent' => 'Angebot versendet',
+        'withdrawn' => 'Angebot zurückgezogen',
+    ],
+];

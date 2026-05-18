@@ -37,6 +37,7 @@ return [
         'submit' => 'Calculate quote',
         'calculated' => 'Quote calculated.',
         'failed' => 'Could not calculate quote',
+        'save_as_quote' => 'Save as quote',
     ],
 
     'result' => [
