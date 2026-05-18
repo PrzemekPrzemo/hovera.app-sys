@@ -40,6 +40,8 @@ return [
     'treatment_templates' => 'Шаблоны процедур',
     'feed_inventory' => 'Склад кормов',
 
+    'vehicles' => 'Транспортные средства',
+
     // Pages (non-resource)
     'pages' => [
         'profile' => 'Профиль',

@@ -41,6 +41,9 @@ return [
     'treatment_templates' => 'Szablony zabiegów',
     'feed_inventory' => 'Magazyn paszy',
 
+    // Transport
+    'vehicles' => 'Pojazdy',
+
     // Pages (non-resource)
     'pages' => [
         'profile' => 'Profil',

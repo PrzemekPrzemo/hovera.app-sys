@@ -38,6 +38,8 @@ return [
     'treatment_templates' => 'Treatment templates',
     'feed_inventory' => 'Feed inventory',
 
+    'vehicles' => 'Vehicles',
+
     'pages' => [
         'profile' => 'Profile',
         'calendar' => "Today's plan",

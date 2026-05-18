@@ -69,4 +69,8 @@ return [
     'feed_items' => 'Magazyn paszy',
     'horse_photo' => 'zdjęcie',
     'horse_photos' => 'Galeria zdjęć',
+
+    // Transport module
+    'vehicle' => 'pojazd',
+    'vehicles' => 'Pojazdy',
 ];
