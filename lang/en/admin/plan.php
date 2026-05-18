@@ -26,8 +26,10 @@ return [
             'features' => 'Keys: bullets[N]=string (marketing), enabled.X=bool (feature flag).',
             'is_active' => 'Whether the plan can still be assigned to new tenants.',
             'is_public' => 'Whether to show on the public pricing page. Enterprise usually false (custom).',
+            'audience' => 'Who this plan is for — Stable or Transporter. Immutable after creation.',
         ],
         'label' => [
+            'audience' => 'Audience',
             'price_monthly' => 'Monthly price',
             'price_yearly' => 'Yearly price',
             'stripe_price_monthly_id' => 'Stripe Price ID (monthly)',
@@ -42,11 +44,15 @@ return [
 
     'table' => [
         'column' => [
+            'audience' => 'Audience',
             'price_monthly' => 'Monthly',
             'price_yearly' => 'Yearly',
             'tenants_count' => 'Stables',
             'is_active_short' => 'Act.',
             'is_public_short' => 'Pub.',
+        ],
+        'filter' => [
+            'audience' => 'Audience',
         ],
     ],
 

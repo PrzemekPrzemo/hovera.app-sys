@@ -26,8 +26,10 @@ return [
             'features' => 'Ключи: bullets[N]=string (маркетинг), enabled.X=bool (feature flag).',
             'is_active' => 'Можно ли тариф ещё назначать новым tenants.',
             'is_public' => 'Показывать ли на публичной странице прайс-листа. Enterprise обычно false (custom).',
+            'audience' => 'Для кого этот тариф — Конюшня или Транспортная компания. После создания не меняется.',
         ],
         'label' => [
+            'audience' => 'Audience',
             'price_monthly' => 'Месячная цена',
             'price_yearly' => 'Годовая цена',
             'stripe_price_monthly_id' => 'Stripe Price ID (месячно)',
@@ -42,11 +44,15 @@ return [
 
     'table' => [
         'column' => [
+            'audience' => 'Audience',
             'price_monthly' => 'Месячно',
             'price_yearly' => 'Годовой',
             'tenants_count' => 'Конюшни',
             'is_active_short' => 'Акт.',
             'is_public_short' => 'Публ.',
+        ],
+        'filter' => [
+            'audience' => 'Audience',
         ],
     ],
 

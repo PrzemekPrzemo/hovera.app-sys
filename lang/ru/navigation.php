@@ -20,6 +20,7 @@ return [
 
     // Resource labels
     'tenants' => 'Конюшни',
+    'all_tenants' => 'Все арендаторы',
     'plans' => 'Тарифы',
     'invitations' => 'Приглашения',
     'horses' => 'Лошади',

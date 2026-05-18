@@ -37,6 +37,7 @@ return [
             'plan' => 'Plan',
             'subscription' => 'Subskrypcja',
             'last_activity_at' => 'Ostatnia aktywność',
+            'verified_at' => 'Zweryfikowano',
             'created_at' => 'Założono',
         ],
     ],
@@ -44,6 +45,14 @@ return [
     'action' => [
         'verify' => 'Zatwierdź konto',
         'reject' => 'Odrzuć konto',
+        'login_as_owner' => [
+            'label' => 'Zaloguj jako transporter',
+            'reason_label' => 'Powód impersonacji (audit RODO)',
+            'reason_helper' => 'Wymagane. Sesja jest wpisana do impersonation_sessions + audit_log_master.',
+            'submit' => 'Rozpocznij impersonację',
+            'no_user_title' => 'Brak aktywnego usera dla tej firmy',
+            'no_user_body' => 'Najpierw dodaj członka zespołu lub zaproś ownera.',
+        ],
     ],
 
     'notify' => [

@@ -20,6 +20,7 @@ return [
 
     // Resource labels
     'tenants' => 'Écuries',
+    'all_tenants' => 'Tous les locataires',
     'plans' => 'Plans',
     'invitations' => 'Invitations',
     'horses' => 'Chevaux',

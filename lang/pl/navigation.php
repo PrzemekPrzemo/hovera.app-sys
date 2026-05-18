@@ -21,6 +21,7 @@ return [
 
     // Resource labels
     'tenants' => 'Stajnie',
+    'all_tenants' => 'Wszyscy tenanci',
     'plans' => 'Plany',
     'invitations' => 'Zaproszenia',
     'horses' => 'Konie',

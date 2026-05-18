@@ -32,10 +32,14 @@ return [
 
     'table' => [
         'column' => [
+            'type' => 'Type',
             'country' => 'Pays',
             'plan' => 'Plan',
             'db_name' => 'Base de données',
             'created_at' => 'Créée le',
+        ],
+        'filter' => [
+            'type' => 'Type de locataire',
         ],
     ],
 

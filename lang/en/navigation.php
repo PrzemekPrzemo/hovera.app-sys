@@ -18,6 +18,7 @@ return [
     ],
 
     'tenants' => 'Stables',
+    'all_tenants' => 'All tenants',
     'plans' => 'Plans',
     'invitations' => 'Invitations',
     'horses' => 'Horses',

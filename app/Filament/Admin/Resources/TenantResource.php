@@ -6,6 +6,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Actions\Impersonation\StartImpersonation;
 use App\Actions\Tenants\DeleteTenant;
+use App\Enums\TenantType;
 use App\Filament\Admin\Resources\TenantResource\Pages;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
@@ -35,7 +36,7 @@ class TenantResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('navigation.tenants');
+        return __('navigation.all_tenants');
     }
 
     public static function getNavigationGroup(): ?string
@@ -157,6 +158,16 @@ class TenantResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('type')
+                    ->label(__('admin/tenant.table.column.type'))
+                    ->badge()
+                    ->sortable()
+                    ->color(fn ($state) => match ($state instanceof TenantType ? $state->value : $state) {
+                        TenantType::Transporter->value => 'warning',
+                        TenantType::Stable->value => 'info',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn ($state) => $state instanceof TenantType ? $state->label() : (string) $state),
                 Tables\Columns\TextColumn::make('slug')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('country')
@@ -182,6 +193,9 @@ class TenantResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                Tables\Filters\SelectFilter::make('type')
+                    ->label(__('admin/tenant.table.filter.type'))
+                    ->options(TenantType::options()),
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'trialing' => 'trialing',

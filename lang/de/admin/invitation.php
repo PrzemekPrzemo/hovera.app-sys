@@ -6,6 +6,7 @@ return [
     'table' => [
         'column' => [
             'tenant' => 'Reitstall',
+            'tenant_type' => 'Typ',
             'role' => 'Rolle',
             'status' => 'Status',
             'invited_by' => 'Einladender',
@@ -23,6 +24,7 @@ return [
             'expired' => 'Nur abgelaufen',
             'accepted' => 'Nur angenommen',
             'tenant' => 'Reitstall',
+            'tenant_type' => 'Mandantentyp',
         ],
     ],
     'action' => [

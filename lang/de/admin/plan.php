@@ -26,8 +26,10 @@ return [
             'features' => 'Schlüssel: bullets[N]=string (Marketing), enabled.X=bool (Feature-Flag).',
             'is_active' => 'Kann der Tarif noch neuen Tenants zugewiesen werden.',
             'is_public' => 'Auf der öffentlichen Preisseite anzeigen? Enterprise üblicherweise false (custom).',
+            'audience' => 'Für wen ist dieser Tarif — Reitstall oder Transporteur. Nach Erstellung unveränderlich.',
         ],
         'label' => [
+            'audience' => 'Audience',
             'price_monthly' => 'Monatspreis',
             'price_yearly' => 'Jahrespreis',
             'stripe_price_monthly_id' => 'Stripe Price ID (monatlich)',
@@ -42,11 +44,15 @@ return [
 
     'table' => [
         'column' => [
+            'audience' => 'Audience',
             'price_monthly' => 'Monatlich',
             'price_yearly' => 'Jährlich',
             'tenants_count' => 'Reitställe',
             'is_active_short' => 'Akt.',
             'is_public_short' => 'Öff.',
+        ],
+        'filter' => [
+            'audience' => 'Audience',
         ],
     ],
 

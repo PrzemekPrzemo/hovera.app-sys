@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources;
 
+use App\Actions\Impersonation\StartImpersonation;
 use App\Domain\Transport\Notifications\TransporterRejectedNotification;
 use App\Domain\Transport\Notifications\TransporterVerifiedNotification;
 use App\Enums\TenantType;
 use App\Enums\VerificationStatus;
+use App\Filament\Admin\Resources\TenantResource\RelationManagers\InvitationsRelationManager;
+use App\Filament\Admin\Resources\TenantResource\RelationManagers\MembershipsRelationManager;
 use App\Filament\Admin\Resources\TransporterResource\Pages;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
@@ -162,6 +165,12 @@ class TransporterResource extends Resource
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('country')->sortable()->toggleable(),
+                Tables\Columns\TextColumn::make('verified_at')
+                    ->label(__('admin/transporter.table.column.verified_at'))
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable()
+                    ->placeholder('—'),
                 Tables\Columns\TextColumn::make('last_activity_at')
                     ->label(__('admin/transporter.table.column.last_activity_at'))
                     ->since()
@@ -211,8 +220,58 @@ class TransporterResource extends Resource
                     ])
                     ->action(fn (Tenant $record, array $data) => self::reject($record, (string) $data['reason']))
                     ->requiresConfirmation(),
+                Tables\Actions\Action::make('login_as_owner')
+                    ->label(__('admin/transporter.action.login_as_owner.label'))
+                    ->icon('heroicon-o-eye')
+                    ->color('success')
+                    ->visible(fn (Tenant $r) => ! $r->trashed()
+                        && $r->status === 'active'
+                        && $r->memberships()->whereNull('revoked_at')->whereNotNull('user_id')->exists())
+                    ->form([
+                        Forms\Components\Textarea::make('reason')
+                            ->label(__('admin/transporter.action.login_as_owner.reason_label'))
+                            ->required()
+                            ->minLength(5)
+                            ->maxLength(500)
+                            ->helperText(__('admin/transporter.action.login_as_owner.reason_helper')),
+                    ])
+                    ->action(function (Tenant $record, array $data, StartImpersonation $impersonate) {
+                        $membership = $record->memberships()
+                            ->whereNull('revoked_at')
+                            ->whereNotNull('user_id')
+                            ->orderBy('created_at')
+                            ->with('user')
+                            ->first();
+
+                        if (! $membership || ! $membership->user) {
+                            Notification::make()->danger()
+                                ->title(__('admin/transporter.action.login_as_owner.no_user_title'))
+                                ->body(__('admin/transporter.action.login_as_owner.no_user_body'))
+                                ->send();
+
+                            return;
+                        }
+
+                        $impersonate->execute(
+                            masterAdmin: Auth::user(),
+                            tenant: $record,
+                            targetUser: $membership->user,
+                            reason: (string) $data['reason'],
+                            session: request()->session(),
+                        );
+                    })
+                    ->successRedirectUrl('/transport')
+                    ->modalSubmitActionLabel(__('admin/transporter.action.login_as_owner.submit')),
                 Tables\Actions\EditAction::make(),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            MembershipsRelationManager::class,
+            InvitationsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

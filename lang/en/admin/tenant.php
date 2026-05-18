@@ -32,10 +32,14 @@ return [
 
     'table' => [
         'column' => [
+            'type' => 'Type',
             'country' => 'Country',
             'plan' => 'Plan',
             'db_name' => 'Database',
             'created_at' => 'Created',
+        ],
+        'filter' => [
+            'type' => 'Tenant type',
         ],
     ],
 

@@ -32,10 +32,14 @@ return [
 
     'table' => [
         'column' => [
+            'type' => 'Тип',
             'country' => 'Страна',
             'plan' => 'Тариф',
             'db_name' => 'База',
             'created_at' => 'Создана',
+        ],
+        'filter' => [
+            'type' => 'Тип арендатора',
         ],
     ],
 

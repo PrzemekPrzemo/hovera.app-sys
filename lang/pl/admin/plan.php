@@ -26,8 +26,10 @@ return [
             'features' => 'Klucze: bullets[N]=string (marketing), enabled.X=bool (feature flag).',
             'is_active' => 'Czy plan można nadal przypisać do nowych tenantów.',
             'is_public' => 'Czy pokazać na publicznej stronie cennika. Enterprise zwykle false (custom).',
+            'audience' => 'Dla kogo jest ten plan — Stajnia lub Firma transportowa. Niezmienne po utworzeniu.',
         ],
         'label' => [
+            'audience' => 'Audience',
             'price_monthly' => 'Cena miesięczna',
             'price_yearly' => 'Cena roczna',
             'stripe_price_monthly_id' => 'Stripe Price ID (miesięcznie)',
@@ -42,11 +44,15 @@ return [
 
     'table' => [
         'column' => [
+            'audience' => 'Audience',
             'price_monthly' => 'Miesięcznie',
             'price_yearly' => 'Rocznie',
             'tenants_count' => 'Stajnie',
             'is_active_short' => 'Akt.',
             'is_public_short' => 'Publ.',
+        ],
+        'filter' => [
+            'audience' => 'Audience',
         ],
     ],
 
