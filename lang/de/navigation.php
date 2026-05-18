@@ -41,6 +41,7 @@ return [
     'feed_inventory' => 'Futterlager',
 
     'vehicles' => 'Fahrzeuge',
+    'drivers' => 'Fahrer',
 
     // Pages (non-resource)
     'pages' => [

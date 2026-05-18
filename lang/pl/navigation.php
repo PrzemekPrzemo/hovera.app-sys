@@ -43,6 +43,7 @@ return [
 
     // Transport
     'vehicles' => 'Pojazdy',
+    'drivers' => 'Kierowcy',
 
     // Pages (non-resource)
     'pages' => [
