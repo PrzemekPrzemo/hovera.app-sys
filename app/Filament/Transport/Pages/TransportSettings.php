@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Transport\Pages;
 
+use App\Domain\Transport\Routing\RoutingProviderProbe;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\TransportSettings as TransportSettingsModel;
 use App\Services\Tenancy\TenantRoleGate;
@@ -174,8 +175,19 @@ class TransportSettings extends Page implements HasForms
                             ->label(__('transport/settings.form.label.routing_api_key'))
                             ->helperText(__('transport/settings.form.helper.routing_api_key'))
                             ->password()
-                            ->revealable()
-                            ->visible(fn (Forms\Get $get) => $get('routing_provider') !== 'ors'),
+                            ->revealable(),
+                        Forms\Components\Actions::make([
+                            Forms\Components\Actions\Action::make('testApiKey')
+                                ->label(__('transport/api_config.action.test_key'))
+                                ->icon('heroicon-o-bolt')
+                                ->color('info')
+                                ->action(function (Forms\Get $get) {
+                                    $this->testApiKey(
+                                        (string) ($get('routing_provider') ?? ''),
+                                        (string) ($get('routing_api_key') ?? ''),
+                                    );
+                                }),
+                        ])->columnSpanFull(),
                     ]),
             ]);
     }
@@ -213,6 +225,36 @@ class TransportSettings extends Page implements HasForms
         Notification::make()
             ->title(__('transport/settings.action.saved'))
             ->success()
+            ->send();
+    }
+
+    /**
+     * Test ważności klucza API providera routingu. Wywołuje minimalny call
+     * przez RoutingProviderProbe i pokazuje notification z wynikiem. Pomaga
+     * userowi sprawdzić czy wkleił prawidłowy token zanim wystawi pierwszą
+     * realną ofertę.
+     */
+    public function testApiKey(string $providerId, string $apiKey): void
+    {
+        abort_unless(self::canAccess(), 403);
+
+        $result = app(RoutingProviderProbe::class)->test($providerId, $apiKey);
+
+        if ($result['success']) {
+            Notification::make()
+                ->success()
+                ->title(__('transport/api_config.notify.success'))
+                ->body($result['message'])
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->danger()
+            ->title(__('transport/api_config.notify.failure'))
+            ->body($result['message'])
+            ->persistent()
             ->send();
     }
 }
