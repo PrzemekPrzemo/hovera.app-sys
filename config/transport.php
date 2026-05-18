@@ -89,6 +89,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Leads
+    |--------------------------------------------------------------------------
+    | Czas życia leadu od momentu utworzenia. Po expires_at — status flipuje
+    | na "expired" przez cron (krok 4 fazy 5+6).
+    */
+
+    'leads' => [
+        'expires_after_days' => env('TRANSPORT_LEAD_EXPIRES_AFTER_DAYS', 14),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Voivodeship adjacency
     |--------------------------------------------------------------------------
     | Routing leadów w trybie BROADCAST: dispatcher wybiera transporterów z

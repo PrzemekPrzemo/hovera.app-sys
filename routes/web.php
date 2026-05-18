@@ -17,6 +17,7 @@ use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PricingController;
 use App\Http\Controllers\Public\Przelewy24Controller;
 use App\Http\Controllers\Public\QuoteAcceptanceController;
+use App\Http\Controllers\Public\TransportInquiryController;
 use App\Http\Controllers\Public\Przelewy24WebhookController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicInvoiceController;
@@ -344,6 +345,29 @@ Route::middleware(['web'])
         Route::post('/reject', [QuoteAcceptanceController::class, 'reject'])
             ->middleware('throttle:10,1')
             ->name('quote.reject');
+    });
+
+/*
+ * Publiczny formularz zapytania transportowego. Anonim wpisuje od/do +
+ * datę + horse count → tworzy transport_lead w status=open. LeadDispatcher
+ * (faza 5+6 krok 4) podejmuje dispatch'em. Throttle POST 5/h z IP (mocne
+ * anti-spam — lead = mail leci do transporterów). Patrz docs/TRANSPORT.md
+ * §5.2 + krok 3 fazy 5+6.
+ */
+Route::middleware(['web'])
+    ->prefix('/transport/zapytanie')
+    ->name('public.transport.inquiry')
+    ->group(function () {
+        Route::get('/', [TransportInquiryController::class, 'show'])->name('');
+        Route::post('/', [TransportInquiryController::class, 'submit'])
+            ->middleware('throttle:5,60')
+            ->name('.submit');
+        Route::get('/dziekujemy/{lead}', [TransportInquiryController::class, 'thanks'])
+            // Laravel HasUlids zwraca lowercase ulid (Crockford base32) —
+            // wzorzec case-insensitive bo nie chcemy linków z różną wielkością
+            // znaków psuć.
+            ->where('lead', '[0-9A-Za-z]{26}')
+            ->name('.thanks');
     });
 
 /*

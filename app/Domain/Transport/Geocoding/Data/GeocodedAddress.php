@@ -12,5 +12,8 @@ final readonly class GeocodedAddress
         public string $displayName,        // pełna nazwa wyświetlana ("ul. Marymoncka 1, Warszawa")
         public Coords $coords,
         public ?string $countryCode = null,
+        // Dla adresów w PL: wojewodztwo (np. "mazowieckie") — używamy do
+        // dispatch'u leadów w trybie broadcast (matching service_areas).
+        public ?string $voivodeship = null,
     ) {}
 }
