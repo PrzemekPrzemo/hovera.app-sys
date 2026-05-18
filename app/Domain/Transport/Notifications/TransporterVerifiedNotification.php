@@ -42,7 +42,8 @@ class TransporterVerifiedNotification extends Notification
             ->subject(__('transport/notify_verified.subject'))
             ->greeting(__('transport/notify_verified.greeting'))
             ->line(__('transport/notify_verified.intro', ['name' => $this->tenant->name]))
-            ->line(__('transport/notify_verified.now_can'));
+            ->line(__('transport/notify_verified.now_can'))
+            ->line(__('transport/notify_verified.trial_started'));
 
         if (! empty($this->verifiedDocuments)) {
             $message->line(__('transport/notify_verified.verified_list_heading'));

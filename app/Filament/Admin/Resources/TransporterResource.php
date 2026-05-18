@@ -355,6 +355,12 @@ class TransporterResource extends Resource
             'verification_notes' => $notes !== '' ? $notes : $tenant->verification_notes,
         ])->save();
 
+        // Marketing spec: trial 1mc dla transportera startuje DOPIERO TU
+        // (po pozytywnej weryfikacji dokumentów), nie od signupu. Wewnętrznie
+        // idempotentne — jeśli trial już wcześniej był ustawiony (np. legacy
+        // tenant przemigrowany ręcznie), nie nadpisujemy.
+        $tenant->refresh()->startTrialOnVerification();
+
         app(MasterAuditLogger::class)->record(
             action: 'transporter.verify',
             targetType: 'Tenant',

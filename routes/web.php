@@ -120,6 +120,12 @@ Route::middleware(['web', 'throttle:30,1'])
     ->get('/pricing', [PricingController::class, 'show'])
     ->name('pricing.show');
 
+// Cennik planów transportowych (Start/Pro/Business/Enterprise, 5 walut).
+// Patrz docs/TRANSPORT.md §15.4 + hovera.app/produkt/transport/.
+Route::middleware(['web', 'throttle:30,1'])
+    ->get('/pricing/transport', [PricingController::class, 'showTransport'])
+    ->name('pricing.transport');
+
 /*
  * Strony prawne — regulamin, polityka prywatności, DPA. Renderowane
  * statycznie z lang files. Throttle 30/min broni przed scrapingiem.
