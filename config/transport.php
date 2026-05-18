@@ -43,6 +43,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Fuel prices
+    |--------------------------------------------------------------------------
+    | FuelPriceService priorytetyzuje: per-tenant manual override →
+    | najnowszy snapshot z central fuel_prices (TTL) → fallback hard-coded.
+    | Scraper e-petrol.pl uruchamiamy `php artisan transport:scrape-fuel`
+    | przez cron raz dziennie (06:00).
+    */
+
+    'fuel' => [
+        'epetrol' => [
+            'url' => env('TRANSPORT_EPETROL_URL', 'https://www.e-petrol.pl/'),
+        ],
+        'snapshot_max_age_days' => env('TRANSPORT_FUEL_SNAPSHOT_MAX_AGE_DAYS', 7),
+        'fallback_price' => env('TRANSPORT_FUEL_FALLBACK_PRICE', 7.00),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Voivodeship adjacency
     |--------------------------------------------------------------------------
     | Routing leadów w trybie BROADCAST: dispatcher wybiera transporterów z
