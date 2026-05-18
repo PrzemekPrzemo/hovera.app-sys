@@ -628,7 +628,7 @@ Kandydaci (patrz §14 dla rekomendacji):
 | OP4 | Czy w trybie broadcast widać liczbę powiadomionych transporterów? | ✅ | NIE pokazujemy w UI zamawiającego — anti-anchoring. Liczbę zna tylko master admin (`transport_lead_dispatch`). |
 | OP5 | Czas ważności oferty niezależny od leadu? | 🟡 | Aktualnie oferta żyje tyle co lead (`expires_at`). Reopen w razie sygnału od UX. |
 | OP6 | Trasy międzynarodowe (DE/CZ/SK/LT) | ⬜ | Post-MVP — patrz §14. PL-only w MVP. |
-| OP7 | Reviews/opinie transporterów | ⬜ | Post-MVP — patrz §14 i §12 (marketplace positioning: reviews = real reviews bo nie wykonujemy transportu). |
+| OP7 | Reviews/opinie transporterów | ✅ | Wdrożone — patrz §13.6. 14 dni od preferred_date, magic link, 1–5 ★ + komentarz. Hovera nie moderuje preventywnie; transporter może zgłosić review do moderacji master adminowi. |
 | OP8 | Verification badge (Hovera-Verified) — kryteria | ✅ | Zaimplementowane przez `verified_at` na `Tenant`, kryteria w `app/Domain/Transport/Verification/` — master admin verify/reject na podstawie uploadowanych dokumentów (OC przewoźnika, licencja, NIP). |
 
 ---
@@ -800,6 +800,49 @@ w stajniach vs w transporterach.
   złamało §12.4 — KSeF per-transporter).
 - Master admin **nie inkasuje płatności** — Stripe jest między klientem
   a transporterem (subscription billing) bezpośrednio.
+
+### 13.6 Reviews (po zaakceptowanym quote)
+
+Marketplace reviews — `app/Filament/Admin/Resources/TransportReviewResource.php`
++ `/transport` panel (TransportReviewResource po stronie tenant'a). Patrz §12.5
+pkt 3 dla pozycjonowania (real reviews, Hovera ≠ przewoźnik).
+
+**Bramka „real deal":** invite generowany **tylko** dla
+`transport_lead_responses.status = accepted` przez `TransportReviewInviteService`
+(cron `transport:dispatch-review-invites`, daily 09:00 Warsaw). Brak akceptacji
+oferty = brak invite = brak opinii. Recenzja anonimowych „użytkowników" jest
+strukturalnie niemożliwa.
+
+**14-dniowy delay:** invite leci dopiero gdy `preferred_date + 14d ≤ now()`.
+Powód: klient ma czas ochłonąć, opinia jest bardziej trafna niż „świeży"
+emocjonalny pierwszy wrażeniowy strzał.
+
+**Magic link UX:** klient nie ma konta w Hoverze i nie musi go zakładać.
+Token (48 znaków `Str::random`, sha256 w DB) w URLu `/transport/review/{token}`
+= jedyna poświadczeniowa. TTL = 30 dni od `invite_sent_at`. Token użyty raz —
+kolejny GET pokazuje friendly „Już zostawiłeś opinię" (200, nie 404).
+
+**1 opinia per (lead × response):** unique key w DB. Idempotent dispatch
+(re-run cron nie wyśle drugiego invite). Anti-double na poziomie DB > app
+race conditions.
+
+**Default publish, opt-out moderacja:** po submit'cie `status = published`
+natychmiast (Hovera = pośrednik). Transporter widzi opinię w `/transport`
+panel, może:
+- **„Odpowiedz publicznie"** → `transporter_response` + timestamp,
+  widoczne pod opinią na `/t/{slug}`. Edycja dozwolona.
+- **„Zgłoś do moderacji"** → `status = flagged` + `flagged_reason`,
+  review znika publicznie. Trafia na master admin's queue.
+
+**Master admin moderacja:** `/admin/transport-reviews` z badge'em flagged
+count. Akcje: `publish` (przywróć), `hide` (zatwierdź ukrycie), `reject`
+(soft delete — używać oszczędnie). Każda akcja w `MasterAuditLogger`.
+
+**GDPR data minimisation:** email zamawiającego po wysyłce invite
+trzymamy tylko jako sha256 hash + redacted string („j***@example.com").
+Imię i nazwisko publicznie redaktowane do formy „Jan K." — pełne nazwisko
+nie wycieka. Aggregate (count/avg/distribution) cached 10 min, bustowany
+po nowym submit / response / flag / moderacja.
 
 ---
 

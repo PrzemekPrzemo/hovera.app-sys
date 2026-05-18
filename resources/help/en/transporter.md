@@ -164,6 +164,43 @@ Yes — multi-tenancy. Create a second tenant in `Settings → Account →
 Add company`, choose `Transporter` type. The tenant switcher (top of
 the screen) flips between them.
 
+## How to earn good reviews
+
+After every accepted transport the customer receives an email from
+Hovera 14 days after `preferred_date` asking for a review. That's the
+real-deal gate — anonymous "users" can't review you, only customers
+after a real deal. How to maximise 5 ★:
+
+1. **Communicate.** Email/SMS the day before ("Hi, we'll be at the
+   stable tomorrow at 8:00. Mateusz, driver, +48 ...") + a short ping
+   after loading and after arrival. The customer knows what's
+   happening = stays calm.
+2. **Clean truck, driver in company shirt.** Small visual cues are
+   the difference between 4 ★ and 5 ★.
+3. **Punctuality > everything.** Being 30 min late averages -1 ★.
+   If you know you'll be late, call **before** the slot, not after.
+4. **After transport:** a short SMS "We arrived safely, thanks for
+   trusting us. In ~14 days you'll get a review request from Hovera —
+   we'd appreciate a few words" boosts response rate by ~40%.
+
+**How to handle negative reviews?**
+
+- First, **reply publicly** in the "Customer reviews" panel
+  ("Reply publicly" action). A professional, short reply
+  ("Thank you for the feedback, we've taken it on board — from now
+  on...") works better than silence. Even 1 ★ with a good reply
+  builds trust.
+- Only use "Flag for moderation" when the review is **fake /
+  defamatory / a mistake** (e.g. a review meant for another
+  transporter). The Hovera team will verify and decide. **Don't
+  use** this action as "I don't like it" — the review will be
+  re-published and your credibility will drop.
+
+The **review link** works for 30 days, once. The `/t/{slug}` profile
+shows the average + last 10 reviews. You can share the profile link
+(Facebook, Google My Business, business cards) — reviews are real and
+non-deletable by the transporter, which adds credibility.
+
 ## Support
 
 - **Support email:** `support@hovera.app` (response time: 1 business

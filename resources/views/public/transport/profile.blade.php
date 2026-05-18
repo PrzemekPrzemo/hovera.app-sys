@@ -61,6 +61,29 @@
             .lead { color: #E9E2D3; }
             .powered, .powered a { color: #C8B8A4; }
         }
+        .reviews-summary { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+        .reviews-avg { font-size: 2.4rem; font-weight: 700; color: #3D2E22; line-height: 1; }
+        .reviews-stars-big { color: var(--primary); font-size: 1.3rem; letter-spacing: .05em; }
+        .reviews-count { color: var(--muted); font-size: .95rem; }
+        .reviews-dist { display: grid; gap: .3rem; max-width: 320px; margin-bottom: 1.5rem; }
+        .reviews-dist-row { display: grid; grid-template-columns: 28px 1fr 36px; gap: .5rem; align-items: center; font-size: .85rem; color: var(--muted); }
+        .reviews-dist-bar { background: #ebe4d3; border-radius: 4px; overflow: hidden; height: 8px; }
+        .reviews-dist-bar-fill { background: var(--primary); height: 100%; }
+        .review { background: var(--card); border-radius: 12px; padding: 1rem 1.2rem; box-shadow: 0 2px 10px rgba(0,0,0,.04); margin-bottom: .75rem; }
+        .review-head { display: flex; gap: .75rem; align-items: baseline; flex-wrap: wrap; margin-bottom: .35rem; }
+        .review-stars { color: var(--primary); font-weight: 700; }
+        .review-author { color: #3D2E22; font-weight: 600; }
+        .review-date { color: var(--muted); font-size: .85rem; }
+        .review-comment { color: #3D2E22; white-space: pre-line; }
+        .review-verified { display: inline-block; padding: .12rem .55rem; border-radius: 999px; font-size: .7rem; background: color-mix(in srgb, var(--primary) 15%, transparent); color: color-mix(in srgb, var(--primary) 80%, #000); }
+        .review-response { margin-top: .75rem; padding: .75rem 1rem; background: color-mix(in srgb, var(--primary) 8%, var(--bg)); border-left: 3px solid var(--primary); border-radius: 6px; }
+        .review-response-label { font-weight: 600; color: #3D2E22; font-size: .85rem; margin-bottom: .25rem; }
+        @media (prefers-color-scheme: dark) {
+            .review { background: #2a221c; }
+            .reviews-avg, .review-author, .review-comment, .review-response-label { color: #E9E2D3; }
+            .reviews-dist-bar { background: #4a3d31; }
+            .review-response { background: #322820; }
+        }
         @media (max-width: 600px) {
             .hero { padding: 2rem 1rem 3rem; }
             .hero h1 { font-size: 1.7rem; }
@@ -127,6 +150,72 @@
                         </div>
                     @endforeach
                 </div>
+            </div>
+        </section>
+    @endif
+
+    @if (! empty($review_aggregate) && ($review_aggregate['count'] ?? 0) > 0)
+        @php
+            $avg = (float) ($review_aggregate['average'] ?? 0);
+            $cnt = (int) ($review_aggregate['count'] ?? 0);
+            $distribution = (array) ($review_aggregate['distribution'] ?? []);
+            $maxBar = max(1, ...array_map('intval', $distribution));
+            $fullStars = (int) floor($avg);
+            $hasHalf = ($avg - $fullStars) >= 0.25 && ($avg - $fullStars) < 0.75;
+            $roundedFull = ($avg - $fullStars) >= 0.75 ? $fullStars + 1 : $fullStars;
+            $starString = str_repeat('★', $roundedFull).str_repeat('☆', max(0, 5 - $roundedFull));
+        @endphp
+        <section class="section">
+            <div class="container">
+                <h2>{{ __('public/transport_review.section.title') }}</h2>
+                <div class="reviews-summary">
+                    <div class="reviews-avg">{{ number_format($avg, 1, ',', ' ') }}</div>
+                    <div>
+                        <div class="reviews-stars-big" aria-label="{{ $avg }} / 5">{{ $starString }}</div>
+                        <div class="reviews-count">
+                            {{ trans_choice('public/transport_review.section.count', $cnt, ['count' => $cnt]) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reviews-dist" role="list" aria-label="{{ __('public/transport_review.section.distribution_label') }}">
+                    @for ($s = 5; $s >= 1; $s--)
+                        @php $n = (int) ($distribution[$s] ?? 0); $pct = $maxBar > 0 ? (int) round(100 * $n / $maxBar) : 0; @endphp
+                        <div class="reviews-dist-row" role="listitem">
+                            <span>{{ $s }} ★</span>
+                            <span class="reviews-dist-bar" aria-hidden="true">
+                                <span class="reviews-dist-bar-fill" style="width: {{ $pct }}%; display:block;"></span>
+                            </span>
+                            <span style="text-align:right;">{{ $n }}</span>
+                        </div>
+                    @endfor
+                </div>
+
+                @foreach (($latest_reviews ?? []) as $rv)
+                    <article class="review">
+                        <div class="review-head">
+                            <span class="review-stars" aria-label="{{ $rv['rating'] }} / 5">
+                                {{ str_repeat('★', (int) $rv['rating']) }}{{ str_repeat('☆', max(0, 5 - (int) $rv['rating'])) }}
+                            </span>
+                            <span class="review-author">{{ $rv['customer'] }}</span>
+                            @if ($rv['submitted_at'])
+                                <span class="review-date">·&nbsp;{{ $rv['submitted_at']->format('Y-m-d') }}</span>
+                            @endif
+                            <span class="review-verified">{{ __('public/transport_review.section.verified_badge') }}</span>
+                        </div>
+                        @if (! empty($rv['comment']))
+                            <div class="review-comment">{{ $rv['comment'] }}</div>
+                        @endif
+                        @if (! empty($rv['transporter_response']))
+                            <div class="review-response">
+                                <div class="review-response-label">
+                                    {{ __('public/transport_review.section.response_label', ['transporter' => $tenant->name]) }}
+                                </div>
+                                <div>{{ $rv['transporter_response'] }}</div>
+                            </div>
+                        @endif
+                    </article>
+                @endforeach
             </div>
         </section>
     @endif
