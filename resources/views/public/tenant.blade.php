@@ -6,6 +6,8 @@
     <title>{{ $tenant->name }} — Hovera</title>
 
     <meta name="description" content="{{ Str::limit($description ?? "{$tenant->name} — stajnia jeździecka.", 160) }}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ route('public.tenant', ['slug' => $tenant->slug]) }}">
 
     {{-- Open Graph --}}
     <meta property="og:type" content="website">

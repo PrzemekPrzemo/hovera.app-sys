@@ -23,6 +23,7 @@ use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicInvoiceController;
 use App\Http\Controllers\Public\PublicSiteController;
 use App\Http\Controllers\Public\SignupController;
+use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Public\StripeWebhookController;
 use App\Http\Controllers\Tenant\BillingController;
 use App\Http\Controllers\Tenant\BugReportController;
@@ -45,6 +46,16 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', fn () => redirect('/'.config('hovera.admin.path')));
+
+/*
+ * Publiczne pliki SEO — /sitemap.xml + /robots.txt. Indeksują tylko strony
+ * marketingowe (landing, formularz zapytania, kalkulator, /t/{slug} dla
+ * zweryfikowanych transporterów, /s/{slug} dla aktywnych stajni). Trasy z
+ * tokenami (np. /transport/quote/...) oraz panele Filament są wykluczone w
+ * robots.txt. Cache 1h — patrz SitemapController.
+ */
+Route::middleware('web')->get('/sitemap.xml', [SitemapController::class, 'sitemap'])->name('public.sitemap');
+Route::middleware('web')->get('/robots.txt', [SitemapController::class, 'robots'])->name('public.robots');
 
 /*
  * PWA offline fallback. Service worker (public/sw.js) precache'uje to
