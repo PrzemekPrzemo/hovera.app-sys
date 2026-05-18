@@ -80,7 +80,7 @@ return [
         'slug_format' => 'Die URL darf nur Kleinbuchstaben, Ziffern und Bindestriche enthalten (Bindestrich nicht am Anfang/Ende).',
         'slug_taken' => 'Diese URL ist bereits vergeben — versuchen Sie eine andere, z. B. mit Ortsangabe oder Kürzel.',
         'terms' => 'Sie müssen die AGB akzeptieren.',
-        'provisioning_failed' => 'Auf unserer Seite ist etwas schiefgelaufen. Bitte versuchen Sie es in Kürze erneut oder schreiben Sie an support@hovera.app.',
+        'provisioning_failed' => 'Auf unserer Seite ist etwas schiefgelaufen. Bitte versuchen Sie es in Kürze erneut oder schreiben Sie an office@hovera.app.',
     ],
 
     'thanks_heading' => '✓ Konto angelegt',
@@ -90,5 +90,5 @@ return [
     'thanks_step_3' => 'Legen Sie ein Passwort fest — das ist Ihr erster Login zum Panel.',
     'thanks_step_4' => 'Sie landen im Panel /app — Sie haben 30 Tage Testphase ohne Einschränkungen.',
     'thanks_no_email' => 'Innerhalb von 5 Minuten keine E-Mail erhalten?',
-    'thanks_no_email_help' => 'Prüfen Sie den Spam-Ordner. Falls weiterhin nichts da ist — schreiben Sie an support@hovera.app, wir helfen.',
+    'thanks_no_email_help' => 'Prüfen Sie den Spam-Ordner. Falls weiterhin nichts da ist — schreiben Sie an office@hovera.app, wir helfen.',
 ];

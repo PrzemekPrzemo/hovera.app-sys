@@ -29,7 +29,7 @@ return [
         'payment_terms_placeholder' => 'e.g. "Payable within 14 days of issue date. Account: ..."',
         'footer_note' => 'Invoice footer',
         'footer_note_help' => 'Printed at the bottom of every invoice PDF + written to the KSeF XML as an optional field.',
-        'footer_note_placeholder' => 'e.g. "Thank you for your business! Questions? support@hovera.app"',
+        'footer_note_placeholder' => 'e.g. "Thank you for your business! Questions? office@hovera.app"',
     ],
 
     'cycle' => [

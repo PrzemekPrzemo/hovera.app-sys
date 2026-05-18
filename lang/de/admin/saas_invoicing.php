@@ -29,7 +29,7 @@ return [
         'payment_terms_placeholder' => 'z. B. „Zahlbar innerhalb von 14 Tagen ab Ausstellungsdatum. Konto: ..."',
         'footer_note' => 'Rechnungs-Fußzeile',
         'footer_note_help' => 'Wird unten auf jeder PDF-Rechnung gedruckt + in das KSeF-XML als optionales Feld eingetragen.',
-        'footer_note_placeholder' => 'z. B. „Vielen Dank für die Zusammenarbeit! Fragen? support@hovera.app"',
+        'footer_note_placeholder' => 'z. B. „Vielen Dank für die Zusammenarbeit! Fragen? office@hovera.app"',
     ],
 
     'cycle' => [

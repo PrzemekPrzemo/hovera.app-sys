@@ -256,7 +256,7 @@
             ·
             <a href="{{ url('/demo') }}">{{ __('public/pricing.footer.demo') }}</a>
             ·
-            <a href="mailto:support@hovera.app">support@hovera.app</a>
+            <a href="mailto:office@hovera.app">office@hovera.app</a>
         </div>
     </div>
 

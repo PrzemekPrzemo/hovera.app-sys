@@ -29,7 +29,7 @@ return [
         'payment_terms_placeholder' => 'напр. "Оплата в течение 14 дней с даты выставления. Счёт: ..."',
         'footer_note' => 'Нижний колонтитул счёта',
         'footer_note_help' => 'Печатается внизу каждого PDF-счёта + добавляется в XML KSeF как опциональное поле.',
-        'footer_note_placeholder' => 'напр. "Спасибо за сотрудничество! Вопросы? support@hovera.app"',
+        'footer_note_placeholder' => 'напр. "Спасибо за сотрудничество! Вопросы? office@hovera.app"',
     ],
 
     'cycle' => [

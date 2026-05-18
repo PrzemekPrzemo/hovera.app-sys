@@ -80,7 +80,7 @@ return [
         'slug_format' => 'L’adresse ne peut contenir que des lettres minuscules, des chiffres et des tirets (pas de tiret en début ou en fin).',
         'slug_taken' => 'Cette adresse est déjà prise — essayez-en une autre, par exemple en ajoutant la ville ou un acronyme.',
         'terms' => 'Vous devez accepter les conditions générales.',
-        'provisioning_failed' => 'Une erreur est survenue de notre côté. Réessayez dans un instant ou écrivez à support@hovera.app.',
+        'provisioning_failed' => 'Une erreur est survenue de notre côté. Réessayez dans un instant ou écrivez à office@hovera.app.',
     ],
 
     'thanks_heading' => '✓ Compte créé',
@@ -90,5 +90,5 @@ return [
     'thanks_step_3' => 'Définissez un mot de passe — il s’agit de votre première connexion au panneau.',
     'thanks_step_4' => 'Vous arrivez dans le panneau /app — vous disposez de 30 jours d’essai sans limite.',
     'thanks_no_email' => 'Pas d’e-mail au bout de 5 minutes ?',
-    'thanks_no_email_help' => 'Vérifiez vos spams. Si vous n’avez toujours rien — écrivez à support@hovera.app, nous vous aiderons.',
+    'thanks_no_email_help' => 'Vérifiez vos spams. Si vous n’avez toujours rien — écrivez à office@hovera.app, nous vous aiderons.',
 ];

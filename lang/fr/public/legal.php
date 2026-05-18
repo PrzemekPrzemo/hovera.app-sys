@@ -19,7 +19,7 @@ return [
 
     'footer' => [
         'copyright' => '© :year hovera. Tous droits réservés.',
-        'support' => 'Assistance : support@hovera.app',
+        'support' => 'Assistance : office@hovera.app',
     ],
 
     'terms' => [
@@ -42,7 +42,7 @@ return [
         'section_5_body' => 'Les tarifs et l\'étendue des plans sont définis dans la grille tarifaire en vigueur sur /pricing. Les frais sont prélevés d\'avance pour la période de facturation (mensuelle ou annuelle) via le prestataire de paiement (Stripe). Une facture TVA est émise sous forme électronique et envoyée à l\'adresse e-mail du Client. Un retard de paiement supérieur à 14 jours autorise le Prestataire à suspendre l\'accès au panneau (les données étant conservées pendant 90 jours à compter de la suspension).',
 
         'section_6_heading' => '6. Réclamations',
-        'section_6_body' => 'Les réclamations doivent être adressées à support@hovera.app dans un délai de 14 jours suivant la survenance de l\'évènement. La réclamation doit contenir les coordonnées du Client, la description du problème ainsi que la solution attendue. Le Prestataire traitera la réclamation dans un délai de 14 jours ouvrés. L\'absence de réponse dans ce délai vaut acceptation de la réclamation.',
+        'section_6_body' => 'Les réclamations doivent être adressées à office@hovera.app dans un délai de 14 jours suivant la survenance de l\'évènement. La réclamation doit contenir les coordonnées du Client, la description du problème ainsi que la solution attendue. Le Prestataire traitera la réclamation dans un délai de 14 jours ouvrés. L\'absence de réponse dans ce délai vaut acceptation de la réclamation.',
 
         'section_7_heading' => '7. Disponibilité (SLA)',
         'section_7_body' => 'Le Prestataire s\'engage à assurer une disponibilité du service de 99,5 % sur une base mensuelle, hors fenêtres de maintenance planifiées annoncées avec un préavis de 48 heures. En cas de dépassement du seuil d\'indisponibilité, le Client a droit à un avoir proportionnel à la durée d\'indisponibilité (conformément au barème SLA disponible sur demande).',
@@ -57,7 +57,7 @@ return [
         'section_10_body' => 'Le Prestataire se réserve le droit de modifier les présentes conditions. Le Client sera informé des modifications par courrier électronique avec un préavis d\'au moins 30 jours. En cas de refus des modifications, le Client est en droit de résilier le contrat avec effet immédiat avant l\'entrée en vigueur des modifications.',
 
         'section_11_heading' => '11. Contact',
-        'section_11_body' => 'Toute question relative aux présentes conditions peut être adressée à support@hovera.app. Coordonnées du Prestataire : Sendormeco Holding sp. z o.o., ayant son siège à Varsovie, ul. Złota 75A/7, 00-819 Warszawa (Pologne), NIP (n° fiscal polonais) : 5252866457, REGON : 389194801, immatriculée au registre des entrepreneurs du KRS (Registre national judiciaire polonais) sous le numéro 0000906110, tenu par le Tribunal d\'arrondissement de Varsovie, 12e Chambre commerciale du KRS, capital social 5 000 PLN.',
+        'section_11_body' => 'Toute question relative aux présentes conditions peut être adressée à office@hovera.app. Coordonnées du Prestataire : Sendormeco Holding sp. z o.o., ayant son siège à Varsovie, ul. Złota 75A/7, 00-819 Warszawa (Pologne), NIP (n° fiscal polonais) : 5252866457, REGON : 389194801, immatriculée au registre des entrepreneurs du KRS (Registre national judiciaire polonais) sous le numéro 0000906110, tenu par le Tribunal d\'arrondissement de Varsovie, 12e Chambre commerciale du KRS, capital social 5 000 PLN.',
     ],
 
     'privacy' => [
@@ -65,7 +65,7 @@ return [
         'intro' => 'La présente politique de confidentialité décrit les modalités de traitement des données personnelles des Utilisateurs du service hovera, conformément au RGPD (UE 2016/679) ainsi qu\'à la loi polonaise du 10 mai 2018 sur la protection des données personnelles.',
 
         'section_1_heading' => '1. Responsable du traitement',
-        'section_1_body' => 'Le responsable du traitement des données personnelles est Sendormeco Holding sp. z o.o., ayant son siège à Varsovie, ul. Złota 75A/7, 00-819 Warszawa (Pologne), NIP : 5252866457, REGON : 389194801, KRS : 0000906110. Contact du responsable : privacy@hovera.app. Délégué à la protection des données (DPO) : dpo@hovera.app.',
+        'section_1_body' => 'Le responsable du traitement des données personnelles est Sendormeco Holding sp. z o.o., ayant son siège à Varsovie, ul. Złota 75A/7, 00-819 Warszawa (Pologne), NIP : 5252866457, REGON : 389194801, KRS : 0000906110. Contact du responsable : office@hovera.app. Délégué à la protection des données (DPO) : office@hovera.app.',
 
         'section_2_heading' => '2. Étendue des données traitées',
         'section_2_body' => 'Lors de l\'inscription, nous traitons : prénom et nom, adresse e-mail, nom de l\'écurie et URL de l\'écurie. Lors de l\'utilisation du service : adresse IP, identifiants de session et cookies, données techniques de l\'appareil (user-agent), journaux d\'activité (heure de connexion, actions dans le panneau). Les données saisies par le Client concernant ses propres clients (cavaliers, chevaux) sont traitées en qualité de sous-traitant — selon les termes du DPA (/dpa).',
@@ -77,10 +77,10 @@ return [
         'section_4_body' => 'Les données du compte Client sont conservées pendant toute la durée du contrat ainsi que 90 jours après sa résiliation (période de tolérance permettant la réactivation). Données de facturation — 5 ans à compter de la fin de l\'exercice fiscal (obligation issue du code fiscal polonais). Journaux système — 12 mois. Cookies analytiques — 13 mois. À l\'expiration de la durée de conservation, les données sont supprimées de manière irréversible ou anonymisées.',
 
         'section_5_heading' => '5. Destinataires des données (sous-traitants ultérieurs)',
-        'section_5_body' => 'Les données peuvent être confiées aux sous-traitants suivants : Hetzner Online GmbH (hébergement de l\'infrastructure, Allemagne/UE), OVH SAS (sauvegardes, France/UE), Stripe Payments Europe Ltd. (traitement des paiements, Irlande/UE), SMSAPI sp. z o.o. (envoi de SMS, Pologne), fournisseur d\'e-mails transactionnels (par ex. Postmark/Mailgun — UE/États-Unis sous clauses contractuelles types, CCT). La liste complète et actualisée des sous-traitants est disponible sur demande à dpo@hovera.app.',
+        'section_5_body' => 'Les données peuvent être confiées aux sous-traitants suivants : Hetzner Online GmbH (hébergement de l\'infrastructure, Allemagne/UE), OVH SAS (sauvegardes, France/UE), Stripe Payments Europe Ltd. (traitement des paiements, Irlande/UE), SMSAPI sp. z o.o. (envoi de SMS, Pologne), fournisseur d\'e-mails transactionnels (par ex. Postmark/Mailgun — UE/États-Unis sous clauses contractuelles types, CCT). La liste complète et actualisée des sous-traitants est disponible sur demande à office@hovera.app.',
 
         'section_6_heading' => '6. Droits de l\'utilisateur',
-        'section_6_body' => 'Toute personne concernée dispose des droits suivants : accès aux données (art. 15 du RGPD), rectification (art. 16), effacement (« droit à l\'oubli » — art. 17), limitation du traitement (art. 18), portabilité des données (art. 20), opposition (art. 21), ainsi que le droit d\'introduire une réclamation auprès du Président de l\'Office polonais de protection des données (PUODO — autorité polonaise de contrôle, équivalent de la CNIL). Pour exercer ces droits — demande à privacy@hovera.app, réponse dans un délai de 30 jours.',
+        'section_6_body' => 'Toute personne concernée dispose des droits suivants : accès aux données (art. 15 du RGPD), rectification (art. 16), effacement (« droit à l\'oubli » — art. 17), limitation du traitement (art. 18), portabilité des données (art. 20), opposition (art. 21), ainsi que le droit d\'introduire une réclamation auprès du Président de l\'Office polonais de protection des données (PUODO — autorité polonaise de contrôle, équivalent de la CNIL). Pour exercer ces droits — demande à office@hovera.app, réponse dans un délai de 30 jours.',
 
         'section_7_heading' => '7. Cookies',
         'section_7_body' => 'Le service utilise des cookies : nécessaires (session, CSRF, choix de la langue) — sans consentement requis ; analytiques (comptage des visites, statistiques anonymes) — avec consentement. L\'Utilisateur peut gérer les cookies dans les paramètres de son navigateur. La désactivation des cookies nécessaires empêche l\'utilisation du panneau.',
@@ -89,7 +89,7 @@ return [
         'section_8_body' => 'Nous mettons en œuvre des mesures techniques et organisationnelles adaptées au risque : chiffrement des communications (TLS 1.2+), chiffrement des données au repos (AES-256 pour les bases de données et les sauvegardes), contrôle d\'accès basé sur les rôles (RBAC), authentification à deux facteurs (2FA) pour les comptes privilégiés, sauvegardes quotidiennes, journaux d\'accès conservés pendant 12 mois, audits de sécurité réguliers.',
 
         'section_9_heading' => '9. Contact pour les questions RGPD',
-        'section_9_body' => 'Délégué à la protection des données : dpo@hovera.app. Responsable du traitement : privacy@hovera.app. Pour les Clients B2B traitant les données de leurs propres clients d\'écurie — voir l\'Accord de sous-traitance (DPA) disponible sur /dpa.',
+        'section_9_body' => 'Délégué à la protection des données : office@hovera.app. Responsable du traitement : office@hovera.app. Pour les Clients B2B traitant les données de leurs propres clients d\'écurie — voir l\'Accord de sous-traitance (DPA) disponible sur /dpa.',
 
         // @todo translate — full FR translation pending legal review.
         'section_10_heading' => '10. Marketplace transport — deux responsables de traitement indépendants',

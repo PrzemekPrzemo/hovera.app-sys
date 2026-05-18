@@ -29,7 +29,7 @@ return [
         'payment_terms_placeholder' => 'par exemple « Payable sous 14 jours à compter de la date d’émission. Compte : … »',
         'footer_note' => 'Pied de page de la facture',
         'footer_note_help' => 'Imprimé en bas de chaque PDF de facture et inséré dans le XML KSeF en tant que champ optionnel.',
-        'footer_note_placeholder' => 'par exemple « Merci pour votre confiance ! Des questions ? support@hovera.app »',
+        'footer_note_placeholder' => 'par exemple « Merci pour votre confiance ! Des questions ? office@hovera.app »',
     ],
 
     'cycle' => [

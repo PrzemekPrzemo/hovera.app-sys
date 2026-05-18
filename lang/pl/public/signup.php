@@ -82,7 +82,7 @@ return [
         'slug_format' => 'Adres może zawierać tylko małe litery, cyfry i myślniki (myślnik nie na początku/końcu).',
         'slug_taken' => 'Ten adres jest już zajęty — spróbuj innego, np. dorzuć miasto albo skrót.',
         'terms' => 'Musisz zaakceptować regulamin.',
-        'provisioning_failed' => 'Coś poszło nie tak po naszej stronie. Spróbuj ponownie za chwilę albo napisz na support@hovera.app.',
+        'provisioning_failed' => 'Coś poszło nie tak po naszej stronie. Spróbuj ponownie za chwilę albo napisz na office@hovera.app.',
     ],
 
     'thanks_heading' => '✓ Konto założone',
@@ -92,5 +92,5 @@ return [
     'thanks_step_3' => 'Ustaw hasło — to Twój pierwszy login do panelu.',
     'thanks_step_4' => 'Lądujesz w panelu /app — masz 30 dni triala bez ograniczeń.',
     'thanks_no_email' => 'Nie dostałeś maila w 5 minut?',
-    'thanks_no_email_help' => 'Sprawdź spam. Jeśli nadal brak — napisz na support@hovera.app, pomożemy.',
+    'thanks_no_email_help' => 'Sprawdź spam. Jeśli nadal brak — napisz na office@hovera.app, pomożemy.',
 ];

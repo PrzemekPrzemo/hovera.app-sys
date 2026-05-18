@@ -18,7 +18,7 @@ return [
 
     'footer' => [
         'copyright' => '© :year hovera. All rights reserved.',
-        'support' => 'Support: support@hovera.app',
+        'support' => 'Support: office@hovera.app',
     ],
 
     'terms' => [
@@ -41,7 +41,7 @@ return [
         'section_5_body' => 'Fees and plan scope are set out in the current pricing page at /pricing. Fees are charged in advance per billing period (monthly or annual) via the payment provider (Stripe). VAT invoices are issued electronically and emailed to the Customer. Late payment of more than 14 days entitles the Provider to suspend panel access (with data retention of 90 days from suspension).',
 
         'section_6_heading' => '6. Complaints',
-        'section_6_body' => 'Complaints should be submitted to support@hovera.app within 14 days of the event. The complaint should include Customer details, problem description, and the desired resolution. The Provider will respond within 14 working days. No response within the deadline is treated as acceptance of the complaint.',
+        'section_6_body' => 'Complaints should be submitted to office@hovera.app within 14 days of the event. The complaint should include Customer details, problem description, and the desired resolution. The Provider will respond within 14 working days. No response within the deadline is treated as acceptance of the complaint.',
 
         'section_7_heading' => '7. Availability (SLA)',
         'section_7_body' => 'The Provider commits to 99.5% monthly availability, excluding planned maintenance windows announced 48 hours in advance. If the unavailability threshold is exceeded, the Customer is entitled to a credit proportional to downtime (per the SLA schedule available on request).',
@@ -56,7 +56,7 @@ return [
         'section_10_body' => 'The Provider reserves the right to amend these Terms. Changes will be communicated by email at least 30 days in advance. If the Customer does not accept changes, they may terminate the agreement with immediate effect before the changes take effect.',
 
         'section_11_heading' => '11. Contact',
-        'section_11_body' => 'Questions about these Terms: support@hovera.app. Provider details: Sendormeco Holding sp. z o.o., registered office at ul. Złota 75A/7, 00-819 Warsaw, Poland; NIP (Polish tax ID): 5252866457; REGON: 389194801; registered in the National Court Register (KRS) under number 0000906110, kept by the District Court for the Capital City of Warsaw, 12th Commercial Division of KRS; share capital PLN 5,000.',
+        'section_11_body' => 'Questions about these Terms: office@hovera.app. Provider details: Sendormeco Holding sp. z o.o., registered office at ul. Złota 75A/7, 00-819 Warsaw, Poland; NIP (Polish tax ID): 5252866457; REGON: 389194801; registered in the National Court Register (KRS) under number 0000906110, kept by the District Court for the Capital City of Warsaw, 12th Commercial Division of KRS; share capital PLN 5,000.',
     ],
 
     'privacy' => [
@@ -64,7 +64,7 @@ return [
         'intro' => 'This privacy policy describes how personal data of hovera users is processed, in accordance with GDPR (EU 2016/679) and Polish Personal Data Protection Act of 10 May 2018.',
 
         'section_1_heading' => '1. Data controller',
-        'section_1_body' => 'The data controller is Sendormeco Holding sp. z o.o., based in Warsaw, registered office at ul. Złota 75A/7, 00-819 Warsaw, Poland; NIP: 5252866457; REGON: 389194801; KRS: 0000906110. Controller contact: privacy@hovera.app. Data Protection Officer (DPO): dpo@hovera.app.',
+        'section_1_body' => 'The data controller is Sendormeco Holding sp. z o.o., based in Warsaw, registered office at ul. Złota 75A/7, 00-819 Warsaw, Poland; NIP: 5252866457; REGON: 389194801; KRS: 0000906110. Controller contact: office@hovera.app. Data Protection Officer (DPO): office@hovera.app.',
 
         'section_2_heading' => '2. Scope of processed data',
         'section_2_body' => 'During registration: full name, email, stable name, stable URL. During use of the service: IP address, session and cookie identifiers, device technical data (user-agent), activity logs (login time, panel actions). Data entered by the Customer about its clients (riders, horses) is processed as a processor — under the DPA terms (/dpa).',
@@ -76,10 +76,10 @@ return [
         'section_4_body' => 'Customer account data: for the duration of the agreement plus 90 days (reactivation grace period). Invoice data: 5 years from the end of the fiscal year (tax law obligation). System logs: 12 months. Analytics cookies: 13 months. After the retention period, data is irreversibly deleted or anonymised.',
 
         'section_5_heading' => '5. Recipients (subprocessors)',
-        'section_5_body' => 'Data may be entrusted to: Hetzner Online GmbH (hosting, DE/EU), OVH SAS (backups, FR/EU), Stripe Payments Europe Ltd. (payments, IE/EU), SMSAPI sp. z o.o. (SMS, PL), transactional email provider (e.g. Postmark/Mailgun — EU/US under SCC). Current list available on request at dpo@hovera.app.',
+        'section_5_body' => 'Data may be entrusted to: Hetzner Online GmbH (hosting, DE/EU), OVH SAS (backups, FR/EU), Stripe Payments Europe Ltd. (payments, IE/EU), SMSAPI sp. z o.o. (SMS, PL), transactional email provider (e.g. Postmark/Mailgun — EU/US under SCC). Current list available on request at office@hovera.app.',
 
         'section_6_heading' => '6. User rights',
-        'section_6_body' => 'Each data subject has the right to: access (Art. 15 GDPR), rectification (Art. 16), erasure ("right to be forgotten" — Art. 17), restriction of processing (Art. 18), data portability (Art. 20), objection (Art. 21), and to lodge a complaint with the President of the Personal Data Protection Office (PUODO). Submit requests to privacy@hovera.app — response within 30 days.',
+        'section_6_body' => 'Each data subject has the right to: access (Art. 15 GDPR), rectification (Art. 16), erasure ("right to be forgotten" — Art. 17), restriction of processing (Art. 18), data portability (Art. 20), objection (Art. 21), and to lodge a complaint with the President of the Personal Data Protection Office (PUODO). Submit requests to office@hovera.app — response within 30 days.',
 
         'section_7_heading' => '7. Cookies',
         'section_7_body' => 'The service uses cookies: necessary (session, CSRF, language) — no consent required; analytical (visit count, anonymous statistics) — with consent. Users can manage cookies in browser settings. Disabling necessary cookies prevents panel use.',
@@ -88,7 +88,7 @@ return [
         'section_8_body' => 'We apply technical and organisational measures appropriate to the risk: TLS 1.2+ in transit, AES-256 at rest (databases and backups), role-based access control (RBAC), two-factor authentication (2FA) for privileged accounts, daily backups, access logs retained for 12 months, regular security audits.',
 
         'section_9_heading' => '9. GDPR contact',
-        'section_9_body' => 'Data Protection Officer: dpo@hovera.app. Controller: privacy@hovera.app. For B2B Customers processing data of their stable clients — see the Data Processing Agreement (DPA) at /dpa.',
+        'section_9_body' => 'Data Protection Officer: office@hovera.app. Controller: office@hovera.app. For B2B Customers processing data of their stable clients — see the Data Processing Agreement (DPA) at /dpa.',
 
         'section_10_heading' => '10. Transport marketplace — two independent controllers',
         'section_10_body' => 'Within the transport marketplace module (the public inquiry form "/transport/zapytanie" and quote acceptance at "/transport/quote/...") the Customer (the person requesting transport) submits contact details (name, email, phone, pickup and dropoff addresses). After the inquiry is created, Hovera shares this data with selected Transporters from the marketplace to allow them to prepare quotes. Upon Customer acceptance of a quote, the selected Transporter becomes an INDEPENDENT data controller for the Customer\'s data with respect to performing the transport contract — Hovera is not responsible for how the Transporter processes the data after quote acceptance. The Customer addresses GDPR rights requests directly to the Transporter (Transporter contact details are available on the public profile /t/{slug} and on the invoice). Hovera remains controller of the Customer\'s data only for platform operations (inquiry history, anti-spam, marketplace statistics). Details in the <a href="/regulamin-marketplace">Transport Marketplace Terms</a>.',

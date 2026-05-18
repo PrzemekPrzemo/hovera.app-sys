@@ -18,7 +18,7 @@ return [
 
     'footer' => [
         'copyright' => '© :year hovera. Wszystkie prawa zastrzeżone.',
-        'support' => 'Pomoc: support@hovera.app',
+        'support' => 'Pomoc: office@hovera.app',
     ],
 
     'terms' => [
@@ -41,7 +41,7 @@ return [
         'section_5_body' => 'Wysokość opłat oraz zakres planów określa aktualny cennik na /pricing. Opłaty są pobierane z góry za okres rozliczeniowy (miesięczny lub roczny) za pośrednictwem dostawcy płatności (Stripe). Faktura VAT wystawiana jest elektronicznie i wysyłana na adres e-mail Klienta. Opóźnienie w płatności powyżej 14 dni uprawnia Usługodawcę do zawieszenia dostępu do panelu (z zachowaniem danych przez 90 dni od daty zawieszenia).',
 
         'section_6_heading' => '6. Reklamacje',
-        'section_6_body' => 'Reklamacje należy zgłaszać na adres support@hovera.app w terminie 14 dni od wystąpienia zdarzenia. Reklamacja powinna zawierać dane Klienta, opis problemu oraz oczekiwany sposób rozpatrzenia. Usługodawca rozpatrzy reklamację w terminie 14 dni roboczych. Brak odpowiedzi w terminie traktuje się jako uznanie reklamacji.',
+        'section_6_body' => 'Reklamacje należy zgłaszać na adres office@hovera.app w terminie 14 dni od wystąpienia zdarzenia. Reklamacja powinna zawierać dane Klienta, opis problemu oraz oczekiwany sposób rozpatrzenia. Usługodawca rozpatrzy reklamację w terminie 14 dni roboczych. Brak odpowiedzi w terminie traktuje się jako uznanie reklamacji.',
 
         'section_7_heading' => '7. Dostępność (SLA)',
         'section_7_body' => 'Usługodawca zapewnia dostępność usługi na poziomie 99,5% w skali miesiąca, z wyłączeniem zaplanowanych okien serwisowych ogłaszanych z 48-godzinnym wyprzedzeniem. W przypadku przekroczenia limitu niedostępności Klient ma prawo do bonifikaty proporcjonalnej do czasu niedostępności (zgodnie z tabelą w polityce SLA dostępnej na żądanie).',
@@ -56,7 +56,7 @@ return [
         'section_10_body' => 'Usługodawca zastrzega prawo zmiany regulaminu. O zmianach Klient zostanie poinformowany pocztą elektroniczną z co najmniej 30-dniowym wyprzedzeniem. W przypadku braku akceptacji zmian Klient ma prawo wypowiedzieć umowę ze skutkiem natychmiastowym przed wejściem zmian w życie.',
 
         'section_11_heading' => '11. Kontakt',
-        'section_11_body' => 'Wszelkie pytania dotyczące regulaminu prosimy kierować na adres support@hovera.app. Dane Usługodawcy: Sendormeco Holding sp. z o.o. z siedzibą w Warszawie, ul. Złota 75A/7, 00-819 Warszawa, NIP: 5252866457, REGON: 389194801, wpisana do rejestru przedsiębiorców KRS pod numerem 0000906110 prowadzonego przez Sąd Rejonowy dla m.st. Warszawy w Warszawie, XII Wydział Gospodarczy KRS, kapitał zakładowy 5 000 zł.',
+        'section_11_body' => 'Wszelkie pytania dotyczące regulaminu prosimy kierować na adres office@hovera.app. Dane Usługodawcy: Sendormeco Holding sp. z o.o. z siedzibą w Warszawie, ul. Złota 75A/7, 00-819 Warszawa, NIP: 5252866457, REGON: 389194801, wpisana do rejestru przedsiębiorców KRS pod numerem 0000906110 prowadzonego przez Sąd Rejonowy dla m.st. Warszawy w Warszawie, XII Wydział Gospodarczy KRS, kapitał zakładowy 5 000 zł.',
     ],
 
     'privacy' => [
@@ -64,7 +64,7 @@ return [
         'intro' => 'Niniejsza polityka prywatności opisuje zasady przetwarzania danych osobowych Użytkowników serwisu hovera, zgodnie z rozporządzeniem RODO (UE 2016/679) oraz ustawą z dnia 10 maja 2018 r. o ochronie danych osobowych.',
 
         'section_1_heading' => '1. Administrator danych',
-        'section_1_body' => 'Administratorem danych osobowych jest Sendormeco Holding sp. z o.o. z siedzibą w Warszawie, ul. Złota 75A/7, 00-819 Warszawa, NIP: 5252866457, REGON: 389194801, KRS: 0000906110. Kontakt z administratorem: privacy@hovera.app. Inspektor Ochrony Danych (DPO): dpo@hovera.app.',
+        'section_1_body' => 'Administratorem danych osobowych jest Sendormeco Holding sp. z o.o. z siedzibą w Warszawie, ul. Złota 75A/7, 00-819 Warszawa, NIP: 5252866457, REGON: 389194801, KRS: 0000906110. Kontakt z administratorem: office@hovera.app. Inspektor Ochrony Danych (DPO): office@hovera.app.',
 
         'section_2_heading' => '2. Zakres przetwarzanych danych',
         'section_2_body' => 'W ramach rejestracji przetwarzamy: imię i nazwisko, adres e-mail, nazwę stajni oraz adres URL stajni. W ramach korzystania z usługi: adres IP, identyfikatory sesji i ciasteczek (cookies), dane techniczne urządzenia (user-agent), logi aktywności (czas logowania, akcje w panelu). Dane wprowadzone przez Klienta o jego klientach (jeźdźcach, koniach) przetwarzamy jako podmiot przetwarzający — na zasadach DPA (/dpa).',
@@ -76,10 +76,10 @@ return [
         'section_4_body' => 'Dane konta Klienta przechowujemy przez czas trwania umowy oraz 90 dni po jej rozwiązaniu (okres karencji do reaktywacji). Dane fakturowe — 5 lat od końca roku obrotowego (obowiązek z ordynacji podatkowej). Logi systemowe — 12 miesięcy. Cookies analityczne — 13 miesięcy. Po upływie okresu retencji dane są nieodwracalnie usuwane lub anonimizowane.',
 
         'section_5_heading' => '5. Odbiorcy danych (subprocesorzy)',
-        'section_5_body' => 'Dane mogą być powierzane następującym podmiotom przetwarzającym: Hetzner Online GmbH (hosting infrastruktury, Niemcy/UE), OVH SAS (kopie zapasowe, Francja/UE), Stripe Payments Europe Ltd. (przetwarzanie płatności, Irlandia/UE), SMSAPI sp. z o.o. (wysyłka SMS, Polska), dostawca poczty transakcyjnej (np. Postmark/Mailgun — UE/USA z SCC). Pełna aktualna lista subprocesorów — na żądanie pod dpo@hovera.app.',
+        'section_5_body' => 'Dane mogą być powierzane następującym podmiotom przetwarzającym: Hetzner Online GmbH (hosting infrastruktury, Niemcy/UE), OVH SAS (kopie zapasowe, Francja/UE), Stripe Payments Europe Ltd. (przetwarzanie płatności, Irlandia/UE), SMSAPI sp. z o.o. (wysyłka SMS, Polska), dostawca poczty transakcyjnej (np. Postmark/Mailgun — UE/USA z SCC). Pełna aktualna lista subprocesorów — na żądanie pod office@hovera.app.',
 
         'section_6_heading' => '6. Prawa użytkownika',
-        'section_6_body' => 'Każdej osobie, której dane dotyczą, przysługuje prawo: dostępu do danych (art. 15 RODO), sprostowania (art. 16), usunięcia („prawo do bycia zapomnianym" — art. 17), ograniczenia przetwarzania (art. 18), przenoszenia danych (art. 20), sprzeciwu (art. 21) oraz wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych. Realizacja praw — wniosek na privacy@hovera.app, odpowiedź w terminie 30 dni.',
+        'section_6_body' => 'Każdej osobie, której dane dotyczą, przysługuje prawo: dostępu do danych (art. 15 RODO), sprostowania (art. 16), usunięcia („prawo do bycia zapomnianym" — art. 17), ograniczenia przetwarzania (art. 18), przenoszenia danych (art. 20), sprzeciwu (art. 21) oraz wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych. Realizacja praw — wniosek na office@hovera.app, odpowiedź w terminie 30 dni.',
 
         'section_7_heading' => '7. Cookies',
         'section_7_body' => 'Serwis używa plików cookies: niezbędnych (sesja, CSRF, wybór języka) — bez wymogu zgody; analitycznych (zliczanie wizyt, anonimowe statystyki) — za zgodą. Użytkownik może zarządzać cookies w ustawieniach przeglądarki. Wyłączenie cookies niezbędnych uniemożliwi korzystanie z panelu.',
@@ -88,7 +88,7 @@ return [
         'section_8_body' => 'Stosujemy środki techniczne i organizacyjne adekwatne do ryzyka: szyfrowanie ruchu (TLS 1.2+), szyfrowanie danych w spoczynku (AES-256 dla baz i kopii), kontrola dostępu oparta na rolach (RBAC), dwuskładnikowe uwierzytelnianie (2FA) dla kont uprzywilejowanych, kopie zapasowe wykonywane codziennie, logi dostępu przechowywane przez 12 miesięcy, regularne audyty bezpieczeństwa.',
 
         'section_9_heading' => '9. Kontakt w sprawach RODO',
-        'section_9_body' => 'Inspektor Ochrony Danych: dpo@hovera.app. Administrator: privacy@hovera.app. Dla Klientów B2B przetwarzających dane swoich klientów stajni — patrz Umowa Powierzenia Przetwarzania (DPA) dostępna na /dpa.',
+        'section_9_body' => 'Inspektor Ochrony Danych: office@hovera.app. Administrator: office@hovera.app. Dla Klientów B2B przetwarzających dane swoich klientów stajni — patrz Umowa Powierzenia Przetwarzania (DPA) dostępna na /dpa.',
 
         'section_10_heading' => '10. Marketplace transportowy — dwóch administratorów danych',
         'section_10_body' => 'W ramach modułu marketplace transportowego (formularz „/transport/zapytanie", akceptacja oferty na „/transport/quote/...") Klient (zamawiający przewóz) podaje dane kontaktowe (imię, e-mail, telefon, adresy załadunku i rozładunku). Po utworzeniu zapytania Hovera udostępnia te dane wybranym Przewoźnikom z marketplace\'u w celu przygotowania oferty. Z chwilą akceptacji oferty przez Klienta wybrany Przewoźnik staje się NIEZALEŻNYM administratorem danych Klienta w zakresie realizacji umowy przewozu — Hovera nie odpowiada za sposób przetwarzania danych przez Przewoźnika po akceptacji oferty. Klient kieruje wnioski o realizację praw RODO bezpośrednio do Przewoźnika (dane kontaktowe Przewoźnika na profilu /t/{slug} oraz na fakturze). Hovera pozostaje administratorem danych Klienta wyłącznie w zakresie funkcjonowania platformy (historia zapytań, anty-spam, statystyki marketplace). Szczegóły w <a href="/regulamin-marketplace">Regulaminie marketplace transportowego</a>.',

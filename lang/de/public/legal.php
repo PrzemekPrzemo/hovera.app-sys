@@ -18,7 +18,7 @@ return [
 
     'footer' => [
         'copyright' => '© :year hovera. Alle Rechte vorbehalten.',
-        'support' => 'Support: support@hovera.app',
+        'support' => 'Support: office@hovera.app',
     ],
 
     'terms' => [
@@ -41,7 +41,7 @@ return [
         'section_5_body' => 'Die Höhe der Entgelte und der Umfang der Pläne ergeben sich aus der aktuellen Preisliste unter /pricing. Die Entgelte werden im Voraus für den Abrechnungszeitraum (monatlich oder jährlich) über den Zahlungsdienstleister (Stripe) erhoben. Die Mehrwertsteuerrechnung wird elektronisch ausgestellt und an die E-Mail-Adresse des Kunden gesendet. Ein Zahlungsverzug von mehr als 14 Tagen berechtigt den Anbieter, den Zugang zum Panel auszusetzen (unter Aufbewahrung der Daten für 90 Tage ab dem Datum der Aussetzung).',
 
         'section_6_heading' => '6. Beschwerden',
-        'section_6_body' => 'Beschwerden sind an support@hovera.app innerhalb von 14 Tagen ab Eintritt des Ereignisses zu richten. Die Beschwerde soll die Daten des Kunden, eine Problembeschreibung sowie die gewünschte Art der Erledigung enthalten. Der Anbieter wird die Beschwerde innerhalb von 14 Werktagen bearbeiten. Eine nicht fristgerechte Antwort gilt als Anerkennung der Beschwerde.',
+        'section_6_body' => 'Beschwerden sind an office@hovera.app innerhalb von 14 Tagen ab Eintritt des Ereignisses zu richten. Die Beschwerde soll die Daten des Kunden, eine Problembeschreibung sowie die gewünschte Art der Erledigung enthalten. Der Anbieter wird die Beschwerde innerhalb von 14 Werktagen bearbeiten. Eine nicht fristgerechte Antwort gilt als Anerkennung der Beschwerde.',
 
         'section_7_heading' => '7. Verfügbarkeit (SLA)',
         'section_7_body' => 'Der Anbieter gewährleistet eine Dienstverfügbarkeit von 99,5 % pro Monat, mit Ausnahme geplanter Wartungsfenster, die mit einer Vorlaufzeit von 48 Stunden angekündigt werden. Bei Überschreitung der Nichtverfügbarkeitsgrenze hat der Kunde Anspruch auf eine Gutschrift im Verhältnis zur Ausfallzeit (gemäß der SLA-Tabelle, die auf Anfrage erhältlich ist).',
@@ -56,7 +56,7 @@ return [
         'section_10_body' => 'Der Anbieter behält sich das Recht vor, diese AGB zu ändern. Über Änderungen wird der Kunde per E-Mail mit einer Vorlaufzeit von mindestens 30 Tagen informiert. Akzeptiert der Kunde die Änderungen nicht, ist er berechtigt, den Vertrag vor Inkrafttreten der Änderungen mit sofortiger Wirkung zu kündigen.',
 
         'section_11_heading' => '11. Kontakt',
-        'section_11_body' => 'Alle Fragen zu diesen AGB richten Sie bitte an support@hovera.app. Angaben zum Anbieter: Sendormeco Holding sp. z o.o. mit Sitz in Warschau, ul. Złota 75A/7, 00-819 Warszawa, NIP (polnische Steuernummer): 5252866457, REGON: 389194801, eingetragen im Unternehmerregister des Landesgerichtsregisters (KRS) unter der Nummer 0000906110, geführt vom Amtsgericht für die Hauptstadt Warschau in Warschau, XII. Wirtschaftsabteilung des KRS, Stammkapital 5.000 PLN.',
+        'section_11_body' => 'Alle Fragen zu diesen AGB richten Sie bitte an office@hovera.app. Angaben zum Anbieter: Sendormeco Holding sp. z o.o. mit Sitz in Warschau, ul. Złota 75A/7, 00-819 Warszawa, NIP (polnische Steuernummer): 5252866457, REGON: 389194801, eingetragen im Unternehmerregister des Landesgerichtsregisters (KRS) unter der Nummer 0000906110, geführt vom Amtsgericht für die Hauptstadt Warschau in Warschau, XII. Wirtschaftsabteilung des KRS, Stammkapital 5.000 PLN.',
     ],
 
     'privacy' => [
@@ -64,7 +64,7 @@ return [
         'intro' => 'Diese Datenschutzerklärung beschreibt die Grundsätze der Verarbeitung personenbezogener Daten der Nutzer des Dienstes hovera gemäß der DSGVO (EU 2016/679) sowie dem polnischen Gesetz zum Schutz personenbezogener Daten vom 10. Mai 2018.',
 
         'section_1_heading' => '1. Verantwortlicher',
-        'section_1_body' => 'Verantwortlicher für die Verarbeitung personenbezogener Daten ist Sendormeco Holding sp. z o.o. mit Sitz in Warschau, ul. Złota 75A/7, 00-819 Warszawa, NIP: 5252866457, REGON: 389194801, KRS: 0000906110. Kontakt zum Verantwortlichen: privacy@hovera.app. Datenschutzbeauftragter (DSB): dpo@hovera.app.',
+        'section_1_body' => 'Verantwortlicher für die Verarbeitung personenbezogener Daten ist Sendormeco Holding sp. z o.o. mit Sitz in Warschau, ul. Złota 75A/7, 00-819 Warszawa, NIP: 5252866457, REGON: 389194801, KRS: 0000906110. Kontakt zum Verantwortlichen: office@hovera.app. Datenschutzbeauftragter (DSB): office@hovera.app.',
 
         'section_2_heading' => '2. Umfang der verarbeiteten Daten',
         'section_2_body' => 'Im Rahmen der Registrierung verarbeiten wir: Vor- und Nachname, E-Mail-Adresse, Stallname und Stall-URL. Im Rahmen der Nutzung des Dienstes: IP-Adresse, Sitzungs- und Cookie-Kennungen, technische Gerätedaten (User-Agent), Aktivitätsprotokolle (Anmeldezeit, Aktionen im Panel). Vom Kunden eingegebene Daten über seine Kunden (Reiter, Pferde) verarbeiten wir als Auftragsverarbeiter — nach den Grundsätzen der AVV (/dpa).',
@@ -76,10 +76,10 @@ return [
         'section_4_body' => 'Kundenkontodaten speichern wir für die Dauer des Vertrags sowie 90 Tage nach dessen Beendigung (Karenzzeitraum zur Reaktivierung). Rechnungsdaten — 5 Jahre ab Ende des Geschäftsjahres (Pflicht aus der polnischen Abgabenordnung). Systemprotokolle — 12 Monate. Analytische Cookies — 13 Monate. Nach Ablauf der Aufbewahrungsfrist werden die Daten unwiderruflich gelöscht oder anonymisiert.',
 
         'section_5_heading' => '5. Empfänger der Daten (Unterauftragsverarbeiter)',
-        'section_5_body' => 'Die Daten können folgenden Auftragsverarbeitern anvertraut werden: Hetzner Online GmbH (Infrastruktur-Hosting, Deutschland/EU), OVH SAS (Backups, Frankreich/EU), Stripe Payments Europe Ltd. (Zahlungsabwicklung, Irland/EU), SMSAPI sp. z o.o. (SMS-Versand, Polen), Anbieter für transaktionale E-Mails (z. B. Postmark/Mailgun — EU/USA mit SCC). Die vollständige aktuelle Liste der Unterauftragsverarbeiter ist auf Anfrage unter dpo@hovera.app erhältlich.',
+        'section_5_body' => 'Die Daten können folgenden Auftragsverarbeitern anvertraut werden: Hetzner Online GmbH (Infrastruktur-Hosting, Deutschland/EU), OVH SAS (Backups, Frankreich/EU), Stripe Payments Europe Ltd. (Zahlungsabwicklung, Irland/EU), SMSAPI sp. z o.o. (SMS-Versand, Polen), Anbieter für transaktionale E-Mails (z. B. Postmark/Mailgun — EU/USA mit SCC). Die vollständige aktuelle Liste der Unterauftragsverarbeiter ist auf Anfrage unter office@hovera.app erhältlich.',
 
         'section_6_heading' => '6. Rechte der betroffenen Personen',
-        'section_6_body' => 'Jeder betroffenen Person stehen folgende Rechte zu: Auskunftsrecht (Art. 15 DSGVO), Recht auf Berichtigung (Art. 16), Recht auf Löschung („Recht auf Vergessenwerden" — Art. 17), Recht auf Einschränkung der Verarbeitung (Art. 18), Recht auf Datenübertragbarkeit (Art. 20), Widerspruchsrecht (Art. 21) sowie das Recht auf Beschwerde beim Präsidenten des polnischen Amtes für den Schutz personenbezogener Daten (PUODO; entspricht der nationalen Aufsichtsbehörde). Ausübung der Rechte — Antrag an privacy@hovera.app, Antwort innerhalb von 30 Tagen.',
+        'section_6_body' => 'Jeder betroffenen Person stehen folgende Rechte zu: Auskunftsrecht (Art. 15 DSGVO), Recht auf Berichtigung (Art. 16), Recht auf Löschung („Recht auf Vergessenwerden" — Art. 17), Recht auf Einschränkung der Verarbeitung (Art. 18), Recht auf Datenübertragbarkeit (Art. 20), Widerspruchsrecht (Art. 21) sowie das Recht auf Beschwerde beim Präsidenten des polnischen Amtes für den Schutz personenbezogener Daten (PUODO; entspricht der nationalen Aufsichtsbehörde). Ausübung der Rechte — Antrag an office@hovera.app, Antwort innerhalb von 30 Tagen.',
 
         'section_7_heading' => '7. Cookies',
         'section_7_body' => 'Der Dienst verwendet Cookies: notwendige (Sitzung, CSRF, Sprachauswahl) — ohne Einwilligungspflicht; analytische (Besucherzählung, anonyme Statistiken) — mit Einwilligung. Der Nutzer kann Cookies in den Browsereinstellungen verwalten. Das Deaktivieren der notwendigen Cookies macht die Nutzung des Panels unmöglich.',
@@ -88,7 +88,7 @@ return [
         'section_8_body' => 'Wir wenden technische und organisatorische Maßnahmen an, die dem Risiko angemessen sind: Verschlüsselung des Datenverkehrs (TLS 1.2+), Verschlüsselung der ruhenden Daten (AES-256 für Datenbanken und Backups), rollenbasierte Zugriffskontrolle (RBAC), Zwei-Faktor-Authentifizierung (2FA) für privilegierte Konten, tägliche Backups, Zugriffsprotokolle mit einer Aufbewahrungsdauer von 12 Monaten, regelmäßige Sicherheitsaudits.',
 
         'section_9_heading' => '9. Kontakt in DSGVO-Angelegenheiten',
-        'section_9_body' => 'Datenschutzbeauftragter: dpo@hovera.app. Verantwortlicher: privacy@hovera.app. Für B2B-Kunden, die Daten ihrer Stallkunden verarbeiten — siehe Auftragsverarbeitungsvereinbarung (AVV), verfügbar unter /dpa.',
+        'section_9_body' => 'Datenschutzbeauftragter: office@hovera.app. Verantwortlicher: office@hovera.app. Für B2B-Kunden, die Daten ihrer Stallkunden verarbeiten — siehe Auftragsverarbeitungsvereinbarung (AVV), verfügbar unter /dpa.',
 
         // @todo translate — full DE translation pending legal review.
         'section_10_heading' => '10. Transport-Marketplace — zwei unabhängige Verantwortliche',

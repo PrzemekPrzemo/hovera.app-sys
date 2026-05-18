@@ -29,7 +29,7 @@ return [
         'payment_terms_placeholder' => 'np. "Płatne w ciągu 14 dni od daty wystawienia. Konto: ..."',
         'footer_note' => 'Stopka faktury',
         'footer_note_help' => 'Drukowana na dole każdej FV PDF + wpisana do XML KSeF jako pole opcjonalne.',
-        'footer_note_placeholder' => 'np. "Dziękujemy za współpracę! Pytania? support@hovera.app"',
+        'footer_note_placeholder' => 'np. "Dziękujemy za współpracę! Pytania? office@hovera.app"',
     ],
 
     'cycle' => [

@@ -100,7 +100,7 @@ return [
             'submit' => 'Wyślij zgłoszenie',
             'cancel' => 'Anuluj',
             'success' => 'Dziękujemy — zgłoszenie zostało wysłane.',
-            'error' => 'Nie udało się wysłać. Spróbuj ponownie lub napisz na support@hovera.app.',
+            'error' => 'Nie udało się wysłać. Spróbuj ponownie lub napisz na office@hovera.app.',
         ],
     ],
 

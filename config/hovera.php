@@ -133,8 +133,8 @@ return [
         'krs' => env('HOVERA_LEGAL_KRS', '0000906110'),
         'address' => env('HOVERA_LEGAL_ADDRESS', 'ul. Złota 75A/7, 00-819 Warszawa'),
         'court' => env('HOVERA_LEGAL_COURT', 'Sąd Rejonowy dla m.st. Warszawy w Warszawie, XII Wydział Gospodarczy KRS'),
-        'support_email' => env('HOVERA_LEGAL_SUPPORT_EMAIL', 'support@hovera.app'),
-        'privacy_email' => env('HOVERA_LEGAL_PRIVACY_EMAIL', 'privacy@hovera.app'),
+        'support_email' => env('HOVERA_LEGAL_SUPPORT_EMAIL', 'office@hovera.app'),
+        'privacy_email' => env('HOVERA_LEGAL_PRIVACY_EMAIL', 'office@hovera.app'),
         'effective_date' => env('HOVERA_LEGAL_EFFECTIVE_DATE', '2026-05-18'),
 
         // Wersja regulaminu zapisywana przy signupie do tenants.terms_version.

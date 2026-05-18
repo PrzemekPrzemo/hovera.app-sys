@@ -69,11 +69,11 @@ return [
         'helper' => [
             'custom_domain' => 'Geben Sie z. B. „meinreitstall.de" oder eine Subdomain „reitstall.firma.com" ein. Nach dem Speichern fügen Sie DNS-Einträge hinzu — Anleitungen erscheinen unten. Die Domain-Verifizierung aktiviert der Master-Admin nach DNS-Bestätigung.',
             'custom_domain_invalid' => 'Ungültiges Domain-Format — nur Kleinbuchstaben, Ziffern, Punkte und Bindestriche.',
-            'custom_domain_unverified' => 'Nicht verifiziert — schreiben Sie an support@hovera.app, nachdem Sie die DNS-Einträge hinzugefügt haben.',
-            'custom_domain_plan_locked' => 'Eigene Domain im Pro-Tarif verfügbar. Schreiben Sie an support@hovera.app, um auf den höheren Tarif zu wechseln.',
+            'custom_domain_unverified' => 'Nicht verifiziert — schreiben Sie an office@hovera.app, nachdem Sie die DNS-Einträge hinzugefügt haben.',
+            'custom_domain_plan_locked' => 'Eigene Domain im Pro-Tarif verfügbar. Schreiben Sie an office@hovera.app, um auf den höheren Tarif zu wechseln.',
             'dns_step_1' => '1. Fügen Sie im Panel Ihres Domain-Registrars einen CNAME-Eintrag hinzu (oder A/ALIAS, falls Apex):',
             'dns_step_2' => '2. Fügen Sie einen TXT-Eintrag zur Verifizierung des Domain-Besitzes hinzu:',
-            'dns_step_3' => '3. Nach dem Anlegen der Einträge schreiben Sie an support@hovera.app — wir prüfen das DNS und aktivieren die Domain (in der Regel binnen 24 h).',
+            'dns_step_3' => '3. Nach dem Anlegen der Einträge schreiben Sie an office@hovera.app — wir prüfen das DNS und aktivieren die Domain (in der Regel binnen 24 h).',
         ],
     ],
 
