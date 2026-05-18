@@ -10,4 +10,6 @@ return [
     'valid_until' => 'Oferta ważna do :date.',
     'action_accept' => 'Zobacz ofertę / Akceptuj online',
     'outro' => 'W razie pytań lub potwierdzenia zlecenia — odpowiedz na ten mail. Dziękuję!',
+    // Stopka prawna mailowa — Hovera = pośrednik marketplace; przewoźnik = niezależny.
+    'disclaimer_intermediary' => '— — — Niniejsza wiadomość dotyczy oferty od niezależnego przewoźnika obsługującego się platformą Hovera. Hovera Sp. z o.o. (Sendormeco Holding sp. z o.o.) jest pośrednikiem marketplace — nie jest stroną umowy przewozu ani nie odpowiada za realizację transportu. Regulamin marketplace: https://app.hovera.app/regulamin-marketplace',
 ];

@@ -30,4 +30,6 @@ return [
 
     'footer_cta_text' => 'Need to transport a horse? Send a request — we reply fast.',
     'powered_by' => 'powered by hovera.app',
+
+    'disclaimer_intermediary' => 'Profile operated by <strong>:transporter_name</strong>. Hovera = marketplace intermediary (<a href="/regulamin-marketplace" target="_blank">terms</a>) — does not perform transports, not a party to the transport contract.',
 ];

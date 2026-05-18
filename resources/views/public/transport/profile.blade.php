@@ -190,6 +190,14 @@
     </div>
 
     <div class="powered">
+        {{-- Marketplace disclaimer: profil obsługiwany przez transportera —
+             Hovera tylko hostuje. Klikalny link do regulaminu marketplace
+             — Klient może zweryfikować rolę Hovera zanim wyśle zapytanie. --}}
+        <div style="margin-bottom:.5rem;font-size:.78rem;">
+            {!! __('public/transporter_profile.disclaimer_intermediary', [
+                'transporter_name' => e($tenant->name),
+            ]) !!}
+        </div>
         <a href="https://hovera.app" target="_blank" rel="noopener">{{ __('public/transporter_profile.powered_by') }}</a>
     </div>
 </body>

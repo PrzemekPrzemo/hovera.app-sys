@@ -82,15 +82,18 @@
             <a href="{{ route('legal.terms') }}" @class(['active' => $active === 'terms'])>{{ __('public/legal.nav.terms') }}</a>
             <a href="{{ route('legal.privacy') }}" @class(['active' => $active === 'privacy'])>{{ __('public/legal.nav.privacy') }}</a>
             <a href="{{ route('legal.dpa') }}" @class(['active' => $active === 'dpa'])>{{ __('public/legal.nav.dpa') }}</a>
+            <a href="{{ route('legal.marketplace') }}" @class(['active' => $active === 'marketplace'])>{{ __('public/legal.nav.marketplace') }}</a>
         </nav>
 
         <div class="meta">{{ $lastUpdatedLabel }}: {{ $lastUpdated }}</div>
         <h1>{{ $title }}</h1>
-        <p class="intro">{{ $intro }}</p>
+        {{-- Intro i body mogą zawierać <a href="..."> z lang files (kontrolowane
+             przez Operatora, nie przez użytkownika). Renderujemy raw HTML. --}}
+        <p class="intro">{!! $intro !!}</p>
 
         @foreach ($sections as $section)
             <h2>{{ $section['heading'] }}</h2>
-            <p>{{ $section['body'] }}</p>
+            <p>{!! $section['body'] !!}</p>
         @endforeach
     </main>
 
@@ -102,6 +105,8 @@
             <a href="{{ route('legal.privacy') }}">{{ __('public/legal.nav.privacy') }}</a>
             ·
             <a href="{{ route('legal.dpa') }}">{{ __('public/legal.nav.dpa') }}</a>
+            ·
+            <a href="{{ route('legal.marketplace') }}">{{ __('public/legal.nav.marketplace') }}</a>
         </div>
         <div class="row">{{ __('public/legal.footer.copyright', ['year' => date('Y')]) }}</div>
     </footer>

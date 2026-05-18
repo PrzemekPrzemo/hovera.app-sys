@@ -41,4 +41,9 @@ return [
     'thanks_heading' => 'Dziękujemy!',
     'thanks_body' => 'Wysłaliśmy Twoje zapytanie do firm transportowych. Oferty dostaniesz mailem na :email w ciągu 24 godzin.',
     'thanks_reference' => 'Numer referencyjny',
+
+    // Disclaimer dot. roli Hovera (pośrednik, nie przewoźnik) — wymagane przez
+    // regulamin marketplace transportowego /regulamin-marketplace.
+    'disclaimer_intermediary' => 'Hovera jest pośrednikiem marketplace — nie jest przewoźnikiem i nie wykonuje transportów. Umowa transportu zawierana jest BEZPOŚREDNIO między Tobą a wybranym przewoźnikiem po akceptacji jego oferty. Szczegóły w <a href="/regulamin-marketplace" target="_blank">regulaminie marketplace transportowego</a>.',
+    'disclaimer_intermediary_thanks' => 'Wybrany przewoźnik skontaktuje się z Tobą bezpośrednio — to z nim zawrzesz umowę przewozu. Hovera jest jedynie technologicznym pośrednikiem, nie jest stroną umowy ani nie odpowiada za realizację transportu. Szczegóły: <a href="/regulamin-marketplace" target="_blank">regulamin marketplace</a>.',
 ];

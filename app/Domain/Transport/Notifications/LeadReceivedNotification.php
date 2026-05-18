@@ -51,6 +51,9 @@ class LeadReceivedNotification extends Notification
                 __('transport/notify_lead_received.action'),
                 url('/transport/leads/'.$this->lead->id),
             )
-            ->line(__('transport/notify_lead_received.outro'));
+            ->line(__('transport/notify_lead_received.outro'))
+            // Stopka prawna — Hovera = pośrednik marketplace; transporter wie
+            // że to on (a nie Hovera) staje się stroną umowy po akceptacji oferty.
+            ->line(__('transport/notify_lead_received.disclaimer_intermediary'));
     }
 }

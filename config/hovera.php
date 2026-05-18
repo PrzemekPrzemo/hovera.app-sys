@@ -110,4 +110,36 @@ return [
         'slug' => env('HOVERA_DEMO_SLUG', 'demo'),
         'enabled' => (bool) env('HOVERA_DEMO_ENABLED', true),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Legal
+    |--------------------------------------------------------------------------
+    | Dane spółki + wersja regulaminu zaszywane w stopkach legal pages,
+    | regulaminie marketplace transportowego, oraz w atrybucie
+    | terms_version zapisywanym przy signupie.
+    |
+    | UWAGA: domyślne wartości są PRODUKCYJNE i pochodzą z istniejącego
+    | regulaminu (Sendormeco Holding sp. z o.o.). Jeżeli operator
+    | platformy zmieni się (np. dedykowana spółka Hovera Sp. z o.o.) —
+    | nadpisać przez .env przed GA / publikacją regulaminu marketplace.
+    */
+
+    'legal' => [
+        'company_name' => env('HOVERA_LEGAL_COMPANY_NAME', 'Sendormeco Holding sp. z o.o.'),
+        'company_short' => env('HOVERA_LEGAL_COMPANY_SHORT', 'Sendormeco Holding'),
+        'nip' => env('HOVERA_LEGAL_NIP', '5252866457'),
+        'regon' => env('HOVERA_LEGAL_REGON', '389194801'),
+        'krs' => env('HOVERA_LEGAL_KRS', '0000906110'),
+        'address' => env('HOVERA_LEGAL_ADDRESS', 'ul. Złota 75A/7, 00-819 Warszawa'),
+        'court' => env('HOVERA_LEGAL_COURT', 'Sąd Rejonowy dla m.st. Warszawy w Warszawie, XII Wydział Gospodarczy KRS'),
+        'support_email' => env('HOVERA_LEGAL_SUPPORT_EMAIL', 'support@hovera.app'),
+        'privacy_email' => env('HOVERA_LEGAL_PRIVACY_EMAIL', 'privacy@hovera.app'),
+        'effective_date' => env('HOVERA_LEGAL_EFFECTIVE_DATE', '2026-05-18'),
+
+        // Wersja regulaminu zapisywana przy signupie do tenants.terms_version.
+        // Przy każdej istotnej zmianie regulaminu inkrementuj (format YYYY-MM)
+        // — to pozwala wykryć ktorych tenantów trzeba ponownie poprosić o akceptację.
+        'terms_version' => env('HOVERA_LEGAL_TERMS_VERSION', '2026-05'),
+    ],
 ];

@@ -51,6 +51,9 @@ return [
         'owner_name' => 'Twoje imię i nazwisko',
         'owner_email' => 'E-mail',
         'terms' => 'Akceptuję <a href="/regulamin" target="_blank">regulamin</a> i <a href="/polityka-prywatnosci" target="_blank">politykę prywatności</a>',
+        // Dodatkowy fragment dorzucany do labelki dla type=transporter — informuje
+        // o akceptacji odrębnego regulaminu marketplace (Hovera = pośrednik).
+        'terms_marketplace_suffix' => ' oraz <a href="/regulamin-marketplace" target="_blank">regulamin marketplace transportowego</a> (Hovera świadczy usługi pośrednictwa technologicznego — nie jest przewoźnikiem ani stroną umowy przewozu)',
     ],
 
     'placeholder' => [

@@ -13,6 +13,7 @@ return [
         'terms' => 'AGB',
         'privacy' => 'Datenschutzerklärung',
         'dpa' => 'AVV',
+        'marketplace' => 'Transport-Marketplace',
     ],
 
     'footer' => [
@@ -22,13 +23,13 @@ return [
 
     'terms' => [
         'title' => 'Allgemeine Geschäftsbedingungen für die Nutzung von hovera',
-        'intro' => 'Diese AGB regeln die Nutzung des Online-Dienstes hovera, verfügbar unter app.hovera.app, der von Sendormeco Holding sp. z o.o. (nachfolgend: „Anbieter") für Unternehmen erbracht wird, die Reitställe und verwandte Tätigkeiten betreiben (nachfolgend: „Kunde" oder „Stall").',
+        'intro' => 'Diese AGB regeln die Nutzung des Online-Dienstes hovera, verfügbar unter app.hovera.app, der von Sendormeco Holding sp. z o.o. (nachfolgend: „Anbieter") für Unternehmen erbracht wird, die Reitställe, Transportunternehmen und verwandte Tätigkeiten betreiben (nachfolgend: „Kunde"). Hovera erbringt AUSSCHLIESSLICH Technologie-Dienstleistungen (SaaS). Im Bereich des Transportmoduls tritt Hovera als MARKETPLACE-VERMITTLER zwischen Kunden und unabhängigen Transporteuren auf und IST WEDER Transportunternehmer NOCH Vertragspartei des Transportvertrags — Einzelheiten in der gesonderten <a href="/regulamin-marketplace">Transport-Marketplace-Ordnung</a>.',
 
         'section_1_heading' => '1. Begriffsbestimmungen',
         'section_1_body' => 'Dienst — das SaaS-System hovera zur Stallverwaltung (Buchungen, Kunden, Pferde, Abrechnungen, Kommunikation). Kunde — der Unternehmer, der einen Vertrag über die Erbringung des Dienstes abgeschlossen hat. Nutzer — eine natürliche Person, die den Dienst im Auftrag des Kunden nutzt (Inhaber, Trainer, Mitarbeiter, Reiter). Trial — kostenloser Testzeitraum von 30 Tagen ab Registrierung. Plan — das in der Preisliste beschriebene Funktionspaket.',
 
         'section_2_heading' => '2. Leistungsumfang',
-        'section_2_body' => 'Der Dienst umfasst: Kalender für Reitstunden, Verwaltung von Pferden und Kunden, Abrechnungen (Rechnungen, Online-Zahlungen), öffentliche Mikrowebsite des Stalls, Online-Buchungsformular, Kundenkommunikationsmodul (E-Mail, SMS), Finanzberichte sowie weitere abgeleitete Funktionen. Die vollständige Funktionsliste je Plan ist unter /pricing verfügbar.',
+        'section_2_body' => 'Der Dienst umfasst: Kalender für Reitstunden, Verwaltung von Pferden und Kunden, Abrechnungen, öffentliche Mikrowebsite des Stalls, Online-Buchungsformular, Kundenkommunikation, Finanzberichte, Transportflotten-Verwaltung, Transport-Anfragen-Marketplace sowie weitere abgeleitete Funktionen. Die vollständige Funktionsliste je Plan: /pricing. Im Bereich des Transportmoduls (Marketplace für Anfragen von Ställen an Transportunternehmen) erbringt der Anbieter AUSSCHLIESSLICH technologische Vermittlung — er führt keine Transporte durch, besitzt keine Fahrzeuge, beschäftigt keine Fahrer und ist keine Partei des Transportvertrags. Einzelheiten in der gesonderten <a href="/regulamin-marketplace">Transport-Marketplace-Ordnung</a>, die integraler Bestandteil dieser AGB für Kunden des Transportmoduls ist.',
 
         'section_3_heading' => '3. Registrierung und Vertragsschluss',
         'section_3_body' => 'Die Registrierung erfolgt über das Formular unter /signup. Der Kunde gibt den Stallnamen, die Stall-URL und die Kontaktdaten des Inhabers an und akzeptiert die AGB sowie die Datenschutzerklärung. Der Vertrag kommt zustande, sobald der Anbieter den Tenant erstellt und einen Aktivierungslink an die angegebene E-Mail-Adresse versendet. Der Kunde haftet für die Richtigkeit der angegebenen Daten.',
@@ -88,6 +89,10 @@ return [
 
         'section_9_heading' => '9. Kontakt in DSGVO-Angelegenheiten',
         'section_9_body' => 'Datenschutzbeauftragter: dpo@hovera.app. Verantwortlicher: privacy@hovera.app. Für B2B-Kunden, die Daten ihrer Stallkunden verarbeiten — siehe Auftragsverarbeitungsvereinbarung (AVV), verfügbar unter /dpa.',
+
+        // @todo translate — full DE translation pending legal review.
+        'section_10_heading' => '10. Transport-Marketplace — zwei unabhängige Verantwortliche',
+        'section_10_body' => 'Innerhalb des Transport-Marketplace-Moduls („/transport/zapytanie" und Angebotsannahme unter „/transport/quote/...") übermittelt der Kunde Kontaktdaten (Name, E-Mail, Telefon, Abhol- und Zustelladressen). Nach Erstellung der Anfrage gibt Hovera diese Daten an ausgewählte Transporteure weiter, damit diese Angebote erstellen können. Mit Angebotsannahme wird der gewählte Transporteur UNABHÄNGIGER Verantwortlicher für die Vertragsdurchführung — Hovera haftet nicht für dessen Datenverarbeitung. Der Kunde richtet DSGVO-Anfragen direkt an den Transporteur. Hovera bleibt nur für den Plattformbetrieb (Anfragehistorie, Anti-Spam, Statistiken) Verantwortlicher. Einzelheiten: <a href="/regulamin-marketplace">Transport-Marketplace-Ordnung</a>.',
     ],
 
     'dpa' => [
@@ -123,5 +128,45 @@ return [
 
         'section_10_heading' => '10. Schlussbestimmungen',
         'section_10_body' => 'In nicht geregelten Angelegenheiten finden die DSGVO sowie polnisches Recht Anwendung. Vertragsänderungen bedürfen der Schriftform (E-Mail genügt) und der Zustimmung beider Parteien. Streitigkeiten entscheidet das für den Sitz des Auftragsverarbeiters zuständige Gericht.',
+
+        // @todo translate — full DE translation pending legal review; English fallback content below.
+        'section_11_heading' => '11. Transport-Marketplace — Datenfluss Kunde → Hovera → Transporteur',
+        'section_11_body' => 'Diese AVV regelt die Übergabe von Stallkundendaten an Hovera. Für das Transport-Marketplace-Modul gilt ein separater Datenfluss: personenbezogene Daten der natürlichen Person, die einen Transport anfragt (über „/transport/zapytanie"), werden von Hovera als Verantwortlicher erhoben und anschließend an den ausgewählten Transporteur weitergegeben, der ab dem Zeitpunkt des Empfangs der Anfrage UNABHÄNGIGER Verantwortlicher wird (NICHT Auftragsverarbeiter von Hovera). Hovera und der Transporteur sind KEINE gemeinsamen Verantwortlichen im Sinne von Art. 26 DSGVO — jeder ist eigenständig im eigenen Bereich verantwortlich. Einzelheiten in der <a href="/regulamin-marketplace">Transport-Marketplace-Ordnung</a>.',
+    ],
+
+    // @todo translate — full DE translation pending legal review; key set mirrors PL/EN (10 sections).
+    'marketplace' => [
+        'title' => 'hovera Transport-Marketplace-Ordnung',
+        'intro' => 'Diese Ordnung regelt die Nutzung des hovera Transport-Marketplace — einer Plattform, die Kunden (Pferdebesitzer, Ställe) mit unabhängigen, auf Pferdetransport spezialisierten Transporteuren verbindet. Plattformbetreiber ist :company. Die Ordnung ist integraler Bestandteil der hovera-AGB (/regulamin) für Kunden und Transporteure, die das Transportmodul nutzen.',
+
+        'section_1_heading' => '1. Definitionen',
+        'section_1_body' => 'Hovera / Betreiber — :company, der Betreiber der hovera-Plattform (Firmenangaben in Abschnitt 10). Kunde — natürliche oder juristische Person, die über die Plattform einen Pferdetransport beauftragt. Transporteur — unabhängiges Unternehmen, das in hovera als Mandant „transporter" registriert und vom Betreiber verifiziert ist. Anfrage — vom Kunden veröffentlichte Transportanfrage. Angebot — Vorschlag des Transporteurs (Preis, Termin, Bedingungen). Marketplace — das hovera-Modul für die Verteilung von Anfragen und das Sammeln von Angeboten.',
+
+        'section_2_heading' => '2. Natur der Hovera-Leistung — Vermittlung, kein Transport',
+        'section_2_body' => 'HOVERA ERBRINGT AUSSCHLIESSLICH TECHNOLOGISCHE VERMITTLUNGSDIENSTLEISTUNGEN. Hovera IST KEIN Transportunternehmer im Sinne des polnischen Zivilgesetzbuchs (Art. 774 ff.) oder des Straßentransportgesetzes. Hovera: (a) besitzt keine Fahrzeuge, (b) beschäftigt keine Fahrer, (c) führt keine Transporte durch und organisiert sie nicht logistisch, (d) IST KEINE Partei des Transportvertrags zwischen Kunde und Transporteur, (e) trägt keine Frachtführerhaftung. Der Transportvertrag wird AUSSCHLIESSLICH zwischen Kunde und Transporteur geschlossen — unmittelbar mit Annahme des Angebots durch den Kunden.',
+
+        'section_3_heading' => '3. Rolle von Hovera',
+        'section_3_body' => 'Hovera stellt eine Technologieplattform bereit, die Folgendes ermöglicht: Veröffentlichung von Transportanfragen, automatische Weiterleitung an passende Transporteure, Erstellung und Versand von Angeboten (PDF + Annahme-Link), Annahme oder Ablehnung durch den Kunden, E-Mail-Kommunikation zwischen den Parteien sowie öffentliche Transporteur-Profile (/t/{slug}). Hovera erhebt eine Abonnementgebühr von Transporteuren gemäß aktueller Preisliste (/pricing).',
+
+        'section_4_heading' => '4. Haftungsausschluss von Hovera',
+        'section_4_body' => 'Hovera HAFTET NICHT für: (a) Qualität, Pünktlichkeit und Sicherheit des Transports — Haftung trägt ausschließlich der Transporteur nach Zivilgesetzbuch, Transportvertrag und Frachtführer-Haftpflichtversicherung; (b) technischen Zustand der Fahrzeuge, Fahrerqualifikationen, Genehmigungen — Transporteur-Haftung; (c) Sach- oder Gesundheitsschäden des Pferdes während des Transports — Ansprüche werden direkt an den Transporteur gerichtet; (d) Zahlungen zwischen Kunde und Transporteur; (e) steuerliche Folgen beim Transporteur (USt., KSeF, JPK). Hovera-Haftung für Vermittlungsdienstleistungen ist auf die in den letzten 12 Monaten vom Transporteur gezahlten Abonnementgebühren begrenzt.',
+
+        'section_5_heading' => '5. Verifizierung der Transporteure',
+        'section_5_body' => 'Jeder Transporteur durchläuft vor der Aufnahme in den Marketplace eine Dokumentenprüfung (CEIDG/KRS-Eintrag, NIP-Nummer, Tiertransport-Zertifikat, aktuelle Frachtführer-Haftpflicht). Positive Verifizierung bestätigt NUR die Vollständigkeit der Unterlagen — sie GARANTIERT NICHT die Qualität der erbrachten Leistungen. Der Kunde ist verpflichtet, den Transporteur vor Annahme eines Angebots eigenständig zu beurteilen.',
+
+        'section_6_heading' => '6. Angebotsannahme = Vertragsschluss zwischen Kunde und Transporteur',
+        'section_6_body' => 'Mit Klick auf „Angebot annehmen" auf /transport/quote/{slug}/{token} schließt der Kunde einen direkten Transportvertrag mit dem im Angebot genannten Transporteur ab. Hovera vermittelt die Annahme nur technisch und benachrichtigt andere Transporteure über die Schließung der Anfrage. Hovera IST KEINE Vertragspartei und HAFTET NICHT für die Vertragserfüllung.',
+
+        'section_7_heading' => '7. Reklamationen und Streitigkeiten',
+        'section_7_body' => 'Alle Reklamationen zur Qualität oder zum Ablauf des Transports richtet der Kunde DIREKT an den Transporteur (Kontaktdaten auf der Rechnung und im öffentlichen Profil /t/{slug}). Hovera bearbeitet keine inhaltlichen Streitigkeiten. Reklamationen zur Plattform selbst: :support_email — Antwort innerhalb von 14 Werktagen.',
+
+        'section_8_heading' => '8. Personenbezogene Daten — zwei Verantwortliche',
+        'section_8_body' => 'Kundendaten werden wie folgt verarbeitet: (1) Hovera ist Verantwortlicher für Plattformbetrieb (Art. 6 Abs. 1 lit. b und f DSGVO). (2) Nach Angebotsannahme wird der gewählte Transporteur UNABHÄNGIGER Verantwortlicher für die Vertragsabwicklung. (3) Hovera und Transporteur sind KEINE gemeinsamen Verantwortlichen i.S.v. Art. 26 DSGVO. Vollständige Datenschutzerklärung: /polityka-prywatnosci. AVV: /dpa.',
+
+        'section_9_heading' => '9. Änderungen der Ordnung',
+        'section_9_body' => 'Der Betreiber behält sich Änderungen vor; Mitteilung per E-Mail mindestens 14 Tage vor Inkrafttreten. Fortgesetzte Nutzung gilt als Zustimmung.',
+
+        'section_10_heading' => '10. Schlussbestimmungen',
+        'section_10_body' => 'In nicht geregelten Angelegenheiten gilt polnisches Recht. Gerichtsstand: zuständiges Gericht für den Sitz des Betreibers (:court). Betreiber: :company, :address, NIP :nip, KRS :krs. Inkrafttreten: :effective_date.',
     ],
 ];

@@ -41,4 +41,7 @@ return [
     'thanks_heading' => 'Merci !',
     'thanks_body' => 'Demande envoyée aux transporteurs. Offres à :email sous 24 h.',
     'thanks_reference' => 'Numéro de référence',
+
+    'disclaimer_intermediary' => 'Hovera est un intermédiaire de marketplace — ni transporteur ni partie au contrat. Le contrat de transport est conclu DIRECTEMENT entre vous et le transporteur choisi après acceptation de son offre. Détails : <a href="/regulamin-marketplace" target="_blank">conditions du marketplace transport</a>.',
+    'disclaimer_intermediary_thanks' => 'Le transporteur choisi vous contactera directement — c’est lui la partie au contrat. Hovera n’est qu’un intermédiaire technologique, pas responsable de l’exécution. Détails : <a href="/regulamin-marketplace" target="_blank">conditions marketplace</a>.',
 ];

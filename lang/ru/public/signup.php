@@ -51,6 +51,7 @@ return [
         'owner_name' => 'Ваше имя и фамилия',
         'owner_email' => 'Email',
         'terms' => 'Я принимаю <a href="/regulamin" target="_blank">правила</a> и <a href="/polityka-prywatnosci" target="_blank">политику конфиденциальности</a>',
+        'terms_marketplace_suffix' => ' а также <a href="/regulamin-marketplace" target="_blank">регламент транспортного маркетплейса</a> (Hovera оказывает услуги технологического посредничества — не перевозчик и не сторона договора перевозки)',
     ],
 
     'placeholder' => [

@@ -51,6 +51,7 @@ return [
         'owner_name' => 'Your full name',
         'owner_email' => 'Email',
         'terms' => 'I accept the <a href="/regulamin" target="_blank">terms</a> and <a href="/polityka-prywatnosci" target="_blank">privacy policy</a>',
+        'terms_marketplace_suffix' => ' and the <a href="/regulamin-marketplace" target="_blank">transport marketplace terms</a> (Hovera provides technology intermediation services — it is not a carrier nor a party to the transport contract)',
     ],
 
     'placeholder' => [
