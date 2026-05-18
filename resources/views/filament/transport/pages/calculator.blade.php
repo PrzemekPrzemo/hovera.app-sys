@@ -69,8 +69,13 @@
                 </table>
             </div>
 
-            <div class="text-xs text-gray-500">
-                {{ __('transport/calculator.result.routing_via', ['provider' => $quotation->routingProvider]) }}
+            <div class="flex items-center justify-between">
+                <div class="text-xs text-gray-500">
+                    {{ __('transport/calculator.result.routing_via', ['provider' => $quotation->routingProvider]) }}
+                </div>
+                <x-filament::button wire:click="saveAsQuote" icon="heroicon-o-document-plus">
+                    {{ __('transport/calculator.action.save_as_quote') }}
+                </x-filament::button>
             </div>
         </div>
     @endif

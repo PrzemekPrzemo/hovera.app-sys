@@ -42,6 +42,7 @@ return [
 
     'vehicles' => 'Fahrzeuge',
     'drivers' => 'Fahrer',
+    'quotes' => 'Angebote',
 
     // Pages (non-resource)
     'pages' => [

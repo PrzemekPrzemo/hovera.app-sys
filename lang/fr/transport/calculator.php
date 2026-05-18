@@ -37,6 +37,7 @@ return [
         'submit' => 'Calculer le devis',
         'calculated' => 'Devis calculé.',
         'failed' => 'Échec du calcul du devis',
+        'save_as_quote' => 'Enregistrer comme devis',
     ],
 
     'result' => [
