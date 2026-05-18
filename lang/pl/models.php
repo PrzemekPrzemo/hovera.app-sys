@@ -73,4 +73,6 @@ return [
     // Transport module
     'vehicle' => 'pojazd',
     'vehicles' => 'Pojazdy',
+    'driver' => 'kierowca',
+    'drivers' => 'Kierowcy',
 ];

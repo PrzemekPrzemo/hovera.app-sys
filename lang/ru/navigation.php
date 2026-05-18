@@ -41,6 +41,7 @@ return [
     'feed_inventory' => 'Склад кормов',
 
     'vehicles' => 'Транспортные средства',
+    'drivers' => 'Водители',
 
     // Pages (non-resource)
     'pages' => [

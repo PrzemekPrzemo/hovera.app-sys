@@ -41,6 +41,7 @@ return [
     'feed_inventory' => 'Stock de fourrage',
 
     'vehicles' => 'Véhicules',
+    'drivers' => 'Chauffeurs',
 
     // Pages (non-resource)
     'pages' => [

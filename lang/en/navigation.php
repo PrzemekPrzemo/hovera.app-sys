@@ -39,6 +39,7 @@ return [
     'feed_inventory' => 'Feed inventory',
 
     'vehicles' => 'Vehicles',
+    'drivers' => 'Drivers',
 
     'pages' => [
         'profile' => 'Profile',

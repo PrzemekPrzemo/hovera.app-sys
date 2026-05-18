@@ -72,4 +72,6 @@ return [
 
     'vehicle' => 'véhicule',
     'vehicles' => 'Véhicules',
+    'driver' => 'chauffeur',
+    'drivers' => 'Chauffeurs',
 ];
