@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Domain\Transport\Geocoding\Exceptions\GeocodingException;
 use App\Domain\Transport\Geocoding\MapboxGeocoder;
+use App\Domain\Transport\Leads\LeadDispatcher;
 use App\Models\Central\TransportLead;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -82,9 +83,11 @@ class TransportInquiryController extends Controller
             'expires_at' => Carbon::now()->addDays((int) config('transport.leads.expires_after_days', 14)),
         ]);
 
-        // LeadDispatcher (krok 4) — TODO: w przyszłej iteracji zdarzenie/job
-        // dispatch'ujący do transporterów. Na razie lead siedzi w status=open
-        // czekając, master admin lub cron go obsłuży.
+        // Dispatch — sync, bo zwykle 0-30 transporterów per voivodeship; gdy
+        // marketplace urośnie >50 + adjacency, zqueueujemy to przez Job.
+        // Notyfikacje email lecą wewnątrz, fail któregokolwiek nie psuje
+        // pozostałych (per-transporter try/catch).
+        app(LeadDispatcher::class)->dispatch($lead);
 
         return redirect()->route('public.transport.inquiry.thanks', ['lead' => $lead->id]);
     }
