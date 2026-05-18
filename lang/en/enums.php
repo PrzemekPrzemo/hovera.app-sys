@@ -24,6 +24,15 @@ return [
         'rejected' => 'Rejected',
     ],
 
+    'transport_lead_status' => [
+        'open' => 'Open',
+        'quoted' => 'Quoted',
+        'accepted' => 'Accepted',
+        'rejected' => 'Rejected',
+        'expired' => 'Expired',
+        'cancelled' => 'Cancelled',
+    ],
+
     'transport_invoice_kind' => [
         'fv' => 'Invoice (VAT)',
         'fv_proforma' => 'Pro forma invoice',

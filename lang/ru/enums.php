@@ -24,6 +24,15 @@ return [
         'rejected' => 'Отклонено',
     ],
 
+    'transport_lead_status' => [
+        'open' => 'Открыт',
+        'quoted' => 'Предложение отправлено',
+        'accepted' => 'Принят',
+        'rejected' => 'Отклонён',
+        'expired' => 'Истёк',
+        'cancelled' => 'Отменён',
+    ],
+
     'transport_invoice_kind' => [
         'fv' => 'Счёт-фактура (НДС)',
         'fv_proforma' => 'Счёт пр​о форма',
