@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Public;
 
 use App\Actions\Tenants\CreateTenant;
+use App\Enums\TenantType;
 use App\Models\Central\Tenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,7 +27,17 @@ class SignupController extends Controller
 {
     public function show(Request $request): View
     {
+        // Bez parametru ?type → pokazujemy chooser (stajnia vs firma
+        // transportowa). Przesłanie wyboru linkuje z powrotem do `/signup?type=...`.
+        $rawType = $request->query('type');
+        if ($rawType === null || ! in_array($rawType, ['stable', 'transporter'], true)) {
+            return view('public.signup.choose');
+        }
+
+        $type = TenantType::from($rawType);
+
         return view('public.signup.form', [
+            'type' => $type,
             'old' => [
                 'name' => (string) old('name', $request->query('name', '')),
                 'slug' => (string) old('slug', $request->query('slug', '')),
@@ -44,6 +55,7 @@ class SignupController extends Controller
             $tenant = $action->execute([
                 'slug' => $data['slug'],
                 'name' => $data['name'],
+                'type' => $data['type'],
                 'country' => 'PL',
                 'locale' => 'pl',
                 'timezone' => 'Europe/Warsaw',
@@ -75,7 +87,7 @@ class SignupController extends Controller
         ]);
     }
 
-    /** @return array{name:string, slug:string, owner_name:string, owner_email:string} */
+    /** @return array{name:string, slug:string, type:string, owner_name:string, owner_email:string} */
     private function validate(Request $request): array
     {
         $data = $request->validate([
@@ -88,6 +100,7 @@ class SignupController extends Controller
                 'regex:/^[a-z0-9](?:[a-z0-9-]{1,60}[a-z0-9])?$/',
                 Rule::unique('central.tenants', 'slug'),
             ],
+            'type' => ['required', Rule::in(['stable', 'transporter'])],
             'owner_name' => ['required', 'string', 'min:2', 'max:120'],
             'owner_email' => ['required', 'email:rfc,strict', 'max:255'],
             'terms' => ['accepted'],
