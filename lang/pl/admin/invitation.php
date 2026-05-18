@@ -6,6 +6,7 @@ return [
     'table' => [
         'column' => [
             'tenant' => 'Stajnia',
+            'tenant_type' => 'Typ',
             'role' => 'Rola',
             'status' => 'Status',
             'invited_by' => 'Zapraszający',
@@ -23,6 +24,7 @@ return [
             'expired' => 'Tylko wygasłe',
             'accepted' => 'Tylko zaakceptowane',
             'tenant' => 'Stajnia',
+            'tenant_type' => 'Typ tenanta',
         ],
     ],
     'action' => [

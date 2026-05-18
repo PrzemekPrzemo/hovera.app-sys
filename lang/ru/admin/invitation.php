@@ -6,6 +6,7 @@ return [
     'table' => [
         'column' => [
             'tenant' => 'Конюшня',
+            'tenant_type' => 'Тип',
             'role' => 'Роль',
             'status' => 'Статус',
             'invited_by' => 'Пригласивший',
@@ -23,6 +24,7 @@ return [
             'expired' => 'Только истёкшие',
             'accepted' => 'Только принятые',
             'tenant' => 'Конюшня',
+            'tenant_type' => 'Тип арендатора',
         ],
     ],
     'action' => [

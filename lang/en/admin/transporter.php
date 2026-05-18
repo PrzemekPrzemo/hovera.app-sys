@@ -37,6 +37,7 @@ return [
             'plan' => 'Plan',
             'subscription' => 'Subscription',
             'last_activity_at' => 'Last activity',
+            'verified_at' => 'Verified at',
             'created_at' => 'Created',
         ],
     ],
@@ -44,6 +45,14 @@ return [
     'action' => [
         'verify' => 'Approve account',
         'reject' => 'Reject account',
+        'login_as_owner' => [
+            'label' => 'Log in as transporter',
+            'reason_label' => 'Reason for impersonation (GDPR audit)',
+            'reason_helper' => 'Required. Session is recorded in impersonation_sessions + audit_log_master.',
+            'submit' => 'Start impersonation',
+            'no_user_title' => 'No active user for this company',
+            'no_user_body' => 'Add a team member or invite an owner first.',
+        ],
     ],
 
     'notify' => [

@@ -32,10 +32,14 @@ return [
 
     'table' => [
         'column' => [
+            'type' => 'Typ',
             'country' => 'Kraj',
             'plan' => 'Plan',
             'db_name' => 'Baza',
             'created_at' => 'Utworzona',
+        ],
+        'filter' => [
+            'type' => 'Typ tenanta',
         ],
     ],
 

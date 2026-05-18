@@ -37,6 +37,7 @@ return [
             'plan' => 'Tarif',
             'subscription' => 'Abonnement',
             'last_activity_at' => 'Letzte Aktivität',
+            'verified_at' => 'Verifiziert am',
             'created_at' => 'Erstellt',
         ],
     ],
@@ -44,6 +45,14 @@ return [
     'action' => [
         'verify' => 'Konto genehmigen',
         'reject' => 'Konto ablehnen',
+        'login_as_owner' => [
+            'label' => 'Als Transporteur anmelden',
+            'reason_label' => 'Grund für Impersonation (DSGVO-Audit)',
+            'reason_helper' => 'Pflichtfeld. Sitzung wird in impersonation_sessions + audit_log_master gespeichert.',
+            'submit' => 'Impersonation starten',
+            'no_user_title' => 'Kein aktiver Benutzer für dieses Unternehmen',
+            'no_user_body' => 'Fügen Sie zuerst ein Teammitglied hinzu oder laden Sie einen Owner ein.',
+        ],
     ],
 
     'notify' => [

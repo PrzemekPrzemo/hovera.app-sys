@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Resources;
 
+use App\Enums\TenantType;
 use App\Filament\Admin\Resources\PlanResource\Pages;
 use App\Filament\Components\PriceInput;
 use App\Models\Central\Plan;
@@ -54,6 +55,12 @@ class PlanResource extends Resource
                         ->maxLength(32)
                         ->unique(ignoreRecord: true)
                         ->helperText(__('admin/plan.form.helper.code')),
+                    Forms\Components\Select::make('audience')
+                        ->label(__('admin/plan.form.label.audience'))
+                        ->options(TenantType::options())
+                        ->default(TenantType::Stable->value)
+                        ->required()
+                        ->helperText(__('admin/plan.form.helper.audience')),
                     Forms\Components\TextInput::make('name')->required()->maxLength(120),
                     Forms\Components\Select::make('currency')
                         ->options(['PLN' => 'PLN', 'EUR' => 'EUR', 'USD' => 'USD'])
@@ -128,6 +135,18 @@ class PlanResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('sort_order')->label('#')->sortable(),
+                Tables\Columns\TextColumn::make('audience')
+                    ->label(__('admin/plan.table.column.audience'))
+                    ->badge()
+                    ->sortable()
+                    ->color(fn ($state) => match ($state) {
+                        TenantType::Transporter->value => 'warning',
+                        TenantType::Stable->value => 'info',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn ($state) => $state
+                        ? (TenantType::tryFrom((string) $state)?->label() ?? (string) $state)
+                        : '—'),
                 Tables\Columns\TextColumn::make('code')->searchable()->sortable()->copyable(),
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('price_monthly_cents')
@@ -146,7 +165,13 @@ class PlanResource extends Resource
                     ->boolean()
                     ->label(__('admin/plan.table.column.is_public_short')),
             ])
-            ->defaultSort('sort_order')
+            // Stables grupowane nad transporterami; w obrębie audience po sort_order.
+            ->modifyQueryUsing(fn ($query) => $query->orderBy('audience')->orderBy('sort_order'))
+            ->filters([
+                Tables\Filters\SelectFilter::make('audience')
+                    ->label(__('admin/plan.table.filter.audience'))
+                    ->options(TenantType::options()),
+            ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()->before(function (Plan $record) {

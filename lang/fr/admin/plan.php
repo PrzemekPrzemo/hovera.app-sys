@@ -26,8 +26,10 @@ return [
             'features' => 'Clés : bullets[N]=string (marketing), enabled.X=bool (feature flag).',
             'is_active' => 'Indique si le plan peut encore être assigné à de nouveaux tenants.',
             'is_public' => 'Indique s’il doit apparaître sur la page de tarification publique. Enterprise généralement false (sur mesure).',
+            'audience' => 'À qui s’adresse ce plan — Écurie ou Transporteur. Immuable après création.',
         ],
         'label' => [
+            'audience' => 'Audience',
             'price_monthly' => 'Prix mensuel',
             'price_yearly' => 'Prix annuel',
             'stripe_price_monthly_id' => 'Stripe Price ID (mensuel)',
@@ -42,11 +44,15 @@ return [
 
     'table' => [
         'column' => [
+            'audience' => 'Audience',
             'price_monthly' => 'Mensuel',
             'price_yearly' => 'Annuel',
             'tenants_count' => 'Écuries',
             'is_active_short' => 'Act.',
             'is_public_short' => 'Pub.',
+        ],
+        'filter' => [
+            'audience' => 'Audience',
         ],
     ],
 

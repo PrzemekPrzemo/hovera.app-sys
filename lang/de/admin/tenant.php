@@ -32,10 +32,14 @@ return [
 
     'table' => [
         'column' => [
+            'type' => 'Typ',
             'country' => 'Land',
             'plan' => 'Tarif',
             'db_name' => 'Datenbank',
             'created_at' => 'Erstellt',
+        ],
+        'filter' => [
+            'type' => 'Mandantentyp',
         ],
     ],
 

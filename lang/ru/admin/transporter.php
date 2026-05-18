@@ -37,6 +37,7 @@ return [
             'plan' => 'Тариф',
             'subscription' => 'Подписка',
             'last_activity_at' => 'Последняя активность',
+            'verified_at' => 'Подтверждено',
             'created_at' => 'Создано',
         ],
     ],
@@ -44,6 +45,14 @@ return [
     'action' => [
         'verify' => 'Подтвердить аккаунт',
         'reject' => 'Отклонить аккаунт',
+        'login_as_owner' => [
+            'label' => 'Войти как транспортер',
+            'reason_label' => 'Причина импersonation (GDPR audit)',
+            'reason_helper' => 'Обязательно. Сессия записывается в impersonation_sessions + audit_log_master.',
+            'submit' => 'Начать impersonation',
+            'no_user_title' => 'Нет активного пользователя для этой компании',
+            'no_user_body' => 'Сначала добавьте члена команды или пригласите владельца.',
+        ],
     ],
 
     'notify' => [

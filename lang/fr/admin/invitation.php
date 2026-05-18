@@ -6,6 +6,7 @@ return [
     'table' => [
         'column' => [
             'tenant' => 'Écurie',
+            'tenant_type' => 'Type',
             'role' => 'Rôle',
             'status' => 'Statut',
             'invited_by' => 'Invité par',
@@ -23,6 +24,7 @@ return [
             'expired' => 'Uniquement expirés',
             'accepted' => 'Uniquement acceptés',
             'tenant' => 'Écurie',
+            'tenant_type' => 'Type de locataire',
         ],
     ],
     'action' => [

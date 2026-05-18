@@ -20,6 +20,7 @@ return [
 
     // Resource labels
     'tenants' => 'Reitställe',
+    'all_tenants' => 'Alle Mandanten',
     'plans' => 'Tarife',
     'invitations' => 'Einladungen',
     'horses' => 'Pferde',

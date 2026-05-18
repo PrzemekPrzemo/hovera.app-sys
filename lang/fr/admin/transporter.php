@@ -37,6 +37,7 @@ return [
             'plan' => 'Plan',
             'subscription' => 'Abonnement',
             'last_activity_at' => 'Dernière activité',
+            'verified_at' => 'Vérifié le',
             'created_at' => 'Créée',
         ],
     ],
@@ -44,6 +45,14 @@ return [
     'action' => [
         'verify' => 'Approuver le compte',
         'reject' => 'Refuser le compte',
+        'login_as_owner' => [
+            'label' => 'Se connecter en tant que transporteur',
+            'reason_label' => 'Motif de l’impersonation (audit RGPD)',
+            'reason_helper' => 'Obligatoire. La session est enregistrée dans impersonation_sessions + audit_log_master.',
+            'submit' => 'Démarrer l’impersonation',
+            'no_user_title' => 'Aucun utilisateur actif pour cette société',
+            'no_user_body' => 'Ajoutez un membre d’équipe ou invitez un propriétaire.',
+        ],
     ],
 
     'notify' => [

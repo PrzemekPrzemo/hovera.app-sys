@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Admin\Resources;
 
 use App\Actions\Invitations\SendInvitation;
+use App\Enums\TenantType;
 use App\Filament\Admin\Resources\InvitationResource\Pages;
 use App\Models\Central\UserInvitation;
 use App\Services\MasterAuditLogger;
@@ -50,6 +51,17 @@ class InvitationResource extends Resource
                 Tables\Columns\TextColumn::make('tenant.name')
                     ->label(__('admin/invitation.table.column.tenant'))
                     ->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('tenant.type')
+                    ->label(__('admin/invitation.table.column.tenant_type'))
+                    ->badge()
+                    ->color(fn ($state) => match ($state instanceof TenantType ? $state->value : $state) {
+                        TenantType::Transporter->value => 'warning',
+                        TenantType::Stable->value => 'info',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn ($state) => $state instanceof TenantType
+                        ? $state->label()
+                        : (TenantType::tryFrom((string) $state)?->label() ?? '—')),
                 Tables\Columns\BadgeColumn::make('role')
                     ->label(__('admin/invitation.table.column.role'))
                     ->placeholder('—'),
@@ -96,6 +108,12 @@ class InvitationResource extends Resource
                     ->label(__('admin/invitation.table.filter.tenant'))
                     ->relationship('tenant', 'name')
                     ->searchable(),
+                Tables\Filters\SelectFilter::make('tenant_type')
+                    ->label(__('admin/invitation.table.filter.tenant_type'))
+                    ->options(TenantType::options())
+                    ->query(fn ($query, array $data) => filled($data['value'] ?? null)
+                        ? $query->whereHas('tenant', fn ($q) => $q->where('type', $data['value']))
+                        : $query),
             ])
             ->actions([
                 Tables\Actions\Action::make('resend')
