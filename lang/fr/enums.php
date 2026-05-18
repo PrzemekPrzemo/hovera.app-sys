@@ -17,6 +17,28 @@ return [
         'withdrawn' => 'Retirée',
     ],
 
+    'verification_status' => [
+        'pending' => 'Documents attendus',
+        'under_review' => 'En vérification',
+        'verified' => 'Vérifié',
+        'rejected' => 'Rejeté',
+    ],
+
+    'transporter_document_type' => [
+        'company_registration' => 'Registre de la société',
+        'company_registration_description' => 'Extrait du registre du commerce (PDF/JPG).',
+        'animal_transport_cert' => 'Certificat de transport d’animaux',
+        'animal_transport_cert_description' => 'Règlement UE 1/2005 — obligatoire pour le transport de chevaux.',
+        'insurance_ocp' => 'Assurance RC transporteur',
+        'insurance_ocp_description' => 'Responsabilité civile du transporteur routier.',
+        'insurance_ocs' => 'Assurance marchandises',
+        'insurance_ocs_description' => 'Assurance pour les dommages à l’animal transporté.',
+        'vehicle_registration' => 'Carte grise du véhicule',
+        'vehicle_registration_description' => 'Scan de la carte grise — date du prochain contrôle.',
+        'other' => 'Autre document',
+        'other_description' => 'Licence communautaire, certificat d’inspection du travail, etc.',
+    ],
+
     'boarding_frequency' => [
         'daily' => 'Quotidienne',
         'monthly' => 'Mensuelle',

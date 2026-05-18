@@ -17,6 +17,28 @@ return [
         'withdrawn' => 'Withdrawn',
     ],
 
+    'verification_status' => [
+        'pending' => 'Awaiting documents',
+        'under_review' => 'Under review',
+        'verified' => 'Verified',
+        'rejected' => 'Rejected',
+    ],
+
+    'transporter_document_type' => [
+        'company_registration' => 'Company registration',
+        'company_registration_description' => 'Business registry entry (CRO/KRS/CEIDG equivalent, PDF or image).',
+        'animal_transport_cert' => 'Animal transport certificate',
+        'animal_transport_cert_description' => 'EU Reg. 1/2005 certificate — required for horse transport.',
+        'insurance_ocp' => 'Carrier liability insurance',
+        'insurance_ocp_description' => 'Carrier liability policy (OCP equivalent).',
+        'insurance_ocs' => 'Cargo insurance',
+        'insurance_ocs_description' => 'Cargo insurance — covers damage to the transported animal.',
+        'vehicle_registration' => 'Vehicle registration',
+        'vehicle_registration_description' => 'Vehicle registration document scan — we check next-inspection date.',
+        'other' => 'Other document',
+        'other_description' => 'Custom — labour inspection certificate, EU community licence, etc.',
+    ],
+
     'boarding_frequency' => [
         'daily' => 'Daily',
         'monthly' => 'Monthly',

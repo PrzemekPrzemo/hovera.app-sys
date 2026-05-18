@@ -17,6 +17,28 @@ return [
         'withdrawn' => 'Wycofana',
     ],
 
+    'verification_status' => [
+        'pending' => 'Oczekuje na dokumenty',
+        'under_review' => 'W weryfikacji',
+        'verified' => 'Zweryfikowane',
+        'rejected' => 'Odrzucone',
+    ],
+
+    'transporter_document_type' => [
+        'company_registration' => 'Dane rejestrowe firmy',
+        'company_registration_description' => 'Wpis do KRS lub CEIDG (PDF, JPG).',
+        'animal_transport_cert' => 'Świadectwo transportu zwierząt',
+        'animal_transport_cert_description' => 'Świadectwo z ustawy 1/2005 — wymagane do przewozu koni.',
+        'insurance_ocp' => 'Ubezpieczenie OC przewoźnika',
+        'insurance_ocp_description' => 'OCP — polisa odpowiedzialności cywilnej przewoźnika drogowego.',
+        'insurance_ocs' => 'Ubezpieczenie OC cargo',
+        'insurance_ocs_description' => 'OCS — polisa za szkody na ładunku (np. uraz konia w trakcie transportu).',
+        'vehicle_registration' => 'Dowód rejestracyjny pojazdu',
+        'vehicle_registration_description' => 'Skan DR — sprawdzamy datę następnego przeglądu i kategorię pojazdu.',
+        'other' => 'Inny dokument',
+        'other_description' => 'Custom — np. zaświadczenie z PIP, licencja wspólnotowa.',
+    ],
+
     'boarding_frequency' => [
         'daily' => 'Dziennie',
         'monthly' => 'Miesięcznie',
