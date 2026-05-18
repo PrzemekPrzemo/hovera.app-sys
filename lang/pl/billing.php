@@ -64,6 +64,8 @@ return [
         'title' => 'Limit planu osiągnięty',
         'horses_exceeded' => 'Trial: limit :limit koni — wybierz plan aby dodać więcej.',
         'clients_exceeded' => 'Trial: limit :limit klientów — wybierz plan aby dodać więcej.',
+        'vehicles_exceeded' => 'Limit :limit pojazdów w aktualnym planie — wybierz wyższy plan aby dodać więcej.',
+        'drivers_exceeded' => 'Limit :limit kierowców w aktualnym planie — wybierz wyższy plan aby dodać więcej.',
     ],
     'onboarding_fee' => [
         'label' => 'Opłata wdrożeniowa — plan :plan',

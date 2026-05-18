@@ -64,6 +64,8 @@ return [
         'title' => 'Limite du plan atteinte',
         'horses_exceeded' => 'Essai : limite de :limit chevaux — choisissez un plan pour en ajouter davantage.',
         'clients_exceeded' => 'Essai : limite de :limit clients — choisissez un plan pour en ajouter davantage.',
+        'vehicles_exceeded' => 'Limite de :limit véhicules dans le plan actuel — passez à un plan supérieur pour en ajouter.',
+        'drivers_exceeded' => 'Limite de :limit chauffeurs dans le plan actuel — passez à un plan supérieur pour en ajouter.',
     ],
     'onboarding_fee' => [
         'label' => 'Frais de mise en route — plan :plan',

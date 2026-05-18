@@ -64,6 +64,8 @@ return [
         'title' => 'Plan limit reached',
         'horses_exceeded' => 'Trial: :limit horses limit — pick a plan to add more.',
         'clients_exceeded' => 'Trial: :limit clients limit — pick a plan to add more.',
+        'vehicles_exceeded' => 'Limit of :limit vehicles in current plan — upgrade to add more.',
+        'drivers_exceeded' => 'Limit of :limit drivers in current plan — upgrade to add more.',
     ],
     'onboarding_fee' => [
         'label' => 'Onboarding fee — :plan plan',
