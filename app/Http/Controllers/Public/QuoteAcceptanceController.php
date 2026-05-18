@@ -47,14 +47,23 @@ class QuoteAcceptanceController extends Controller
             abort(404);
         }
 
+        // Direct-charge payments MVP — settings dla fallback'u (payment_instructions
+        // gdy quote.payment_url nie ustawione). Patrz docs/TRANSPORT.md §15.
+        // Try/catch: w starszych tenant DB tabela `transport_settings` może
+        // jeszcze nie istnieć (migracja wjedzie z merge'm) — wtedy fallback do
+        // null, sekcja płatności po prostu pokaże "skontaktuj się z przewoźnikiem".
+        try {
+            $transportSettings = TransportSettings::current();
+        } catch (\Throwable) {
+            $transportSettings = null;
+        }
+
         return view('public.transport.quote-landing', [
             'tenant' => $this->tenants->tenantOrFail(),
             'quote' => $quote,
             'slug' => $slug,
             'token' => $token,
-            // Direct-charge payments MVP — settings dla fallback'u (payment_instructions
-            // gdy quote.payment_url nie ustawione). Patrz docs/TRANSPORT.md §13.
-            'transportSettings' => TransportSettings::current(),
+            'transportSettings' => $transportSettings,
         ]);
     }
 
