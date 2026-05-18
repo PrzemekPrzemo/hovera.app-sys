@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Tenants;
 
 use App\Actions\Invitations\SendInvitation;
+use App\Enums\TenantType;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
@@ -29,6 +30,7 @@ class CreateTenant
     /**
      * @param  array{
      *     slug:string, name:string,
+     *     type?:string,
      *     country?:string, locale?:string, timezone?:string, currency?:string,
      *     plan_code?:string|null,
      *     owner_email?:string|null, owner_name?:string|null,
@@ -37,21 +39,27 @@ class CreateTenant
     public function execute(array $input): Tenant
     {
         $data = $this->validate($input);
+        $type = TenantType::from($data['type']);
         [$dbName, $dbUser] = array_values($this->provisioner->makeIdentifiers($data['slug']));
         $dbPassword = $this->provisioner->generatePassword();
 
-        // Trial 2.0 — domyślnie wszyscy startują z planem Pro (pełen
-        // zestaw feature'ów), ale na trialu obowiązuje hard-cap 10/5
-        // wyrażony przez `trial_max_horses` / `trial_max_clients`.
-        // Jeśli caller jawnie poda `plan_code`, honorujemy.
+        // Trial 2.0 — domyślny plan zależy od typu tenanta:
+        //   stable      → pro (pełen feature set), trial cap'i konie/klientów
+        //   transporter → transport_pro (5 pojazdów, 10 kierowców)
+        // Caller może override przez plan_code.
+        $defaultPlanCode = match ($type) {
+            TenantType::Stable => 'pro',
+            TenantType::Transporter => 'transport_pro',
+        };
         $plan = ! empty($data['plan_code'])
             ? Plan::where('code', $data['plan_code'])->first()
-            : Plan::where('code', 'pro')->first();
+            : Plan::where('code', $defaultPlanCode)->first();
 
-        $tenant = DB::connection('central')->transaction(function () use ($data, $dbName, $dbUser, $dbPassword, $plan) {
+        $tenant = DB::connection('central')->transaction(function () use ($data, $type, $dbName, $dbUser, $dbPassword, $plan) {
             $tenant = new Tenant([
                 'slug' => $data['slug'],
                 'name' => $data['name'],
+                'type' => $type,
                 'country' => $data['country'],
                 'locale' => $data['locale'],
                 'timezone' => $data['timezone'],
@@ -80,17 +88,17 @@ class CreateTenant
             throw $e;
         }
 
-        $tenant->forceFill([
+        // Trial caps: tylko dla stajni (trial_max_horses / trial_max_clients).
+        // Transporter dziedziczy limity wprost z planu (max_vehicles, max_drivers).
+        $postProvisionAttrs = [
             'status' => 'trialing',
-            // Standardowy 30-dniowy trial. Master admin może przedłużyć
-            // ręcznie w panelu admin lub przy upgrade na płatny plan
-            // status flipuje na 'active' i trial_ends_at idzie ignored.
             'trial_ends_at' => $tenant->trial_ends_at ?? now()->addDays(30),
-            // Trial 2.0: hard-cap 10 koni / 5 klientów, mimo że plan
-            // formalnie Pro. Override żyje tylko dopóki status=trialing.
-            'trial_max_horses' => $tenant->trial_max_horses ?? 10,
-            'trial_max_clients' => $tenant->trial_max_clients ?? 5,
-        ])->save();
+        ];
+        if ($type === TenantType::Stable) {
+            $postProvisionAttrs['trial_max_horses'] = $tenant->trial_max_horses ?? 10;
+            $postProvisionAttrs['trial_max_clients'] = $tenant->trial_max_clients ?? 5;
+        }
+        $tenant->forceFill($postProvisionAttrs)->save();
 
         $ownerEmail = $data['owner_email'] ?? null;
         if (! empty($ownerEmail)) {
@@ -150,6 +158,7 @@ class CreateTenant
                 'regex:/^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/',
                 Rule::unique(Tenant::class, 'slug')],
             'name' => ['required', 'string', 'min:2', 'max:255'],
+            'type' => ['sometimes', 'string', Rule::in(['stable', 'transporter'])],
             'country' => ['sometimes', 'string', 'size:2'],
             'locale' => ['sometimes', 'string', 'max:10'],
             'timezone' => ['sometimes', 'string', 'max:64'],
@@ -164,6 +173,7 @@ class CreateTenant
         }
 
         return array_replace([
+            'type' => 'stable',
             'country' => 'PL',
             'locale' => 'pl',
             'timezone' => 'Europe/Warsaw',

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ __('public/signup.title') }} — hovera</title>
+    <title>{{ __('public/signup.title_'.$type->value) }} — hovera</title>
     <meta name="robots" content="noindex">
     <link rel="icon" href="{{ asset('favicon.svg') }}">
     <x-pwa-head />
@@ -53,8 +53,11 @@
         <div class="logo">hovera</div>
 
         <div class="card">
-            <h1>{{ __('public/signup.heading') }}</h1>
-            <div class="subtitle">{{ __('public/signup.subtitle') }}</div>
+            <h1>{{ __('public/signup.heading_'.$type->value) }}</h1>
+            <div class="subtitle">{{ __('public/signup.subtitle_'.$type->value) }}</div>
+            <div class="subtitle" style="margin-top:-.75rem;font-size:.78rem;">
+                <a href="{{ route('signup.show') }}" style="color:#A8956B;text-decoration:none;">← {{ __('public/signup.back_to_choose') }}</a>
+            </div>
 
             <div class="perks">
                 <strong>{{ __('public/signup.trial_strong') }}</strong>
@@ -74,9 +77,10 @@
 
             <form method="post" action="{{ route('signup.submit') }}">
                 @csrf
+                <input type="hidden" name="type" value="{{ $type->value }}">
 
                 <div class="form-row">
-                    <label for="name">{{ __('public/signup.label.name') }}</label>
+                    <label for="name">{{ __('public/signup.label.name_'.$type->value) }}</label>
                     <input type="text" name="name" id="name" required maxlength="120" autofocus
                            value="{{ $old['name'] }}"
                            placeholder="{{ __('public/signup.placeholder.name') }}"

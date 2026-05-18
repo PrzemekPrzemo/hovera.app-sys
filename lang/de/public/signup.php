@@ -3,17 +3,50 @@
 declare(strict_types=1);
 
 return [
-    'title' => 'Reitstall anlegen',
+    'title' => 'Konto anlegen',
+    'title_stable' => 'Reitstall anlegen',
+    'title_transporter' => 'Transportunternehmen anlegen',
     'thanks_title' => 'E-Mail prüfen',
 
-    'heading' => 'Reitstall in hovera anlegen',
+    'heading' => 'Konto in hovera anlegen',
+    'heading_stable' => 'Reitstall in hovera anlegen',
+    'heading_transporter' => 'Transportunternehmen in hovera anlegen',
     'subtitle' => 'Füllen Sie 4 Felder aus und erhalten Sie eine E-Mail mit einem Link zur Passwortvergabe. Ohne Kreditkarte.',
+    'subtitle_stable' => 'Füllen Sie 4 Felder aus und erhalten Sie eine E-Mail mit einem Link zur Passwortvergabe. Ohne Kreditkarte.',
+    'subtitle_transporter' => 'Füllen Sie 4 Felder aus und erhalten Sie eine E-Mail mit einem Link zur Passwortvergabe. 30-Tage-Test — Pro-Tarif (5 Fahrzeuge, 10 Fahrer).',
+    'back_to_choose' => 'Kontoart wechseln',
+
+    'choose' => [
+        'title' => 'Was betreiben Sie?',
+        'heading' => 'Was betreiben Sie?',
+        'subtitle' => 'Hovera bedient zwei unterschiedliche Geschäfte in einem Ökosystem. Wählen Sie das passende — das andere können Sie später hinzufügen.',
+        'stable' => [
+            'title' => 'Ich betreibe einen Reitstall',
+            'price' => 'ab 0 € / Mon. · 30 Tage Test',
+            'bullet_1' => 'Multi-Ressourcen-Kalender: Stunden, Training, Pflege',
+            'bullet_2' => 'Kunden + Reitkarten + Auto-Abrechnung',
+            'bullet_3' => 'Pferdekarte, Gesundheitsbuch, Fütterungsplan',
+            'bullet_4' => 'Rechnungen + KSeF + Besitzerportal',
+            'cta' => 'Stall registrieren →',
+        ],
+        'transporter' => [
+            'title' => 'Ich betreibe ein Transportunternehmen',
+            'price' => 'ab 35 € / Mon. · 30 Tage Test',
+            'bullet_1' => 'Fahrzeuge + Fahrer + km/Kraftstoff-Preise',
+            'bullet_2' => 'Routenkalkulator mit Karte (ORS/Mapbox/Google)',
+            'bullet_3' => 'PDF-Angebote + Nummerierung + E-Mail',
+            'bullet_4' => 'Marktplatz für Anfragen von Reitställen',
+            'cta' => 'Unternehmen registrieren →',
+        ],
+    ],
 
     'trial_strong' => '🎉 30 Tage kostenlos',
     'trial_text' => 'Voller Funktionsumfang. Keine Karte. Keine automatische Umwandlung in einen kostenpflichtigen Tarif — Sie wählen erst dann, wenn Sie sicher sind, dass Sie bleiben möchten.',
 
     'label' => [
         'name' => 'Reitstall-Name',
+        'name_stable' => 'Reitstall-Name',
+        'name_transporter' => 'Firmenname',
         'slug' => 'URL des Reitstalls',
         'owner_name' => 'Ihr Vor- und Nachname',
         'owner_email' => 'E-Mail',

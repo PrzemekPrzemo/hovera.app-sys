@@ -3,17 +3,50 @@
 declare(strict_types=1);
 
 return [
-    'title' => 'Create your stable',
+    'title' => 'Create your account',
+    'title_stable' => 'Create your stable',
+    'title_transporter' => 'Create your transport company',
     'thanks_title' => 'Check your inbox',
 
-    'heading' => 'Create your stable on hovera',
+    'heading' => 'Create your account on hovera',
+    'heading_stable' => 'Create your stable on hovera',
+    'heading_transporter' => 'Create your transport company on hovera',
     'subtitle' => 'Fill in 4 fields, you\'ll get an email with a link to set your password. No credit card.',
+    'subtitle_stable' => 'Fill in 4 fields, you\'ll get an email with a link to set your password. No credit card.',
+    'subtitle_transporter' => 'Fill in 4 fields, you\'ll get an email with a link to set your password. 30-day trial — Pro plan (5 vehicles, 10 drivers).',
+    'back_to_choose' => 'back to account type',
+
+    'choose' => [
+        'title' => 'What do you run?',
+        'heading' => 'What do you run?',
+        'subtitle' => 'Hovera runs two distinct businesses in one ecosystem. Pick the right one — you can add the other later.',
+        'stable' => [
+            'title' => 'I run a stable',
+            'price' => 'from €0 / mo · 30-day trial',
+            'bullet_1' => 'Multi-resource calendar: lessons, training, care',
+            'bullet_2' => 'Clients + passes + auto-settlement',
+            'bullet_3' => 'Horse card, health journal, feeding plan',
+            'bullet_4' => 'VAT invoices + KSeF + owner portal',
+            'cta' => 'Register stable →',
+        ],
+        'transporter' => [
+            'title' => 'I run a transport company',
+            'price' => 'from €35 / mo · 30-day trial',
+            'bullet_1' => 'Vehicles + drivers + per-km/fuel pricing',
+            'bullet_2' => 'Route calculator with map (ORS/Mapbox/Google)',
+            'bullet_3' => 'PDF quotes + numbering + email delivery',
+            'bullet_4' => 'Marketplace of inquiries from stables',
+            'cta' => 'Register company →',
+        ],
+    ],
 
     'trial_strong' => '🎉 30 days free',
     'trial_text' => 'Full functionality. No card. No auto-charge — pick a plan only when you\'re sure you want to stay.',
 
     'label' => [
         'name' => 'Stable name',
+        'name_stable' => 'Stable name',
+        'name_transporter' => 'Company name',
         'slug' => 'Stable URL',
         'owner_name' => 'Your full name',
         'owner_email' => 'Email',

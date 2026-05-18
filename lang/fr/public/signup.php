@@ -3,17 +3,50 @@
 declare(strict_types=1);
 
 return [
-    'title' => 'Créer une écurie',
+    'title' => 'Créer un compte',
+    'title_stable' => 'Créer une écurie',
+    'title_transporter' => 'Créer une société de transport',
     'thanks_title' => 'Consultez votre e-mail',
 
-    'heading' => 'Créez votre écurie sur hovera',
+    'heading' => 'Créez votre compte sur hovera',
+    'heading_stable' => 'Créez votre écurie sur hovera',
+    'heading_transporter' => 'Créez votre société de transport sur hovera',
     'subtitle' => 'Remplissez 4 champs, vous recevrez un e-mail avec un lien pour définir votre mot de passe. Sans carte de crédit.',
+    'subtitle_stable' => 'Remplissez 4 champs, vous recevrez un e-mail avec un lien pour définir votre mot de passe. Sans carte de crédit.',
+    'subtitle_transporter' => 'Remplissez 4 champs, vous recevrez un e-mail avec un lien pour définir votre mot de passe. Essai 30 jours — plan Pro (5 véhicules, 10 chauffeurs).',
+    'back_to_choose' => 'changer le type de compte',
+
+    'choose' => [
+        'title' => 'Que gérez-vous ?',
+        'heading' => 'Que gérez-vous ?',
+        'subtitle' => 'Hovera fait fonctionner deux activités distinctes dans un seul écosystème. Choisissez la vôtre — vous pourrez ajouter l’autre plus tard.',
+        'stable' => [
+            'title' => 'Je gère une écurie',
+            'price' => 'à partir de 0 € / mois · essai 30 jours',
+            'bullet_1' => 'Calendrier multi-ressources : cours, entraînement, soins',
+            'bullet_2' => 'Clients + abonnements + facturation auto',
+            'bullet_3' => 'Fiche du cheval, journal santé, plan alimentaire',
+            'bullet_4' => 'Factures + KSeF + portail propriétaire',
+            'cta' => 'Inscrire l’écurie →',
+        ],
+        'transporter' => [
+            'title' => 'Je gère une société de transport',
+            'price' => 'à partir de 35 € / mois · essai 30 jours',
+            'bullet_1' => 'Véhicules + chauffeurs + tarif km/carburant',
+            'bullet_2' => 'Calculateur d’itinéraires avec carte (ORS/Mapbox/Google)',
+            'bullet_3' => 'Devis PDF + numérotation + envoi e-mail',
+            'bullet_4' => 'Marketplace de demandes des écuries',
+            'cta' => 'Inscrire la société →',
+        ],
+    ],
 
     'trial_strong' => '🎉 30 jours gratuits',
     'trial_text' => 'Toutes les fonctionnalités. Sans carte. Pas de bascule automatique vers une formule payante — vous choisirez un plan seulement quand vous serez sûr de rester.',
 
     'label' => [
         'name' => 'Nom de l’écurie',
+        'name_stable' => 'Nom de l’écurie',
+        'name_transporter' => 'Nom de la société',
         'slug' => 'Adresse URL de l’écurie',
         'owner_name' => 'Vos nom et prénom',
         'owner_email' => 'E-mail',

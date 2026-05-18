@@ -3,17 +3,50 @@
 declare(strict_types=1);
 
 return [
-    'title' => 'Załóż stajnię',
+    'title' => 'Załóż konto',
+    'title_stable' => 'Załóż stajnię',
+    'title_transporter' => 'Załóż firmę transportową',
     'thanks_title' => 'Sprawdź mail',
 
-    'heading' => 'Załóż stajnię w hovera',
+    'heading' => 'Załóż konto w hovera',
+    'heading_stable' => 'Załóż stajnię w hovera',
+    'heading_transporter' => 'Załóż firmę transportową w hovera',
     'subtitle' => 'Wypełnij 4 pola, dostaniesz mail z linkiem do ustawienia hasła. Bez karty kredytowej.',
+    'subtitle_stable' => 'Wypełnij 4 pola, dostaniesz mail z linkiem do ustawienia hasła. Bez karty kredytowej.',
+    'subtitle_transporter' => 'Wypełnij 4 pola, dostaniesz mail z linkiem do ustawienia hasła. 30 dni triala — plan Pro (5 pojazdów, 10 kierowców).',
+    'back_to_choose' => 'wróć do wyboru typu konta',
+
+    'choose' => [
+        'title' => 'Co prowadzisz?',
+        'heading' => 'Co prowadzisz?',
+        'subtitle' => 'Hovera obsługuje dwa zupełnie różne biznesy w jednym ekosystemie. Wybierz właściwy dla siebie — możesz później dodać drugi.',
+        'stable' => [
+            'title' => 'Prowadzę stajnię',
+            'price' => 'od 0 zł / mc · 30 dni triala',
+            'bullet_1' => 'Multi-resource kalendarz: lekcje, treningi, opieka',
+            'bullet_2' => 'Klienci + karnety + auto-rozliczenia',
+            'bullet_3' => 'Karta konia, dziennik zdrowia, plan żywienia',
+            'bullet_4' => 'Faktury VAT + KSeF + portal właściciela',
+            'cta' => 'Zarejestruj stajnię →',
+        ],
+        'transporter' => [
+            'title' => 'Prowadzę firmę transportową',
+            'price' => 'od 149 zł / mc · 30 dni triala',
+            'bullet_1' => 'Pojazdy + kierowcy + cennik km/paliwo',
+            'bullet_2' => 'Kalkulator tras z mapą (ORS/Mapbox/Google)',
+            'bullet_3' => 'Oferty PDF + numeracja + mailing',
+            'bullet_4' => 'Marketplace zapytań od stajni',
+            'cta' => 'Zarejestruj firmę →',
+        ],
+    ],
 
     'trial_strong' => '🎉 30 dni za darmo',
     'trial_text' => 'Pełna funkcjonalność. Bez karty. Bez automatycznej zamiany na płatny — wybierzesz plan dopiero gdy będziesz pewny że chcesz zostać.',
 
     'label' => [
         'name' => 'Nazwa stajni',
+        'name_stable' => 'Nazwa stajni',
+        'name_transporter' => 'Nazwa firmy',
         'slug' => 'Adres URL stajni',
         'owner_name' => 'Twoje imię i nazwisko',
         'owner_email' => 'E-mail',
