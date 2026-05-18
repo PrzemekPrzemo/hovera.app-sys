@@ -10,6 +10,8 @@ return [
         'resources' => 'Resources (optional)',
         'pricing' => 'Pricing',
         'terms' => 'Terms & notes',
+        'payment' => 'Payment (direct charge)',
+        'payment_description' => 'Hovera does NOT process payments. The customer pays you directly — paste your gateway URL or leave empty to fall back to settings instructions.',
     ],
 
     'form' => [
@@ -45,10 +47,26 @@ return [
             'routing_provider' => 'Route source',
             'terms' => 'Commercial terms',
             'notes' => 'Internal notes',
+            'payment_url' => 'Payment URL',
+            'payment_method_label' => 'Payment method label',
+            'payment_notes' => 'Payment notes',
+            'payment_completed_status' => 'Payment status',
+            'mark_as_paid_reason' => 'Reason / transaction reference (optional)',
         ],
         'helper' => [
             'terms' => 'Visible to the customer on the quote / PDF.',
             'notes' => 'Team-only notes — not shared with customer.',
+            'payment_url' => 'Paste your gateway link (Stripe / Przelewy24 / bank link). Hovera does NOT process payments — the customer pays you directly.',
+            'payment_method_label' => 'Short label shown to the customer below the Pay button (e.g. "Stripe", "BLIK").',
+            'payment_notes' => 'Internal or customer-facing notes (e.g. "30% deposit due by Friday").',
+            'mark_as_paid_reason' => 'E.g. transfer reference or settlement date — goes to the audit log.',
+        ],
+        'placeholder' => [
+            'payment_method_label' => 'Stripe / Przelewy24 / BLIK / Bank transfer',
+        ],
+        'value' => [
+            'payment_completed_at' => 'Paid — confirmed :date',
+            'payment_not_completed' => 'Unpaid — use "Mark as paid" after funds arrive.',
         ],
     ],
 
@@ -69,6 +87,9 @@ return [
         'withdraw' => 'Withdraw quote',
         'download_pdf' => 'Download PDF',
         'issue_invoice' => 'Issue invoice',
+        'mark_as_paid' => 'Mark as paid',
+        'mark_as_paid_modal_heading' => 'Confirm payment receipt',
+        'mark_as_paid_modal_description' => 'Did the customer pay you directly? Mark the quote as paid. Hovera did not mediate the transaction — this is a manual confirmation for the audit log and the customer view.',
     ],
 
     'notify' => [
@@ -83,5 +104,7 @@ return [
         'invoice_issued' => 'Invoice issued',
         'invoice_issued_body' => 'Invoice :number created from this quote.',
         'invoice_failed' => 'Could not issue invoice',
+        'marked_as_paid' => 'Quote marked as paid',
+        'marked_as_paid_body' => 'Quote :number — payment receipt confirmed.',
     ],
 ];

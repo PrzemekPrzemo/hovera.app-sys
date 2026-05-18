@@ -643,10 +643,12 @@ zakresu fazy 8.
 
 Kandydaci (patrz §14 dla rekomendacji):
 
-- Stripe Connect Express (Hovera = platform, transporter = connected MoR).
-- Lub: direct charge do transportera (Hovera tylko jako saas, no payment middleware).
-- KSeF per-transporter (transporter-as-issuer, hovera passthrough).
-- Faktura draft generowana auto po akceptacji oferty.
+**Status:** ✅ MVP wdrożony (URL-based direct charge — patrz §13 niżej).
+Pełna integracja Stripe Connect API + webhooks w późniejszej iteracji.
+
+Pierwotny scope (Stripe / Przelewy24 dla zaliczki + finalnej z webhookami,
+KSeF integracja per-transporter ✅ — patrz §14.1) jest zachowany jako follow-up.
+KSeF już zaimplementowany w PR #225 (transporter-as-issuer, Hovera passthrough).
 
 ---
 
@@ -828,23 +830,24 @@ deterministyczną listę slotów PWL (KRS, zezwolenie zawód, PWL T1/T2
 (tooltip blokady verify-tenant).
 
 ### 13.2 `TenantResource` (audience filter)
+### 15.2 `TenantResource` (audience filter)
 
 Bazowa lista wszystkich tenantów (stajnie + transporterzy) z filtrem
 `type` w toolbarze — kliknięcie filtra przełącza widok między „stajnie"
 i „transporterzy". To samo źródło danych, inny perspektywa.
 
-### 13.3 `PlanResource`
+### 15.3 `PlanResource`
 
 Plany Stripe (stajnia: Starter/Pro/Multi; transporter: Solo/Pro/Fleet)
 z badge'em `audience` ∈ `stable` / `transporter`. Master admin może
 dodać nowy plan dla wybranej grupy bez wycieku do drugiej.
 
-### 13.4 `InvitationResource` (filtered)
+### 15.4 `InvitationResource` (filtered)
 
 Filtr po `tenant.type` — admin widzi osobno zaproszenia czekające
 w stajniach vs w transporterach.
 
-### 13.5 Co NIE jest w master adminie
+### 15.5 Co NIE jest w master adminie
 
 - Master admin **nie widzi treści ofert ani leadów per-tenant** (privacy
   by default). Dostęp tylko do agregatów (liczba leadów / liczba ofert
@@ -854,7 +857,7 @@ w stajniach vs w transporterach.
 - Master admin **nie inkasuje płatności** — Stripe jest między klientem
   a transporterem (subscription billing) bezpośrednio.
 
-### 13.6 Reviews (po zaakceptowanym quote)
+### 15.6 Reviews (po zaakceptowanym quote)
 
 Marketplace reviews — `app/Filament/Admin/Resources/TransportReviewResource.php`
 + `/transport` panel (TransportReviewResource po stronie tenant'a). Patrz §12.5
@@ -1037,3 +1040,79 @@ queries po `audit_logs.action IN ('transporter.verify', 'lead.dispatch',
 > **Status dokumentu:** v2.0 — odzwierciedla faktyczny stan modułu po PR #211–#221
 > (2026-05-18). Aktualizacja: każda zmiana decyzji w §2 lub §12 → wpis w `git log`
 > z prefixem `docs(transport):`.
+## 15. Płatności — direct charge (MVP)
+
+**Status:** ✅ wdrożone w gałęzi `claude/transport-payments-mvp`.
+
+### 15.1 Model biznesowy
+
+Hovera jest pośrednikiem marketplace (patrz §1.1 — pozycjonowanie). Nie jesteśmy
+merchantem of record, nie obsługujemy bramki, nie trzymamy środków klienta.
+
+Klient płaci **bezpośrednio do transportera** — Stripe Payment Link, Przelewy24,
+BLIK, przelew tradycyjny, gotówka — *whatever the carrier accepts*. Konsekwencje:
+
+- transporter ma własną relację z PSP (Payment Service Provider),
+- transporter rozlicza VAT i podatek dochodowy bezpośrednio,
+- Hovera nie ma webhooków → potwierdzenie wpływu jest **ręczne** (akcja
+  „Oznacz jako opłacone" w `QuoteResource`),
+- reklamacje płatności idą do transportera, nie do Hovery (disclaimer na
+  landing'u + PDF + mailu).
+
+### 15.2 Zakres MVP
+
+| Komponent | Co robi |
+|---|---|
+| `quotes.payment_url` | URL do bramki transportera (paste-and-go) |
+| `quotes.payment_method_label` | krótka etykieta (np. „Stripe", „BLIK") |
+| `quotes.payment_completed_at` | ręczne potwierdzenie wpływu |
+| `quotes.payment_notes` | wewnętrzne notatki ws. płatności |
+| `transport_settings.default_payment_url_template` | szablon z placeholderami |
+| `transport_settings.default_payment_method_label` | domyślna etykieta |
+| `transport_settings.payment_instructions` | tekst-fallback gdy URL pusty |
+
+Auto-fill: gdy transporter wstawi `default_payment_url_template` w settings
+(z placeholderami `{quote_number}`, `{gross_total_pln}`, `{customer_name}`),
+system rozwija go i przypisuje do nowej oferty przy create (przez
+`PaymentUrlTemplate::expand()` w `CreateQuote::afterCreate()`).
+
+### 15.3 UI — cztery stany sekcji płatności
+
+Na publicznym landing'u (`/transport/quote/{slug}/{token}`) sekcja płatności
+pokazuje się **tylko gdy quote.status = accepted**, z priorytetem:
+
+1. **payment_completed_at set** → zielony banner „Płatność potwierdzona przez
+   przewoźnika (:date)".
+2. **payment_url set** → primary CTA „Zapłać teraz (:amount :currency)"
+   (target="_blank", rel="noopener noreferrer nofollow"), opcjonalna etykieta.
+3. **payment_instructions w settings** (URL pusty) → info-box z instrukcjami
+   przelewu tradycyjnego.
+4. **nic** → CTA „Skontaktuj się z {transporter}" + dane kontaktowe z
+   `tenant.branding`.
+
+Każdy stan zawiera disclaimer:
+> Płatność realizowana BEZPOŚREDNIO do {transporter_name}. Hovera jest
+> pośrednikiem marketplace i NIE przyjmuje płatności. Reklamacje płatności
+> kieruj bezpośrednio do przewoźnika.
+
+Disclaimer ten widoczny też w PDF (sekcja „Płatność") i w mailu („Jak zapłacić").
+
+### 15.4 Co świadomie pominięte (post-MVP)
+
+- **Stripe Connect API** (Express / Standard accounts) — pełna integracja
+  z OAuth flow, encrypted credentials, server-side payment intents.
+- **Webhooki PSP** — auto-mark-as-paid po `payment.succeeded` (zamiast ręcznie).
+- **Multi-step payments** — zaliczka + pozostała kwota jako osobne URL'e.
+- **Refundy / dispute handling** — UI dla zwrotów i sporów.
+- **KSeF auto-fakturowanie** po `payment_completed_at` — w połączeniu z
+  `IssueTransportInvoiceFromQuote`.
+
+Decyzja: MVP wystarczy do walidacji UX. Pełna integracja Stripe Connect ma sens
+dopiero gdy mamy 10+ aktywnych transporterów wystawiających 100+ ofert/mc —
+inaczej koszt utrzymania webhooków > value.
+
+---
+
+> **Status dokumentu:** v2.1 — odzwierciedla faktyczny stan modułu po PR #211–#228
+> (2026-05-18). Dodano §15 (Płatności direct charge MVP). Aktualizacja: każda zmiana
+> decyzji w §2 lub §12 → wpis w `git log` z prefixem `docs(transport):`.

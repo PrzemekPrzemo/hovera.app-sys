@@ -26,6 +26,15 @@ return [
         'reject' => 'Refuser',
     ],
 
+    'payment' => [
+        'heading' => 'Paiement',
+        'disclaimer' => 'Le paiement est effectué DIRECTEMENT à :transporter. Hovera est un intermédiaire marketplace et N’accepte PAS les paiements. Adressez toute réclamation directement au transporteur.',
+        'confirmed' => 'Paiement confirmé par le transporteur (:date)',
+        'pay_now' => 'Payer maintenant (:amount :currency)',
+        'instructions_heading' => 'Instructions de paiement :',
+        'contact_transporter' => 'Contactez :transporter pour convenir du mode de paiement.',
+    ],
+
     'footer' => 'Page sécurisée fournie par :app',
 
     'disclaimer_intermediary_html' => '<strong>En acceptant cette offre vous concluez un contrat DIRECTEMENT avec :transporter_name :transporter_nip.</strong> Hovera est intermédiaire de marketplace — NI partie au contrat, NI transporteur, NI responsable de l’exécution. Veuillez consulter les <a href="/regulamin-marketplace" target="_blank" style="color:inherit;text-decoration:underline;">conditions du marketplace transport</a>.',

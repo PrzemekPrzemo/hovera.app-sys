@@ -10,6 +10,8 @@ return [
         'resources' => 'Ressources (optionnel)',
         'pricing' => 'Tarification',
         'terms' => 'Conditions et notes',
+        'payment' => 'Paiement (direct charge)',
+        'payment_description' => 'Hovera N’ACCEPTE PAS les paiements. Le client vous paie directement — collez l’URL de votre passerelle ou laissez vide pour utiliser les instructions des paramètres.',
     ],
 
     'form' => [
@@ -45,10 +47,26 @@ return [
             'routing_provider' => 'Source itinéraire',
             'terms' => 'Conditions commerciales',
             'notes' => 'Notes internes',
+            'payment_url' => 'URL de paiement',
+            'payment_method_label' => 'Libellé du mode de paiement',
+            'payment_notes' => 'Notes de paiement',
+            'payment_completed_status' => 'Statut du paiement',
+            'mark_as_paid_reason' => 'Motif / référence de transaction (optionnel)',
         ],
         'helper' => [
             'terms' => 'Visible par le client sur le devis / PDF.',
             'notes' => 'Notes internes — pas partagées avec le client.',
+            'payment_url' => 'URL de votre passerelle de paiement. Hovera N’ACCEPTE PAS les paiements.',
+            'payment_method_label' => 'Étiquette courte affichée sous le bouton Payer.',
+            'payment_notes' => 'Notes internes ou côté client.',
+            'mark_as_paid_reason' => 'Ex. référence de virement — pour le journal d’audit.',
+        ],
+        'placeholder' => [
+            'payment_method_label' => 'Stripe / Przelewy24 / BLIK / Virement',
+        ],
+        'value' => [
+            'payment_completed_at' => 'Payé — confirmé :date',
+            'payment_not_completed' => 'Non payé — utilisez « Marquer comme payé » après réception des fonds.',
         ],
     ],
 
@@ -69,6 +87,9 @@ return [
         'withdraw' => 'Retirer le devis',
         'download_pdf' => 'Télécharger le PDF',
         'issue_invoice' => 'Émettre la facture',
+        'mark_as_paid' => 'Marquer comme payé',
+        'mark_as_paid_modal_heading' => 'Confirmer la réception du paiement',
+        'mark_as_paid_modal_description' => 'Le client a-t-il payé directement ? Marquez le devis comme payé. Hovera n’a pas intermédié — confirmation manuelle pour le journal d’audit et l’affichage côté client.',
     ],
 
     'notify' => [
@@ -83,5 +104,7 @@ return [
         'invoice_issued' => 'Facture émise',
         'invoice_issued_body' => 'Facture :number créée à partir de ce devis.',
         'invoice_failed' => 'Impossible d’émettre la facture',
+        'marked_as_paid' => 'Devis marqué comme payé',
+        'marked_as_paid_body' => 'Devis :number — réception du paiement confirmée.',
     ],
 ];

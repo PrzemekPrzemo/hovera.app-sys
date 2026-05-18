@@ -16,6 +16,7 @@ return [
         'route' => 'Trasa',
         'pricing' => 'Wycena',
         'terms' => 'Warunki',
+        'payment' => 'Płatność',
     ],
 
     'label' => [
@@ -39,7 +40,12 @@ return [
         'net_total' => 'Razem netto',
         'vat' => 'VAT (:rate%)',
         'gross_total' => 'Razem brutto',
+        'payment_url' => 'Link do płatności',
+        'payment_method_label' => 'Metoda',
+        'payment_instructions' => 'Instrukcje',
     ],
+
+    'payment_disclaimer' => 'Płatność realizowana BEZPOŚREDNIO do :transporter. Hovera jest pośrednikiem marketplace i NIE przyjmuje płatności.',
 
     'value' => [
         'yes' => 'Tak',
