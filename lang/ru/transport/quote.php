@@ -68,6 +68,7 @@ return [
         'send' => 'Отправить клиенту',
         'withdraw' => 'Отозвать',
         'download_pdf' => 'Скачать PDF',
+        'issue_invoice' => 'Выставить счёт',
     ],
 
     'notify' => [
@@ -79,5 +80,8 @@ return [
         'verification_required' => 'Аккаунт не верифицирован',
         'verification_required_body' => 'Чтобы отправить предложение клиенту, нужно пройти верификацию — загрузите обязательные документы.',
         'open_documents' => 'Открыть документы',
+        'invoice_issued' => 'Счёт выставлен',
+        'invoice_issued_body' => 'Счёт :number создан из этого предложения.',
+        'invoice_failed' => 'Не удалось выставить счёт',
     ],
 ];

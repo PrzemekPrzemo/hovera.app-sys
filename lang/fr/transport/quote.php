@@ -68,6 +68,7 @@ return [
         'send' => 'Envoyer au client',
         'withdraw' => 'Retirer le devis',
         'download_pdf' => 'Télécharger le PDF',
+        'issue_invoice' => 'Émettre la facture',
     ],
 
     'notify' => [
@@ -79,5 +80,8 @@ return [
         'verification_required' => 'Compte non vérifié',
         'verification_required_body' => 'Pour envoyer un devis, vous devez d’abord vérifier votre compte — téléversez les documents requis.',
         'open_documents' => 'Ouvrir documents',
+        'invoice_issued' => 'Facture émise',
+        'invoice_issued_body' => 'Facture :number créée à partir de ce devis.',
+        'invoice_failed' => 'Impossible d’émettre la facture',
     ],
 ];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Transport\Resources;
 
+use App\Domain\Transport\Invoices\IssueTransportInvoiceFromQuote;
 use App\Domain\Transport\Notifications\QuoteSentNotification;
 use App\Domain\Transport\Quotes\QuoteNumberGenerator;
 use App\Domain\Transport\Quotes\QuotePdfGenerator;
@@ -296,6 +297,14 @@ class QuoteResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                Tables\Actions\Action::make('issueInvoice')
+                    ->label(__('transport/quote.action.issue_invoice'))
+                    ->icon('heroicon-o-document-currency-dollar')
+                    ->color('success')
+                    ->visible(fn (Quote $q) => $q->status === QuoteStatus::Accepted
+                        && ! \App\Models\Tenant\TransportInvoice::query()->where('quote_id', $q->id)->exists())
+                    ->requiresConfirmation()
+                    ->action(fn (Quote $q) => self::issueInvoice($q)),
                 Tables\Actions\Action::make('downloadPdf')
                     ->label(__('transport/quote.action.download_pdf'))
                     ->icon('heroicon-o-arrow-down-tray')
@@ -386,6 +395,44 @@ class QuoteResource extends Resource
                 ->body(__('transport/quote.notify.sent_no_customer_email', ['number' => $quote->number]))
                 ->send();
         }
+    }
+
+    /**
+     * Wystaw FV ze snapshotu accepted Quote — używa IssueTransportInvoiceFromQuote.
+     * Gating: verified tenant (FV mogą wystawiać tylko zweryfikowane firmy).
+     * Patrz docs/TRANSPORT.md (krok C2).
+     */
+    public static function issueInvoice(Quote $quote): void
+    {
+        if (! self::ensureTenantVerified()) {
+            return;
+        }
+
+        try {
+            $invoice = app(IssueTransportInvoiceFromQuote::class)->execute($quote);
+        } catch (\DomainException $e) {
+            Notification::make()
+                ->warning()
+                ->title(__('transport/quote.notify.invoice_failed'))
+                ->body($e->getMessage())
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        app(TenantAuditLogger::class)->record(
+            'transport_invoice.issued',
+            'TransportInvoice',
+            (string) $invoice->id,
+            ['number' => $invoice->number, 'quote_number' => $quote->number],
+        );
+
+        Notification::make()
+            ->success()
+            ->title(__('transport/quote.notify.invoice_issued'))
+            ->body(__('transport/quote.notify.invoice_issued_body', ['number' => $invoice->number]))
+            ->send();
     }
 
     public static function downloadPdf(Quote $quote): \Symfony\Component\HttpFoundation\StreamedResponse
