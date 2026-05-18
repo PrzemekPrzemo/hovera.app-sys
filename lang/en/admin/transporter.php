@@ -1,0 +1,55 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'navigation' => 'Transport companies',
+
+    'model' => [
+        'singular' => 'transport company',
+        'plural' => 'Transport companies',
+    ],
+
+    'form' => [
+        'section' => [
+            'identification' => 'Identification',
+            'verification' => 'Verification',
+            'verification_description' => 'The company uploads documents in their panel (/transport/transporter-documents). Review and approve or reject with a note.',
+            'subscription' => 'Subscription',
+        ],
+        'label' => [
+            'tax_id' => 'Tax ID / VAT',
+            'verification_status' => 'Status',
+            'verified_at' => 'Verified at',
+            'verification_notes' => 'Notes / reason',
+            'rejection_reason' => 'Rejection reason',
+            'plan' => 'Plan',
+        ],
+        'helper' => [
+            'verification_status' => 'Changed only by "Verify" / "Reject" actions.',
+            'verification_notes' => 'Visible to the transport company.',
+        ],
+    ],
+
+    'table' => [
+        'column' => [
+            'verification' => 'Verification',
+            'plan' => 'Plan',
+            'subscription' => 'Subscription',
+            'last_activity_at' => 'Last activity',
+            'created_at' => 'Created',
+        ],
+    ],
+
+    'action' => [
+        'verify' => 'Approve account',
+        'reject' => 'Reject account',
+    ],
+
+    'notify' => [
+        'verified' => 'Account approved',
+        'verified_body' => 'Company :name activated. They can now send quotes and invoices.',
+        'rejected' => 'Account rejected',
+        'rejected_body' => 'Company :name rejected. They received an email with the reason.',
+    ],
+];
