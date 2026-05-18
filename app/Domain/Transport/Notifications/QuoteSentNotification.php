@@ -52,6 +52,14 @@ class QuoteSentNotification extends Notification
             ]));
         }
 
+        // Link do publicznej landing page (akceptacja / odrzucenie). Wymaga
+        // accept_token (gwarantowany przez QuoteResource::sendQuote) i slug
+        // tenant'a z aktualnego kontekstu (TenantManager).
+        $acceptUrl = $this->buildAcceptUrl();
+        if ($acceptUrl !== null) {
+            $message->action(__('transport/notify_quote_sent.action_accept'), $acceptUrl);
+        }
+
         $message->line(__('transport/notify_quote_sent.outro'));
 
         return $message->attachData(
@@ -59,5 +67,18 @@ class QuoteSentNotification extends Notification
             name: $this->quote->number.'.pdf',
             options: ['mime' => 'application/pdf'],
         );
+    }
+
+    private function buildAcceptUrl(): ?string
+    {
+        $tenant = app(\App\Tenancy\TenantManager::class)->current();
+        if (! $tenant || ! $this->quote->accept_token) {
+            return null;
+        }
+
+        return route('public.transport.quote', [
+            'slug' => $tenant->slug,
+            'token' => $this->quote->accept_token,
+        ]);
     }
 }

@@ -8,5 +8,6 @@ return [
     'intro' => 'Please find attached our quote for horse transport — details below and in the PDF.',
     'summary' => 'Route :from → :to, planned date :date. Total amount: :gross :currency gross.',
     'valid_until' => 'Quote valid until :date.',
+    'action_accept' => 'View quote / Accept online',
     'outro' => 'For questions or to confirm the booking — just reply to this email. Thank you!',
 ];
