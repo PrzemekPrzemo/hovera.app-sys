@@ -1,0 +1,70 @@
+DejaVu Fonts
+============
+
+The DejaVu fonts are a font family based on the Bitstream Vera Fonts.
+Their goal is to provide a wider range of characters while maintaining
+the original look and feel through the process of collaborative
+development.
+
+Used in Hovera for offline-renderable TTF text in pre-rendered Open
+Graph images (1200x630 PNGs streamed by TransporterOgImageController).
+Bundled because servers without `fonts-dejavu` installed would otherwise
+fall back to GD's built-in bitmap glyphs, which look amateurish for
+social-share thumbnails.
+
+Files:
+  - DejaVuSans.ttf       — regular weight, used for tagline + footer
+  - DejaVuSans-Bold.ttf  — bold, used for tenant name + wordmark
+
+License (excerpt — full text at https://dejavu-fonts.github.io/License.html)
+---------------------------------------------------------------------------
+Fonts are (c) Bitstream (see below). DejaVu changes are in public domain.
+Glyphs imported from Arev fonts are (c) Tavmjong Bah (see below).
+
+Bitstream Vera Fonts Copyright
+==============================
+
+Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream
+Vera is a trademark of Bitstream, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the fonts accompanying this license ("Fonts") and associated
+documentation files (the "Font Software"), to reproduce and distribute
+the Font Software, including without limitation the rights to use,
+copy, merge, publish, distribute, and/or sell copies of the Font
+Software, and to permit persons to whom the Font Software is furnished
+to do so, subject to the following conditions:
+
+The above copyright and trademark notices and this permission notice
+shall be included in all copies of one or more of the Font Software
+typefaces.
+
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED.
+
+Arev Fonts Copyright
+====================
+
+Copyright (c) 2006 by Tavmjong Bah. All Rights Reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the fonts accompanying this license ("Fonts") and associated
+documentation files (the "Font Software"), to reproduce and distribute
+the modifications to the Bitstream Vera Font Software, including
+without limitation the rights to use, copy, merge, publish, distribute,
+and/or sell copies of the modified Font Software, and to permit persons
+to whom the Font Software is furnished to do so, subject to the
+following conditions:
+
+The above copyright and trademark notices and this permission notice
+shall be included in all copies of one or more of the Font Software
+typefaces.
+
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED.
+
+TAVMJONG BAH SHALL NOT BE LIABLE FOR ANY DAMAGES, INCLUDING ANY
+GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM OTHER
+DEALINGS IN THE FONT SOFTWARE.

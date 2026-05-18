@@ -16,15 +16,17 @@ use App\Http\Controllers\Public\LegalController;
 use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PricingController;
 use App\Http\Controllers\Public\Przelewy24Controller;
-use App\Http\Controllers\Public\QuoteAcceptanceController;
-use App\Http\Controllers\Public\TransportInquiryController;
 use App\Http\Controllers\Public\Przelewy24WebhookController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicInvoiceController;
 use App\Http\Controllers\Public\PublicSiteController;
+use App\Http\Controllers\Public\QuoteAcceptanceController;
 use App\Http\Controllers\Public\SignupController;
 use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Public\StripeWebhookController;
+use App\Http\Controllers\Public\TransporterOgImageController;
+use App\Http\Controllers\Public\TransporterProfileController;
+use App\Http\Controllers\Public\TransportInquiryController;
 use App\Http\Controllers\Tenant\BillingController;
 use App\Http\Controllers\Tenant\BugReportController;
 use App\Http\Controllers\Tenant\ImportTemplateController;
@@ -345,9 +347,22 @@ Route::middleware(['web', 'throttle:30,1'])
  * do /transport/zapytanie. Patrz docs/TRANSPORT.md §9 faza 7.
  */
 Route::middleware('web')
-    ->get('/t/{slug}', [\App\Http\Controllers\Public\TransporterProfileController::class, 'show'])
+    ->get('/t/{slug}', [TransporterProfileController::class, 'show'])
     ->where('slug', $slugRegex)
     ->name('public.transporter');
+
+/*
+ * Pre-rendered Open Graph image (1200x630 PNG) dla profilu transportera.
+ * Linkowane w <meta property="og:image"> w profile.blade.php — kiedy
+ * transporter wrzuca URL swojego profilu na FB/LinkedIn/X/Slack, unfurl
+ * pokazuje branded card z nazwą + tagline + hovera footer zamiast
+ * małego logo z pierwszego ujęcia. Patrz docs/TRANSPORT.md §9 faza 7.
+ */
+Route::middleware('web')
+    ->get('/t/{slug}/og-image.png',
+        [TransporterOgImageController::class, 'show'])
+    ->where('slug', $slugRegex)
+    ->name('public.transporter.og_image');
 
 /*
  * Publiczna akceptacja oferty transportowej. URL przesyłany w mailu z PDFem;
