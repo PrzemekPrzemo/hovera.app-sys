@@ -1,10 +1,12 @@
 # Hovera — Moduł Transportu Koni
 
-> Stan: maj 2026 · plan szczegółowy, pre-implementation
+> Stan: maj 2026 · faza 1–7 + post-MVP batch 1 wdrożone; pozostają faza 8 (testy/polish)
+> i faza 9 (płatności). Dokument jest aktualizowany na bieżąco po każdym merge'u.
 >
 > Ten dokument jest źródłem prawdy dla modułu transportu. Wszystkie decyzje produktowe
 > i architektoniczne uzgodnione z właścicielem produktu (PrzemekPrzemo) są tu spisane.
 > Faza implementacyjna powinna każdorazowo zaczynać od konsultacji odpowiedniego rozdziału.
+> Statusy ✅/🟡/⬜ w §9 są źródłem prawdy o tym co już istnieje w `main`.
 
 ---
 
@@ -251,6 +253,14 @@ listę profili publicznych (`/t/{slug}`).
   `rejected`, lead zmienia status na `accepted`, `accepted_response_id` wskazuje wybraną.
 - Transporterzy z `rejected` dostają powiadomienie „Twoja oferta nie została wybrana".
 
+**Wejście z publicznego profilu (post-MVP, PR #219).** Z formularza zapytania
+otwartego linkiem `/t/{slug}?transporter={slug}` (CTA „Zapytaj o ofertę" na profilu)
+`TransportInquiryController` automatycznie pre-fill'uje `targeted_transporter_ids =
+[{tenant_id tej firmy}]` i wymusza `mode = direct`. Pole wyboru transporterów jest
+ukryte, użytkownik widzi tylko baner „Wysyłasz zapytanie do: {nazwa firmy}".
+Lead nigdy nie trafia do nikogo innego — to jest właściwy tryb dla
+SEO-trafficu z publicznego profilu i partnerstw zewnętrznych.
+
 ### 5.2 Tryb BROADCAST
 
 Zamawiający nie wskazuje konkretnych firm. Lead jest **broadcastowany** do wszystkich
@@ -373,6 +383,19 @@ przez `Mail::build(...)` z runtime config.
 | Zamawiający (stajnia) | ✅ stable mailer (domyślny) | ✅ | ➖ |
 | Zamawiający (anonimowy) | ✅ transport mailer | ❌ | ➖ |
 
+### 6.5 Lista zaimplementowanych notyfikacji (`app/Domain/Transport/Notifications/`)
+
+| Notification | Adresat | Powód | PR |
+|---|---|---|---|
+| `LeadReceivedNotification` | transporter | dostałeś nowy lead (broadcast lub direct) | #214 |
+| `LeadClosedNotification` | transporter (przegrany) | lead zamknięty, wybrano kogoś innego | #216 |
+| `QuoteSentNotification` | zamawiający | dostałeś PDF oferty z linkiem akceptacyjnym | #201 |
+| `QuoteAcceptedNotification` | transporter (zwycięzca) | klient zaakceptował Twoją ofertę | #202 |
+| `QuoteRejectedNotification` | transporter (przegrany ofertą) | klient wybrał innego dostawcę | #216 |
+| `TransporterVerifiedNotification` | transporter | master admin zweryfikował konto | #206 |
+| `TransporterRejectedNotification` | transporter | master admin odrzucił dokumenty | #206 |
+| `TransportInvoiceSentNotification` | klient końcowy | faktura po realizacji (PDF w załączniku) | #208 |
+
 ---
 
 ## 7. Maps / routing API — analiza decyzji
@@ -486,151 +509,396 @@ Etapy:
 
 ## 9. Plan fazowy
 
-Suma: **9–11 tygodni od startu do GA**.
+Status na 2026-05-18: faza 1–7 ✅ + post-MVP batch 1 ✅. Pozostają faza 8
+(polish + testy E2E) i faza 9 (płatności).
 
-### Faza 1 — Foundations (tydzień 1–3)
+### Faza 1 — Foundations ✅ (PR #187–#194)
 
 **Cel:** transporter może się zarejestrować, dodać pojazd, ustawić stawki.
 
-- [ ] Migracja `tenants.type` + backfill (`type='stable'` dla istniejących).
-- [ ] Signup flow: krok wyboru typu tenanta.
-- [ ] `TransportPanelProvider` (Filament) → `/transport`.
-- [ ] `VehicleResource` (CRUD).
-- [ ] `TransportSettingsPage` (singleton form).
-- [ ] `DriverResource` (CRUD, podstawowy).
-- [ ] Migracja `transport_*` tabel central + per-tenant.
-- [ ] Stripe products: Solo / Pro / Fleet + gating na `vehicles` count.
+- [x] Migracja `tenants.type` + backfill (`type='stable'` dla istniejących) — PR #187.
+- [x] Signup flow: krok wyboru typu tenanta — PR #194.
+- [x] `TransportPanelProvider` (Filament) → `/transport` — PR #188.
+- [x] `VehicleResource` (CRUD) — PR #189.
+- [x] `TransportSettings` (singleton page) — PR #190.
+- [x] `DriverResource` (CRUD) — PR #191.
+- [x] Migracja `transport_*` tabel central + per-tenant — PR #192.
+- [x] Stripe products: Solo / Pro / Fleet + gating na `vehicles`/`drivers` count — PR #193.
 
-**Demo na koniec:** rejestrujesz się jako transporter, logujesz, dodajesz pojazd, ustawiasz stawki, masz subskrypcję.
-
-### Faza 2 — Calculator + Routing (tydzień 3–4)
+### Faza 2 — Calculator + Routing ✅ (PR #195–#198)
 
 **Cel:** transporter potrafi wycenić trasę z mapą.
 
-- [ ] `RoutingProvider` interfejs + 3 implementacje (ORS, Google, Mapbox).
-- [ ] `RoutingService` z plan-aware selection.
-- [ ] `route_cache` tabela + invalidation.
-- [ ] `FuelPriceService` (scraper e-petrol + cache + manual override).
-- [ ] `CalculatorService` (km × stawka + paliwo + opłaty + VAT).
-- [ ] UI kalkulatora w panelu (Filament action) z preview mapy.
+- [x] `RoutingProvider` interfejs + 3 implementacje (ORS, Google, Mapbox) — PR #195.
+- [x] `RoutingService` z plan-aware selection + `route_cache` — PR #195.
+- [x] `FuelPriceService` (scraper e-petrol + cache + manual override) — PR #196.
+- [x] `CalculatorService` (km × stawka + paliwo + opłaty + VAT) — PR #197.
+- [x] UI kalkulatora w panelu (Filament action) z geocodingiem Mapbox — PR #198.
 
-**Demo:** wpisujesz Warszawa → Kraków, widzisz trasę na mapie, wycenę 1480 zł netto.
-
-### Faza 3 — Quotes + PDF + Email (tydzień 4–5)
+### Faza 3 — Quotes + PDF + Email ✅ (PR #199–#202)
 
 **Cel:** transporter wystawia ofertę, klient dostaje PDF mailem.
 
-- [ ] `QuoteResource` (Filament).
-- [ ] `QuoteNumberGenerator` (OF/YYYY/MM/NNNN, per tenant).
-- [ ] Generator PDF (mPDF, branded template).
-- [ ] Notyfikacja `QuoteSentNotification` (osobny mailer `transport`).
-- [ ] Workflow: draft → sent → accepted/rejected.
+- [x] `QuoteResource` (Filament) + Save-as-quote z kalkulatora — PR #200.
+- [x] `QuoteNumberGenerator` (OF/YYYY/MM/NNNN, per tenant) — PR #199.
+- [x] Generator PDF (`QuotePdfGenerator`) + osobny SMTP transport — PR #201.
+- [x] Publiczna akceptacja oferty (signed URL z maila) + notyfikacje zwrotne — PR #202.
 
-**Demo:** generujesz ofertę, klient dostaje mail z PDF, klika „akceptuję".
+### Faza 3.5 — Verification + Admin + Invoices + API config + Dashboard v1 ✅ (PR #203–#210)
 
-### Faza 4 — Migracja istniejącego klienta (tydzień 5–6)
+Wewnętrznie nazwana „kroki A–E z feedbacku produkcyjnego" — wpadła między
+fazą 3 a 4 jako warunek koniecznym do startu marketplace.
 
-**Cel:** klient od kalkulatora działa w hoverze.
+- [x] Verification data layer + UI + gating wysyłki przed weryfikacją — PR #203–#205.
+- [x] Master admin `TransporterResource` (verify/reject + impersonation) — PR #206.
+- [x] `TransportInvoice` data layer + IssueFromQuote + Filament UI + PDF + email — PR #207–#208.
+- [x] „Test API key" button w `TransportSettings` (probe ORS/Mapbox/Google) — PR #209.
+- [x] Dashboard v1 (KPI + top FV + korytarze + transporty) — PR #210.
+
+### Faza 4 — Migracja istniejącego klienta ⬜ (odsunięta na po GA)
+
+Po feedbacku produkcyjnym przesunięta: najpierw GA marketplace'u, dopiero potem
+przenosimy płacącego klienta starego kalkulatora. Plan §8 pozostaje aktualny.
 
 - [ ] `transport:import-legacy` artisan command.
 - [ ] Faktyczna migracja (T-0 z planu §8.3).
 - [ ] Stary URL → 301 redirect.
 
-**Demo:** klient loguje się w hoverze, widzi swoje stare oferty, kontynuuje pracę.
+### Faza 5+6 — Service areas + Favorites + Lead marketplace ✅ (PR #211–#216)
 
-### Faza 5 — Service areas + Favorites (tydzień 6–7)
+**Cel:** zapytania trafiają do transporterów, transporter odpowiada ofertą.
 
-**Cel:** mapa obsługi + ulubieni transporterzy.
+- [x] Service areas UI dla transportera (multi-select województw) — PR #211.
+- [x] `transport_favorites` UI (gwiazdki w stable panelu) — PR #212.
+- [x] Publiczny formularz `/transport/zapytanie` (PL/EN/DE/FR/RU) — PR #213.
+- [x] `LeadDispatcher` (broadcast/direct routing + email do transporterów) — PR #214.
+- [x] `LeadResource` (inbox transportera) + akcja „Odpowiedz ofertą" — PR #215.
+- [x] `QuoteAcceptanceService` (1 accept → reject reszty + `LeadClosedNotification`) — PR #216.
 
-- [ ] `TransportServiceAreasPage` (klikalna mapa PL, multi-select).
-- [ ] `transport_favorites` UI (w panelu stajni: „zobacz transporterów" → gwiazdka).
-- [ ] Adjacency config (`config/transport.php`).
+### Faza 7 — Public profile `/t/{slug}` ✅ (PR #217)
 
-**Demo:** stajnia oznacza 3 ulubionych transporterów, każdy z nich ma ustawione 4 województwa.
+**Cel:** transporter ma stronę-wizytówkę indeksowalną przez Google.
 
-### Faza 6 — Public form + Lead marketplace (tydzień 7–8)
+- [x] `TransporterProfileController` + view `public/transport/profile.blade.php`.
+- [x] i18n PL/EN/DE/FR/RU (`lang/*/public/transporter_profile.php`).
+- [x] Renderuje tylko transporterów `verified_at != null` (404 inaczej).
+- [x] SEO meta + schema.org/LocalBusiness + canonical.
 
-**Cel:** zapytania trafiają do transporterów.
+### Faza 7.5 — post-MVP batch 1 ✅ (PR #218–#221)
 
-- [ ] `transport_leads` + `transport_lead_dispatch` + `transport_lead_responses` (central).
-- [ ] Public form `/transport/zapytanie` (PL/EN/DE).
-- [ ] Logged-in flow w portalu stajni: button na karcie konia „Zamów transport".
-- [ ] `LeadDispatcher` (logika direct vs broadcast, §5).
-- [ ] `LeadResource` (inbox transportera).
-- [ ] `QuoteAcceptanceService` (akceptacja → rejection pozostałych).
-- [ ] Anonimowy acceptance token (link w mailu).
-- [ ] Notyfikacje: `LeadReceivedNotification`, `QuoteAcceptedNotification` (rejected do reszty).
+Drobne, ale ważne dla early-traction features. Wszystkie wdrożone bez bumpa
+zakresu fazy 8.
 
-**Demo:** anonimowy klient z formularza → mail do 8 transporterów w mazowieckim → 3 oferty → klient wybiera jedną → 2 inne dostają „nie wybrano".
+| PR | Co | Pliki kluczowe |
+|---|---|---|
+| #218 | **Sitemap + robots.** `/sitemap.xml` (lista zweryfikowanych profili `/t/` i publicznych stajni `/s/`) oraz `/robots.txt` z `Sitemap:` directive. | `SitemapController`, `public.sitemap.blade.php` |
+| #219 | **Direct lead z profilu.** `/t/{slug}` → CTA „Zapytaj o ofertę" otwiera `/transport/zapytanie?transporter={slug}`, formularz pre-fill'uje cel i wymusza `mode=direct`. | `TransportInquiryController` (extended), `inquiry.blade.php` |
+| #220 | **OG image 1200×630.** `/t/{slug}/og-image.png` — pre-rendered grafika do social share'ów. Plain GD + bundled DejaVu Sans (bez node, bez headless chrome). Cache 24h. | `TransporterOgImageController`, `resources/fonts/DejaVu*.ttf` |
+| #221 | **Mini-dashboard v2** — 4 nowe widgety dorzucone do `TransportDashboardService`: `LeadsKpiWidget` (leady tygodniowo + win rate 30d), `UpcomingTransportsWeekWidget` (kalendarz 7 dni), `TopPaidInvoicesWidget` (best FV 90d), `RoutesHeatmapWidget` (najczęstsze trasy). | `app/Filament/Transport/Widgets/*Widget.php`, `dashboard.php` i18n |
 
-### Faza 7 — Public mini-page `/t/{slug}` (tydzień 8–9)
+### Faza 8 — Polish + Tests + Help center 🟡 (in progress)
 
-**Cel:** transporter ma stronę-wizytówkę.
+**Cel:** GA-ready, w tym kompletny help center dla transporterów.
 
-- [ ] `transporter_profiles` tabela + Filament edytor.
-- [ ] Public route `/t/{slug}` z SEO meta + schema.org/LocalBusiness.
-- [ ] Galeria pojazdów + opis + obszar + CTA do zapytania (z pre-filled `targeted_transporter_ids`).
+- [x] Tłumaczenia PL/EN/DE/FR/RU dla wszystkich publicznych view'ów i notyfikacji.
+- [x] Dokumentacja per-rola transporter w `resources/help/{locale}/transporter.md` (PL/EN — full, DE/FR/RU — machine-translated, flagged for native review).
+- [ ] Mobile responsive review (smoke pass na 360px / 768px / 1280px).
+- [ ] Feature tests E2E: lead → response → acceptance → invoice → email delivery.
+- [ ] Smoke test prod: 5 prawdziwych zapytań → 5 ofert → 5 akceptacji.
+- [ ] Audit log review (wszystkie state transitions na `transport_leads` / `transport_lead_responses`).
 
-**Demo:** wpisujesz `/t/firma-xyz`, widzisz profil, klikasz „zapytaj o ofertę", lead idzie tylko do tej firmy.
+### Faza 9 — Płatności ⬜ (post-MVP, zakres do uzgodnienia)
 
-### Faza 8 — Polish + i18n + Tests (tydzień 9–10)
+Kandydaci (patrz §14 dla rekomendacji):
 
-**Cel:** GA-ready.
-
-- [ ] Tłumaczenia PL/EN/DE/FR/RU (kontynuacja istniejącego i18n).
-- [ ] Mobile responsive UI dla publicznego formularza.
-- [ ] Feature tests dla `LeadDispatcher`, `QuoteAcceptanceService`, `CalculatorService`.
-- [ ] Dokumentacja per-rola (transporter w `resources/help/{locale}/transporter.md`).
-- [ ] Smoke test: 5 prawdziwych zapytań → 5 prawdziwych ofert → 5 prawdziwych akceptacji.
-
-**Demo:** publiczna premiera.
-
-### Faza 9 — Płatności (poza zakresem MVP, tydzień 11+)
-
-Stripe / Przelewy24 dla wpłat zaliczki i finalnej. Faktura draft po akceptacji.
-KSeF integracja przez billu.pl (już zaplanowana w głównym hovera-spec).
+- Stripe Connect Express (Hovera = platform, transporter = connected MoR).
+- Lub: direct charge do transportera (Hovera tylko jako saas, no payment middleware).
+- KSeF per-transporter (transporter-as-issuer, hovera passthrough).
+- Faktura draft generowana auto po akceptacji oferty.
 
 ---
 
 ## 10. Otwarte pytania / decyzje do podjęcia później
 
-| # | Pytanie | Kiedy decydujemy |
-|---|---|---|
-| OP1 | Ile dni triala dla transportera? (Stajnia ma 30 dni — czy tak samo?) | Przed fazą 1 |
-| OP2 | Czy plan Solo dostaje marketplace, czy tylko płatne plany? | Przed fazą 6 |
-| OP3 | Czy ulubionych może być max 5 czy bez limitu? | Przed fazą 5 |
-| OP4 | Czy w trybie broadcast widać liczbę powiadomionych transporterów dla zamawiającego? (transparentność vs anti-anchoring) | Przed fazą 6 |
-| OP5 | Czy oferty mają konkretny czas ważności (np. 48h od wysłania) niezależny od `expires_at` leadu? | Przed fazą 3 |
-| OP6 | Trasy międzynarodowe (DE/CZ/SK/LT) — czy w MVP czy faza późniejsza? | Przed fazą 2 |
-| OP7 | Reviews/opinie transporterów — kiedy włączamy? | Po GA |
-| OP8 | Verification badge (Hovera-Verified) — kryteria? | Po GA |
+| # | Pytanie | Status | Decyzja |
+|---|---|---|---|
+| OP1 | Ile dni triala dla transportera? | ✅ | 14 dni (krócej niż stajnia — transporter szybciej waliduje wartość przez pierwszy lead). |
+| OP2 | Czy plan Solo dostaje marketplace? | ✅ | TAK — wszystkie plany mają marketplace, różnica w limitach pojazdów/kierowców i routing API. |
+| OP3 | Czy ulubionych może być max 5 czy bez limitu? | ✅ | Max 5 (egzekwowane w `TransportFavoriteManager`). |
+| OP4 | Czy w trybie broadcast widać liczbę powiadomionych transporterów? | ✅ | NIE pokazujemy w UI zamawiającego — anti-anchoring. Liczbę zna tylko master admin (`transport_lead_dispatch`). |
+| OP5 | Czas ważności oferty niezależny od leadu? | 🟡 | Aktualnie oferta żyje tyle co lead (`expires_at`). Reopen w razie sygnału od UX. |
+| OP6 | Trasy międzynarodowe (DE/CZ/SK/LT) | ⬜ | Post-MVP — patrz §14. PL-only w MVP. |
+| OP7 | Reviews/opinie transporterów | ⬜ | Post-MVP — patrz §14 i §12 (marketplace positioning: reviews = real reviews bo nie wykonujemy transportu). |
+| OP8 | Verification badge (Hovera-Verified) — kryteria | ✅ | Zaimplementowane przez `verified_at` na `Tenant`, kryteria w `app/Domain/Transport/Verification/` — master admin verify/reject na podstawie uploadowanych dokumentów (OC przewoźnika, licencja, NIP). |
 
 ---
 
 ## 11. Zależności od reszty Hovery
 
-| Co | Czy istnieje | Kiedy potrzebne |
+| Co | Status | Notatka |
 |---|---|---|
-| `User` + `TenantMembership` + tenant switcher | ✅ działa | od fazy 1 |
-| Stripe billing | ✅ działa | faza 1 (nowe produkty) |
-| Filament Panels | ✅ działa | faza 1 (nowy `PanelProvider`) |
-| i18n stack | ✅ działa | każda faza |
-| FCM push | ✅ działa | faza 6 (notyfikacje leadów) |
-| KSeF / billu.pl | 🟡 częściowo | faza 9 (płatności) |
-| Audit log | ✅ działa | każda faza |
+| `User` + `TenantMembership` + tenant switcher | ✅ działa | używane od fazy 1, multi-tenancy dla osoby która ma i stajnię i transport. |
+| Stripe billing | ✅ działa | produkty Solo/Pro/Fleet wdrożone w PR #193 z gatingiem `vehicles`/`drivers`. |
+| Filament Panels | ✅ działa | `TransportPanelProvider` (PR #188) wyłączony per `tenants.type`. |
+| i18n stack (PL/EN/DE/FR/RU) | ✅ działa | wszystkie 5 lokali pokryte we wszystkich publicznych view'ach i notyfikacjach. |
+| FCM push | ✅ działa | używane przez `LeadReceivedNotification` (faza 6). |
+| Audit log | ✅ działa | wpisy z `TransporterResource::verify/reject`, `QuoteAcceptanceService`, `LeadDispatcher`. |
+| Routing API (ORS / Mapbox / Google) | ✅ działa | 3 providery zaimplementowane (`app/Domain/Transport/Routing/Providers/`), plan-gated, „Test API key" probe w settings. |
+| Mapbox geocoding | ✅ działa | używane w kalkulatorze do autocomplete'u adresów. |
+| Help center publiczny | ✅ działa | `/help/{persona}` (PR #182). Po fazie 8 doklejamy persona `transporter` (osobny markdown — patrz §13). |
+| Sitemap / robots | ✅ działa | `/sitemap.xml` + `/robots.txt` z directive `Sitemap:`. Indeksuje `/t/{slug}` i `/s/{slug}`. |
+| KSeF / billu.pl | 🟡 częściowo | faktury stajni już idą przez KSeF. Per-transporter — odsunięte do fazy 9 (patrz §14). |
+| Stripe Connect | ⬜ | nie ma — kandydat do fazy 9 (patrz §14, rekomendacja: Express). |
 
 ---
 
-## 12. Pierwsze konkretne kroki (gdy ruszamy)
+## 12. Marketplace positioning — Hovera ≠ firma transportowa
 
-1. **Stworzyć migrację `2026_XX_XX_add_type_to_tenants.php`** z backfill.
-2. **Dodać `TransportPanelProvider`** + zarejestrować w `bootstrap/providers.php`.
-3. **Stworzyć skeleton `app/Domain/Transport/`** z pustymi serwisami.
-4. **Rozszerzyć signup form** (resources/views/auth lub Filament) o krok typu tenanta.
-5. **Pierwszy PR draftowy** z kafelkiem „Czy chcesz prowadzić firmę transportową?"
-   w `/app/onboarding` — żeby zwalidować flow zanim zbudujemy resztę.
+To jest fundament prawny i produktowy całego modułu. **Każda kolejna decyzja
+(KSeF, płatności, reviews, międzynarodowe trasy) wypada z tego rozdziału.**
+
+### 12.1 Stwierdzenie pozycji
+
+> **Hovera jest dostawcą SaaS i pośrednikiem marketplace'owym, NIE firmą transportową.**
+> Hovera nie przewozi koni, nie posiada pojazdów, nie zatrudnia kierowców, nie
+> wystawia faktur za usługę transportową. Hovera **łączy** zamawiających
+> z przewoźnikami i dostarcza im narzędzia (panel, kalkulator, oferty, faktury,
+> profil publiczny). Punkt.
+
+### 12.2 Trójkąt prawny
+
+```
+  ┌──────────────┐                                  ┌─────────────────┐
+  │  Zamawiający │ ◀── umowa transportu (B2B/B2C) ─▶│   Transporter   │
+  │  (klient)    │                                  │   (firma X)     │
+  └──────┬───────┘                                  └────────┬────────┘
+         │                                                   │
+         │    obsługa pośrednictwa (free dla zamawiającego)  │  subskrypcja SaaS
+         │                                                   │  (+ przyszła prowizja)
+         ▼                                                   ▼
+        ┌──────────────────────────────────────────────────────────┐
+        │                    Hovera (Hovera sp. z o.o.)            │
+        │   ↳ platforma, marketplace, narzędzia, brand, security   │
+        └──────────────────────────────────────────────────────────┘
+```
+
+**Umowa transportowa = strict bilateralna: zamawiający ↔ transporter.**
+Hovera nie jest stroną tej umowy. Hovera dostarcza tylko software'ową
+infrastrukturę, w której ta umowa jest zawierana (formularz, oferta, akceptacja
+przez signed URL, kalendarz, PDF, faktura).
+
+### 12.3 Model przychodów
+
+| Strumień | Status | Komu fakturujemy |
+|---|---|---|
+| Subskrypcja SaaS od transporterów (Solo/Pro/Fleet) | ✅ MVP | Transporter (B2B, NIP, Stripe) |
+| Subskrypcja SaaS od stajni (Starter/Pro/Multi) | ✅ od początku Hovery | Stajnia |
+| Prowizja od skutecznych deali | ⬜ post-MVP | Transporter (% od `transport_lead_response.price_net` zaakceptowanej) |
+| Sponsorowane pozycje na liście profili / reklamy „Wyróżnij profil" | ⬜ post-MVP | Transporter |
+| Payment processing fee (jeśli włączymy Stripe Connect) | ⬜ post-MVP | Transporter (% od transakcji + flat fee) |
+
+**Co fakturuje TRANSPORTER (nie Hovera):**
+
+- Usługa transportu konia zamawiającemu (faktura VAT z NIPem transportera, jego
+  numeracja, wystawiana w `TransportInvoiceResource`).
+- Faktury idą przez KSeF transportera (post-MVP, faza 9 — patrz §14).
+
+### 12.4 Podział odpowiedzialności
+
+| Obszar | Odpowiada Transporter | Odpowiada Hovera |
+|---|---|---|
+| Stan techniczny pojazdu, OC przewoźnika, licencja, badania | ✅ pełna odpowiedzialność | sprawdzamy dokumenty przy onboardingu (verify), nie aktualizujemy ich |
+| Bezpieczeństwo transportu (warunki w pojeździe, kompetencje kierowcy, plan trasy) | ✅ pełna odpowiedzialność | — |
+| Realizacja umowy z zamawiającym (terminy, jakość, reklamacje) | ✅ pełna odpowiedzialność | mediacja dobrowolna, brak SLA |
+| Wystawienie faktury VAT / paragonu | ✅ pełna odpowiedzialność (swoim NIPem, swoją numeracją, swoim KSeF-em) | dajemy tylko narzędzie (`TransportInvoiceResource`) |
+| Roszczenia za szkodę w transporcie | ✅ Konwencja CMR + OC przewoźnika | — |
+| Compliance RODO względem danych zamawiającego (dane konia, kontakt) | współ-administrator (po przyjęciu leadu) | współ-administrator (do momentu przekazania leadu) |
+| Dostępność platformy (uptime), security, backupy danych | — | ✅ |
+| Aktualność danych w profilu publicznym, treść opisu | ✅ | moderacja przy verify, brak ciągłej weryfikacji |
+| Brand i reputacja marketplace'u | współ | ✅ (zasady, ban, weryfikacja) |
+
+### 12.5 Konsekwencje dla decyzji produktowych
+
+To pozycjonowanie **wymusza** następujące decyzje (na które będziemy się
+powoływać w kolejnych pracach):
+
+1. **KSeF = per-transporter.** Hovera nie wystawia faktur za transport — to robi
+   transporter. Integracja KSeF w fazie 9 dotyczy *jego* numeracji, *jego*
+   NIPu, *jego* tokenów. Hovera robi tylko passthrough (signal API + UI w
+   `TransportInvoiceResource`).
+2. **Płatności = direct charge lub Stripe Connect z transporterem jako MoR.**
+   Hovera nie inkasuje pieniędzy w swoje imię za transport. Jeśli włączymy
+   Stripe (post-MVP), to przez Connect Express — transporter jest Merchant of
+   Record, Hovera tylko orchestruje + ściąga prowizję.
+3. **Reviews = real reviews.** Nie wstydzimy się ich, bo nie wykonujemy
+   transportu — opinie dotyczą *transportera*, nie Hovery. Włączamy bez ryzyka
+   reputacyjnego dla nas.
+4. **Reklamacje = bezpośrednio do transportera.** Mamy tylko mediation tool
+   (kanał kontaktu), nie centralę reklamacyjną. Klauzula w regulaminie
+   marketplace'u: „Hovera może wspomóc mediację, ale nie jest stroną umowy
+   transportu".
+5. **Ban / rejection = nasze prawo, nie obowiązek.** Hovera **nie ma SLA na
+   weryfikację** ani na odrzucenie — to discretionary, master admin tool.
+
+### 12.6 Linki referencyjne
+
+- `/regulamin` — regulamin świadczenia usługi SaaS (Hovera ↔ tenant).
+- `/regulamin-marketplace` — regulamin marketplace'u (zamawiający ↔ transporter,
+  Hovera jako pośrednik). **TODO post-MVP** — równoległa praca w branchu
+  `claude/transport-legal-intermediary`. Do czasu wdrożenia: relewantne klauzule
+  trafiają tymczasowo do `/regulamin` § „Marketplace transportu".
+- `/polityka-prywatnosci` — RODO art. 13 (oba kierunki).
+- `/dpa` — RODO art. 28 (współ-administrowanie danymi zamawiającego między
+  Hoverą a transporterem).
 
 ---
 
-> **Status dokumentu:** v1.0 — gotowy do startu fazy 1.
-> Każda zmiana decyzji produktowej (§2) musi być tu odnotowana wraz z datą i powodem.
+## 13. Master admin — co jest w `/admin` dla transporterów
+
+Master admin (`/admin`, gated po `is_master_admin = true`) ma pełen wgląd
+i sterowanie nad transporterami w central DB. Trzy główne resource'y:
+
+### 13.1 `TransporterResource` (PR #206)
+
+`app/Filament/Admin/Resources/TransporterResource.php` — Eloquent query
+scope'owany do `tenants.type = transporter`. Funkcje:
+
+- **List view:** wszyscy transporterzy z kolumną statusu (`pending` /
+  `verified` / `rejected`), sort by `verified_at`, filter by status.
+- **Verify action:** ustawia `verified_at = now()`, wysyła
+  `TransporterVerifiedNotification`, wpis w audit log z `action =
+  transporter.verify`.
+- **Reject action:** modal z polem `reason`, ustawia `verified_at = null`
+  + zapisuje powód, wysyła `TransporterRejectedNotification`.
+- **Impersonation:** master admin może wejść w panel `/transport` jako dany
+  transporter (przez istniejący `ImpersonationController`) — dla supportu
+  i debug.
+
+### 13.2 `TenantResource` (audience filter)
+
+Bazowa lista wszystkich tenantów (stajnie + transporterzy) z filtrem
+`type` w toolbarze — kliknięcie filtra przełącza widok między „stajnie"
+i „transporterzy". To samo źródło danych, inny perspektywa.
+
+### 13.3 `PlanResource`
+
+Plany Stripe (stajnia: Starter/Pro/Multi; transporter: Solo/Pro/Fleet)
+z badge'em `audience` ∈ `stable` / `transporter`. Master admin może
+dodać nowy plan dla wybranej grupy bez wycieku do drugiej.
+
+### 13.4 `InvitationResource` (filtered)
+
+Filtr po `tenant.type` — admin widzi osobno zaproszenia czekające
+w stajniach vs w transporterach.
+
+### 13.5 Co NIE jest w master adminie
+
+- Master admin **nie widzi treści ofert ani leadów per-tenant** (privacy
+  by default). Dostęp tylko do agregatów (liczba leadów / liczba ofert
+  per transporter) przez `MasterStatsWidget`.
+- Master admin **nie może wystawić faktury** za transportera (to by
+  złamało §12.4 — KSeF per-transporter).
+- Master admin **nie inkasuje płatności** — Stripe jest między klientem
+  a transporterem (subscription billing) bezpośrednio.
+
+---
+
+## 14. Co dalej (post-MVP, ordered)
+
+Lista priorytetów po fazie 8. Każda pozycja ma uzasadnienie biznesowe; kolejność
+odzwierciedla relację „koszt budowy ↔ wpływ na konwersję/retencję".
+
+### 14.1 KSeF integracja per-transporter
+
+**Co:** transporter podpina swój KSeF (token autoryzacyjny w
+`transport_settings.ksef_*`), Hovera w `TransportInvoiceResource` wysyła
+faktury w jego imieniu (passthrough). Numer faktury = numeracja transportera,
+NIP wystawcy = NIP transportera.
+
+**Dlaczego priorytet 1:** w PL od 1 lutego 2026 KSeF jest **obowiązkowy dla
+B2B**. Bez tego transporterzy nie mogą legalnie fakturować po fazie 8.
+
+**Estymata:** 2–3 tygodnie. Bazujemy na istniejącym `app/Domain/Ksef/`
+(używanym dla faktur stajni / hovery).
+
+### 14.2 Reviews / opinie transporterów
+
+**Co:** po `accepted` leadzie, zamawiający dostaje link do oceny (1–5 + opis),
+opinia idzie na publiczny profil `/t/{slug}`.
+
+**Dlaczego priorytet 2:** dramatycznie zwiększa konwersję anonimowego ruchu
+z SEO (osoby trafiające na profil widzą social proof). Bezpieczne dla nas,
+bo §12 — Hovera nie wykonuje transportu, opinie są o transporterze.
+
+**Estymata:** 1–2 tygodnie. Schema: `transport_reviews` (central, 1:1 z
+`transport_leads` po `accepted`).
+
+### 14.3 Płatności — Stripe Connect Express
+
+**Rekomendacja:** Stripe Connect **Express** (nie Standard, nie Custom).
+
+**Dlaczego Express:**
+
+- **Hovera = platform**, **transporter = connected MoR.** Pieniądze nigdy
+  nie przechodzą przez Hovera balance — direct flow od klienta do
+  transportera. Z §12 — Hovera nie inkasuje za transport.
+- **Onboarding minimalny.** Stripe-hosted KYC, ~5 minut z UI transportera.
+  Express bierze KYC na siebie (compliance Stripe, nie nasze).
+- **Prowizja jako `application_fee_amount`.** Auto-deduct od każdej
+  transakcji — to jest nasz przychód z prowizji (§12.3).
+- **Wypłaty transportera = direct na jego konto bankowe.** Bez middleware
+  bookkeeping po naszej stronie.
+
+**Alternatywa rozważona i odrzucona:** direct charge bez Connect. Łatwiej
+zbudować, ale prowizja musiałaby być fakturowana osobno post-fact, plus
+nie skaluje się gdy dojdzie subscription pricing per-transakcja.
+
+**Estymata:** 3–4 tygodnie (Connect onboarding + payment flow w
+`transport_lead_responses` + reconciliation).
+
+### 14.4 Trasy międzynarodowe (DE / CZ / SK / LT)
+
+**Co:** rozszerzenie `voivodeship_adjacency` na regiony zagraniczne,
+i18n routing (de.hovera.app/transport/anfrage), Vat-OSS / reverse charge
+w fakturach, walidacja licencji przewozowej UE.
+
+**Dlaczego priorytet 4:** największy unlock TAM, ale wymaga prawnego
+rozeznania per-jurysdykcja (RODO różnie interpretowane w DE, FR ma
+swój COVOA).
+
+**Estymata:** 4–6 tygodni; może być rozłożone po krajach (DE first, bo
+~40% niemieckich stajni już mówi po polsku z naszymi klientami z LZ).
+
+### 14.5 Sponsored placements / reklama wewnątrz marketplace'u
+
+**Co:** transporter płaci miesięczny boost żeby być wyżej w wynikach
+wyszukiwania `/transport` lub żeby mieć badge „Polecany" na profilu.
+
+**Dlaczego priorytet 5:** dodatkowy strumień przychodów, ale wymaga
+że marketplace ma już krytyczną masę (>100 aktywnych transporterów),
+inaczej nie ma o co konkurować.
+
+### 14.6 Driver app (mobile)
+
+**Co:** osobna mobile-first webview / PWA dla kierowców
+(`/driver/{token}`) — zlecenie, dane konia, telefon do stajni,
+podpis odbioru i dostawy, photo upload.
+
+**Dlaczego priorytet 6:** Fleet plan unlock — bez tego transporter z 5+
+kierowcami musi mailem rozsyłać zlecenia. Ważne dla retention klientów
+z planu Fleet.
+
+**Estymata:** 3 tygodnie.
+
+### 14.7 Audit log review + monitoring
+
+Niżej priorytetowe, ale do zaplanowania: dashboard master admina z
+queries po `audit_logs.action IN ('transporter.verify', 'lead.dispatch',
+'quote.accept')` — alerting na anomalie (np. 1 transporter akceptuje
+80% leadów = możliwy sock-puppeting).
+
+---
+
+> **Status dokumentu:** v2.0 — odzwierciedla faktyczny stan modułu po PR #211–#221
+> (2026-05-18). Aktualizacja: każda zmiana decyzji w §2 lub §12 → wpis w `git log`
+> z prefixem `docs(transport):`.
