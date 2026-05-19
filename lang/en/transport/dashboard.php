@@ -3,6 +3,48 @@
 declare(strict_types=1);
 
 return [
+    'navigation' => 'Home',
+    'title' => 'Transport panel',
+
+    'hero' => [
+        'primary_badge' => 'Main',
+        'calculator' => [
+            'title' => 'Quote a route',
+            'body' => 'Calculator: addresses → distance → fuel cost → full quote ready to send to the customer.',
+        ],
+        'leads' => [
+            'title' => 'Inquiry inbox',
+            'body_empty' => 'New customer inquiries will appear here — we will also send an email.',
+            'body_with_count' => '{1} :count new inquiry waiting.|[2,*] :count new inquiries waiting.',
+        ],
+        'quotes' => [
+            'title' => 'Sent quotes',
+            'body_empty' => 'Your quotes sent to customers. Calculator "Save as quote" lands them here.',
+            'body_with_count' => '{1} :count quote awaiting customer decision.|[2,*] :count quotes awaiting customer decision.',
+        ],
+        'invoices' => [
+            'title' => 'Invoices',
+            'body_empty' => 'Issued VAT invoices. KSeF integration ready — send with one click.',
+            'body_with_amount' => 'Unpaid: :amount. Check receivables.',
+        ],
+    ],
+
+    'onboarding' => [
+        'heading' => '🎯 Account setup',
+        'intro' => 'Before customers can see your offers, complete the items below. '
+            .'LeadDispatcher skips carriers without verification or vehicles.',
+        'step' => [
+            'verify' => 'Verify PWL documents',
+            'verified' => 'Documents verified',
+            'add_vehicle' => 'Add your first vehicle',
+            'vehicles_done' => 'Vehicle added',
+            'add_driver' => 'Add your first driver',
+            'drivers_done' => 'Driver added',
+            'set_service_areas' => 'Set service areas (provinces)',
+            'service_areas_done' => 'Service areas set',
+        ],
+    ],
+
     'kpi' => [
         'mrr_month' => 'Revenue this month',
         'mrr_month_desc' => 'Paid invoices since start of month.',

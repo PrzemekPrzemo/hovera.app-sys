@@ -3,6 +3,48 @@
 declare(strict_types=1);
 
 return [
+    'navigation' => 'Panel główny',
+    'title' => 'Panel transportu',
+
+    'hero' => [
+        'primary_badge' => 'Najważniejsze',
+        'calculator' => [
+            'title' => 'Wyceń trasę',
+            'body' => 'Kalkulator: adresy → odległość → koszt paliwa → pełna wycena gotowa do wysłania klientowi.',
+        ],
+        'leads' => [
+            'title' => 'Inbox zapytań',
+            'body_empty' => 'Nowe zapytania od klientów pojawią się tutaj — powiadomimy też mailem.',
+            'body_with_count' => '{1} :count nowe zapytanie czeka na odpowiedź.|[2,4] :count nowe zapytania czekają na odpowiedź.|[5,*] :count nowych zapytań czeka na odpowiedź.',
+        ],
+        'quotes' => [
+            'title' => 'Wysłane oferty',
+            'body_empty' => 'Twoje oferty wysłane do klientów. Z kalkulatora „Zapisz jako oferta" trafiają tu.',
+            'body_with_count' => '{1} :count oferta czeka na decyzję klienta.|[2,4] :count oferty czekają na decyzję klienta.|[5,*] :count ofert czeka na decyzję klienta.',
+        ],
+        'invoices' => [
+            'title' => 'Faktury',
+            'body_empty' => 'Wystawione faktury VAT. KSeF integration gotowa — wyślij jednym kliknięciem.',
+            'body_with_amount' => 'Nieopłacone: :amount. Sprawdź należności.',
+        ],
+    ],
+
+    'onboarding' => [
+        'heading' => '🎯 Konfiguracja konta',
+        'intro' => 'Zanim klienci zaczną widzieć Twoje oferty, uzupełnij poniższe. '
+            .'LeadDispatcher pomija transporterów bez weryfikacji lub bez pojazdów.',
+        'step' => [
+            'verify' => 'Zweryfikuj dokumenty PWL',
+            'verified' => 'Dokumenty zweryfikowane',
+            'add_vehicle' => 'Dodaj pierwszy pojazd',
+            'vehicles_done' => 'Pojazd dodany',
+            'add_driver' => 'Dodaj pierwszego kierowcę',
+            'drivers_done' => 'Kierowca dodany',
+            'set_service_areas' => 'Ustaw obszary działania (województwa)',
+            'service_areas_done' => 'Obszary działania ustawione',
+        ],
+    ],
+
     'kpi' => [
         'mrr_month' => 'Przychody bieżący miesiąc',
         'mrr_month_desc' => 'Zapłacone faktury (od początku miesiąca).',

@@ -6,6 +6,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Profile;
 use App\Filament\Transport\Pages\Calculator;
+use App\Filament\Transport\Pages\TransportDashboard;
 use App\Filament\Transport\Widgets\LeadsKpiWidget;
 use App\Filament\Transport\Widgets\PendingInvoicesWidget;
 use App\Filament\Transport\Widgets\RoutesHeatmapWidget;
@@ -97,7 +98,11 @@ class TransportPanelProvider extends PanelProvider
                 // ale wybrane pages chcemy mieć z pewnym slotem w sidebarze
                 // (Dashboard jako home + Calculator jako kluczowy CTA dla
                 // transportera) niezależnie od kolejności auto-discovery.
-                Pages\Dashboard::class,
+                //
+                // TransportDashboard (custom) zastępuje domyślny
+                // Pages\Dashboard — pokazuje hero CTA grid + onboarding
+                // checklist + wszystkie zarejestrowane widgety poniżej.
+                TransportDashboard::class,
                 Calculator::class,
                 Profile::class,
             ])
