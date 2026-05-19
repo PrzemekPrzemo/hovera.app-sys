@@ -48,17 +48,21 @@ return [
     ],
 
     'tenant_select' => [
-        'title' => 'Pick a stable — Hovera',
-        'heading' => 'Pick a stable',
-        'intro' => 'Your account has access to :count stables. Pick which one to sign in to.',
+        'title' => 'Pick an account — Hovera',
+        'heading' => 'Pick an account',
+        'intro' => 'Your account has access to :count tenants (stables / transport companies). Pick which one to sign in to.',
         'role_label' => ':slug · role: :role',
-        'submit' => 'Continue to stable',
+        'submit' => 'Continue to panel',
+        'no_access' => 'No access to the selected account.',
+        'type_stable' => 'Stable',
+        'type_transporter' => 'Transport company',
+        'status_provisioning' => 'Awaiting verification',
     ],
 
     'no_tenants' => [
-        'title' => 'No stables available — Hovera',
-        'heading' => 'No stables available',
-        'intro' => 'Your account is not yet assigned to any stable, or your access has been revoked. Contact the stable administrator to get access.',
+        'title' => 'No accounts available — Hovera',
+        'heading' => 'No accounts available',
+        'intro' => 'Your account is not yet assigned to any stable or transport company, or your access has been revoked. Contact the administrator to get access.',
         'logout' => 'Sign out',
     ],
 

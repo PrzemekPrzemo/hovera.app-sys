@@ -50,17 +50,21 @@ return [
     ],
 
     'tenant_select' => [
-        'title' => 'Reitstall wählen — Hovera',
-        'heading' => 'Reitstall wählen',
-        'intro' => 'Ihr Konto hat Zugriff auf :count Reitställe. Wählen Sie aus, in welchen Sie sich anmelden möchten.',
+        'title' => 'Konto wählen — Hovera',
+        'heading' => 'Konto wählen',
+        'intro' => 'Ihr Konto hat Zugriff auf :count Tenants (Reitställe / Transportunternehmen). Wählen Sie aus, in welchen Sie sich anmelden möchten.',
         'role_label' => ':slug · Rolle: :role',
-        'submit' => 'Zum Reitstall',
+        'submit' => 'Zum Panel',
+        'no_access' => 'Kein Zugriff auf das gewählte Konto.',
+        'type_stable' => 'Reitstall',
+        'type_transporter' => 'Transportunternehmen',
+        'status_provisioning' => 'Wartet auf Verifizierung',
     ],
 
     'no_tenants' => [
-        'title' => 'Keine Reitställe verfügbar — Hovera',
-        'heading' => 'Keine Reitställe verfügbar',
-        'intro' => 'Ihr Konto ist noch keinem Reitstall zugeordnet, oder Ihr Zugriff wurde entzogen. Wenden Sie sich an den Administrator des Reitstalls, um Zugriff zu erhalten.',
+        'title' => 'Keine Konten verfügbar — Hovera',
+        'heading' => 'Keine Konten verfügbar',
+        'intro' => 'Ihr Konto ist noch keinem Reitstall oder Transportunternehmen zugeordnet, oder Ihr Zugriff wurde entzogen. Wenden Sie sich an den Administrator, um Zugriff zu erhalten.',
         'logout' => 'Abmelden',
     ],
 

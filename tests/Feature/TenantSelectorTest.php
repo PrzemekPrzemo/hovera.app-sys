@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\TenantType;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Models\Central\User;
@@ -26,7 +27,7 @@ class TenantSelectorTest extends TestCase
         $this->actingAs($user)
             ->get('/tenant/select')
             ->assertOk()
-            ->assertSeeText('Brak dostępnych stajni');
+            ->assertSeeText('Brak dostępnych kont');
     }
 
     public function test_user_with_one_membership_is_auto_redirected(): void
@@ -52,11 +53,62 @@ class TenantSelectorTest extends TestCase
         $this->actingAs($user)
             ->get('/tenant/select')
             ->assertOk()
-            ->assertSeeText('Wybierz stajnię')
+            ->assertSeeText('Wybierz konto')
             ->assertSeeText('alpha')
             ->assertSeeText('beta');
 
         $this->assertNull(session('current_tenant_id'));
+    }
+
+    public function test_transporter_tenant_in_provisioning_state_is_selectable(): void
+    {
+        // Świeży transporter po signupie czeka na verification → status=provisioning.
+        // Owner musi się zalogować żeby śledzić proces / douploadować braki.
+        $user = $this->makeUser();
+        $tenant = $this->makeTenant('galoptrans', 'provisioning', TenantType::Transporter);
+        $this->makeMembership($user, $tenant);
+
+        $response = $this->actingAs($user)->get('/tenant/select');
+        $response->assertRedirect('/transport');
+
+        $this->assertSame($tenant->id, session('current_tenant_id'));
+    }
+
+    public function test_single_transporter_membership_redirects_to_transport_panel(): void
+    {
+        $user = $this->makeUser();
+        $tenant = $this->makeTenant('galoptrans', 'active', TenantType::Transporter);
+        $this->makeMembership($user, $tenant);
+
+        $this->actingAs($user)
+            ->get('/tenant/select')
+            ->assertRedirect('/transport');
+    }
+
+    public function test_single_stable_membership_redirects_to_app_panel(): void
+    {
+        $user = $this->makeUser();
+        $tenant = $this->makeTenant('stable-acme', 'active', TenantType::Stable);
+        $this->makeMembership($user, $tenant);
+
+        $this->actingAs($user)
+            ->get('/tenant/select')
+            ->assertRedirect('/app');
+    }
+
+    public function test_choose_redirects_to_transport_panel_when_picking_transporter(): void
+    {
+        $user = $this->makeUser();
+        $stable = $this->makeTenant('stajnia', 'active', TenantType::Stable);
+        $transporter = $this->makeTenant('przewoznik', 'active', TenantType::Transporter);
+        $this->makeMembership($user, $stable);
+        $this->makeMembership($user, $transporter);
+
+        $this->actingAs($user)
+            ->post('/tenant/select', ['tenant_id' => $transporter->id])
+            ->assertRedirect('/transport');
+
+        $this->assertSame($transporter->id, session('current_tenant_id'));
     }
 
     public function test_choose_sets_current_tenant_and_redirects_to_app(): void
@@ -127,11 +179,12 @@ class TenantSelectorTest extends TestCase
         ]);
     }
 
-    private function makeTenant(string $slug, string $status = 'active'): Tenant
+    private function makeTenant(string $slug, string $status = 'active', ?TenantType $type = null): Tenant
     {
         $tenant = new Tenant([
             'slug' => $slug,
             'name' => ucfirst($slug),
+            'type' => ($type ?? TenantType::Stable)->value,
             'db_name' => 'hovera_t_'.$slug,
             'db_username' => 'hovera_t_'.$slug,
             'status' => $status,
