@@ -527,9 +527,11 @@ Route::middleware('web')
  * Pełny multi-section signup zastępujący lean `/signup?type=transporter`
  * dla firm które od razu chcą wgrać dokumenty. Patrz docs/TRANSPORT.md §15.
  *
- * Throttle 1/h/IP — anti-abuse dla document uploads (6 plików × max 5MB).
+ * Throttle TYLKO na POST submit (1/h/IP) — anti-abuse dla 6 file upload'ów
+ * × 5MB = 30MB per signup. GET pozostaje 30/min bez blokowania normalnego
+ * browsingu (user może wejść, opuścić, wrócić, poprawić → bez 429).
  */
-Route::middleware(['web', 'throttle:1,60'])
+Route::middleware(['web', 'throttle:30,1'])
     ->get('/przewoznicy/dolacz', [TransporterOnboardingController::class, 'show'])
     ->name('public.transport.onboarding.show');
 
