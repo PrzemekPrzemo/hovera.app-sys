@@ -251,6 +251,23 @@ class TransporterKsefService
             default => 'FA',
         };
 
+        // FA(3) wymaga reference do oryginalnej FV w `<DaneFaKorygowanej>`
+        // gdy `RodzajFaktury=KOR`. Bez tego XML waliduje się serwerowo
+        // przez MF z błędem „missing reference". Patrz docs/TRANSPORT.md §16.
+        $correctionRefXml = '';
+        if ($kodSystemowy === 'KOR' && $invoice->corrects_invoice_id) {
+            $invoice->loadMissing('correctsInvoice');
+            $original = $invoice->correctsInvoice;
+            if ($original !== null) {
+                $origNumber = htmlspecialchars((string) $original->number, ENT_XML1);
+                $origIssued = $original->issued_at?->format('Y-m-d') ?? $issued;
+                $correctionRefXml = '<DaneFaKorygowanej>'
+                    .'<NrFaKorygowanej>'.$origNumber.'</NrFaKorygowanej>'
+                    .'<DataWystFaKorygowanej>'.$origIssued.'</DataWystFaKorygowanej>'
+                    .'</DaneFaKorygowanej>';
+            }
+        }
+
         $ns = 'http://crd.gov.pl/wzor/2023/06/29/12648/';
 
         return '<?xml version="1.0" encoding="UTF-8"?>'
@@ -281,6 +298,7 @@ class TransporterKsefService
             .'<P_14_1>'.$vat.'</P_14_1>'
             .'<P_15>'.$total.'</P_15>'
             .'<RodzajFaktury>'.$kodSystemowy.'</RodzajFaktury>'
+            .$correctionRefXml
             .'</Fa>'
             .'</Faktura>';
     }

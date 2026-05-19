@@ -12,6 +12,8 @@ return [
         'dates' => 'Daten',
         'route' => 'Strecke',
         'notes' => 'Notizen',
+        'correction' => 'Rechnungskorrektur',
+        'correction_help' => 'Wählen Sie die ursprüngliche Rechnung, die diese KOR korrigiert.',
     ],
 
     'form' => [
@@ -21,6 +23,11 @@ return [
             'net_total' => 'Netto',
             'vat_total' => 'MwSt.',
             'gross_total' => 'Brutto',
+            'corrects_invoice' => 'Korrigierte Rechnung',
+        ],
+        'helper' => [
+            'kind' => 'Wählen Sie „Korrektur" wenn diese Rechnung eine zuvor ausgestellte korrigiert.',
+            'corrects_invoice' => 'Nummer der ursprünglichen Rechnung. Erscheint in XML im `<DaneFaKorygowanej>` Block.',
         ],
     ],
 
