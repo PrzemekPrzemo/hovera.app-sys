@@ -75,6 +75,8 @@ return [
             'specialist_desc' => 'Health records, visits, horse treatment.',
             'client' => 'Stable client',
             'client_desc' => 'Portal: bookings, passes, my horse.',
+            'transporter' => 'Transport company',
+            'transporter_desc' => 'Vehicles, drivers, leads, quotes, PWL documents.',
         ],
         'legal' => [
             'open_in_new_tab' => 'Open public version',

@@ -75,6 +75,8 @@ return [
             'specialist_desc' => 'Gesundheitsakten, Besuche, Pferdebehandlung.',
             'client' => 'Stallkunde',
             'client_desc' => 'Portal: Buchungen, Karten, mein Pferd.',
+            'transporter' => 'Transportunternehmen',
+            'transporter_desc' => 'Fahrzeuge, Fahrer, Leads, Angebote, PWL-Dokumente.',
         ],
         'legal' => [
             'open_in_new_tab' => 'Öffentliche Version öffnen',

@@ -75,6 +75,8 @@ return [
             'specialist_desc' => 'Dossiers de santé, visites, traitement des chevaux.',
             'client' => 'Client de l’écurie',
             'client_desc' => 'Portail : réservations, cartes, mon cheval.',
+            'transporter' => 'Société de transport',
+            'transporter_desc' => 'Véhicules, conducteurs, demandes, devis, documents PWL.',
         ],
         'legal' => [
             'open_in_new_tab' => 'Ouvrir la version publique',
