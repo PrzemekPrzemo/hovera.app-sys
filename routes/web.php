@@ -162,7 +162,7 @@ Route::middleware(['web', 'throttle:30,1'])->group(function () {
         ->where('doc', 'terms|privacy|dpa')
         ->name('help.legal');
     Route::get('/help/{persona?}', [HelpController::class, 'show'])
-        ->where('persona', 'owner|employee|specialist|client')
+        ->where('persona', 'owner|employee|specialist|client|transporter')
         ->name('help.show');
 });
 

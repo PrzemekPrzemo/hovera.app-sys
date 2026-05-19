@@ -30,8 +30,17 @@ class HelpController extends Controller
     /** @var list<string> */
     private const SUPPORTED_LOCALES = ['pl', 'en', 'de', 'fr', 'ru'];
 
-    /** @var list<string> */
-    public const PERSONAS = ['owner', 'employee', 'specialist', 'client'];
+    /**
+     * Persona keys — używane do walidacji URL `{persona}` segment'u + jako
+     * lookup do pliku markdown `resources/help/{locale}/{persona}.md`.
+     *
+     * `transporter` dodany po PR #228 (dodał `resources/help/{locale}/transporter.md`)
+     * + PR #250 (publiczna rejestracja `/przewoznicy/dolacz` — nowi
+     * transporter'zy potrzebują dedykowanej dokumentacji od day-1).
+     *
+     * @var list<string>
+     */
+    public const PERSONAS = ['owner', 'employee', 'specialist', 'client', 'transporter'];
 
     /** @var list<string> */
     public const LEGAL_DOCS = ['terms', 'privacy', 'dpa'];
@@ -88,6 +97,7 @@ class HelpController extends Controller
                     'employee' => 'users',
                     'specialist' => 'heart',
                     'client' => 'identification',
+                    'transporter' => 'truck',
                     default => 'storefront',
                 },
             ];
