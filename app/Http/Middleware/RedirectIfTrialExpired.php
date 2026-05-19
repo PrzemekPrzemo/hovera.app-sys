@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Enums\TenantType;
 use App\Tenancy\TenantManager;
 use Closure;
 use Illuminate\Http\Request;
@@ -39,6 +40,15 @@ class RedirectIfTrialExpired
 
         $tenant = $this->tenants->current();
         if ($tenant === null || ! $tenant->trialHasExpired()) {
+            return $next($request);
+        }
+
+        // Transport tenants nie mają jeszcze flow billing.show pod /app/billing
+        // — ich rozliczenie jest osobnym tematem (P24/Stripe/manual decyzja
+        // produktowa). Redirect do `/app/billing` byłby loop'em (panel /app
+        // dla nich nie istnieje). Zostawiamy w panelu /transport,
+        // verification + plan status komunikowany przez `<x-transport-verification-banner />`.
+        if ($tenant->type === TenantType::Transporter) {
             return $next($request);
         }
 
