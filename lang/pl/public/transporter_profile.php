@@ -38,6 +38,6 @@ return [
     // Badge „Zweryfikowany przez Hovera" — widoczny tylko gdy Tenant::isVerifiedTransporter() === true.
     // Hover/tooltip rozwija pełną listę zweryfikowanych dokumentów + link do §12 regulaminu marketplace.
     'verified_badge_label' => 'Zweryfikowany przez Hovera',
-    'verified_badge_tooltip' => 'Hovera zweryfikowała aktualność: zezwolenia na zawód przewoźnika drogowego, PWL T1/T2, świadectw kierowców, świadectwa pojazdu, książki mycia i OC. Hovera dokonała weryfikacji dokumentów — NIE odpowiada za faktyczną realizację transportu (patrz regulamin marketplace).',
+    'verified_badge_tooltip' => 'Hovera zweryfikowała aktualność: zezwolenia na zawód przewoźnika drogowego, PLW T1/T2, świadectw kierowców, świadectwa pojazdu, książki mycia i OC. Hovera dokonała weryfikacji dokumentów — NIE odpowiada za faktyczną realizację transportu (patrz regulamin marketplace).',
     'verified_badge_link_label' => 'regulamin marketplace',
 ];

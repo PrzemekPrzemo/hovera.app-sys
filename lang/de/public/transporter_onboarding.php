@@ -18,7 +18,7 @@ return [
     'perks' => [
         'title' => 'Was Sie erhalten',
         'item_1' => 'Öffentliches Profil unter app.hovera.app/t/{slug} (Google-indiziert)',
-        'item_2' => 'Direct Leads + Broadcasting in ganz Polen (PWL)',
+        'item_2' => 'Direct Leads + Broadcasting in ganz Polen (PLW)',
         'item_3' => 'Angebotsrechner + automatisches PDF + Online-Zahlung',
         'item_4' => 'Erster Monat gratis ab Verifizierungsdatum',
     ],
@@ -43,10 +43,10 @@ return [
         'owner_email_hint' => 'Wir senden den Magic-Link nach Verifizierung.',
         'owner_phone' => 'Kontakttelefon',
     ],
-    'documents_disclaimer' => 'Wir benötigen 6 Dokumente gemäß PWL-Gesetz und hovera-Regulierungen. '
+    'documents_disclaimer' => 'Wir benötigen 6 Dokumente gemäß PLW-Gesetz und hovera-Regulierungen. '
         .'Formate: PDF, JPG, PNG. Max 5 MB pro Datei.',
     'pwl_authorization' => [
-        'label' => 'PWL-Transportgenehmigung',
+        'label' => 'PLW-Transportgenehmigung',
         'description' => 'Genehmigung für den Transport lebender Tiere nach EG-Verordnung 1/2005. '
             .'Wählen Sie den Typ: T1 (kurze Fahrten, bis 8 Std.) oder T2 (lange Fahrten, über 8 Std.) — '
             .'und laden Sie den entsprechenden Scan hoch.',
@@ -78,7 +78,7 @@ return [
         'tax_id_format' => 'Steuernummer muss 10 Ziffern haben.',
         'regon_format' => 'REGON muss 9 oder 14 Ziffern haben.',
         'terms' => 'Sie müssen die AGB akzeptieren.',
-        'pwl_authorization_type_required' => 'Wählen Sie den PWL-Genehmigungstyp (T1 oder T2).',
+        'pwl_authorization_type_required' => 'Wählen Sie den PLW-Genehmigungstyp (T1 oder T2).',
         'provisioning_failed' => 'Konto konnte nicht erstellt werden — bitte später erneut versuchen.',
     ],
     'notify' => ['thanks_silent' => 'Danke — wir prüfen Ihre Anmeldung.'],

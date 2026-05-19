@@ -23,7 +23,7 @@ return [
     'perks' => [
         'title' => 'What you get',
         'item_1' => 'Public profile at app.hovera.app/t/{slug} indexed by Google',
-        'item_2' => 'Direct leads from customers + broadcast to all of Poland (PWL)',
+        'item_2' => 'Direct leads from customers + broadcast to all of Poland (PLW)',
         'item_3' => 'Quote calculator + automatic PDF offer + online payment',
         'item_4' => 'First month free starting from the document verification date',
     ],
@@ -51,11 +51,12 @@ return [
         'owner_phone' => 'Contact phone',
     ],
 
-    'documents_disclaimer' => 'We require 6 documents per PWL (Polish Logistics Cooperation) law and hovera regulations. '
+    'documents_disclaimer' => 'We require 6 documents issued by the Polish County Veterinary Officer '
+        .'(PLW — Powiatowy Lekarz Weterynarii) per EC Regulation 1/2005 and hovera regulations. '
         .'Without the full set, we cannot activate your account. Formats: PDF, JPG, PNG. Max 5 MB per file.',
 
     'pwl_authorization' => [
-        'label' => 'PWL carrier authorization',
+        'label' => 'PLW carrier authorization',
         'description' => 'Authorization to transport live animals under EC Regulation 1/2005. '
             .'Choose the type: T1 (short trips, up to 8h) or T2 (long trips, over 8h) — '
             .'and upload the matching scan.',
@@ -92,7 +93,7 @@ return [
         'tax_id_format' => 'Tax ID must be 10 digits (no dashes or spaces).',
         'regon_format' => 'REGON must be 9 or 14 digits.',
         'terms' => 'You must accept the terms to continue.',
-        'pwl_authorization_type_required' => 'Choose the PWL authorization type (T1 or T2).',
+        'pwl_authorization_type_required' => 'Choose the PLW authorization type (T1 or T2).',
         'provisioning_failed' => 'Unfortunately we could not create the account — please try again in a moment. '
             .'If the problem persists, please email office@hovera.app.',
     ],

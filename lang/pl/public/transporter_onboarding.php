@@ -23,7 +23,7 @@ return [
     'perks' => [
         'title' => 'Co dostajesz?',
         'item_1' => 'Publiczny profil pod app.hovera.app/t/{slug} indeksowany przez Google',
-        'item_2' => 'Direct lead od klientów + broadcasting do całej Polski (PWL)',
+        'item_2' => 'Direct lead od klientów + broadcasting do całej Polski (PLW)',
         'item_3' => 'Kalkulator wyceny + automatyczna oferta PDF + płatność online',
         'item_4' => 'Pierwszy miesiąc gratis od momentu weryfikacji dokumentów',
     ],
@@ -51,12 +51,12 @@ return [
         'owner_phone' => 'Telefon kontaktowy',
     ],
 
-    'documents_disclaimer' => 'Wymagamy 6 dokumentów zgodnie z ustawą PWL (Polska Współpraca '
-        .'Logistyczna) i regulaminami hovera. Bez kompletu nie możemy aktywować konta. '
-        .'Formaty: PDF, JPG, PNG. Max 5 MB per plik.',
+    'documents_disclaimer' => 'Wymagamy 6 dokumentów wydanych przez Powiatowego Lekarza Weterynarii '
+        .'(PLW) zgodnie z Rozp. WE 1/2005 oraz regulaminami hovera. Bez kompletu nie możemy '
+        .'aktywować konta. Formaty: PDF, JPG, PNG. Max 5 MB per plik.',
 
     'pwl_authorization' => [
-        'label' => 'Zezwolenie przewoźnika PWL',
+        'label' => 'Zezwolenie przewoźnika PLW',
         'description' => 'Zezwolenie na transport zwierząt żywych wg Rozp. WE 1/2005. '
             .'Wybierz typ: T1 (krótkie trasy, do 8h) lub T2 (długie trasy, powyżej 8h) — '
             .'i wgraj odpowiedni skan.',
@@ -93,7 +93,7 @@ return [
         'tax_id_format' => 'NIP musi mieć 10 cyfr (bez kresek i spacji).',
         'regon_format' => 'REGON musi mieć 9 lub 14 cyfr.',
         'terms' => 'Musisz zaakceptować regulamin żeby kontynuować.',
-        'pwl_authorization_type_required' => 'Wybierz typ zezwolenia PWL (T1 lub T2).',
+        'pwl_authorization_type_required' => 'Wybierz typ zezwolenia PLW (T1 lub T2).',
         'provisioning_failed' => 'Niestety nie udało się utworzyć konta — spróbuj ponownie '
             .'za chwilę. Jeśli problem się powtarza, napisz do office@hovera.app.',
     ],

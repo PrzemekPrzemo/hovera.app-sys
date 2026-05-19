@@ -76,7 +76,7 @@ return [
             'client' => 'Stable client',
             'client_desc' => 'Portal: bookings, passes, my horse.',
             'transporter' => 'Transport company',
-            'transporter_desc' => 'Vehicles, drivers, leads, quotes, PWL documents.',
+            'transporter_desc' => 'Vehicles, drivers, leads, quotes, PLW documents.',
         ],
         'legal' => [
             'open_in_new_tab' => 'Open public version',

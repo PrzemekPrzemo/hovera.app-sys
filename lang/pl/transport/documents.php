@@ -51,12 +51,12 @@ return [
         'allowed_formats' => 'Akceptujemy: PDF, JPG, PNG. Maksymalnie 10 MB per plik. Wszystkie pliki przechowywane są w szyfrowanym storage UE.',
     ],
 
-    // PWL = Przewóz Wewnątrzwspólnotowy Zwierząt Żywych. Sekcja na liście
-    // dokumentów odróżniająca legacy slots (KRS, dawne) od ścisłego zestawu PWL.
+    // PLW = Przewóz Wewnątrzwspólnotowy Zwierząt Żywych. Sekcja na liście
+    // dokumentów odróżniająca legacy slots (KRS, dawne) od ścisłego zestawu PLW.
     'section' => [
-        'pwl_required' => 'Dokumenty PWL (wymagane do weryfikacji)',
+        'pwl_required' => 'Dokumenty PLW (wymagane do weryfikacji)',
         'pwl_optional' => 'Dokumenty opcjonalne',
-        'legacy' => 'Dokumenty legacy (nie zaliczają się do PWL)',
+        'legacy' => 'Dokumenty legacy (nie zaliczają się do PLW)',
     ],
 
     'helper' => [
@@ -66,11 +66,11 @@ return [
     ],
 
     'checklist' => [
-        'heading' => 'Lista wymaganych dokumentów PWL',
+        'heading' => 'Lista wymaganych dokumentów PLW',
         'progress' => ':done z :total dokumentów zweryfikowanych',
         'missing_intro' => 'Brakuje:',
         'all_complete' => 'Wszystkie wymagane dokumenty zatwierdzone.',
-        'pwl_authorization_alternative' => 'Zezwolenie PWL (Typ 1 LUB Typ 2)',
+        'pwl_authorization_alternative' => 'Zezwolenie PLW (Typ 1 LUB Typ 2)',
     ],
 
     'admin' => [
@@ -80,7 +80,7 @@ return [
         'rejection_reason_required' => 'Powód odrzucenia (widoczny dla transportera)',
         'notify_doc_verified' => 'Dokument zatwierdzony',
         'notify_doc_rejected' => 'Dokument odrzucony',
-        'cannot_verify_tenant' => 'Najpierw zweryfikuj wszystkie wymagane dokumenty PWL (:done/:total). Zobacz listę poniżej.',
+        'cannot_verify_tenant' => 'Najpierw zweryfikuj wszystkie wymagane dokumenty PLW (:done/:total). Zobacz listę poniżej.',
     ],
 
     'expiry_notify' => [

@@ -52,9 +52,9 @@ return [
     ],
 
     'section' => [
-        'pwl_required' => 'PWL documents (required for verification)',
+        'pwl_required' => 'PLW documents (required for verification)',
         'pwl_optional' => 'Optional documents',
-        'legacy' => 'Legacy documents (do not count toward PWL)',
+        'legacy' => 'Legacy documents (do not count toward PLW)',
     ],
 
     'helper' => [
@@ -64,11 +64,11 @@ return [
     ],
 
     'checklist' => [
-        'heading' => 'PWL required documents checklist',
+        'heading' => 'PLW required documents checklist',
         'progress' => ':done of :total documents verified',
         'missing_intro' => 'Missing:',
         'all_complete' => 'All required documents verified.',
-        'pwl_authorization_alternative' => 'PWL authorization (Type 1 OR Type 2)',
+        'pwl_authorization_alternative' => 'PLW authorization (Type 1 OR Type 2)',
     ],
 
     'admin' => [
@@ -78,7 +78,7 @@ return [
         'rejection_reason_required' => 'Rejection reason (visible to the transporter)',
         'notify_doc_verified' => 'Document approved',
         'notify_doc_rejected' => 'Document rejected',
-        'cannot_verify_tenant' => 'First verify all required PWL documents (:done/:total). See the checklist below.',
+        'cannot_verify_tenant' => 'First verify all required PLW documents (:done/:total). See the checklist below.',
     ],
 
     'expiry_notify' => [
