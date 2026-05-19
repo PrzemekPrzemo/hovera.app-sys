@@ -12,6 +12,7 @@ use App\Models\Central\User;
 use App\Tenancy\Provisioner;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Mockery\MockInterface;
@@ -107,6 +108,39 @@ class CreateTenantTypeSelectorTest extends TestCase
         $tenant = Tenant::where('slug', 'stadnina')->first();
         $this->assertNotNull($tenant);
         $this->assertSame(TenantType::Stable, $tenant->type);
+    }
+
+    public function test_duplicate_slug_surfaces_validation_error_with_field_name_in_notification(): void
+    {
+        $this->actingAsMasterAdmin();
+
+        // Istniejący tenant o tym samym slugu — second create powinien
+        // failować z ValidationException → Notification z `slug:` prefix.
+        Tenant::create([
+            'slug' => 'duplicate-x',
+            'name' => 'Existing',
+            'type' => TenantType::Stable->value,
+            'db_name' => 'hovera_t_existing',
+            'db_username' => 'hovera_t_existing',
+            'db_password_encrypted' => Crypt::encryptString('x'),
+            'status' => 'active',
+        ]);
+
+        Livewire::test(CreateTenant::class)
+            ->fillForm([
+                'type' => TenantType::Stable->value,
+                'slug' => 'duplicate-x',
+                'name' => 'Second Try',
+                'country' => 'PL',
+                'locale' => 'pl',
+                'timezone' => 'Europe/Warsaw',
+                'currency' => 'PLN',
+            ])
+            ->call('create')
+            ->assertNotified();
+
+        // Tenant nie powinien być utworzony (action zatrzymane na ValidationException).
+        $this->assertSame(1, Tenant::where('slug', 'duplicate-x')->count());
     }
 
     public function test_plan_select_filters_by_selected_type(): void

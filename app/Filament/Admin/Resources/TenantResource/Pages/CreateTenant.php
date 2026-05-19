@@ -51,16 +51,17 @@ class CreateTenant extends CreateRecord
             ]);
         } catch (ValidationException $e) {
             // Walidacja po stronie action'a — pokaż błędy jako Filament Notification
-            // żeby admin wiedział czemu submit nie poszedł (zamiast cichego rollbacku).
-            $firstError = collect($e->errors())->flatten()->first() ?: $e->getMessage();
+            // z nazwą pola (`slug: The slug has already been taken.`) żeby admin
+            // jednym spojrzeniem wiedział co naprawić.
+            $body = $this->formatValidationErrors($e->errors());
             Notification::make()
                 ->danger()
                 ->title(__('admin/tenant.notify.create_failed'))
-                ->body((string) $firstError)
+                ->body($body)
                 ->persistent()
                 ->send();
 
-            Log::warning('Tenant create validation failed', [
+            $this->safelyLog('warning', 'Tenant create validation failed', [
                 'slug' => $data['slug'] ?? '?',
                 'type' => $type->value,
                 'errors' => $e->errors(),
@@ -77,7 +78,7 @@ class CreateTenant extends CreateRecord
                 ->persistent()
                 ->send();
 
-            Log::error('Tenant create failed', [
+            $this->safelyLog('error', 'Tenant create failed', [
                 'slug' => $data['slug'] ?? '?',
                 'type' => $type->value,
                 'plan_code' => $planCode,
@@ -105,5 +106,55 @@ class CreateTenant extends CreateRecord
             ->send();
 
         return $tenant;
+    }
+
+    /**
+     * Składa multi-field validation errors w czytelny string dla Filament
+     * Notification: `slug: The slug has already been taken. | name: required`.
+     * Jeden field per linia żeby admin widział wszystkie naraz.
+     *
+     * @param  array<string, array<int, string>>  $errors
+     */
+    private function formatValidationErrors(array $errors): string
+    {
+        $lines = [];
+        foreach ($errors as $field => $messages) {
+            if (! is_array($messages) || $messages === []) {
+                continue;
+            }
+            $lines[] = $field.': '.(string) reset($messages);
+        }
+
+        return implode(' | ', $lines) ?: __('admin/tenant.notify.create_failed');
+    }
+
+    /**
+     * Logowanie z fallbackiem na error_log (PHP-FPM stderr) gdy
+     * `storage/logs/*.log` nie ma write permission. Bez tego pierwotny
+     * exception z provisioningu jest cichy bo Log driver rzuca własny
+     * exception zanim Notification dotrze do UI.
+     *
+     * Ops-side fix to chmod na storage; ten fallback gwarantuje że admin
+     * przynajmniej dostanie czytelną Notification nawet przy zepsutych
+     * permach.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    private function safelyLog(string $level, string $message, array $context): void
+    {
+        try {
+            Log::$level($message, $context);
+        } catch (Throwable $e) {
+            // Ostatnia szansa — error_log idzie do PHP-FPM stderr (Plesk
+            // pokazuje w panelu Logi). Nie używamy ->error() bo to ten
+            // sam Log fasada który właśnie padł.
+            error_log(sprintf(
+                '[hovera] %s: %s (context: %s) (log write failed: %s)',
+                strtoupper($level),
+                $message,
+                json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}',
+                $e->getMessage(),
+            ));
+        }
     }
 }
