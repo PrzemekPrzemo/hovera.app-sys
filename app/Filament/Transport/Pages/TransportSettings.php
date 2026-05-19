@@ -95,6 +95,7 @@ class TransportSettings extends Page implements HasForms
             'default_payment_method_label' => $settings->default_payment_method_label,
             'payment_instructions' => $settings->payment_instructions,
             'p24_quote_autopay_enabled' => (bool) $settings->p24_quote_autopay_enabled,
+            'payu_quote_autopay_enabled' => (bool) ($settings->payu_quote_autopay_enabled ?? false),
         ]);
     }
 
@@ -351,6 +352,30 @@ class TransportSettings extends Page implements HasForms
                             ->content(__('transport/p24.form.helper.credentials_pointer'))
                             ->columnSpanFull(),
                     ]),
+
+                // PayU quote autopay — patrz docs/TRANSPORT.md §16.
+                // Hovera tylko technicznie odpala PayU order create z creds
+                // transportera — pieniądze idą bezpośrednio na konto PayU
+                // transportera. Marketplace passthrough — Hovera nie pośredniczy.
+                // Credentials żyją w /app/payment-settings (tenants.settings.payments.payu).
+                Forms\Components\Section::make(__('transport/payu.section.title'))
+                    ->description(__('transport/payu.section.description'))
+                    ->schema([
+                        Forms\Components\Placeholder::make('payu_disclaimer')
+                            ->label('')
+                            ->content(__('transport/payu.section.disclaimer'))
+                            ->columnSpanFull(),
+
+                        Forms\Components\Toggle::make('payu_quote_autopay_enabled')
+                            ->label(__('transport/payu.form.label.autopay_enabled'))
+                            ->helperText(__('transport/payu.form.helper.autopay_enabled'))
+                            ->inline(false),
+
+                        Forms\Components\Placeholder::make('payu_creds_pointer')
+                            ->label('')
+                            ->content(__('transport/payu.form.helper.credentials_pointer'))
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -451,6 +476,7 @@ class TransportSettings extends Page implements HasForms
             'default_payment_method_label' => $form['default_payment_method_label'] ?: null,
             'payment_instructions' => $form['payment_instructions'] ?: null,
             'p24_quote_autopay_enabled' => (bool) ($form['p24_quote_autopay_enabled'] ?? false),
+            'payu_quote_autopay_enabled' => (bool) ($form['payu_quote_autopay_enabled'] ?? false),
         ]);
 
         // Token: jeśli user wpisał nowy → szyfrujemy i zapisujemy. Jeśli

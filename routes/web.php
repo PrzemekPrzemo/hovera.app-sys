@@ -16,6 +16,8 @@ use App\Http\Controllers\Public\LegalController;
 use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PayUAddonReturnController;
 use App\Http\Controllers\Public\PayUAddonWebhookController;
+use App\Http\Controllers\Public\PayUQuoteReturnController;
+use App\Http\Controllers\Public\PayUQuoteWebhookController;
 use App\Http\Controllers\Public\PayUWebhookController;
 use App\Http\Controllers\Public\PricingController;
 use App\Http\Controllers\Public\Przelewy24AddonReturnController;
@@ -304,6 +306,26 @@ Route::middleware(['web'])
             ->where('tenant_slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
             ->name('return');
         Route::post('/webhook/{tenant_slug}', [Przelewy24QuoteWebhookController::class, 'handle'])
+            ->where('tenant_slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
+            ->middleware('throttle:60,1')
+            ->name('webhook');
+    });
+
+/*
+ * Per-transporter PayU quote payments — patrz docs/TRANSPORT.md §16.
+ *
+ * Analogiczne do `/transport/p24/*` ale z PayU OAuth + SHA256 signature.
+ * Webhook + return URL z tenant_slug w pathnie żeby router znał kontekst
+ * przed switch'em do tenant DB.
+ */
+Route::middleware(['web'])
+    ->prefix('/transport/payu')
+    ->name('public.transport.payu.')
+    ->group(function () {
+        Route::get('/return/{tenant_slug}/{quote_id}', [PayUQuoteReturnController::class, 'return'])
+            ->where('tenant_slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
+            ->name('return');
+        Route::post('/webhook/{tenant_slug}', [PayUQuoteWebhookController::class, 'handle'])
             ->where('tenant_slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
             ->middleware('throttle:60,1')
             ->name('webhook');

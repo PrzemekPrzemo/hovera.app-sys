@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Transport\Resources\QuoteResource\Pages;
 
 use App\Domain\Transport\Payments\PaymentUrlTemplate;
+use App\Domain\Transport\Payments\PayU\TransporterPayUQuoteService;
 use App\Domain\Transport\Payments\Przelewy24\TransporterP24QuoteService;
 use App\Domain\Transport\Payments\Stripe\TransporterStripeConnectService;
 use App\Domain\Transport\Quotes\QuoteNumberGenerator;
@@ -87,9 +88,11 @@ class CreateQuote extends CreateRecord
         //      (docs/TRANSPORT.md §15.6)
         //   2. Przelewy24 autopay — hosted checkout transportera
         //      (docs/TRANSPORT.md §15.5)
-        //   3. default_payment_url_template — fallback na własny URL transportera
+        //   3. PayU autopay — hosted checkout transportera (docs/TRANSPORT.md §16)
+        //   4. default_payment_url_template — fallback na własny URL transportera
         $this->applyStripeConnectCheckoutIfEnabled();
         $this->tryGenerateP24PaymentLink();
+        $this->tryGeneratePayUPaymentLink();
         $this->applyDefaultPaymentUrlIfBlank();
 
         app(TenantAuditLogger::class)->record(
@@ -160,6 +163,68 @@ class CreateQuote extends CreateRecord
             Notification::make()
                 ->warning()
                 ->title(__('transport/p24.notify.autopay_failed'))
+                ->body($e->getMessage())
+                ->persistent()
+                ->send();
+        }
+    }
+
+    /**
+     * PayU quote autopay — patrz docs/TRANSPORT.md §16.
+     *
+     * Analogiczne do `tryGenerateP24PaymentLink` ale PayU. Wymaga:
+     *   1. `transport_settings.payu_quote_autopay_enabled = true`
+     *   2. creds w `tenants.settings.payments.payu` (pos_id, oauth_client_id,
+     *      oauth_client_secret, md5_key)
+     *   3. quote w PLN, gross > 0
+     *
+     * Soft-fail — jeśli PayU OAuth/order endpoint padnie, logujemy +
+     * warning notification, quote zostaje bez payment_url, ewentualnie
+     * fallback do default_payment_url_template.
+     */
+    private function tryGeneratePayUPaymentLink(): void
+    {
+        /** @var Quote $quote */
+        $quote = $this->record;
+
+        if ($quote->payment_url) {
+            return; // już ustawione (manual / Stripe / P24)
+        }
+
+        $settings = TransportSettings::current();
+        if (! ($settings->payu_quote_autopay_enabled ?? false)) {
+            return;
+        }
+
+        $tenant = app(TenantManager::class)->current();
+        if ($tenant === null) {
+            return;
+        }
+
+        $svc = app(TransporterPayUQuoteService::class);
+        if (! $svc->isConfigured($tenant)) {
+            // Toggle on, ale brak creds — silent skip (transporter zobaczy
+            // w /app/payment-settings że pól brakuje).
+            return;
+        }
+
+        try {
+            $url = $svc->createPaymentSession($tenant, $quote);
+
+            $quote->forceFill([
+                'payment_url' => $url,
+                'payment_method_label' => $quote->payment_method_label ?: 'PayU',
+            ])->save();
+        } catch (\Throwable $e) {
+            Log::warning('PayU quote autopay failed', [
+                'quote_id' => $quote->id,
+                'tenant' => $tenant->slug,
+                'error' => $e->getMessage(),
+            ]);
+
+            Notification::make()
+                ->warning()
+                ->title(__('transport/payu.notify.autopay_failed'))
                 ->body($e->getMessage())
                 ->persistent()
                 ->send();
