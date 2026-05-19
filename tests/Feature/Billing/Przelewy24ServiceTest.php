@@ -188,8 +188,13 @@ class Przelewy24ServiceTest extends TestCase
             'tenant_id' => $tenant->id,
             'number' => 'HVR/2026/05/0001',
             'kind' => 'regular',
+            // plan_code jest NOT NULL w central.invoices (snapshot zakupionego
+            // planu w momencie wystawienia FV). Bez wartości test fail'uje
+            // SQLite NOT NULL constraint — fixtura podaje generyczny "TRIAL".
+            'plan_code' => 'TRIAL',
+            'period' => 'one_time',
             'currency' => 'PLN',
-            'subtotal_cents' => (int) round($total / 1.23),
+            'amount_cents' => (int) round($total / 1.23),
             'vat_cents' => $total - (int) round($total / 1.23),
             'total_cents' => $total,
             'vat_rate' => 23,

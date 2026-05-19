@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Billing;
 
+use App\Models\Central\AddonPurchase;
 use App\Models\Central\Invoice;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -113,6 +114,134 @@ class Przelewy24Service
         ])->save();
 
         return $url;
+    }
+
+    /**
+     * Rejestruje transakcję P24 dla zakupu add-onu (jednorazowo,
+     * Hovera-as-merchant). Mirror createPayment() ale dla AddonPurchase
+     * zamiast Invoice. Zapisuje session_id + url na purchase.
+     *
+     * Patrz docs/TRANSPORT.md §13 (master admin add-on purchases).
+     *
+     * @throws RuntimeException gdy P24 zwróci błąd / pusty token
+     */
+    public function chargeAddon(AddonPurchase $purchase): string
+    {
+        if ($purchase->currency !== 'PLN') {
+            throw new InvalidArgumentException('P24 supports PLN only — purchase currency: '.$purchase->currency);
+        }
+        if ($purchase->amount_cents <= 0) {
+            throw new InvalidArgumentException('AddonPurchase amount must be > 0.');
+        }
+        if ($purchase->isTerminal()) {
+            throw new InvalidArgumentException('AddonPurchase już w stanie terminalnym ('.$purchase->status.') — nie można generować nowego linka.');
+        }
+
+        $sessionId = (string) $purchase->id;
+        $amount = $purchase->amount_cents;
+        $sign = $this->signRegister($sessionId, $amount);
+
+        $email = $this->resolveAddonEmail($purchase);
+
+        $payload = [
+            'merchantId' => $this->merchantId,
+            'posId' => $this->posId,
+            'sessionId' => $sessionId,
+            'amount' => $amount,
+            'currency' => $purchase->currency,
+            'description' => $this->addonDescription($purchase),
+            'email' => $email,
+            'country' => 'PL',
+            'language' => 'pl',
+            'urlReturn' => route('admin.p24.addon.return', ['purchase_id' => $purchase->id]),
+            'urlStatus' => route('webhooks.p24.addon'),
+            'sign' => $sign,
+        ];
+
+        $response = Http::withBasicAuth((string) $this->posId, $this->apiKey)
+            ->acceptJson()
+            ->asJson()
+            ->timeout(20)
+            ->post($this->host().'/api/v1/transaction/register', $payload);
+
+        if (! $response->successful()) {
+            $err = (string) data_get($response->json(), 'error', 'unknown error');
+            throw new RuntimeException("P24 addon register failed: {$err} (HTTP {$response->status()})");
+        }
+
+        $token = (string) data_get($response->json(), 'data.token', '');
+        if ($token === '') {
+            throw new RuntimeException('P24 addon register: empty token in response.');
+        }
+
+        $url = $this->host().'/trnRequest/'.$token;
+
+        $purchase->forceFill([
+            'p24_session_id' => $sessionId,
+            'p24_payment_url' => $url,
+            'status' => AddonPurchase::STATUS_PENDING,
+        ])->save();
+
+        return $url;
+    }
+
+    /**
+     * Webhook handler dla add-on purchases. Verify sign + verify call →
+     * mark purchase as paid. Side-effects (np. extra_driver →
+     * extra_driver_count++) odbywają się w AddonPurchase observerze /
+     * dedicated jobie — tutaj tylko flip statusu. Idempotent.
+     *
+     * @param  array<string,mixed>  $payload
+     */
+    public function processAddonWebhook(array $payload): bool
+    {
+        if (! $this->verifyWebhook($payload)) {
+            Log::warning('P24 addon webhook: signature mismatch', [
+                'session_id' => $payload['sessionId'] ?? null,
+            ]);
+
+            return false;
+        }
+
+        $sessionId = (string) ($payload['sessionId'] ?? '');
+        $orderId = (int) ($payload['orderId'] ?? 0);
+        $amount = (int) ($payload['amount'] ?? 0);
+        $currency = (string) ($payload['currency'] ?? 'PLN');
+
+        $purchase = AddonPurchase::query()->where('p24_session_id', $sessionId)->first();
+        if ($purchase === null) {
+            Log::warning('P24 addon webhook: purchase not found', ['session_id' => $sessionId]);
+
+            return false;
+        }
+
+        if ($purchase->isPaid()) {
+            return true; // idempotent ack
+        }
+
+        if ($amount !== $purchase->amount_cents) {
+            Log::warning('P24 addon webhook: amount mismatch', [
+                'session_id' => $sessionId,
+                'expected' => $purchase->amount_cents,
+                'got' => $amount,
+            ]);
+
+            return false;
+        }
+
+        $verified = $this->verifyPayment($sessionId, $orderId, $amount, $currency);
+        if (! $verified) {
+            return false;
+        }
+
+        $purchase->forceFill([
+            'status' => AddonPurchase::STATUS_PAID,
+            'paid_at' => now(),
+            'p24_paid_at' => now(),
+            'p24_order_id' => (string) $orderId,
+        ])->save();
+
+        return true;
     }
 
     /**
@@ -297,6 +426,31 @@ class Przelewy24Service
         $plan = $invoice->plan_code !== null ? ' ('.$invoice->plan_code.')' : '';
 
         return 'Hovera FV '.$invoice->number.$plan;
+    }
+
+    private function addonDescription(AddonPurchase $purchase): string
+    {
+        return 'Hovera add-on '.$purchase->addon_name;
+    }
+
+    private function resolveAddonEmail(AddonPurchase $purchase): string
+    {
+        $tenant = $purchase->tenant;
+        if ($tenant === null) {
+            return 'no-reply@hovera.app';
+        }
+
+        $email = $tenant->memberships()
+            ->where('role', 'owner')
+            ->whereNull('revoked_at')
+            ->orderBy('joined_at')
+            ->limit(1)
+            ->get()
+            ->map(fn ($m) => $m->user?->email)
+            ->filter()
+            ->first();
+
+        return is_string($email) && $email !== '' ? $email : 'no-reply@hovera.app';
     }
 
     private function resolveEmail(Invoice $invoice): string
