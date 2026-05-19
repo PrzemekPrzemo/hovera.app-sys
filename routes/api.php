@@ -2,12 +2,39 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\TransportInquiryApiController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\InvoiceController;
 use App\Http\Controllers\Api\V1\SyncController;
 use App\Http\Controllers\Api\V1\UploadController;
+use App\Http\Middleware\ResolveEmbedCors;
 use Illuminate\Support\Facades\Route;
+
+/*
+ * Embed snippet API — `POST /api/transport/inquiry`. Transporter osadza
+ * formularz zapytania na swojej stronie (HTML+JS snippet z
+ * `/transport/embed-snippet`), JS posta tutaj. Patrz docs/TRANSPORT.md §16.
+ *
+ * Gating (defense-in-depth):
+ *   - `ResolveEmbedCors` middleware: per-tenant whitelist `embed_allowed_origins`
+ *     z `transport_settings`. Zły origin → brak CORS headers (browser block).
+ *   - `X-Hovera-Embed-Token` header weryfikowany w controllerze (constant-time).
+ *   - Honeypot `website` field — silent 200.
+ *   - Throttle 10/h/IP — wyższy niż public `/transport/zapytanie` (5/h) bo
+ *     embed może mieć więcej bona-fide traffic z popularnych stron.
+ *
+ * CSRF już auto-excluded dla `api/*` (bootstrap/app.php).
+ */
+Route::middleware([ResolveEmbedCors::class])
+    ->prefix('transport')
+    ->name('api.transport.')
+    ->group(function () {
+        Route::options('/inquiry', fn () => response()->noContent(204));
+        Route::post('/inquiry', [TransportInquiryApiController::class, 'store'])
+            ->middleware('throttle:10,60')
+            ->name('inquiry');
+    });
 
 // Public auth endpoints (no tenant context yet — user picks tenant after login).
 Route::prefix('v1')->group(function () {
