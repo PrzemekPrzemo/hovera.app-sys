@@ -101,6 +101,14 @@
 <body>
     <section class="hero">
         <div class="hero-inner">
+            {{-- Link „Wszystkie firmy" — pomaga SEO crawlerom dotrzeć do katalogu
+                 z profili linkowanych zewnętrznie, plus UX dla użytkowników którzy
+                 chcą porównać kilku przewoźników. Patrz docs/TRANSPORT.md §16. --}}
+            <div style="text-align: left; margin-bottom: 1rem;">
+                <a href="{{ url('/przewoznicy') }}" style="color: rgba(255,255,255,.85); text-decoration: none; font-size: .88rem;">
+                    {{ __('public/transporter_directory.back_to_directory') }}
+                </a>
+            </div>
             @if ($logo_url)
                 <img src="{{ $logo_url }}" alt="{{ $tenant->name }}" class="logo-img">
             @endif

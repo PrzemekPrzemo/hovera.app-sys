@@ -24,6 +24,7 @@ use App\Http\Controllers\Public\QuoteAcceptanceController;
 use App\Http\Controllers\Public\SignupController;
 use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Public\StripeWebhookController;
+use App\Http\Controllers\Public\TransporterDirectoryController;
 use App\Http\Controllers\Public\TransporterOgImageController;
 use App\Http\Controllers\Public\TransporterProfileController;
 use App\Http\Controllers\Public\TransportInquiryController;
@@ -341,6 +342,16 @@ Route::middleware(['web', 'throttle:30,1'])
         Route::get('/cancel/{entry}', [BookingCancellationController::class, 'show'])->name('cancel.show');
         Route::post('/cancel/{entry}', [BookingCancellationController::class, 'submit'])->name('cancel.submit');
     });
+
+/*
+ * Publiczny katalog zweryfikowanych przewoźników pod /przewoznicy.
+ * Trzecia ścieżka odkrywania marketplace'u — obok bezpośredniego /t/{slug}
+ * i broadcast'u /transport/zapytanie. Filtry: województwo + nazwa firmy;
+ * sort: ocena malejąco (default), nazwa, recency. Patrz docs/TRANSPORT.md §16.
+ */
+Route::middleware('web')
+    ->get('/przewoznicy', [TransporterDirectoryController::class, 'index'])
+    ->name('public.transporters.directory');
 
 /*
  * Publiczny profil transportera pod /t/{slug} — marketing/SEO landing.

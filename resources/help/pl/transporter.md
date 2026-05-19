@@ -249,6 +249,34 @@ pokazuje średnią + ostatnich 10 opinii. Możesz też udostępniać
 link do profilu (Facebook, Google My Business, wizytówki) — opinie
 realne, niewykasowalne przez transportera, dodają wiarygodności.
 
+## Publiczny katalog `/przewoznicy`
+
+Twój profil pojawi się w katalogu zweryfikowanych przewoźników
+(`/przewoznicy`) **automatycznie po weryfikacji** dokumentów przez
+zespół Hovery. Nie musisz nic dodatkowo robić — katalog czyta listę
+verified tenantów bezpośrednio z bazy.
+
+**Ranking w katalogu:**
+
+1. **Ocena malejąco** (Reviews — średnia z opublikowanych opinii).
+2. Liczba opinii (więcej = bardziej zaufany przy tej samej średniej).
+3. **Recency** (`created_at` DESC) — nowi przewoźnicy widoczni
+   nawet bez opinii.
+
+**Co poprawia widoczność:**
+
+- Komplet branding (logo + primary color) — karta wygląda lepiej.
+- Wypełniony `tagline` (1-2 zdania) — pojawia się pod nazwą firmy.
+- Lista województw w „Obszar działania" — filtry katalogu pokażą
+  Cię klientom z danego regionu.
+- Aktywne pozyskiwanie opinii (linki do `/transport/review/...`
+  po zakończeniu zlecenia) — średnia + count przeszywają sortowanie.
+
+**Anty-spam:** tenant z statusem `suspended` znika z katalogu
+natychmiast (cache 60 s s-maxage). Suspended ≠ verified — choć
+zachowujesz status verification, marketplace ukrywa firmę dopóki
+Hovera nie zdejmie blokady.
+
 ## Wsparcie
 
 - **Email supportu:** `support@hovera.app` (czas reakcji: 1 dzień
