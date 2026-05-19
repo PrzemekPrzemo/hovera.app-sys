@@ -39,9 +39,13 @@ return new class extends Migration
             // Magic link mechanism — token raw idzie do maila, w DB trzymamy
             // tylko sha256 hash (analog akceptacji oferty, ale z osobnym TTL
             // 30 dni — review ma duży window żeby klient zdążył ochłonąć/przemyśleć).
+            // ->useCurrent() na obu — MySQL strict mode wymaga explicit default
+            // dla TIMESTAMP NOT NULL. App code (TransportReviewInviteService)
+            // i tak nadpisuje obie wartości przy create — default to tylko
+            // sanity fallback gdyby ktoś insertował bez wypełnienia.
             $table->string('invite_token_hash', 64)->unique();
-            $table->timestamp('invite_sent_at');
-            $table->timestamp('invite_expires_at');
+            $table->timestamp('invite_sent_at')->useCurrent();
+            $table->timestamp('invite_expires_at')->useCurrent();
 
             // Content
             $table->unsignedTinyInteger('rating')->nullable();          // 1..5
