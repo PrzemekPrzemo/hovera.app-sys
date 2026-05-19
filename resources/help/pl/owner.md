@@ -396,7 +396,32 @@ Sidebar i strony są **filtrowane wg roli pracownika**. Vet nie zobaczy faktur i
 
 ---
 
-## 25. Wskazówki
+## 25. Zamawianie transportu koni
+
+W ramach swojego planu Hovery (Start i wyżej — `free` plan nie ma dostępu)
+zamawiasz transport koni **bezpłatnie**, bez wychodzenia z panelu.
+
+**Skąd zacząć?** Wejdź w sidebar → **Transport koni** (`/app/transport`) — znajdziesz tam
+3 ścieżki:
+
+1. **Wyślij zapytanie do wszystkich w regionie** (broadcast) — najszybsze, otrzymasz
+   oferty mailem od kilku przewoźników w ciągu 24h.
+2. **Przeglądaj firmy** — publiczny katalog wszystkich zweryfikowanych przewoźników
+   (opinie, region, flota).
+3. **Ulubieni przewoźnicy** — Twoja lista max 5 firm; przy zapytaniu direct
+   pre-wypełniamy je do wyboru.
+
+**Skrót z karty konia:** otwierając konkretnego konia (`/app/horses/{id}/edit`),
+zobaczysz w nagłówku przycisk **"Zamów transport"** — wypełnimy dane stajni
+oraz nazwę konia automatycznie.
+
+**Hovera = pośrednik marketplace.** Umowa transportu zawierana jest BEZPOŚREDNIO
+między Tobą a wybranym przewoźnikiem po akceptacji jego oferty. Szczegóły w
+[regulaminie marketplace](/regulamin-marketplace).
+
+---
+
+## 26. Wskazówki
 
 - **Skróty z klawiatury** — `?` w panelu pokazuje listę skrótów
 - **Język** — przełącz w user menu (PL / EN / DE / FR); preferencja zapisuje się per user

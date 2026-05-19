@@ -11,6 +11,15 @@ return [
     'direct_target_banner' => 'Вы отправляете запрос напрямую :name. Ответит только эта компания.',
     'direct_target_switch_to_broadcast' => 'Я хочу отправить всем подходящим перевозчикам',
 
+    'originator_banner' => [
+        'from_stable' => 'Заявка из конюшни :name',
+        'back_to_app' => 'вернуться в панель',
+    ],
+
+    'prefill' => [
+        'horse_note' => 'Лошадь: :name',
+    ],
+
     'label' => [
         'customer_name' => 'ФИО',
         'customer_email' => 'Email',

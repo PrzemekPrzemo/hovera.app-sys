@@ -11,6 +11,15 @@ return [
     'direct_target_banner' => 'Vous envoyez cette demande directement à :name. Seule cette entreprise répondra.',
     'direct_target_switch_to_broadcast' => 'Je préfère l\'envoyer à tous les transporteurs correspondants',
 
+    'originator_banner' => [
+        'from_stable' => 'Demande depuis l\'écurie :name',
+        'back_to_app' => 'retour au panneau',
+    ],
+
+    'prefill' => [
+        'horse_note' => 'Cheval : :name',
+    ],
+
     'label' => [
         'customer_name' => 'Nom complet',
         'customer_email' => 'E-mail',

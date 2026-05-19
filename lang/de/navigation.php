@@ -45,6 +45,7 @@ return [
     'vehicles' => 'Fahrzeuge',
     'drivers' => 'Fahrer',
     'quotes' => 'Angebote',
+    'transport' => 'Pferdetransport',
 
     // Pages (non-resource)
     'pages' => [

@@ -43,6 +43,7 @@ return [
     'vehicles' => 'Vehicles',
     'drivers' => 'Drivers',
     'quotes' => 'Quotes',
+    'transport' => 'Horse transport',
 
     'pages' => [
         'profile' => 'Profile',

@@ -8,11 +8,15 @@ use App\Domain\Transport\Geocoding\Exceptions\GeocodingException;
 use App\Domain\Transport\Geocoding\MapboxGeocoder;
 use App\Domain\Transport\Leads\LeadDispatcher;
 use App\Models\Central\Tenant;
+use App\Models\Central\TenantMembership;
 use App\Models\Central\TransportLead;
+use App\Models\Tenant\Horse;
+use App\Tenancy\TenantManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -43,20 +47,29 @@ class TransportInquiryController extends Controller
     public function show(Request $request): View
     {
         $targetTransporter = $this->resolveTransporterFromRequest($request);
+        $originatorStable = $this->resolveOriginatorStable($request);
+        $horseContext = $this->resolveHorseContext($request, $originatorStable);
+
+        // Defaulty pre-fillu — query params (?stable=…&horse=…) wygrywają
+        // nad sesją (old). Jeżeli user editował już raz formularz, jego
+        // wpisy nadpisują nasze pre-fill'e (old() ma pierwszeństwo) —
+        // tylko pierwszy load z /app dostaje hint'y.
+        $defaults = $this->buildPrefillDefaults($originatorStable, $horseContext);
 
         return view('public.transport.inquiry', [
             'old' => [
-                'customer_name' => (string) old('customer_name'),
-                'customer_email' => (string) old('customer_email'),
+                'customer_name' => (string) old('customer_name', $defaults['customer_name']),
+                'customer_email' => (string) old('customer_email', $defaults['customer_email']),
                 'customer_phone' => (string) old('customer_phone'),
-                'pickup_address' => (string) old('pickup_address'),
+                'pickup_address' => (string) old('pickup_address', $defaults['pickup_address']),
                 'dropoff_address' => (string) old('dropoff_address'),
                 'preferred_date' => (string) old('preferred_date', now()->addDays(7)->toDateString()),
                 'preferred_time' => (string) old('preferred_time'),
-                'horse_count' => (int) old('horse_count', 1),
-                'notes' => (string) old('notes'),
+                'horse_count' => (int) old('horse_count', $defaults['horse_count']),
+                'notes' => (string) old('notes', $defaults['notes']),
             ],
             'targetTransporter' => $targetTransporter,
+            'originatorStable' => $originatorStable,
         ]);
     }
 
@@ -75,11 +88,14 @@ class TransportInquiryController extends Controller
 
         $targetTransporter = $this->resolveTransporterFromRequest($request);
         $isDirect = $targetTransporter !== null;
+        $originatorStable = $this->resolveOriginatorStable($request);
 
         $lead = TransportLead::create([
             'id' => (string) Str::ulid(),
             'mode' => $isDirect ? 'direct' : 'broadcast',
             'targeted_transporter_ids' => $isDirect ? [$targetTransporter->id] : null,
+            'originator_tenant_id' => $originatorStable?->id,
+            'originator_user_id' => $originatorStable !== null ? Auth::id() : null,
             'originator_name' => $data['customer_name'],
             'originator_email' => $data['customer_email'],
             'originator_phone' => $data['customer_phone'] ?? null,
@@ -151,6 +167,106 @@ class TransportInquiryController extends Controller
         );
 
         return $tenant instanceof Tenant ? $tenant : null;
+    }
+
+    /**
+     * Resolve `?stable={ulid}` do Tenant — ale tylko gdy zalogowany user
+     * ma aktywne membership w tym tenancie. Silent null w innym przypadku
+     * (gracieusna degradacja — nie 403'ujemy ani nie eksponujemy istnienia
+     * stable owom anonimowym).
+     *
+     * Wymóg `canUseTransport()` jest poza zakresem tej metody — controller
+     * publiczny dopuszcza każde stable do submita; gate jest na entry
+     * pointach panelu (TransportEntry::canAccess + sidebar visibility).
+     */
+    private function resolveOriginatorStable(Request $request): ?Tenant
+    {
+        $stableId = (string) $request->input('stable', '');
+
+        if ($stableId === '' || ! preg_match('/^[0-9A-Za-z]{26}$/', $stableId)) {
+            return null;
+        }
+
+        $user = Auth::user();
+        if ($user === null) {
+            return null;
+        }
+
+        // Czy user ma aktywne (non-revoked) membership w tym tenancie?
+        $hasMembership = TenantMembership::query()
+            ->where('tenant_id', $stableId)
+            ->where('user_id', $user->id)
+            ->whereNull('revoked_at')
+            ->exists();
+
+        if (! $hasMembership) {
+            return null;
+        }
+
+        return Tenant::query()->find($stableId);
+    }
+
+    /**
+     * Resolve `?horse={ulid}` — wymaga aktywnego $stable bo Horse model
+     * żyje per-tenant connection. Setujemy tenant na czas zapytania,
+     * po czym revertujemy żeby nie zatruć reszty requestu.
+     */
+    private function resolveHorseContext(Request $request, ?Tenant $stable): ?Horse
+    {
+        $horseId = (string) $request->input('horse', '');
+
+        if ($horseId === '' || $stable === null) {
+            return null;
+        }
+
+        if (! preg_match('/^[0-9A-Za-z]{26}$/', $horseId)) {
+            return null;
+        }
+
+        try {
+            return app(TenantManager::class)->execute($stable, function () use ($horseId): ?Horse {
+                return Horse::query()->find($horseId);
+            });
+        } catch (\Throwable) {
+            // Tenant connection nieczynny / mig nie wykonana → ignoruj.
+            return null;
+        }
+    }
+
+    /**
+     * @return array{customer_name:string, customer_email:string, pickup_address:string, horse_count:int, notes:string}
+     */
+    private function buildPrefillDefaults(?Tenant $stable, ?Horse $horse): array
+    {
+        $defaults = [
+            'customer_name' => '',
+            'customer_email' => '',
+            'pickup_address' => '',
+            'horse_count' => 1,
+            'notes' => '',
+        ];
+
+        if ($stable !== null) {
+            $user = Auth::user();
+            if ($user !== null) {
+                $defaults['customer_name'] = (string) ($user->name ?? '');
+                $defaults['customer_email'] = (string) ($user->email ?? '');
+            }
+
+            // public_profile.address ustawiany w TenantSettings — patrz
+            // app/Filament/App/Pages/TenantSettings.php :: save().
+            $address = (string) data_get($stable->settings ?? [], 'public_profile.address', '');
+            if ($address !== '') {
+                $defaults['pickup_address'] = $address;
+            }
+        }
+
+        if ($horse !== null) {
+            $defaults['horse_count'] = 1;
+            $defaults['notes'] = __('public/transport_inquiry.prefill.horse_note', ['name' => (string) $horse->name]);
+        }
+
+        return $defaults;
     }
 
     /**
