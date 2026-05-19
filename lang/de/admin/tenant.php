@@ -15,6 +15,7 @@ return [
             'database' => 'Datenbank',
         ],
         'label' => [
+            'type' => 'Mandanten-Typ',
             'tax_id' => 'USt-IdNr. / VAT-ID',
             'plan' => 'Tarif',
             'primary_color' => 'Hauptfarbe',
@@ -25,9 +26,23 @@ return [
             'public_address' => 'Adresse',
             'public_website' => 'Website',
         ],
+        'option' => [
+            'type' => [
+                'stable' => 'Reitstall',
+                'transporter' => 'Transportunternehmen',
+            ],
+        ],
         'helper' => [
             'slug' => 'Unveränderlich. Wird in URLs und Datenbanknamen verwendet.',
+            'type' => 'Bestimmt das Panel nach dem Login (Reitstall → /app, Transport → /transport) und welche Tarife verfügbar sind. Nach Erstellung unveränderlich.',
+            'plan' => 'Tarifliste gefiltert nach gewähltem Mandantentyp.',
         ],
+    ],
+
+    'notify' => [
+        'created_stable' => 'Reitstall erstellt',
+        'created_transporter' => 'Transportunternehmen erstellt',
+        'created_body' => 'Datenbank :db wurde initialisiert.',
     ],
 
     'table' => [

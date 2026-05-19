@@ -15,6 +15,7 @@ return [
             'database' => 'Database',
         ],
         'label' => [
+            'type' => 'Tenant type',
             'tax_id' => 'Tax ID / VAT ID',
             'plan' => 'Plan',
             'primary_color' => 'Primary color',
@@ -25,9 +26,23 @@ return [
             'public_address' => 'Address',
             'public_website' => 'Website',
         ],
+        'option' => [
+            'type' => [
+                'stable' => 'Equestrian stable',
+                'transporter' => 'Transport company',
+            ],
+        ],
         'helper' => [
             'slug' => 'Immutable. Used in URLs and database name.',
+            'type' => 'Determines the panel after login (Stable → /app, Transport → /transport) and which plans are available. Immutable after creation.',
+            'plan' => 'Plan list filtered by selected tenant type.',
         ],
+    ],
+
+    'notify' => [
+        'created_stable' => 'Stable created',
+        'created_transporter' => 'Transport company created',
+        'created_body' => 'Database :db has been initialized.',
     ],
 
     'table' => [

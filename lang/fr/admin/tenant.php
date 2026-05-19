@@ -15,6 +15,7 @@ return [
             'database' => 'Base de données',
         ],
         'label' => [
+            'type' => 'Type de locataire',
             'tax_id' => 'NIP / N° de TVA',
             'plan' => 'Plan',
             'primary_color' => 'Couleur principale',
@@ -25,9 +26,23 @@ return [
             'public_address' => 'Adresse',
             'public_website' => 'Site web',
         ],
+        'option' => [
+            'type' => [
+                'stable' => 'Écurie équestre',
+                'transporter' => 'Société de transport',
+            ],
+        ],
         'helper' => [
             'slug' => 'Immuable. Utilisé dans les URLs et le nom de base de données.',
+            'type' => 'Détermine le panneau après connexion (Écurie → /app, Transport → /transport) et les plans disponibles. Immuable après création.',
+            'plan' => 'Liste des plans filtrée par le type de locataire sélectionné.',
         ],
+    ],
+
+    'notify' => [
+        'created_stable' => 'Écurie créée',
+        'created_transporter' => 'Société de transport créée',
+        'created_body' => 'La base de données :db a été initialisée.',
     ],
 
     'table' => [

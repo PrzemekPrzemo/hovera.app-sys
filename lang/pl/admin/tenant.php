@@ -15,6 +15,7 @@ return [
             'database' => 'Baza danych',
         ],
         'label' => [
+            'type' => 'Typ tenanta',
             'tax_id' => 'NIP / VAT ID',
             'plan' => 'Plan',
             'primary_color' => 'Kolor wiodący',
@@ -25,9 +26,23 @@ return [
             'public_address' => 'Adres',
             'public_website' => 'Strona WWW',
         ],
+        'option' => [
+            'type' => [
+                'stable' => 'Stajnia jeździecka',
+                'transporter' => 'Firma transportowa',
+            ],
+        ],
         'helper' => [
             'slug' => 'Niezmienne. Używane w adresach i nazwie bazy.',
+            'type' => 'Określa panel po zalogowaniu (Stajnia → /app, Transport → /transport) i listę dostępnych planów. Po utworzeniu niezmienialny.',
+            'plan' => 'Lista planów filtrowana wybranym typem tenanta.',
         ],
+    ],
+
+    'notify' => [
+        'created_stable' => 'Stajnia utworzona',
+        'created_transporter' => 'Firma transportowa utworzona',
+        'created_body' => 'Baza :db została zainicjowana.',
     ],
 
     'table' => [

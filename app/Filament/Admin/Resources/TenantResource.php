@@ -60,6 +60,18 @@ class TenantResource extends Resource
             Forms\Components\Section::make(__('admin/tenant.form.section.identification'))
                 ->columns(2)
                 ->schema([
+                    Forms\Components\Select::make('type')
+                        ->label(__('admin/tenant.form.label.type'))
+                        ->helperText(__('admin/tenant.form.helper.type'))
+                        ->options([
+                            TenantType::Stable->value => __('admin/tenant.form.option.type.stable'),
+                            TenantType::Transporter->value => __('admin/tenant.form.option.type.transporter'),
+                        ])
+                        ->default(TenantType::Stable->value)
+                        ->required()
+                        ->disabledOn('edit')
+                        ->live()
+                        ->columnSpanFull(),
                     Forms\Components\TextInput::make('slug')
                         ->required()
                         ->maxLength(63)
@@ -87,7 +99,15 @@ class TenantResource extends Resource
                 ->schema([
                     Forms\Components\Select::make('plan_id')
                         ->label(__('admin/tenant.form.label.plan'))
-                        ->options(fn () => Plan::query()->orderBy('sort_order')->pluck('name', 'id'))
+                        ->options(function (Forms\Get $get) {
+                            $type = $get('type') ?: TenantType::Stable->value;
+
+                            return Plan::query()
+                                ->where('audience', $type)
+                                ->orderBy('sort_order')
+                                ->pluck('name', 'id');
+                        })
+                        ->helperText(__('admin/tenant.form.helper.plan'))
                         ->searchable(),
                     Forms\Components\Select::make('status')
                         ->options([
