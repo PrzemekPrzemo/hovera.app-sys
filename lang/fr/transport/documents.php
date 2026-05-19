@@ -51,7 +51,6 @@ return [
         'allowed_formats' => 'Acceptés : PDF, JPG, PNG. Maximum 10 Mo par fichier. Tous les fichiers stockés chiffrés en UE.',
     ],
 
-    // @todo native review — traduction automatique depuis PL/EN.
     'section' => [
         'pwl_required' => 'Documents PWL (obligatoires pour la vérification)',
         'pwl_optional' => 'Documents optionnels',

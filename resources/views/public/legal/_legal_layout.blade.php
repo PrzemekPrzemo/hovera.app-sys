@@ -62,6 +62,19 @@
             .logo, nav.main a, h1, h2 { color: #E9E2D3; }
             .meta, footer.site, footer.site a { color: #C8B8A4; }
         }
+        /* Mobile (≤600px) — kompaktowy header (nav.main ukryty oprócz CTA),
+           mniej paddingu w main, mniejsze h1. */
+        @media (max-width: 600px) {
+            header.site { padding: .75rem 1rem; }
+            nav.main a { margin-left: .5rem; font-size: .85rem; }
+            nav.main a:not(.cta) { display: none; }
+            main.legal { margin: 1.5rem auto 2.5rem; padding: 0 1rem; }
+            h1 { font-size: 1.55rem; }
+            h2 { font-size: 1.1rem; margin: 1.5rem 0 .35rem; }
+            .legal-tabs { gap: .35rem; }
+            .legal-tabs a { padding: .4rem .8rem; font-size: .82rem; }
+            footer.site { padding: 1.25rem 1rem; }
+        }
     </style>
 </head>
 <body>

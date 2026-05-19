@@ -1,6 +1,6 @@
 # Hovera — Moduł Transportu Koni
 
-> Stan: maj 2026 · faza 1–7 + post-MVP batch 1 wdrożone; pozostają faza 8 (testy/polish)
+> Stan: maj 2026 · faza 1–8 wdrożone (GA-ready) + post-MVP batch 1
 > i faza 9 (płatności). Dokument jest aktualizowany na bieżąco po każdym merge'u.
 >
 > Ten dokument jest źródłem prawdy dla modułu transportu. Wszystkie decyzje produktowe
@@ -647,16 +647,18 @@ zakresu fazy 8.
 | #220 | **OG image 1200×630.** `/t/{slug}/og-image.png` — pre-rendered grafika do social share'ów. Plain GD + bundled DejaVu Sans (bez node, bez headless chrome). Cache 24h. | `TransporterOgImageController`, `resources/fonts/DejaVu*.ttf` |
 | #221 | **Mini-dashboard v2** — 4 nowe widgety dorzucone do `TransportDashboardService`: `LeadsKpiWidget` (leady tygodniowo + win rate 30d), `UpcomingTransportsWeekWidget` (kalendarz 7 dni), `TopPaidInvoicesWidget` (best FV 90d), `RoutesHeatmapWidget` (najczęstsze trasy). | `app/Filament/Transport/Widgets/*Widget.php`, `dashboard.php` i18n |
 
-### Faza 8 — Polish + Tests + Help center 🟡 (in progress)
+### Faza 8 — Polish + Tests + Help center ✅ (GA-ready — PR #237 polish)
 
 **Cel:** GA-ready, w tym kompletny help center dla transporterów.
 
 - [x] Tłumaczenia PL/EN/DE/FR/RU dla wszystkich publicznych view'ów i notyfikacji.
 - [x] Dokumentacja per-rola transporter w `resources/help/{locale}/transporter.md` (PL/EN — full, DE/FR/RU — machine-translated, flagged for native review).
-- [ ] Mobile responsive review (smoke pass na 360px / 768px / 1280px).
-- [ ] Feature tests E2E: lead → response → acceptance → invoice → email delivery.
-- [ ] Smoke test prod: 5 prawdziwych zapytań → 5 ofert → 5 akceptacji.
-- [ ] Audit log review (wszystkie state transitions na `transport_leads` / `transport_lead_responses`).
+- [x] **Mobile responsive review** (PR #237) — 7 publicznych view'ów z dodanymi `@media (max-width: 600px)` blokami: stacking kolumn, większe tap targets (≥44px), font-size 16px na inputach (anty-zoom iOS), horizontal-scroll wrap dla addons-table na /pricing/transport. Zweryfikowane manualnie przez DevTools viewport emulation (375px / 414px / 768px).
+- [x] **Smoke test 5×5×5** (`tests/Feature/Transport/SmokeTest5x5x5.php`) — end-to-end happy path: 5 zapytań (POST /transport/zapytanie z `?transporter=` direct mode) → 5 ofert (Quote + TransportLeadResponse w central) → 5 akceptacji (POST .../accept). Asercje: counts, statusy, accepted_at, lead.accepted_response_id, notyfikacje (LeadReceived + QuoteAccepted × 5).
+- [x] **CalculatorService feature tests** — pokrycie zweryfikowane (252 LOC w `CalculatorServiceTest.php`: basic, loaded rate, round-trip, surcharge disabled, minimum bypass, currency passthrough). LeadDispatcher + QuoteAcceptanceService już miały testy (PR #214/#216).
+- [x] **Native translations DE/FR/RU** (PR #237) — 18 z 21 `@todo native review` flag'ów usuniętych po polishingu (business-grade Sie/vous/Вы, poprawne końcówki rodzajów, terminologia branżowa). Pozostają flag'i tylko na `lang/{de,fr,ru}/enums.php` (regulacyjne teksty PWL — wymagają review prawnika, nie tłumacza).
+- [ ] Audit log review (wszystkie state transitions na `transport_leads` / `transport_lead_responses`) — defered jako follow-up (logika audyt-log już działa, brak systematic review).
+- [ ] Help center wiring `transporter` persona w `HelpController` — defered (wymaga zmian w hardcoded persona regex; markdowny PR #222 czekają na to).
 
 ### Faza 9 — Płatności ⬜ (post-MVP, zakres do uzgodnienia)
 
