@@ -32,12 +32,13 @@ return new class extends Migration
             }
         });
 
-        // Index addytywnie — Schema::hasIndex jest stabilne tylko dla
-        // unique/foreign w Laravel 11, dla regular index sprawdzamy raw
-        // przez DB query (MySQL information_schema, SQLite pragma).
-        if (! $this->hasIndex('transport_reviews', 'transport_reviews_transporter_tenant_id_flagged_by_tenant_at_index')) {
+        // Explicit short index name — auto-generated
+        // `transport_reviews_transporter_tenant_id_flagged_by_tenant_at_index`
+        // ma 67 znaków, MySQL limit = 64. Bez `name` argumentu deploy padał
+        // na MySQL prod (handover §6 gotcha #2). Patrz docs/TRANSPORT.md.
+        if (! $this->hasIndex('transport_reviews', 'tr_tenant_flagged_idx')) {
             Schema::connection('central')->table('transport_reviews', function (Blueprint $table) {
-                $table->index(['transporter_tenant_id', 'flagged_by_tenant_at']);
+                $table->index(['transporter_tenant_id', 'flagged_by_tenant_at'], 'tr_tenant_flagged_idx');
             });
         }
     }
@@ -45,8 +46,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::connection('central')->table('transport_reviews', function (Blueprint $table) {
-            if ($this->hasIndex('transport_reviews', 'transport_reviews_transporter_tenant_id_flagged_by_tenant_at_index')) {
-                $table->dropIndex(['transporter_tenant_id', 'flagged_by_tenant_at']);
+            if ($this->hasIndex('transport_reviews', 'tr_tenant_flagged_idx')) {
+                $table->dropIndex('tr_tenant_flagged_idx');
             }
             if (Schema::connection('central')->hasColumn('transport_reviews', 'flagged_by_user_id')) {
                 $table->dropColumn('flagged_by_user_id');
