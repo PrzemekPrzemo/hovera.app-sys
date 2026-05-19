@@ -43,6 +43,7 @@ return [
         'created_stable' => 'Reitstall erstellt',
         'created_transporter' => 'Transportunternehmen erstellt',
         'created_body' => 'Datenbank :db wurde initialisiert.',
+        'create_failed' => 'Mandantenerstellung fehlgeschlagen',
     ],
 
     'table' => [
