@@ -109,8 +109,16 @@
 
     <div class="card signup-cta">
         <h3>{{ __('public/transport_lead_portal.signup.heading') }}</h3>
-        <p>{{ __('public/transport_lead_portal.signup.body') }}</p>
-        <p class="signup-disabled">{{ __('public/transport_lead_portal.signup.coming_soon') }}</p>
+        @if ($isLoggedInAsLeadOwner)
+            <p>{{ __('public/transport_lead_portal.signup.already_logged_in') }}</p>
+            <a href="{{ route('public.transport.my_inquiries') }}" style="display:inline-block;padding:.7rem 1.1rem;background:var(--primary);color:#fff;border-radius:8px;font-weight:700;text-decoration:none;">{{ __('public/transport_lead_portal.signup.view_history') }}</a>
+        @elseif ($accountExists)
+            <p>{{ __('public/transport_lead_portal.signup.account_exists') }}</p>
+            <a href="{{ url('/app/login') }}" style="display:inline-block;padding:.7rem 1.1rem;background:var(--primary);color:#fff;border-radius:8px;font-weight:700;text-decoration:none;">{{ __('public/transport_lead_portal.signup.login_cta') }}</a>
+        @else
+            <p>{{ __('public/transport_lead_portal.signup.body') }}</p>
+            <a href="{{ route('public.transport.lead_portal.signup', ['slug' => $lead->access_slug]) }}" style="display:inline-block;padding:.7rem 1.1rem;background:var(--primary);color:#fff;border-radius:8px;font-weight:700;text-decoration:none;">{{ __('public/transport_lead_portal.signup.cta') }}</a>
+        @endif
     </div>
 
     <div class="footer">
