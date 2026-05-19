@@ -81,6 +81,99 @@ class PlanResource extends Resource
                         ->helperText(__('admin/plan.form.helper.onboarding_fee'))
                         ->columnSpanFull(),
                 ]),
+            Forms\Components\Section::make(__('admin/plan.form.section.multi_currency'))
+                ->description(__('admin/plan.form.section.multi_currency_description'))
+                ->collapsible()
+                // Enterprise (custom contract) — bez fixed pricing,
+                // multi-currency overlay nie ma sensu.
+                ->hidden(fn (Forms\Get $get) => self::isEnterprisePlan($get))
+                ->schema([
+                    Forms\Components\Repeater::make('prices_per_currency')
+                        ->label('')
+                        ->addActionLabel(__('admin/plan.form.label.multi_currency_add'))
+                        ->columns(2)
+                        ->reorderable(false)
+                        ->defaultItems(0)
+                        // Klucz repeatera == currency code; serializujemy
+                        // do {EUR: {monthly_cents, yearly_cents, stripe_*}, ...}.
+                        ->afterStateHydrated(function (Forms\Components\Repeater $component, $state) {
+                            if (! is_array($state) || $state === []) {
+                                $component->state([]);
+
+                                return;
+                            }
+                            $items = [];
+                            foreach ($state as $currency => $row) {
+                                if (! is_array($row)) {
+                                    continue;
+                                }
+                                $items[] = [
+                                    'currency' => is_string($currency) ? strtoupper($currency) : '',
+                                    'monthly_cents' => $row['monthly_cents'] ?? null,
+                                    'yearly_cents' => $row['yearly_cents'] ?? null,
+                                    'stripe_price_monthly_id' => $row['stripe_price_monthly_id'] ?? null,
+                                    'stripe_price_yearly_id' => $row['stripe_price_yearly_id'] ?? null,
+                                ];
+                            }
+                            $component->state($items);
+                        })
+                        // Repeater::setUp ustawia `mutateDehydratedStateUsing`
+                        // który ZAWSZE array_values() po naszym
+                        // `dehydrateStateUsing`. Żeby zachować klucze walut,
+                        // używamy `mutateDehydratedStateUsing` (nadpisuje
+                        // domyślny).
+                        ->mutateDehydratedStateUsing(function ($state) {
+                            if (! is_array($state)) {
+                                return null;
+                            }
+                            $out = [];
+                            foreach ($state as $row) {
+                                if (! is_array($row)) {
+                                    continue;
+                                }
+                                $currency = strtoupper((string) ($row['currency'] ?? ''));
+                                if ($currency === '') {
+                                    continue;
+                                }
+                                $out[$currency] = array_filter([
+                                    'monthly_cents' => isset($row['monthly_cents']) ? (int) $row['monthly_cents'] : null,
+                                    'yearly_cents' => isset($row['yearly_cents']) ? (int) $row['yearly_cents'] : null,
+                                    'stripe_price_monthly_id' => $row['stripe_price_monthly_id'] ?? null,
+                                    'stripe_price_yearly_id' => $row['stripe_price_yearly_id'] ?? null,
+                                ], static fn ($v) => $v !== null && $v !== '');
+                            }
+
+                            return $out !== [] ? $out : null;
+                        })
+                        ->schema([
+                            Forms\Components\Select::make('currency')
+                                ->label(__('admin/plan.form.label.multi_currency_currency'))
+                                ->options(self::currencyOptionsForOverlay())
+                                ->required()
+                                ->helperText(__('admin/plan.form.helper.multi_currency_currency')),
+                            Forms\Components\Group::make()->schema([]), // spacer
+                            Forms\Components\TextInput::make('monthly_cents')
+                                ->label(__('admin/plan.form.label.multi_currency_monthly'))
+                                ->numeric()
+                                ->minValue(0)
+                                ->helperText(__('admin/plan.form.helper.multi_currency_monthly')),
+                            Forms\Components\TextInput::make('yearly_cents')
+                                ->label(__('admin/plan.form.label.multi_currency_yearly'))
+                                ->numeric()
+                                ->minValue(0)
+                                ->helperText(__('admin/plan.form.helper.multi_currency_yearly')),
+                            Forms\Components\TextInput::make('stripe_price_monthly_id')
+                                ->label(__('admin/plan.form.label.multi_currency_stripe_monthly'))
+                                ->disabled()
+                                ->dehydrated()
+                                ->helperText(__('admin/plan.form.helper.multi_currency_stripe_monthly')),
+                            Forms\Components\TextInput::make('stripe_price_yearly_id')
+                                ->label(__('admin/plan.form.label.multi_currency_stripe_yearly'))
+                                ->disabled()
+                                ->dehydrated()
+                                ->helperText(__('admin/plan.form.helper.multi_currency_stripe_yearly')),
+                        ]),
+                ]),
             Forms\Components\Section::make(__('admin/plan.form.section.stripe'))
                 ->description(__('admin/plan.form.section.stripe_description'))
                 ->columns(2)
@@ -147,7 +240,14 @@ class PlanResource extends Resource
                     ->formatStateUsing(fn ($state) => $state
                         ? (TenantType::tryFrom((string) $state)?->label() ?? (string) $state)
                         : '—'),
-                Tables\Columns\TextColumn::make('code')->searchable()->sortable()->copyable(),
+                Tables\Columns\TextColumn::make('code')
+                    ->searchable()
+                    ->sortable()
+                    ->copyable()
+                    // Wizualny sygnał że plan jest legacy — admin powinien
+                    // przenieść jego tenantów na nową taryfę.
+                    ->badge(fn (Plan $r): bool => str_ends_with((string) $r->code, '_legacy'))
+                    ->color(fn (Plan $r): ?string => str_ends_with((string) $r->code, '_legacy') ? 'danger' : null),
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('price_monthly_cents')
                     ->label(__('admin/plan.table.column.price_monthly'))
@@ -158,6 +258,12 @@ class PlanResource extends Resource
                 Tables\Columns\TextColumn::make('tenants_count')
                     ->label(__('admin/plan.table.column.tenants_count'))
                     ->counts('tenants'),
+                Tables\Columns\TextColumn::make('active_tenants_count')
+                    ->label(__('admin/plan.table.column.active_tenants_count'))
+                    ->counts([
+                        'tenants as active_tenants_count' => fn ($q) => $q->whereIn('status', ['trialing', 'active']),
+                    ])
+                    ->numeric(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean()
                     ->label(__('admin/plan.table.column.is_active_short')),
@@ -201,5 +307,39 @@ class PlanResource extends Resource
             'create' => Pages\CreatePlan::route('/create'),
             'edit' => Pages\EditPlan::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Czy form w danym stanie reprezentuje plan Enterprise (custom pricing).
+     * Używamy do ukrycia sekcji multi-currency — Enterprise nie ma fixed cen.
+     */
+    private static function isEnterprisePlan(Forms\Get $get): bool
+    {
+        $features = $get('features');
+        if (is_array($features) && (! empty($features['is_custom_pricing'])
+            || ($features['marketing_cta'] ?? null) === 'contact_sales')) {
+            return true;
+        }
+
+        $monthly = (int) ($get('price_monthly_cents') ?? 0);
+        $yearly = (int) ($get('price_yearly_cents') ?? 0);
+
+        return $monthly <= 0 && $yearly <= 0;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function currencyOptionsForOverlay(): array
+    {
+        // Pokazujemy wszystkie wspierane waluty — UI nie wie jaka jest
+        // baza w momencie renderowania repeatera (form ma własny state).
+        // Walidacja "nie duplikuj base'a" jest deklarowana w helper text.
+        $opts = [];
+        foreach (Plan::supportedCurrencies() as $c) {
+            $opts[$c] = $c;
+        }
+
+        return $opts;
     }
 }
