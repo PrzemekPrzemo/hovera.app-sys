@@ -193,6 +193,29 @@
                         @error($inputName) <span class="error-msg">{{ $message }}</span> @enderror
                     </div>
                 @endforeach
+
+                {{-- Merged PWL T1/T2 — radio + jeden file input. Transporter wybiera
+                     typ zezwolenia (T1 < 8h vs T2 > 8h) i wgrywa odpowiedni skan. --}}
+                <div class="doc-row">
+                    <label for="{{ $pwlAuthorizationInput }}">
+                        <span class="doc-name">{{ __('public/transporter_onboarding.pwl_authorization.label') }}</span>
+                        <span class="doc-required">*</span>
+                    </label>
+                    <span class="doc-desc">{{ __('public/transporter_onboarding.pwl_authorization.description') }}</span>
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap; padding:.35rem 0;">
+                        @foreach ($pwlAuthorizationTypes as $typeKey)
+                            <label style="display:inline-flex; align-items:center; gap:.4rem; font-weight:500;">
+                                <input type="radio" name="{{ $pwlAuthorizationRadio }}" value="{{ $typeKey }}" required
+                                    {{ old($pwlAuthorizationRadio) === $typeKey ? 'checked' : '' }}>
+                                <span>{{ __('public/transporter_onboarding.pwl_authorization.type_'.$typeKey) }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @error($pwlAuthorizationRadio) <span class="error-msg">{{ $message }}</span> @enderror
+                    <input id="{{ $pwlAuthorizationInput }}" type="file" name="{{ $pwlAuthorizationInput }}" required accept=".pdf,.jpg,.jpeg,.png" class="@error($pwlAuthorizationInput) error @enderror">
+                    <span class="field-hint">{{ __('public/transporter_onboarding.documents.file_hint') }}</span>
+                    @error($pwlAuthorizationInput) <span class="error-msg">{{ $message }}</span> @enderror
+                </div>
             </div>
         </div>
 

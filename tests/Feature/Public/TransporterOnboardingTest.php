@@ -6,6 +6,7 @@ namespace Tests\Feature\Public;
 
 use App\Domain\Transport\Verification\DocumentUploadService;
 use App\Enums\TenantType;
+use App\Enums\TransporterDocumentType;
 use App\Enums\VerificationStatus;
 use App\Mail\MasterAdmin\TransporterOnboardingSubmittedMail;
 use App\Models\Central\Tenant;
@@ -79,8 +80,8 @@ class TransporterOnboardingTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('doc_road_carrier_license', false);
-        $response->assertSee('doc_pwl_t1', false);
-        $response->assertSee('doc_pwl_t2', false);
+        $response->assertSee('doc_pwl_authorization', false);
+        $response->assertSee('pwl_authorization_type', false);
         $response->assertSee('doc_pwl_driver_handler', false);
         $response->assertSee('doc_pwl_vehicle_approval', false);
         $response->assertSee('doc_wash_disinfection', false);
@@ -164,6 +165,50 @@ class TransporterOnboardingTest extends TestCase
         $response->assertSessionHasErrors('doc_road_carrier_license');
     }
 
+    public function test_missing_pwl_authorization_type_returns_validation_error(): void
+    {
+        $payload = $this->validPayload();
+        unset($payload['pwl_authorization_type']);
+
+        $response = $this->post('/przewoznicy/dolacz', $payload);
+
+        $response->assertSessionHasErrors('pwl_authorization_type');
+    }
+
+    public function test_invalid_pwl_authorization_type_returns_validation_error(): void
+    {
+        $payload = $this->validPayload();
+        $payload['pwl_authorization_type'] = 't9'; // nieistniejący wariant
+
+        $response = $this->post('/przewoznicy/dolacz', $payload);
+
+        $response->assertSessionHasErrors('pwl_authorization_type');
+    }
+
+    public function test_pwl_authorization_radio_drives_enum_case_used_for_upload(): void
+    {
+        $captured = [];
+        $this->mock(DocumentUploadService::class, function ($m) use (&$captured) {
+            $m->shouldReceive('upload')
+                ->andReturnUsing(function ($file, TransporterDocumentType $type) use (&$captured) {
+                    $captured[] = $type;
+
+                    return new TransporterDocument([
+                        'id' => '01HXXXXXX',
+                        'status' => 'pending',
+                    ]);
+                });
+        });
+
+        $payload = $this->validPayload();
+        $payload['pwl_authorization_type'] = 't2';
+
+        $this->post('/przewoznicy/dolacz', $payload);
+
+        $this->assertContains(TransporterDocumentType::PwlAuthorizationT2, $captured);
+        $this->assertNotContains(TransporterDocumentType::PwlAuthorizationT1, $captured);
+    }
+
     public function test_unaccepted_terms_returns_validation_error(): void
     {
         $payload = $this->validPayload();
@@ -208,9 +253,9 @@ class TransporterOnboardingTest extends TestCase
             'owner_email' => 'anna@testfirma.pl',
             'owner_phone' => '+48 600 100 200',
             'terms' => '1',
+            'pwl_authorization_type' => 't1',
             'doc_road_carrier_license' => UploadedFile::fake()->create('license.pdf', 100, 'application/pdf'),
-            'doc_pwl_t1' => UploadedFile::fake()->create('pwl_t1.pdf', 100, 'application/pdf'),
-            'doc_pwl_t2' => UploadedFile::fake()->create('pwl_t2.pdf', 100, 'application/pdf'),
+            'doc_pwl_authorization' => UploadedFile::fake()->create('pwl.pdf', 100, 'application/pdf'),
             'doc_pwl_driver_handler' => UploadedFile::fake()->create('driver.pdf', 100, 'application/pdf'),
             'doc_pwl_vehicle_approval' => UploadedFile::fake()->create('vehicle.pdf', 100, 'application/pdf'),
             'doc_wash_disinfection' => UploadedFile::fake()->create('wash.pdf', 100, 'application/pdf'),

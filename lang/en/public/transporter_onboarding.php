@@ -54,6 +54,15 @@ return [
     'documents_disclaimer' => 'We require 6 documents per PWL (Polish Logistics Cooperation) law and hovera regulations. '
         .'Without the full set, we cannot activate your account. Formats: PDF, JPG, PNG. Max 5 MB per file.',
 
+    'pwl_authorization' => [
+        'label' => 'PWL carrier authorization',
+        'description' => 'Authorization to transport live animals under EC Regulation 1/2005. '
+            .'Choose the type: T1 (short trips, up to 8h) or T2 (long trips, over 8h) — '
+            .'and upload the matching scan.',
+        'type_t1' => 'Type 1 (transport up to 8 hours)',
+        'type_t2' => 'Type 2 (transport over 8 hours)',
+    ],
+
     'documents' => [
         'file_hint' => 'PDF, JPG or PNG. Max 5 MB.',
         'anonymized_heading' => 'Documents are only for verification',
@@ -83,6 +92,7 @@ return [
         'tax_id_format' => 'Tax ID must be 10 digits (no dashes or spaces).',
         'regon_format' => 'REGON must be 9 or 14 digits.',
         'terms' => 'You must accept the terms to continue.',
+        'pwl_authorization_type_required' => 'Choose the PWL authorization type (T1 or T2).',
         'provisioning_failed' => 'Unfortunately we could not create the account — please try again in a moment. '
             .'If the problem persists, please email office@hovera.app.',
     ],

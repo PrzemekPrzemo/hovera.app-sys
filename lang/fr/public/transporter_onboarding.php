@@ -46,6 +46,14 @@ return [
     ],
     'documents_disclaimer' => 'Nous exigeons 6 documents conformément à la loi PWL et aux règlements hovera. '
         .'Formats : PDF, JPG, PNG. Max 5 Mo par fichier.',
+    'pwl_authorization' => [
+        'label' => 'Autorisation PWL du transporteur',
+        'description' => 'Autorisation de transport d\'animaux vivants selon le Règlement CE 1/2005. '
+            .'Choisissez le type : T1 (trajets courts, jusqu\'à 8h) ou T2 (trajets longs, plus de 8h) — '
+            .'et téléchargez le scan correspondant.',
+        'type_t1' => 'Type 1 (transport jusqu\'à 8 heures)',
+        'type_t2' => 'Type 2 (transport de plus de 8 heures)',
+    ],
     'documents' => [
         'file_hint' => 'PDF, JPG ou PNG. Max 5 Mo.',
         'anonymized_heading' => 'Documents uniquement pour vérification',
@@ -71,6 +79,7 @@ return [
         'tax_id_format' => 'Le NIP doit comporter 10 chiffres.',
         'regon_format' => 'Le REGON doit comporter 9 ou 14 chiffres.',
         'terms' => 'Vous devez accepter les CGV.',
+        'pwl_authorization_type_required' => 'Choisissez le type d\'autorisation PWL (T1 ou T2).',
         'provisioning_failed' => 'Impossible de créer le compte — réessayez dans un instant.',
     ],
     'notify' => ['thanks_silent' => 'Merci — nous examinerons votre demande.'],

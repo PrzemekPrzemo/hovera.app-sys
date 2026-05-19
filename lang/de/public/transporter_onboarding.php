@@ -45,6 +45,14 @@ return [
     ],
     'documents_disclaimer' => 'Wir benötigen 6 Dokumente gemäß PWL-Gesetz und hovera-Regulierungen. '
         .'Formate: PDF, JPG, PNG. Max 5 MB pro Datei.',
+    'pwl_authorization' => [
+        'label' => 'PWL-Transportgenehmigung',
+        'description' => 'Genehmigung für den Transport lebender Tiere nach EG-Verordnung 1/2005. '
+            .'Wählen Sie den Typ: T1 (kurze Fahrten, bis 8 Std.) oder T2 (lange Fahrten, über 8 Std.) — '
+            .'und laden Sie den entsprechenden Scan hoch.',
+        'type_t1' => 'Typ 1 (Transport bis 8 Stunden)',
+        'type_t2' => 'Typ 2 (Transport über 8 Stunden)',
+    ],
     'documents' => [
         'file_hint' => 'PDF, JPG oder PNG. Max 5 MB.',
         'anonymized_heading' => 'Dokumente nur zur Verifizierung',
@@ -70,6 +78,7 @@ return [
         'tax_id_format' => 'Steuernummer muss 10 Ziffern haben.',
         'regon_format' => 'REGON muss 9 oder 14 Ziffern haben.',
         'terms' => 'Sie müssen die AGB akzeptieren.',
+        'pwl_authorization_type_required' => 'Wählen Sie den PWL-Genehmigungstyp (T1 oder T2).',
         'provisioning_failed' => 'Konto konnte nicht erstellt werden — bitte später erneut versuchen.',
     ],
     'notify' => ['thanks_silent' => 'Danke — wir prüfen Ihre Anmeldung.'],
