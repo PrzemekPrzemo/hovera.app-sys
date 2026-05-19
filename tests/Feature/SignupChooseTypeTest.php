@@ -83,7 +83,7 @@ class SignupChooseTypeTest extends TestCase
         $this->assertSame(TenantType::Stable, $tenant->type);
     }
 
-    public function test_create_tenant_action_creates_transporter_with_transport_pro_plan(): void
+    public function test_create_tenant_action_creates_transporter_with_transport_start_plan(): void
     {
         TransportPlansSeeder::seed();
         Plan::create([
@@ -102,13 +102,20 @@ class SignupChooseTypeTest extends TestCase
 
         $this->assertSame(TenantType::Transporter, $tenant->type);
         $this->assertNotNull($tenant->plan);
-        $this->assertSame('transport_pro', $tenant->plan->code);
+        // Marketing spec (2026-05-18): default plan for transporters
+        // bumped from `transport_pro` (old 349 PLN) to `transport_start`
+        // (new 250 PLN). Patrz docs/TRANSPORT.md §15.5.
+        $this->assertSame('transport_start', $tenant->plan->code);
 
         // Trial caps for stable should NOT be set for transporter.
         $this->assertNull($tenant->trial_max_horses);
         $this->assertNull($tenant->trial_max_clients);
 
-        // But trial_ends_at should still be set (30 days default).
-        $this->assertNotNull($tenant->trial_ends_at);
+        // Marketing spec: trial NIE startuje od signupu — startuje od
+        // pozytywnej weryfikacji dokumentów. Patrz Tenant::startTrialOnVerification().
+        $this->assertNull($tenant->trial_ends_at,
+            'Transporter trial must NOT start at signup — only after verification');
+        $this->assertSame('provisioning', $tenant->status,
+            'Transporter sits in provisioning until verified');
     }
 }

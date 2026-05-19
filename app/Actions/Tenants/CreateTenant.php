@@ -6,6 +6,7 @@ namespace App\Actions\Tenants;
 
 use App\Actions\Invitations\SendInvitation;
 use App\Enums\TenantType;
+use App\Enums\VerificationStatus;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
@@ -45,11 +46,14 @@ class CreateTenant
 
         // Trial 2.0 — domyślny plan zależy od typu tenanta:
         //   stable      → pro (pełen feature set), trial cap'i konie/klientów
-        //   transporter → transport_pro (5 pojazdów, 10 kierowców)
+        //   transporter → transport_start (4 pojazdy / 4 kierowców) — wybrany
+        //                 jako najtańszy plan transport_* by domyślnie nie
+        //                 fakturować trialowca więcej niż konieczne. Po
+        //                 weryfikacji owner może zmienić plan.
         // Caller może override przez plan_code.
         $defaultPlanCode = match ($type) {
             TenantType::Stable => 'pro',
-            TenantType::Transporter => 'transport_pro',
+            TenantType::Transporter => 'transport_start',
         };
         $plan = ! empty($data['plan_code'])
             ? Plan::where('code', $data['plan_code'])->first()
@@ -64,7 +68,7 @@ class CreateTenant
                 // dokumenty zanim master admin go zweryfikuje. Stable tenant
                 // dostaje NULL (irrelevant).
                 'verification_status' => $type === TenantType::Transporter
-                    ? \App\Enums\VerificationStatus::Pending
+                    ? VerificationStatus::Pending
                     : null,
                 'country' => $data['country'],
                 'locale' => $data['locale'],
@@ -96,13 +100,28 @@ class CreateTenant
 
         // Trial caps: tylko dla stajni (trial_max_horses / trial_max_clients).
         // Transporter dziedziczy limity wprost z planu (max_vehicles, max_drivers).
-        $postProvisionAttrs = [
-            'status' => 'trialing',
-            'trial_ends_at' => $tenant->trial_ends_at ?? now()->addDays(30),
-        ];
+        //
+        // TRANSPORTER trial flow (marketing spec — hovera.app/produkt/transport/):
+        //   "1 miesiąc gratis NIE od signupu — od momentu pozytywnej weryfikacji
+        //    dokumentów (2-5 dni roboczych)". Dlatego trial_ends_at zostaje
+        //    NULL aż do `TransporterResource::verify()` → `startTrialOnVerification()`.
+        //   Status przez ten czas = 'provisioning' (tenant nie może jeszcze
+        //    wystawiać ofert ani być billable'em).
         if ($type === TenantType::Stable) {
-            $postProvisionAttrs['trial_max_horses'] = $tenant->trial_max_horses ?? 10;
-            $postProvisionAttrs['trial_max_clients'] = $tenant->trial_max_clients ?? 5;
+            $postProvisionAttrs = [
+                'status' => 'trialing',
+                'trial_ends_at' => $tenant->trial_ends_at ?? now()->addDays(30),
+                'trial_max_horses' => $tenant->trial_max_horses ?? 10,
+                'trial_max_clients' => $tenant->trial_max_clients ?? 5,
+            ];
+        } else {
+            // Transporter — czekamy na weryfikację. Status pozostaje
+            // 'provisioning' (LoginController odsyła do /transport/verification
+            // page do czasu flipu na 'trialing' w startTrialOnVerification()).
+            $postProvisionAttrs = [
+                'status' => 'provisioning',
+                'trial_ends_at' => null,
+            ];
         }
         $tenant->forceFill($postProvisionAttrs)->save();
 
