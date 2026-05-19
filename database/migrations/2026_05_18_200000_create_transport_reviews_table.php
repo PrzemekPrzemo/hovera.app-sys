@@ -80,7 +80,9 @@ return new class extends Migration
             // Anti-double — 1 invite per (lead, response). Idempotency dispatch'a.
             $table->unique(['lead_id', 'response_id']);
             // Szybki aggregate dla `/t/{slug}` — count/avg WHERE status=published.
-            $table->index(['transporter_tenant_id', 'status', 'submitted_at']);
+            // Explicit krótka nazwa indexu — auto-generated `transport_reviews_transporter_tenant_id_status_submitted_at_index`
+            // (66 chars) przekracza MySQL limit identyfikatora (64).
+            $table->index(['transporter_tenant_id', 'status', 'submitted_at'], 'tr_reviews_tenant_status_submitted_idx');
         });
     }
 
