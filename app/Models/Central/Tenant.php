@@ -6,6 +6,7 @@ namespace App\Models\Central;
 
 use App\Enums\TenantType;
 use App\Enums\VerificationStatus;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -25,7 +26,7 @@ class Tenant extends Model
     protected $fillable = [
         'slug', 'name', 'legal_name', 'tax_id', 'type',
         'verification_status', 'verified_at', 'verified_by_user_id', 'verification_notes',
-        'is_featured', 'featured_at', 'featured_by_user_id',
+        'is_featured', 'featured_at', 'featured_until', 'featured_by_user_id',
         'embed_allowed_origins', 'embed_api_token',
         'db_host', 'db_port', 'db_name', 'db_username', 'db_password_encrypted',
         'country', 'locale', 'timezone', 'currency',
@@ -47,6 +48,7 @@ class Tenant extends Model
             'verified_at' => 'datetime',
             'is_featured' => 'boolean',
             'featured_at' => 'datetime',
+            'featured_until' => 'datetime',
             'embed_allowed_origins' => 'array',
             'embed_api_token' => 'encrypted',
             'branding' => 'array',
@@ -97,7 +99,15 @@ class Tenant extends Model
      */
     public function scopeFeatured(Builder $query): Builder
     {
-        return $query->where('is_featured', true);
+        // Featured aktywny gdy:
+        //   - is_featured=true AND (featured_until IS NULL  // legacy permanent
+        //                            OR featured_until > NOW())  // sponsored, nieprzeterminowany
+        // Daily cron `transport:expire-featured` flipuje is_featured=false
+        // gdy featured_until < NOW(), więc w praktyce odpowiednio.
+        return $query->where('is_featured', true)
+            ->where(function (Builder $q) {
+                $q->whereNull('featured_until')->orWhere('featured_until', '>', now());
+            });
     }
 
     /**
@@ -118,6 +128,38 @@ class Tenant extends Model
         ])->save();
     }
 
+    /**
+     * Featured z terminem ważności — używane przez sponsored placements.
+     * Po `featured_until` daily cron flipuje is_featured=false.
+     * Extend'uje istniejący okres jeśli featured_until > now() — kup 30d
+     * nad 30d → 60d razem (rolling extension).
+     *
+     * Patrz docs/TRANSPORT.md §16 (sponsored placements).
+     */
+    public function markFeaturedUntil(Carbon|\Illuminate\Support\Carbon $until, ?string $byUserId = null): void
+    {
+        // Rolling extension: gdy obecny featured_until > now(), pozostały
+        // czas dolicza się do nowo kupionego pakietu (kup 30d nad aktywnym
+        // 25d → 55d razem). Caller podaje `$until = now()+N`, my przeliczamy
+        // jako "ile sekund od teraz" i dolicza do current lub od now().
+        $now = now();
+        $secondsToAdd = max(0, $until->getTimestamp() - $now->getTimestamp());
+
+        $current = $this->featured_until;
+        if ($current !== null && $current->isFuture()) {
+            $newUntil = $current->copy()->addSeconds($secondsToAdd);
+        } else {
+            $newUntil = $now->copy()->addSeconds($secondsToAdd);
+        }
+
+        $this->forceFill([
+            'is_featured' => true,
+            'featured_at' => $this->featured_at ?? now(),
+            'featured_until' => $newUntil,
+            'featured_by_user_id' => $byUserId,
+        ])->save();
+    }
+
     public function unmarkFeatured(): void
     {
         if (! $this->is_featured) {
@@ -127,6 +169,7 @@ class Tenant extends Model
         $this->forceFill([
             'is_featured' => false,
             'featured_at' => null,
+            'featured_until' => null,
             'featured_by_user_id' => null,
         ])->save();
     }

@@ -90,10 +90,20 @@ class TransporterRankingService
             ->whereNotNull('rating')
             ->groupBy('transporter_tenant_id');
 
+        // Computed `is_active_featured` honoruje featured_until — sponsored
+        // boost wygasa real-time bez czekania na daily cron. Legacy permanent
+        // featured (featured_until IS NULL) zostają na górze cały czas.
+        $activeFeatured = DB::raw(
+            'CASE WHEN tenants.is_featured = 1 AND '
+            .'(tenants.featured_until IS NULL OR tenants.featured_until > '
+            .DB::connection()->getPdo()->quote(now()->toDateTimeString())
+            .') THEN 1 ELSE 0 END'
+        );
+
         $query->leftJoinSub($sub, 'review_agg', function ($join) {
             $join->on('review_agg.transporter_tenant_id', '=', 'tenants.id');
         })
-            ->orderByDesc('tenants.is_featured')
+            ->orderByDesc($activeFeatured)
             ->orderByDesc(DB::raw('COALESCE(review_agg.avg_rating, 0)'))
             ->orderByDesc(DB::raw('COALESCE(review_agg.review_count, 0)'))
             ->orderByDesc('tenants.created_at');

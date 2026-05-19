@@ -64,3 +64,14 @@ Schedule::command('transport:ksef:poll-submitted')
     ->timezone('Europe/Warsaw')
     ->withoutOverlapping(30)
     ->onOneServer();
+
+// Sponsored placements — daily o 02:00 czyści `is_featured=false` dla
+// tenantów których `featured_until` już minął. Real-time sort honoruje
+// expired w `TransporterRankingService`, ale flagę boolean czyścimy
+// raz dziennie żeby admin UI i markFeaturedUntil() rolling extension
+// działały spójnie. Patrz docs/TRANSPORT.md §16.
+Schedule::command('transport:expire-featured')
+    ->dailyAt('02:00')
+    ->timezone('Europe/Warsaw')
+    ->withoutOverlapping()
+    ->onOneServer();
