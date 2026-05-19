@@ -43,6 +43,7 @@ return [
         'created_stable' => 'Stajnia utworzona',
         'created_transporter' => 'Firma transportowa utworzona',
         'created_body' => 'Baza :db została zainicjowana.',
+        'create_failed' => 'Tworzenie tenanta nie powiodło się',
     ],
 
     'table' => [

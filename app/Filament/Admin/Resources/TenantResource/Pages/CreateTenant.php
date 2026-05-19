@@ -12,6 +12,9 @@ use App\Services\MasterAuditLogger;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * Routes Filament's default save through our CreateTenant action so the
@@ -35,16 +38,55 @@ class CreateTenant extends CreateRecord
             $planCode = Plan::find($data['plan_id'])?->code;
         }
 
-        $tenant = $action->execute([
-            'type' => $type->value,
-            'slug' => $data['slug'],
-            'name' => $data['name'],
-            'country' => $data['country'] ?? 'PL',
-            'locale' => $data['locale'] ?? 'pl',
-            'timezone' => $data['timezone'] ?? 'Europe/Warsaw',
-            'currency' => $data['currency'] ?? 'PLN',
-            'plan_code' => $planCode,
-        ]);
+        try {
+            $tenant = $action->execute([
+                'type' => $type->value,
+                'slug' => $data['slug'],
+                'name' => $data['name'],
+                'country' => $data['country'] ?? 'PL',
+                'locale' => $data['locale'] ?? 'pl',
+                'timezone' => $data['timezone'] ?? 'Europe/Warsaw',
+                'currency' => $data['currency'] ?? 'PLN',
+                'plan_code' => $planCode,
+            ]);
+        } catch (ValidationException $e) {
+            // Walidacja po stronie action'a — pokaż błędy jako Filament Notification
+            // żeby admin wiedział czemu submit nie poszedł (zamiast cichego rollbacku).
+            $firstError = collect($e->errors())->flatten()->first() ?: $e->getMessage();
+            Notification::make()
+                ->danger()
+                ->title(__('admin/tenant.notify.create_failed'))
+                ->body((string) $firstError)
+                ->persistent()
+                ->send();
+
+            Log::warning('Tenant create validation failed', [
+                'slug' => $data['slug'] ?? '?',
+                'type' => $type->value,
+                'errors' => $e->errors(),
+            ]);
+
+            $this->halt();
+        } catch (Throwable $e) {
+            // Provisioning padł (MySQL CREATE DATABASE, GRANT, migrate, etc.).
+            // Surface error w UI zamiast cichego ekranu "myśli ale nic się nie dzieje".
+            Notification::make()
+                ->danger()
+                ->title(__('admin/tenant.notify.create_failed'))
+                ->body($e->getMessage())
+                ->persistent()
+                ->send();
+
+            Log::error('Tenant create failed', [
+                'slug' => $data['slug'] ?? '?',
+                'type' => $type->value,
+                'plan_code' => $planCode,
+                'error' => $e->getMessage(),
+                'exception' => $e::class,
+            ]);
+
+            $this->halt();
+        }
 
         $audit->record('tenant.create', 'Tenant', $tenant->id, $tenant->id, [
             'slug' => $tenant->slug,

@@ -43,6 +43,7 @@ return [
         'created_stable' => 'Écurie créée',
         'created_transporter' => 'Société de transport créée',
         'created_body' => 'La base de données :db a été initialisée.',
+        'create_failed' => 'Échec de la création du locataire',
     ],
 
     'table' => [

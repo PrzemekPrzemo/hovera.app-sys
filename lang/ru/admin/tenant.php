@@ -43,6 +43,7 @@ return [
         'created_stable' => 'Конюшня создана',
         'created_transporter' => 'Транспортная компания создана',
         'created_body' => 'База данных :db была инициализирована.',
+        'create_failed' => 'Не удалось создать арендатора',
     ],
 
     'table' => [

@@ -43,6 +43,7 @@ return [
         'created_stable' => 'Stable created',
         'created_transporter' => 'Transport company created',
         'created_body' => 'Database :db has been initialized.',
+        'create_failed' => 'Tenant creation failed',
     ],
 
     'table' => [
