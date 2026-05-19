@@ -50,17 +50,21 @@ return [
     ],
 
     'tenant_select' => [
-        'title' => 'Choisir une écurie — Hovera',
-        'heading' => 'Choisir une écurie',
-        'intro' => 'Votre compte a accès à :count écuries. Choisissez celle à laquelle vous souhaitez vous connecter.',
+        'title' => 'Choisir un compte — Hovera',
+        'heading' => 'Choisir un compte',
+        'intro' => 'Votre compte a accès à :count tenants (écuries / sociétés de transport). Choisissez celui auquel vous souhaitez vous connecter.',
         'role_label' => ':slug · rôle : :role',
-        'submit' => 'Accéder à l’écurie',
+        'submit' => 'Accéder au panneau',
+        'no_access' => 'Aucun accès au compte sélectionné.',
+        'type_stable' => 'Écurie',
+        'type_transporter' => 'Société de transport',
+        'status_provisioning' => 'En attente de vérification',
     ],
 
     'no_tenants' => [
-        'title' => 'Aucune écurie disponible — Hovera',
-        'heading' => 'Aucune écurie disponible',
-        'intro' => 'Votre compte n’est pas encore associé à une écurie, ou votre accès a été révoqué. Contactez l’administrateur de l’écurie pour obtenir un accès.',
+        'title' => 'Aucun compte disponible — Hovera',
+        'heading' => 'Aucun compte disponible',
+        'intro' => 'Votre compte n’est pas encore associé à une écurie ou société de transport, ou votre accès a été révoqué. Contactez l’administrateur pour obtenir un accès.',
         'logout' => 'Se déconnecter',
     ],
 

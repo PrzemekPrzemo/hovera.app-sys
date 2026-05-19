@@ -50,17 +50,21 @@ return [
     ],
 
     'tenant_select' => [
-        'title' => 'Wybierz stajnię — Hovera',
-        'heading' => 'Wybierz stajnię',
-        'intro' => 'Twoje konto ma dostęp do :count stajni. Wybierz, do której chcesz się zalogować.',
+        'title' => 'Wybierz konto — Hovera',
+        'heading' => 'Wybierz konto',
+        'intro' => 'Twoje konto ma dostęp do :count tenantów (stajni / firm transportowych). Wybierz, do którego chcesz się zalogować.',
         'role_label' => ':slug · rola: :role',
-        'submit' => 'Przejdź do stajni',
+        'submit' => 'Przejdź do panelu',
+        'no_access' => 'Brak dostępu do wybranego konta.',
+        'type_stable' => 'Stajnia',
+        'type_transporter' => 'Firma transportowa',
+        'status_provisioning' => 'Oczekuje na weryfikację',
     ],
 
     'no_tenants' => [
-        'title' => 'Brak dostępnych stajni — Hovera',
-        'heading' => 'Brak dostępnych stajni',
-        'intro' => 'Twoje konto nie jest jeszcze przypisane do żadnej stajni, lub Twój dostęp został cofnięty. Skontaktuj się z administratorem stajni, aby uzyskać dostęp.',
+        'title' => 'Brak dostępnych kont — Hovera',
+        'heading' => 'Brak dostępnych kont',
+        'intro' => 'Twoje konto nie jest jeszcze przypisane do żadnej stajni ani firmy transportowej, lub Twój dostęp został cofnięty. Skontaktuj się z administratorem aby uzyskać dostęp.',
         'logout' => 'Wyloguj się',
     ],
 

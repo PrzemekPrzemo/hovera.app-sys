@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Enums\TenantType;
 use App\Models\Central\TenantMembership;
 use App\Models\Central\User;
 use Illuminate\Http\RedirectResponse;
@@ -17,11 +18,23 @@ use Illuminate\View\View;
  *
  *   - 0 active memberships → friendly dead-end page (could happen for
  *     a master admin who has no stable yet)
- *   - 1 active membership  → auto-select, redirect to /app
+ *   - 1 active membership  → auto-select, redirect to correct panel
+ *     (`/app` dla stable, `/transport` dla transporter)
  *   - >1 active membership → list, user picks
+ *
+ * Transporter tenant w statusie `provisioning` (świeży signup, czeka na
+ * weryfikację dokumentów) też jest pokazywany — owner musi się zalogować
+ * żeby śledzić status weryfikacji + ewentualnie douploadować braki.
  */
 class TenantSelectorController extends Controller
 {
+    /**
+     * Statusy tenant'a w których user może wejść do panelu. `provisioning`
+     * dotyczy transporterów czekających na verification — bez tego owner
+     * po signupie utykał na "Brak dostępnych firm" mimo że ma membership.
+     */
+    private const SELECTABLE_TENANT_STATUSES = ['provisioning', 'trialing', 'active', 'past_due'];
+
     public function show(Request $request): View|RedirectResponse
     {
         /** @var User $user */
@@ -31,7 +44,7 @@ class TenantSelectorController extends Controller
             ->with(['tenant'])
             ->where('user_id', $user->id)
             ->whereNull('revoked_at')
-            ->whereHas('tenant', fn ($q) => $q->whereIn('status', ['trialing', 'active', 'past_due']))
+            ->whereHas('tenant', fn ($q) => $q->whereIn('status', self::SELECTABLE_TENANT_STATUSES))
             ->get();
 
         if ($memberships->isEmpty()) {
@@ -39,9 +52,10 @@ class TenantSelectorController extends Controller
         }
 
         if ($memberships->count() === 1) {
-            $request->session()->put('current_tenant_id', $memberships->first()->tenant_id);
+            $membership = $memberships->first();
+            $request->session()->put('current_tenant_id', $membership->tenant_id);
 
-            return redirect()->intended('/app');
+            return redirect()->intended($this->panelUrlFor($membership->tenant?->type));
         }
 
         return view('tenant.select', compact('memberships'));
@@ -57,19 +71,20 @@ class TenantSelectorController extends Controller
         $user = Auth::user();
 
         $membership = TenantMembership::query()
+            ->with(['tenant'])
             ->where('user_id', $user->id)
             ->where('tenant_id', $request->string('tenant_id'))
             ->whereNull('revoked_at')
-            ->whereHas('tenant', fn ($q) => $q->whereIn('status', ['trialing', 'active', 'past_due']))
+            ->whereHas('tenant', fn ($q) => $q->whereIn('status', self::SELECTABLE_TENANT_STATUSES))
             ->first();
 
         if (! $membership) {
-            return back()->withErrors(['tenant_id' => 'Brak dostępu do wybranej stajni.']);
+            return back()->withErrors(['tenant_id' => __('auth.tenant_select.no_access')]);
         }
 
         $request->session()->put('current_tenant_id', $membership->tenant_id);
 
-        return redirect()->intended('/app');
+        return redirect()->intended($this->panelUrlFor($membership->tenant?->type));
     }
 
     public function switch(Request $request): RedirectResponse
@@ -77,5 +92,14 @@ class TenantSelectorController extends Controller
         $request->session()->forget('current_tenant_id');
 
         return redirect()->route('tenant.select');
+    }
+
+    /**
+     * Stable → /app, Transporter → /transport. Null fallback do /app
+     * (legacy tenant'y bez typu dostają stable-panel jak dotychczas).
+     */
+    private function panelUrlFor(?TenantType $type): string
+    {
+        return '/'.($type?->panelId() ?? 'app');
     }
 }
