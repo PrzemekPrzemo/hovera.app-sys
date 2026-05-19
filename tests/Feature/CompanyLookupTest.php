@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Central\SystemSetting;
+use App\Services\CompanyLookup\CeidgApiService;
 use App\Services\CompanyLookup\CompanyLookupService;
 use App\Services\CompanyLookup\GusApiService;
 use App\Services\CompanyLookup\KrsApiService;
@@ -165,5 +166,141 @@ class CompanyLookupTest extends TestCase
         ]);
 
         $this->assertNull(app(CompanyLookupService::class)->lookupByKrs('0000999999'));
+    }
+
+    public function test_ceidg_lookup_returns_null_when_not_configured(): void
+    {
+        $this->assertNull(app(CeidgApiService::class)->findByNip('5260250274'));
+    }
+
+    public function test_ceidg_lookup_parses_response_when_configured(): void
+    {
+        SystemSetting::setSecret('ceidg.api_token', 'jwt-token-here');
+
+        Http::fake([
+            'datastore.ceidg.gov.pl/*' => Http::response([
+                'firma' => [[
+                    'nazwa' => 'Jan Kowalski Transport JDG',
+                    'status' => 'AKTYWNY',
+                    'dataRozpoczecia' => '2020-01-15',
+                    'adresDzialalnosci' => [
+                        'ulica' => 'Polna',
+                        'budynek' => '12',
+                        'kod' => '00-001',
+                        'miasto' => 'Warszawa',
+                        'wojewodztwo' => 'MAZOWIECKIE',
+                    ],
+                    'telefon' => '+48 600 100 200',
+                ]],
+            ], 200),
+        ]);
+
+        $data = app(CeidgApiService::class)->findByNip('5260250274');
+
+        $this->assertNotNull($data);
+        $this->assertSame('Jan Kowalski Transport JDG', $data['name']);
+        $this->assertSame('AKTYWNY', $data['status']);
+        $this->assertSame('Polna', $data['street']);
+        $this->assertSame('12', $data['building']);
+        $this->assertSame('00-001', $data['postal_code']);
+        $this->assertSame('Warszawa', $data['city']);
+        $this->assertSame('+48 600 100 200', $data['phone']);
+    }
+
+    public function test_ceidg_lookup_returns_null_on_404(): void
+    {
+        SystemSetting::setSecret('ceidg.api_token', 'jwt-token-here');
+        Http::fake([
+            'datastore.ceidg.gov.pl/*' => Http::response('Not Found', 404),
+        ]);
+
+        $this->assertNull(app(CeidgApiService::class)->findByNip('5260250274'));
+    }
+
+    public function test_combined_lookup_merges_gus_and_ceidg_sources(): void
+    {
+        SystemSetting::setSecret('gus.api_key', 'gus-key');
+        SystemSetting::setSecret('ceidg.api_token', 'ceidg-token');
+
+        // GUS returns basic data, CEIDG returns enriched + phone
+        $loginResponse = '<?xml version="1.0" encoding="UTF-8"?>'
+            .'<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">'
+            .'<s:Body><ZalogujResult xmlns="http://CIS/BIR/PUBL/2014/07">SID-XYZ</ZalogujResult></s:Body>'
+            .'</s:Envelope>';
+
+        $innerXml = '<root><dane><Regon>123456789</Regon><Nazwa>Stary Nazwa Z GUS</Nazwa>'
+            .'<Ulica>Kasztanowa</Ulica><NrNieruchomosci>7</NrNieruchomosci>'
+            .'<KodPocztowy>00-001</KodPocztowy><Miejscowosc>Warszawa</Miejscowosc>'
+            .'<Typ>F</Typ></dane></root>';
+        $searchResponse = '<?xml version="1.0" encoding="UTF-8"?>'
+            .'<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">'
+            .'<s:Body><DaneSzukajPodmiotyResponse xmlns="http://CIS/BIR/PUBL/2014/07">'
+            .'<DaneSzukajPodmiotyResult>'.htmlspecialchars($innerXml, ENT_XML1).'</DaneSzukajPodmiotyResult>'
+            .'</DaneSzukajPodmiotyResponse></s:Body></s:Envelope>';
+        $logoutResponse = '<?xml version="1.0"?><s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope"><s:Body/></s:Envelope>';
+
+        Http::fake([
+            'wyszukiwarkaregon*' => Http::sequence()
+                ->push($loginResponse, 200)
+                ->push($searchResponse, 200)
+                ->push($logoutResponse, 200),
+            'datastore.ceidg.gov.pl/*' => Http::response([
+                'firma' => [[
+                    'nazwa' => 'Nowa Nazwa Z CEIDG',
+                    'telefon' => '+48 600 100 200',
+                    'adresDzialalnosci' => [
+                        'ulica' => 'Polna',
+                        'budynek' => '12',
+                        'kod' => '00-002',
+                        'miasto' => 'Kraków',
+                    ],
+                ]],
+            ], 200),
+        ]);
+
+        $data = app(CompanyLookupService::class)->lookupByNip('5260250274');
+
+        $this->assertNotNull($data);
+        // CEIDG override'uje pola które ma uzupełnione
+        $this->assertSame('Nowa Nazwa Z CEIDG', $data['name']);
+        $this->assertSame('Polna', $data['street']);
+        $this->assertSame('Kraków', $data['city']);
+        $this->assertSame('+48 600 100 200', $data['phone']);
+        // GUS regon zachowany (CEIDG go nie zwraca)
+        $this->assertSame('123456789', $data['regon']);
+        // sources lista zawiera oba
+        $this->assertContains('gus', $data['sources']);
+        $this->assertContains('ceidg', $data['sources']);
+    }
+
+    public function test_combined_lookup_falls_back_to_gus_when_ceidg_not_configured(): void
+    {
+        SystemSetting::setSecret('gus.api_key', 'gus-key');
+        // brak CEIDG token
+
+        $loginResponse = '<?xml version="1.0" encoding="UTF-8"?>'
+            .'<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">'
+            .'<s:Body><ZalogujResult xmlns="http://CIS/BIR/PUBL/2014/07">SID-XYZ</ZalogujResult></s:Body>'
+            .'</s:Envelope>';
+
+        $innerXml = '<root><dane><Regon>123456789</Regon><Nazwa>GUS Tylko</Nazwa>'
+            .'<Miejscowosc>Warszawa</Miejscowosc><Typ>F</Typ></dane></root>';
+        $searchResponse = '<?xml version="1.0" encoding="UTF-8"?>'
+            .'<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope">'
+            .'<s:Body><DaneSzukajPodmiotyResponse xmlns="http://CIS/BIR/PUBL/2014/07">'
+            .'<DaneSzukajPodmiotyResult>'.htmlspecialchars($innerXml, ENT_XML1).'</DaneSzukajPodmiotyResult>'
+            .'</DaneSzukajPodmiotyResponse></s:Body></s:Envelope>';
+        $logoutResponse = '<?xml version="1.0"?><s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope"><s:Body/></s:Envelope>';
+
+        Http::fakeSequence()
+            ->push($loginResponse, 200)
+            ->push($searchResponse, 200)
+            ->push($logoutResponse, 200);
+
+        $data = app(CompanyLookupService::class)->lookupByNip('5260250274');
+
+        $this->assertNotNull($data);
+        $this->assertSame('GUS Tylko', $data['name']);
+        $this->assertSame(['gus'], $data['sources']);
     }
 }

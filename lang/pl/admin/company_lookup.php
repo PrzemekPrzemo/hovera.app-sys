@@ -7,16 +7,20 @@ return [
         'section' => [
             'gus' => 'GUS BIR (REGON)',
             'gus_description' => 'API kluczyk wydaje GUS po rejestracji na https://api.stat.gov.pl. Bezpłatny. Klucz rotuje co kwartał — pamiętaj o wymianie.',
+            'ceidg' => 'CEIDG (Centralna Ewidencja Działalności Gospodarczej)',
+            'ceidg_description' => 'Rejestr JDG (jednoosobowych działalności). Bezpłatny token JWT po rejestracji na https://datastore.ceidg.gov.pl. Bez tokenu lookup pomija CEIDG i używa tylko GUS+KRS.',
             'krs' => 'KRS (publiczne API)',
             'krs_description' => 'KRS Open Data API jest publiczne i nie wymaga konfiguracji. Hovera korzysta z https://api-krs.ms.gov.pl. Cache 30 dni.',
         ],
         'label' => [
             'gus_api_key' => 'Klucz API GUS',
             'gus_env' => 'Środowisko',
+            'ceidg_api_token' => 'Token CEIDG (JWT)',
             'krs_status' => 'Status',
         ],
         'helper' => [
             'gus_api_key' => 'Klucz testowy z dokumentacji GUS: abcde12345abcde12345 (działa tylko ze środowiskiem test).',
+            'ceidg_api_token' => 'Long-lived JWT z panelu CEIDG. Wymagany scope: dane firmy + adres.',
         ],
         'options' => [
             'env_test' => 'Test (wyszukiwarkaregontest.stat.gov.pl)',
@@ -26,6 +30,6 @@ return [
     ],
 
     'action' => [
-        'saved' => 'Zapisano konfigurację GUS / KRS',
+        'saved' => 'Zapisano konfigurację GUS / CEIDG / KRS',
     ],
 ];

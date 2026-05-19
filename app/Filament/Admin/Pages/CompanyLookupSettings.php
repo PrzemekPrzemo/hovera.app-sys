@@ -54,6 +54,7 @@ class CompanyLookupSettings extends Page implements HasForms
         $this->form->fill([
             'gus_api_key' => SystemSetting::getSecret('gus.api_key', '') ?? '',
             'gus_env' => SystemSetting::getValue('gus.env', 'test'),
+            'ceidg_api_token' => SystemSetting::getSecret('ceidg.api_token', '') ?? '',
         ]);
     }
 
@@ -80,6 +81,16 @@ class CompanyLookupSettings extends Page implements HasForms
                             ->required(),
                     ]),
 
+                Forms\Components\Section::make(__('admin/company_lookup.form.section.ceidg'))
+                    ->description(__('admin/company_lookup.form.section.ceidg_description'))
+                    ->schema([
+                        Forms\Components\TextInput::make('ceidg_api_token')
+                            ->label(__('admin/company_lookup.form.label.ceidg_api_token'))
+                            ->password()
+                            ->revealable()
+                            ->helperText(__('admin/company_lookup.form.helper.ceidg_api_token')),
+                    ]),
+
                 Forms\Components\Section::make(__('admin/company_lookup.form.section.krs'))
                     ->description(__('admin/company_lookup.form.section.krs_description'))
                     ->schema([
@@ -99,6 +110,11 @@ class CompanyLookupSettings extends Page implements HasForms
             SystemSetting::setSecret('gus.api_key', $key);
         }
         SystemSetting::setValue('gus.env', (string) ($form['gus_env'] ?? 'test'));
+
+        $ceidg = trim((string) ($form['ceidg_api_token'] ?? ''));
+        if ($ceidg !== '') {
+            SystemSetting::setSecret('ceidg.api_token', $ceidg);
+        }
 
         Notification::make()->title(__('admin/company_lookup.action.saved'))->success()->send();
     }

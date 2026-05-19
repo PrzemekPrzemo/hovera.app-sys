@@ -5,21 +5,26 @@ declare(strict_types=1);
 namespace App\Services\CompanyLookup;
 
 /**
- * Orchestrates GUS + KRS lookup for company auto-fill in Client form.
+ * Orchestrates GUS + CEIDG + KRS lookup for company auto-fill.
  *
- *   1. Validate NIP checksum locally (saves an API call on typos)
- *   2. Hit GUS by NIP — gets nazwa, REGON, address, type
- *   3. Optionally hit KRS to enrich (board members, capital) — only
- *      when a KRS number is found in GUS or supplied directly
+ * Reguła zapytań:
+ *   1. Walidacja NIP-checksum lokalnie (oszczędza wywołania API).
+ *   2. GUS po NIP (REGON + nazwa + adres) — źródło dla wszystkich podmiotów.
+ *   3. Jeśli CEIDG skonfigurowane: równolegle hit CEIDG po NIP (dla JDG
+ *      dostaniemy dokładniejszy adres + status + telefon).
+ *   4. Jeśli GUS zwróciło KRS lub typ=osoba prawna: hit KRS żeby uzupełnić
+ *      legal_form / kapitał / zarząd.
  *
- * Returns a normalised payload regardless of source. Frontend can use
- * any subset.
+ * Frontend (Filament action) używa `lookupByNip` i bierze co potrzebuje
+ * z połączonego payload'u. Source priority: CEIDG > GUS > KRS dla pól
+ * gdzie wszystkie 3 mogą występować (CEIDG ma najświeższe dane JDG).
  */
 class CompanyLookupService
 {
     public function __construct(
         private readonly GusApiService $gus,
         private readonly KrsApiService $krs,
+        private readonly CeidgApiService $ceidg,
     ) {}
 
     /**
@@ -41,11 +46,13 @@ class CompanyLookupService
     }
 
     /**
-     * Full lookup by NIP. Returns null when NIP is invalid or GUS not
-     * configured / unreachable. Otherwise returns:
+     * Full lookup by NIP — merge'd GUS + CEIDG + KRS payload.
      *
-     *   nip, regon, name, street, building, apartment,
-     *   postal_code, city, province, type, krs (optional)
+     * Zwraca null tylko gdy NIP niepoprawny formalnie LUB żadne źródło
+     * nic nie zwróciło (typowo: nieaktywne API + nieznany NIP).
+     *
+     * Klucz `sources` w wynikowym array'u zawiera listę źródeł które
+     * zwróciły dane — przydatne dla UI „dane pochodzą z X, Y".
      *
      * @return array<string,mixed>|null
      */
@@ -56,14 +63,69 @@ class CompanyLookupService
         }
 
         $gusData = $this->gus->findByNip($nip);
-        if ($gusData === null) {
+        $ceidgData = $this->ceidg->findByNip($nip);
+
+        if ($gusData === null && $ceidgData === null) {
             return null;
         }
 
-        // GUS sometimes returns a KRS in the dataset for legal persons —
-        // when present we could enrich; for MVP we just return GUS as-is
-        // and let the caller hit KRS separately if needed.
-        return $gusData;
+        // CEIDG ma najświeższe dane dla JDG, GUS jest fallbackiem.
+        // Merge: CEIDG override'uje GUS field-by-field gdy oba mają wartość.
+        $merged = $gusData ?? [];
+        if (is_array($ceidgData)) {
+            foreach ($ceidgData as $k => $v) {
+                if ($v !== null && $v !== '') {
+                    $merged[$k] = $v;
+                }
+            }
+        }
+
+        $sources = [];
+        if ($gusData !== null) {
+            $sources[] = 'gus';
+        }
+        if ($ceidgData !== null) {
+            $sources[] = 'ceidg';
+        }
+
+        // Enrich z KRS gdy GUS sugeruje osobę prawną. GUS Typ=P (osoba prawna)
+        // lub LP (jednostka lokalna osoby prawnej). Dla osoby fizycznej (F) lub
+        // JDG (LF) KRS nie ma wpisu.
+        $gusType = (string) ($gusData['type'] ?? '');
+        if ($gusType === 'P' || $gusType === 'LP') {
+            $krsData = $this->krsLookupForGusPodmiot($merged);
+            if (is_array($krsData)) {
+                foreach (['legal_form'] as $k) {
+                    if (! empty($krsData[$k])) {
+                        $merged[$k] = $krsData[$k];
+                    }
+                }
+                $sources[] = 'krs';
+            }
+        }
+
+        $merged['nip'] = $nip;
+        $merged['sources'] = $sources;
+
+        return $merged;
+    }
+
+    /**
+     * Helper: dla osoby prawnej z GUS spróbuj znaleźć KRS. GUS sam nie zwraca
+     * KRS w basic search response — ale REGON zawiera prefix mappable na rejestr.
+     * MVP: jeśli caller dostarczy KRS bezpośrednio, używa się `lookupByKrs`.
+     * W przyszłości można dodać dodatkowy GUS call (DanePelnyRaport) który
+     * zawiera KRS — na razie zwracamy null.
+     *
+     * @param  array<string,mixed>  $_gusData
+     * @return array<string,mixed>|null
+     */
+    private function krsLookupForGusPodmiot(array $_gusData): ?array
+    {
+        // Placeholder dla przyszłego enrichmentu — GUS basic API nie zwraca
+        // bezpośrednio KRS, byłby potrzebny dodatkowy call DanePelnyRaport.
+        // Master admin tymczasowo może użyć osobnego pola KRS jeśli zna.
+        return null;
     }
 
     /**
@@ -98,6 +160,7 @@ class CompanyLookupService
             'apartment' => (string) ($address['nrLokalu'] ?? '') ?: null,
             'postal_code' => (string) ($address['kodPocztowy'] ?? '') ?: null,
             'city' => (string) ($address['miejscowosc'] ?? '') ?: null,
+            'sources' => ['krs'],
         ];
     }
 }
