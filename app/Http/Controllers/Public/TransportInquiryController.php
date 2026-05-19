@@ -75,6 +75,14 @@ class TransportInquiryController extends Controller
 
     public function submit(Request $request, MapboxGeocoder $geocoder): RedirectResponse
     {
+        // Honeypot — boty wypełniają wszystkie pola po kolei, włącznie z
+        // ukrytym `website` (display:none + tabindex=-1). Bona-fide klient
+        // nigdy nie ma tej wartości. Silent 200 redirect żeby spam tooling nie
+        // wykrył że został wycięty + nie tracimy zasobów na geocoding.
+        if ((string) $request->input('website', '') !== '') {
+            return back();
+        }
+
         $data = $this->validate($request);
 
         try {

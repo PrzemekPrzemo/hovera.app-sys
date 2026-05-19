@@ -8,6 +8,7 @@ use App\Actions\Impersonation\StartImpersonation;
 use App\Domain\Transport\Notifications\TransporterRejectedNotification;
 use App\Domain\Transport\Notifications\TransporterVerifiedNotification;
 use App\Domain\Transport\Payments\Stripe\TransporterStripeConnectService;
+use App\Domain\Transport\Public\TransporterRankingService;
 use App\Domain\Transport\Verification\VerificationChecklist;
 use App\Domain\Transport\Verification\VerificationChecklistService;
 use App\Enums\TenantType;
@@ -302,6 +303,34 @@ class TransporterResource extends Resource
                 // Sync Stripe Connect status — przydatne gdy transporter
                 // mówi „dokończyłem KYC, ale Hovera widzi pending" (webhook
                 // mógł się zgubić albo opóźnić). Patrz docs/TRANSPORT.md §15.6.
+                // Manualny "Polecany" boost dla landing'i (/transport + /przewoznicy).
+                // Patrz docs/TRANSPORT.md §16. Idempotentny — drugi toggle ON nie
+                // resetuje featured_at, OFF czyści. Cache TransporterRankingService::top
+                // bustowany po każdym toggle żeby zmiana była widoczna od razu.
+                Tables\Actions\Action::make('toggle_featured')
+                    ->label(fn (Tenant $t) => $t->is_featured
+                        ? __('admin/transporter.action.unfeature')
+                        : __('admin/transporter.action.feature'))
+                    ->icon(fn (Tenant $t) => $t->is_featured ? 'heroicon-o-star' : 'heroicon-o-star')
+                    ->color(fn (Tenant $t) => $t->is_featured ? 'warning' : 'success')
+                    ->visible(fn (Tenant $t) => $t->verification_status === VerificationStatus::Verified)
+                    ->requiresConfirmation()
+                    ->action(function (Tenant $record, MasterAuditLogger $audit) {
+                        $userId = Auth::id() !== null ? (string) Auth::id() : null;
+                        if ($record->is_featured) {
+                            $record->unmarkFeatured();
+                            $audit->record('tenant.unfeatured', 'Tenant', (string) $record->id, []);
+                            $msg = __('admin/transporter.notify.unfeatured');
+                        } else {
+                            $record->markFeatured($userId);
+                            $audit->record('tenant.featured', 'Tenant', (string) $record->id, []);
+                            $msg = __('admin/transporter.notify.featured');
+                        }
+
+                        app(TransporterRankingService::class)->flushTopCache();
+
+                        Notification::make()->success()->title($msg)->send();
+                    }),
                 Tables\Actions\Action::make('sync_stripe_connect')
                     ->label(__('transport/stripe_connect.action.admin_sync'))
                     ->icon('heroicon-o-arrow-path')

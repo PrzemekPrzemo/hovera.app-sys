@@ -26,6 +26,7 @@ return [
     'empty_state_action' => 'Показать всех',
 
     'card_view_profile' => 'Открыть профиль',
+    'featured_badge' => 'Рекомендуем',
     'card_disclaimer_verified' => 'Проверено Hovera. Hovera — посредник маркетплейса.',
     'card_disclaimer_link_label' => 'условия',
 

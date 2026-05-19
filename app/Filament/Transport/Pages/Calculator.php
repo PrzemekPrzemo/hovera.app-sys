@@ -7,10 +7,14 @@ namespace App\Filament\Transport\Pages;
 use App\Domain\Transport\Calculator\CalculatorService;
 use App\Domain\Transport\Calculator\Data\CalculationOptions;
 use App\Domain\Transport\Calculator\Data\Quotation;
+use App\Domain\Transport\Geocoding\Data\GeocodedAddress;
 use App\Domain\Transport\Geocoding\Exceptions\GeocodingException;
 use App\Domain\Transport\Geocoding\MapboxGeocoder;
+use App\Domain\Transport\Routing\Data\Coords;
 use App\Domain\Transport\Routing\Exceptions\RoutingException;
+use App\Enums\QuoteStatus;
 use App\Filament\Concerns\RestrictedByTenantRole;
+use App\Filament\Transport\Resources\QuoteResource;
 use App\Models\Central\Tenant;
 use App\Services\Tenancy\TenantRoleGate;
 use App\Tenancy\TenantManager;
@@ -21,6 +25,7 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Http\RedirectResponse;
 use Throwable;
 
 /**
@@ -86,10 +91,77 @@ class Calculator extends Page implements HasForms
 
     public ?string $toDisplayName = null;
 
+    /**
+     * Backlinki przekazywane z lead inbox (LeadResource::openInCalculator).
+     * Po `saveAsQuote` doszyte do session pending, dzięki czemu CreateQuote
+     * dostaje `lead_id` w pre-fillu i tworzy backlink Quote ↔ Lead.
+     */
+    public ?string $pendingLeadId = null;
+
+    /**
+     * Koordynaty z lead pre-fill — geocoding wykonany podczas tworzenia leada
+     * w TransportInquiryController. Pomijamy ponowny call do Mapbox/ORS w
+     * calculate(); jeśli user zmienił adres ręcznie po pre-fillu, geocoder
+     * i tak przeliczy. Patrz docs/TRANSPORT.md §16 (lead → calculator flow).
+     */
+    public ?float $pendingPickupLat = null;
+
+    public ?float $pendingPickupLng = null;
+
+    public ?float $pendingDropoffLat = null;
+
+    public ?float $pendingDropoffLng = null;
+
     public function mount(): void
     {
         abort_unless(self::canAccess(), 403);
+
+        $this->consumeLeadPreFill();
+
         $this->form->fill($this->data);
+    }
+
+    /**
+     * Konsumuje `transport.calc.pending` z session jeśli zawiera lead context.
+     * NIE czyści sesji — `saveAsQuote()` doszywa do niej dodatkowe pola
+     * (distance/cost) i przekazuje do CreateQuote. Pre-fill kończy się
+     * wlanym formularzem + bannerem „Zaciągnięto dane z zapytania".
+     */
+    private function consumeLeadPreFill(): void
+    {
+        $pending = session('transport.calc.pending');
+        if (! is_array($pending)) {
+            return;
+        }
+
+        // Tylko gdy pending pochodzi z lead'a (ma lead_id) — inaczej to mogło
+        // być pending z poprzedniego Calculator → Quote round-trip (gross_total
+        // wpisane), nie chcemy psuć formu pustymi adresami.
+        $leadId = $pending['lead_id'] ?? null;
+        $fromAddress = $pending['from_address'] ?? $pending['pickup_address'] ?? null;
+        $toAddress = $pending['to_address'] ?? $pending['dropoff_address'] ?? null;
+
+        if ($leadId === null || $fromAddress === null || $toAddress === null) {
+            return;
+        }
+
+        $this->pendingLeadId = (string) $leadId;
+        $this->data['from_address'] = (string) $fromAddress;
+        $this->data['to_address'] = (string) $toAddress;
+
+        // Zachowujemy lat/lng z lead'a — w calculate() pomijamy geocoding jeśli
+        // user nie zmienił adresów. Mapbox call dla niezmienionego adresu byłby
+        // wasted spend.
+        $this->pendingPickupLat = isset($pending['pickup_lat']) ? (float) $pending['pickup_lat'] : null;
+        $this->pendingPickupLng = isset($pending['pickup_lng']) ? (float) $pending['pickup_lng'] : null;
+        $this->pendingDropoffLat = isset($pending['dropoff_lat']) ? (float) $pending['dropoff_lat'] : null;
+        $this->pendingDropoffLng = isset($pending['dropoff_lng']) ? (float) $pending['dropoff_lng'] : null;
+
+        Notification::make()
+            ->info()
+            ->title(__('transport/calculator.notify.lead_prefilled_title'))
+            ->body(__('transport/calculator.notify.lead_prefilled_body'))
+            ->send();
     }
 
     public function form(Form $form): Form
@@ -149,10 +221,23 @@ class Calculator extends Page implements HasForms
             return;
         }
 
+        // Optymalizacja: jeśli adres jest niezmieniony od lead pre-fillu i mamy
+        // zachowane koordynaty, omijamy ponowny call do Mapbox (geocoding już
+        // został zrobiony przy submit leada). Patrz docs/TRANSPORT.md §16.
         $geocoder = app(MapboxGeocoder::class);
         try {
-            $from = $geocoder->geocode((string) $form['from_address']);
-            $to = $geocoder->geocode((string) $form['to_address']);
+            $from = $this->geocodeOrReuseFromLead(
+                $geocoder,
+                (string) $form['from_address'],
+                $this->pendingPickupLat,
+                $this->pendingPickupLng,
+            );
+            $to = $this->geocodeOrReuseFromLead(
+                $geocoder,
+                (string) $form['to_address'],
+                $this->pendingDropoffLat,
+                $this->pendingDropoffLng,
+            );
         } catch (GeocodingException $e) {
             $this->fail($e->getMessage());
 
@@ -198,7 +283,7 @@ class Calculator extends Page implements HasForms
      * (CreateQuote::fillForm konsumuje pending). Wymaga wcześniejszego
      * udanego `calculate()` — przycisk widoczny tylko gdy mamy `$quotation`.
      */
-    public function saveAsQuote(): \Illuminate\Http\RedirectResponse
+    public function saveAsQuote(): RedirectResponse
     {
         abort_unless(self::canAccess(), 403);
         abort_unless($this->quotation !== null, 422);
@@ -206,18 +291,26 @@ class Calculator extends Page implements HasForms
         $q = $this->quotation;
         $form = $this->data;
 
-        session()->put('transport.calc.pending', [
+        // Zachowanie lead pre-fill: jeśli Calculator został otwarty z lead'a
+        // (LeadResource::openInCalculator), dorzucamy `lead_id` + lat/lng z
+        // pending do nowego session pending. CreateQuote::fillForm konsumuje
+        // `lead_id` i tworzy backlink Quote ↔ Lead. Pre-existing customer_*
+        // pola też zostaną przekazane (CreateQuote je używa).
+        $existingPending = (array) session('transport.calc.pending', []);
+        $leadId = $existingPending['lead_id'] ?? $this->pendingLeadId;
+        $pickupLat = isset($existingPending['pickup_lat']) ? (float) $existingPending['pickup_lat'] : ($this->pendingPickupLat ?? 0.0);
+        $pickupLng = isset($existingPending['pickup_lng']) ? (float) $existingPending['pickup_lng'] : ($this->pendingPickupLng ?? 0.0);
+        $dropoffLat = isset($existingPending['dropoff_lat']) ? (float) $existingPending['dropoff_lat'] : ($this->pendingDropoffLat ?? 0.0);
+        $dropoffLng = isset($existingPending['dropoff_lng']) ? (float) $existingPending['dropoff_lng'] : ($this->pendingDropoffLng ?? 0.0);
+
+        $base = [
             'pickup_address' => $this->fromDisplayName ?? ($form['from_address'] ?? ''),
             'dropoff_address' => $this->toDisplayName ?? ($form['to_address'] ?? ''),
-            // koordynaty straconych po polyline'ie nie odzyskamy — zostawiamy
-            // user'owi do uzupełnienia w formularzu, albo (lepiej) trzymamy
-            // je w session razem z Quotation. Niestety Coords nie są w
-            // Quotation DTO, więc na razie zera — refactor po pierwszym UX feedbacku.
-            'pickup_lat' => 0.0,
-            'pickup_lng' => 0.0,
-            'dropoff_lat' => 0.0,
-            'dropoff_lng' => 0.0,
-            'preferred_date' => now()->addDays(7)->toDateString(),
+            'pickup_lat' => $pickupLat,
+            'pickup_lng' => $pickupLng,
+            'dropoff_lat' => $dropoffLat,
+            'dropoff_lng' => $dropoffLng,
+            'preferred_date' => $existingPending['preferred_date'] ?? now()->addDays(7)->toDateString(),
             'round_trip' => (bool) ($form['round_trip'] ?? false),
             'loaded' => (bool) ($form['loaded'] ?? true),
             'distance_km' => $q->distanceKm,
@@ -233,10 +326,45 @@ class Calculator extends Page implements HasForms
             'vat_amount' => $q->vatAmount,
             'gross_total' => $q->grossTotal,
             'currency' => $q->currency,
-            'status' => \App\Enums\QuoteStatus::Draft->value,
-        ]);
+            'status' => QuoteStatus::Draft->value,
+        ];
 
-        return redirect()->to(\App\Filament\Transport\Resources\QuoteResource::getUrl('create'));
+        if ($leadId !== null) {
+            $base['lead_id'] = (string) $leadId;
+        }
+
+        // Customer info z lead pre-fillu (CreateQuote używa do pre-fill quote'a).
+        foreach (['customer_name', 'customer_email', 'customer_phone', 'notes', 'horse_count', 'preferred_time'] as $key) {
+            if (isset($existingPending[$key])) {
+                $base[$key] = $existingPending[$key];
+            }
+        }
+
+        session()->put('transport.calc.pending', $base);
+
+        return redirect()->to(QuoteResource::getUrl('create'));
+    }
+
+    /**
+     * Reusuje koordynaty z lead pre-fillu (jeśli są) zamiast wołać Mapbox.
+     * Trafia wtedy, gdy: (a) mamy lead context, (b) zachowane lat/lng,
+     * (c) adres w formularzu jest dokładnie taki sam jak wpisany przy
+     * pre-fillu (porównanie string-wise). Inaczej geocoduje normalnie.
+     */
+    private function geocodeOrReuseFromLead(
+        MapboxGeocoder $geocoder,
+        string $address,
+        ?float $cachedLat,
+        ?float $cachedLng,
+    ): GeocodedAddress {
+        if ($this->pendingLeadId !== null && $cachedLat !== null && $cachedLng !== null) {
+            return new GeocodedAddress(
+                displayName: $address,
+                coords: new Coords($cachedLat, $cachedLng),
+            );
+        }
+
+        return $geocoder->geocode($address);
     }
 
     private function fail(string $message): void

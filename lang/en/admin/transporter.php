@@ -45,6 +45,8 @@ return [
     'action' => [
         'verify' => 'Approve account',
         'reject' => 'Reject account',
+        'feature' => 'Mark as Featured',
+        'unfeature' => 'Unmark Featured',
         'login_as_owner' => [
             'label' => 'Log in as transporter',
             'reason_label' => 'Reason for impersonation (GDPR audit)',
@@ -60,6 +62,8 @@ return [
         'verified_body' => 'Company :name activated. They can now send quotes and invoices.',
         'rejected' => 'Account rejected',
         'rejected_body' => 'Company :name rejected. They received an email with the reason.',
+        'featured' => 'Marked as Featured',
+        'unfeatured' => 'Featured status removed',
     ],
 
     'documents' => [

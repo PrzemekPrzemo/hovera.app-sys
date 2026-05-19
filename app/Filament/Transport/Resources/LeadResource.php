@@ -9,11 +9,13 @@ use App\Filament\Transport\Resources\LeadResource\Pages;
 use App\Models\Central\TransportLead;
 use App\Models\Central\TransportLeadDispatch;
 use App\Services\Tenancy\TenantRoleGate;
+use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 
 /**
  * Inbox leadów dla transportera — pokazuje tylko te leady, które
@@ -151,7 +153,52 @@ class LeadResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('openInCalculator')
+                    ->label(__('transport/lead.action.open_in_calculator'))
+                    ->icon('heroicon-o-calculator')
+                    ->color('primary')
+                    ->visible(fn (TransportLead $r) => in_array($r->status, ['open', 'quoted'], true))
+                    ->action(fn (TransportLead $record) => self::openInCalculator($record)),
             ]);
+    }
+
+    /**
+     * Wzorzec session-write + redirect (analogiczny do ViewLead::respondToLead).
+     * Calculator::mount() konsumuje pending — wlewa from/to/lat/lng do form'a
+     * i pomija geocoding (lat/lng już są). Patrz docs/TRANSPORT.md §16.
+     */
+    public static function openInCalculator(TransportLead $lead): RedirectResponse
+    {
+        session()->put('transport.calc.pending', [
+            'from_address' => $lead->pickup_address,
+            'to_address' => $lead->dropoff_address,
+            'pickup_address' => $lead->pickup_address,
+            'dropoff_address' => $lead->dropoff_address,
+            'pickup_lat' => (float) $lead->pickup_lat,
+            'pickup_lng' => (float) $lead->pickup_lng,
+            'dropoff_lat' => (float) $lead->dropoff_lat,
+            'dropoff_lng' => (float) $lead->dropoff_lng,
+            'horse_count' => (int) $lead->horse_count,
+            'preferred_date' => $lead->preferred_date?->toDateString(),
+            'preferred_time' => $lead->preferred_time,
+            'customer_name' => $lead->originator_name,
+            'customer_email' => $lead->originator_email,
+            'customer_phone' => $lead->originator_phone,
+            'notes' => $lead->notes,
+            'lead_id' => (string) $lead->id,
+        ]);
+
+        app(TenantAuditLogger::class)->record(
+            'transport_lead.opened_in_calculator',
+            'TransportLead',
+            (string) $lead->id,
+        );
+
+        // Hard-coded path zamiast Calculator::getUrl() — Filament Page resolve'uje
+        // URL przez aktywny panel context, ale w niektórych call-stack'ach
+        // (testy, queue jobs) context może być niepoprawny. Path jest stabilny:
+        // TransportPanelProvider.path('transport') + Calculator slug.
+        return redirect()->to('/transport/calculator');
     }
 
     public static function getPages(): array

@@ -27,6 +27,7 @@ return [
     'empty_state_action' => 'Pokaż wszystkich',
 
     'card_view_profile' => 'Zobacz profil',
+    'featured_badge' => 'Polecany',
     // Spójne z §12 docs/TRANSPORT.md — pokazujemy że za jakością odpowiada
     // transporter, Hovera weryfikuje dokumenty, ale nie wykonuje transportów.
     'card_disclaimer_verified' => 'Zweryfikowany przez Hovera. Hovera = pośrednik marketplace.',

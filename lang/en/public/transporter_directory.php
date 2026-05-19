@@ -26,6 +26,7 @@ return [
     'empty_state_action' => 'Show all',
 
     'card_view_profile' => 'View profile',
+    'featured_badge' => 'Featured',
     'card_disclaimer_verified' => 'Verified by Hovera. Hovera = marketplace intermediary.',
     'card_disclaimer_link_label' => 'terms',
 

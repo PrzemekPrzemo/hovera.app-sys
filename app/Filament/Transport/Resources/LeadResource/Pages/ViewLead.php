@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Transport\Resources\LeadResource\Pages;
 
 use App\Filament\Transport\Resources\LeadResource;
+use App\Filament\Transport\Resources\QuoteResource;
 use App\Models\Central\TransportLead;
 use App\Models\Central\TransportLeadDispatch;
 use App\Models\Central\TransportLeadResponse;
@@ -16,6 +17,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Widok pojedynczego leada w inboxie transportera. Otwarcie strony flipuje
@@ -81,6 +83,12 @@ class ViewLead extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('openInCalculator')
+                ->label(__('transport/lead.action.open_in_calculator'))
+                ->icon('heroicon-o-calculator')
+                ->color('primary')
+                ->visible(fn () => in_array($this->record->status, ['open', 'quoted'], true))
+                ->action(fn () => LeadResource::openInCalculator($this->record)),
             Actions\Action::make('respond')
                 ->label(__('transport/lead.action.respond'))
                 ->icon('heroicon-o-paper-airplane')
@@ -113,7 +121,7 @@ class ViewLead extends ViewRecord
             ->exists();
     }
 
-    private function respondToLead(): \Symfony\Component\HttpFoundation\RedirectResponse
+    private function respondToLead(): RedirectResponse
     {
         /** @var TransportLead $lead */
         $lead = $this->record;
@@ -169,7 +177,7 @@ class ViewLead extends ViewRecord
             ->body(__('transport/lead.notify.respond_started_body'))
             ->send();
 
-        return redirect()->to(\App\Filament\Transport\Resources\QuoteResource::getUrl('create'));
+        return redirect()->to(QuoteResource::getUrl('create'));
     }
 
     private function markAsSeen(): void

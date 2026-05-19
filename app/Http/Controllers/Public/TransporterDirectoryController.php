@@ -4,18 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
+use App\Domain\Transport\Public\TransporterRankingService;
 use App\Domain\Transport\ServiceAreas\TransportServiceAreaManager;
-use App\Enums\TenantType;
-use App\Enums\VerificationStatus;
 use App\Models\Central\Tenant;
-use App\Models\Central\TransportReview;
-use App\Models\Central\TransportServiceArea;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -30,8 +25,9 @@ use Illuminate\View\View;
  * - tylko status ∈ {trialing, active, past_due} (suspended/cancelled = niewidoczni)
  * - soft-deleted (deleted_at) wykluczeni automatycznie przez Tenant::query()
  *
- * Sort default: ocena malejąco, potem recency (najnowsze rejestracje powyżej).
- * Cache aggregates w jednym zapytaniu zamiast N+1 — patrz attachAggregates().
+ * Sort default `rating_desc`: featured boost → rating → recency. Ranking
+ * + aggregaty wyciągnięte do TransporterRankingService — landing /transport
+ * używa tego samego service'u.
  *
  * Patrz docs/TRANSPORT.md §16 oraz fragment §12 o dyskryminatorach marketplace.
  */
@@ -41,6 +37,8 @@ class TransporterDirectoryController extends Controller
 
     /** @var list<string> */
     private const ALLOWED_SORTS = ['recent', 'rating_desc', 'name'];
+
+    public function __construct(private readonly TransporterRankingService $ranking) {}
 
     public function index(Request $request): View|Response
     {
@@ -68,8 +66,8 @@ class TransporterDirectoryController extends Controller
             page: (int) $request->query('page', 1),
         );
 
-        $this->attachAggregates($transporters);
-        $this->attachPrimaryVoivodeships($transporters);
+        $this->ranking->attachAggregates($transporters);
+        $this->ranking->attachPrimaryVoivodeships($transporters);
 
         // Total count = paginator total (filtered). Hero string used both
         // przez SEO meta i w nagłówku — nie róbmy dwóch zapytań.
@@ -113,11 +111,7 @@ class TransporterDirectoryController extends Controller
         string $sort,
         int $page,
     ): LengthAwarePaginator {
-        $base = Tenant::query()
-            ->where('tenants.type', TenantType::Transporter)
-            ->where('tenants.verification_status', VerificationStatus::Verified)
-            ->whereIn('tenants.status', ['trialing', 'active', 'past_due'])
-            ->select('tenants.*');
+        $base = $this->ranking->baseVerifiedQuery();
 
         if ($voivodeship !== null) {
             // DISTINCT bo transporter może mieć wiele rekordów w
@@ -133,11 +127,12 @@ class TransporterDirectoryController extends Controller
             $base->whereRaw('LOWER(tenants.name) LIKE ?', [$needle]);
         }
 
-        // Sort. rating_desc = LEFT JOIN aggregate subquery i sortujemy po avg.
+        // Sort. rating_desc używa featured-boost + review aggregate; recent/name
+        // ignorują featured (user explicit chce inny sort, respektujemy intencję).
         match ($sort) {
             'name' => $base->orderBy('tenants.name'),
             'recent' => $base->orderByDesc('tenants.created_at'),
-            'rating_desc' => $this->applyRatingSort($base),
+            'rating_desc' => $this->ranking->applyFeaturedAndRatingSort($base),
             default => $base->orderByDesc('tenants.created_at'),
         };
 
@@ -145,102 +140,5 @@ class TransporterDirectoryController extends Controller
             perPage: self::PER_PAGE,
             page: max(1, $page),
         );
-    }
-
-    /**
-     * LEFT JOIN do subquery agregującej średnią ocen — żeby nie tracić
-     * transporterów bez recenzji (idą na koniec listy). Ranking:
-     * najpierw avg DESC, potem count DESC (więcej opinii = bardziej
-     * zaufany), na końcu created_at DESC (nowi widoczni).
-     *
-     * @param  Builder<Tenant>  $base
-     */
-    private function applyRatingSort($base): void
-    {
-        $sub = TransportReview::query()
-            ->select([
-                'transporter_tenant_id',
-                DB::raw('AVG(rating) as avg_rating'),
-                DB::raw('COUNT(*) as review_count'),
-            ])
-            ->where('status', 'published')
-            ->whereNotNull('rating')
-            ->groupBy('transporter_tenant_id');
-
-        $base->leftJoinSub($sub, 'review_agg', function ($join) {
-            $join->on('review_agg.transporter_tenant_id', '=', 'tenants.id');
-        })
-            ->orderByDesc(DB::raw('COALESCE(review_agg.avg_rating, 0)'))
-            ->orderByDesc(DB::raw('COALESCE(review_agg.review_count, 0)'))
-            ->orderByDesc('tenants.created_at');
-    }
-
-    /**
-     * Doczepia do każdego tenanta w paginatorze pola review_average i
-     * review_count w JEDNYM zapytaniu (anti N+1). Nie wołamy
-     * TransportReview::aggregateFor() per-row — to byłoby 20 cache hitów
-     * w najlepszym wypadku, 20 GROUP BY w najgorszym.
-     *
-     * @param  LengthAwarePaginator<int, Tenant>  $transporters
-     */
-    private function attachAggregates(LengthAwarePaginator $transporters): void
-    {
-        $ids = $transporters->getCollection()->pluck('id')->all();
-        if ($ids === []) {
-            return;
-        }
-
-        $aggregates = TransportReview::query()
-            ->select([
-                'transporter_tenant_id',
-                DB::raw('AVG(rating) as avg_rating'),
-                DB::raw('COUNT(*) as review_count'),
-            ])
-            ->where('status', 'published')
-            ->whereNotNull('rating')
-            ->whereIn('transporter_tenant_id', $ids)
-            ->groupBy('transporter_tenant_id')
-            ->get()
-            ->keyBy('transporter_tenant_id');
-
-        $transporters->getCollection()->transform(function (Tenant $t) use ($aggregates): Tenant {
-            $row = $aggregates->get($t->id);
-            $t->setAttribute('review_average', $row !== null ? round((float) $row->avg_rating, 2) : 0.0);
-            $t->setAttribute('review_count', $row !== null ? (int) $row->review_count : 0);
-
-            return $t;
-        });
-    }
-
-    /**
-     * Doczepia primary voivodeship (pierwszy z listy) per tenant w jednym
-     * zapytaniu. Karta na liście pokazuje to jako pill — najbardziej
-     * relewantne info dla użytkownika filtrującego po regionie.
-     *
-     * @param  LengthAwarePaginator<int, Tenant>  $transporters
-     */
-    private function attachPrimaryVoivodeships(LengthAwarePaginator $transporters): void
-    {
-        $ids = $transporters->getCollection()->pluck('id')->all();
-        if ($ids === []) {
-            return;
-        }
-
-        $rows = TransportServiceArea::query()
-            ->whereIn('transporter_tenant_id', $ids)
-            ->orderBy('voivodeship')
-            ->get(['transporter_tenant_id', 'voivodeship'])
-            ->groupBy('transporter_tenant_id');
-
-        $transporters->getCollection()->transform(function (Tenant $t) use ($rows): Tenant {
-            $list = $rows->get($t->id);
-            $voivodeships = $list !== null
-                ? $list->pluck('voivodeship')->all()
-                : [];
-            $t->setAttribute('primary_voivodeship', $voivodeships[0] ?? null);
-            $t->setAttribute('all_voivodeships', $voivodeships);
-
-            return $t;
-        });
     }
 }

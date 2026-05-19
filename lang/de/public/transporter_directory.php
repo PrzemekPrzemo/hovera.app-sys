@@ -26,6 +26,7 @@ return [
     'empty_state_action' => 'Alle anzeigen',
 
     'card_view_profile' => 'Profil ansehen',
+    'featured_badge' => 'Empfohlen',
     'card_disclaimer_verified' => 'Von Hovera verifiziert. Hovera ist Marktplatz-Vermittler.',
     'card_disclaimer_link_label' => 'AGB',
 

@@ -39,6 +39,10 @@ return [
         'failed' => 'Échec du calcul du devis',
         'save_as_quote' => 'Enregistrer comme devis',
     ],
+    'notify' => [
+        'lead_prefilled_title' => 'Données de la demande pré-remplies',
+        'lead_prefilled_body' => 'Les adresses et le contact client sont déjà remplis — cliquez sur "Calculer" pour calculer le prix.',
+    ],
 
     'result' => [
         'heading' => 'Résultat du devis',

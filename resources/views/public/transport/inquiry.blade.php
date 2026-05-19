@@ -69,89 +69,19 @@
                 </div>
             @endif
 
-            @if ($errors->any())
-                <div class="errors">
-                    <strong>{{ __('public/transport_inquiry.errors_heading') }}</strong>
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+            @if (! empty($originatorStable))
+                <div class="direct-banner">
+                    {!! __('public/transport_inquiry.originator_banner.from_stable', ['name' => '<strong>'.e($originatorStable->name).'</strong>']) !!}
+                    —
+                    <a href="{{ url('/app/transport') }}">{{ __('public/transport_inquiry.originator_banner.back_to_app') }}</a>
                 </div>
             @endif
 
-            <form method="post" action="{{ route('public.transport.inquiry.submit') }}">
-                @csrf
-                @if (! empty($targetTransporter))
-                    <input type="hidden" name="transporter" value="{{ $targetTransporter->slug }}">
-                @endif
-
-                <div class="row-two">
-                    <div class="form-row">
-                        <label for="customer_name">{{ __('public/transport_inquiry.label.customer_name') }}</label>
-                        <input type="text" name="customer_name" id="customer_name" required maxlength="120" value="{{ $old['customer_name'] }}">
-                    </div>
-                    <div class="form-row">
-                        <label for="customer_email">{{ __('public/transport_inquiry.label.customer_email') }}</label>
-                        <input type="email" name="customer_email" id="customer_email" required maxlength="255" value="{{ $old['customer_email'] }}">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <label for="customer_phone">{{ __('public/transport_inquiry.label.customer_phone') }}</label>
-                    <input type="tel" name="customer_phone" id="customer_phone" maxlength="40" value="{{ $old['customer_phone'] }}">
-                </div>
-
-                <div class="form-row">
-                    <label for="pickup_address">{{ __('public/transport_inquiry.label.pickup_address') }}</label>
-                    <input type="text" name="pickup_address" id="pickup_address" required maxlength="255" value="{{ $old['pickup_address'] }}" placeholder="{{ __('public/transport_inquiry.placeholder.pickup_address') }}">
-                </div>
-
-                <div class="form-row">
-                    <label for="dropoff_address">{{ __('public/transport_inquiry.label.dropoff_address') }}</label>
-                    <input type="text" name="dropoff_address" id="dropoff_address" required maxlength="255" value="{{ $old['dropoff_address'] }}" placeholder="{{ __('public/transport_inquiry.placeholder.dropoff_address') }}">
-                </div>
-
-                <div class="row-two">
-                    <div class="form-row">
-                        <label for="preferred_date">{{ __('public/transport_inquiry.label.preferred_date') }}</label>
-                        <input type="date" name="preferred_date" id="preferred_date" required value="{{ $old['preferred_date'] }}" min="{{ now()->toDateString() }}">
-                    </div>
-                    <div class="form-row">
-                        <label for="preferred_time">{{ __('public/transport_inquiry.label.preferred_time') }}</label>
-                        <input type="time" name="preferred_time" id="preferred_time" value="{{ $old['preferred_time'] }}">
-                    </div>
-                </div>
-
-                <label class="checkbox">
-                    <input type="checkbox" name="flexible_date" value="1">
-                    <span>{{ __('public/transport_inquiry.label.flexible_date') }}</span>
-                </label>
-
-                <div class="form-row">
-                    <label for="horse_count">{{ __('public/transport_inquiry.label.horse_count') }}</label>
-                    <input type="number" name="horse_count" id="horse_count" required min="1" max="15" value="{{ $old['horse_count'] }}">
-                </div>
-
-                <div class="form-row">
-                    <label for="notes">{{ __('public/transport_inquiry.label.notes') }}</label>
-                    <textarea name="notes" id="notes" maxlength="2000" placeholder="{{ __('public/transport_inquiry.placeholder.notes') }}">{{ $old['notes'] }}</textarea>
-                </div>
-
-                <label class="checkbox">
-                    <input type="checkbox" name="terms" required>
-                    <span>{!! __('public/transport_inquiry.label.terms') !!}</span>
-                </label>
-
-                <button type="submit">{{ __('public/transport_inquiry.action.submit') }}</button>
-
-                {{-- Disclaimer: Hovera = pośrednik marketplace, nie przewoźnik.
-                     Wymagany legal compliance — informuje użytkownika ZANIM wyśle
-                     zapytanie, że umowa będzie z wybranym przewoźnikiem (nie z Hovera). --}}
-                <p style="margin-top:1rem;font-size:.78rem;color:var(--muted);font-style:italic;line-height:1.5;">
-                    {!! __('public/transport_inquiry.disclaimer_intermediary') !!}
-                </p>
-            </form>
+            @include('public.transport._inquiry-form', [
+                'old' => $old,
+                'targetTransporter' => $targetTransporter,
+                'formId' => 'inquiry-page',
+            ])
         </div>
     </div>
 </body>

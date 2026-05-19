@@ -40,6 +40,11 @@ return [
         'save_as_quote' => 'Zapisz jako ofertę',
     ],
 
+    'notify' => [
+        'lead_prefilled_title' => 'Dane z zapytania zaciągnięte',
+        'lead_prefilled_body' => 'Adresy i kontakt klienta są już wypełnione — kliknij "Policz wycenę", aby obliczyć cenę.',
+    ],
+
     'result' => [
         'heading' => 'Wynik wyceny',
         'from' => 'Skąd',

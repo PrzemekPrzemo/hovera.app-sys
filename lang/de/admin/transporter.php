@@ -45,6 +45,8 @@ return [
     'action' => [
         'verify' => 'Konto genehmigen',
         'reject' => 'Konto ablehnen',
+        'feature' => 'Als Empfohlen markieren',
+        'unfeature' => 'Empfehlung entfernen',
         'login_as_owner' => [
             'label' => 'Als Transporteur anmelden',
             'reason_label' => 'Grund für Impersonation (DSGVO-Audit)',
@@ -60,6 +62,8 @@ return [
         'verified_body' => 'Unternehmen :name aktiviert. Es kann Angebote und Rechnungen versenden.',
         'rejected' => 'Konto abgelehnt',
         'rejected_body' => 'Unternehmen :name abgelehnt. Es erhielt eine E-Mail mit der Begründung.',
+        'featured' => 'Als Empfohlen markiert',
+        'unfeatured' => 'Empfehlung entfernt',
     ],
 
     'documents' => [
