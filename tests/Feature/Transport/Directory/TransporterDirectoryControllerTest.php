@@ -214,10 +214,12 @@ class TransporterDirectoryControllerTest extends TestCase
 
     public function test_includes_cta_to_inquiry_and_signup(): void
     {
+        // Footer CTA dla transporterów przeniesiony z lean `/signup?type=transporter`
+        // na pełny onboarding flow `/przewoznicy/dolacz` (rejestracja + dokumenty).
         $this->get('/przewoznicy')
             ->assertOk()
             ->assertSee('/transport/zapytanie', false)
-            ->assertSee('/signup?type=transporter', false);
+            ->assertSee('/przewoznicy/dolacz', false);
     }
 
     public function test_review_aggregate_computed_without_n_plus_1(): void
