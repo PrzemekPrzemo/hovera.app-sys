@@ -33,6 +33,12 @@ return Application::configure(basePath: dirname(__DIR__))
             // kontrolerów.
             'transport/p24/webhook/*',
             'webhooks/przelewy24/addon',
+            // PayU webhooks (central invoices + add-ons + per-transporter quote).
+            // Signature SHA256 z raw body + md5_key weryfikowany wewnątrz
+            // PayUService::verifyWebhookSignature. Patrz docs/TRANSPORT.md §16.
+            'webhooks/payu',
+            'webhooks/payu/addon',
+            'transport/payu/webhook/*',
             'api/*',
         ]);
 

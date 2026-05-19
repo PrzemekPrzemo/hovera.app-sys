@@ -10,6 +10,7 @@ use App\Models\Tenant\Horse;
 use App\Models\Tenant\Payment;
 use App\Observers\HorseObserver;
 use App\Observers\PaymentObserver;
+use App\Services\Billing\PayUService;
 use App\Services\Billing\Przelewy24Service;
 use App\Services\Billing\StripeBillingService;
 use App\Services\Integrations\LiveJumping\LiveJumpingClient;
@@ -61,6 +62,21 @@ class AppServiceProvider extends ServiceProvider
                 posId: (int) ($cfg['pos_id'] ?? ($cfg['merchant_id'] ?? 0)),
                 apiKey: (string) ($cfg['api_key'] ?? ''),
                 crc: (string) ($cfg['crc'] ?? ''),
+                env: (string) ($cfg['env'] ?? 'sandbox'),
+            );
+        });
+
+        // Central PayU — analogiczne do Przelewy24Service ale z OAuth2
+        // client_credentials flow. Patrz docs/TRANSPORT.md §16.
+        $this->app->singleton(PayUService::class, function ($app) {
+            $cfg = $app['config']->get('services.payu', []);
+
+            return new PayUService(
+                posId: (int) ($cfg['pos_id'] ?? 0),
+                oauthClientId: (string) ($cfg['oauth_client_id'] ?? ''),
+                oauthClientSecret: (string) ($cfg['oauth_client_secret'] ?? ''),
+                md5Key: (string) ($cfg['md5_key'] ?? ''),
+                secondKey: (string) ($cfg['second_key'] ?? ''),
                 env: (string) ($cfg['env'] ?? 'sandbox'),
             );
         });
