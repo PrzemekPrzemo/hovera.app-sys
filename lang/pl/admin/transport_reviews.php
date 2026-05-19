@@ -21,11 +21,18 @@ return [
     'filter' => [
         'rating' => 'Ocena',
         'transporter' => 'Przewoźnik',
+        'flagged' => 'Zgłoszone przez przewoźnika',
     ],
     'action' => [
         'publish' => 'Opublikuj',
         'hide' => 'Ukryj',
         'reject' => 'Odrzuć (usuń)',
+    ],
+    'bulk' => [
+        'publish' => 'Opublikuj zaznaczone',
+        'publish_done' => 'Opublikowano :count opinii',
+        'hide' => 'Ukryj zaznaczone',
+        'hide_done' => 'Ukryto :count opinii',
     ],
     'form' => [
         'moderation_notes' => 'Notatki moderatora',

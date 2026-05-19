@@ -13,8 +13,18 @@ return [
         'status' => 'Статус',
         'flagged_at' => 'Отмечен',
     ]],
-    'filter' => ['rating' => 'Оценка', 'transporter' => 'Перевозчик'],
+    'filter' => [
+        'rating' => 'Оценка',
+        'transporter' => 'Перевозчик',
+        'flagged' => 'Отмечено перевозчиком',
+    ],
     'action' => ['publish' => 'Опубликовать', 'hide' => 'Скрыть', 'reject' => 'Отклонить (удалить)'],
+    'bulk' => [
+        'publish' => 'Опубликовать выбранные',
+        'publish_done' => 'Опубликовано :count отзывов',
+        'hide' => 'Скрыть выбранные',
+        'hide_done' => 'Скрыто :count отзывов',
+    ],
     'form' => ['moderation_notes' => 'Заметки модератора'],
     'notify' => [
         'moderated' => 'Отзыв обновлён (статус: :status).',

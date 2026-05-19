@@ -35,7 +35,7 @@ class TransportReview extends Model
         'rating', 'comment', 'customer_name',
         'customer_email_hash', 'customer_email_redacted',
         'status', 'transporter_response', 'transporter_responded_at',
-        'flagged_reason', 'flagged_by_tenant_at',
+        'flagged_reason', 'flagged_by_tenant_at', 'flagged_by_user_id',
         'moderated_by_user_id', 'moderated_at', 'moderation_notes',
         'submitted_at',
     ];

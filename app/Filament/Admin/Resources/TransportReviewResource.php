@@ -136,6 +136,51 @@ class TransportReviewResource extends Resource
                     ->label(__('admin/transport_reviews.filter.transporter'))
                     ->options(fn () => Tenant::query()->where('type', 'transporter')->pluck('name', 'id')->all())
                     ->searchable(),
+
+                Tables\Filters\Filter::make('flagged_by_transporter')
+                    ->label(__('admin/transport_reviews.filter.flagged'))
+                    ->query(fn ($q) => $q->whereNotNull('flagged_by_tenant_at')->where('status', '!=', 'hidden'))
+                    ->toggle(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkAction::make('publishSelected')
+                    ->label(__('admin/transport_reviews.bulk.publish'))
+                    ->icon('heroicon-o-eye')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->action(function ($records): void {
+                        foreach ($records as $record) {
+                            /** @var TransportReview $record */
+                            self::moderate($record, 'published', '[bulk]');
+                        }
+
+                        Notification::make()
+                            ->success()
+                            ->title(__('admin/transport_reviews.bulk.publish_done', ['count' => $records->count()]))
+                            ->send();
+                    }),
+                Tables\Actions\BulkAction::make('hideSelected')
+                    ->label(__('admin/transport_reviews.bulk.hide'))
+                    ->icon('heroicon-o-eye-slash')
+                    ->color('warning')
+                    ->form([
+                        Forms\Components\Textarea::make('moderation_notes')
+                            ->label(__('admin/transport_reviews.form.moderation_notes'))
+                            ->required()
+                            ->rows(3),
+                    ])
+                    ->requiresConfirmation()
+                    ->action(function ($records, array $data): void {
+                        foreach ($records as $record) {
+                            /** @var TransportReview $record */
+                            self::moderate($record, 'hidden', (string) $data['moderation_notes']);
+                        }
+
+                        Notification::make()
+                            ->warning()
+                            ->title(__('admin/transport_reviews.bulk.hide_done', ['count' => $records->count()]))
+                            ->send();
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
