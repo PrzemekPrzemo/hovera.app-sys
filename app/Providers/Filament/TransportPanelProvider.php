@@ -5,11 +5,21 @@ declare(strict_types=1);
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Profile;
+use App\Filament\Transport\Pages\Calculator;
+use App\Filament\Transport\Widgets\LeadsKpiWidget;
+use App\Filament\Transport\Widgets\PendingInvoicesWidget;
+use App\Filament\Transport\Widgets\RoutesHeatmapWidget;
+use App\Filament\Transport\Widgets\TopCorridorsWidget;
+use App\Filament\Transport\Widgets\TopPaidInvoicesWidget;
+use App\Filament\Transport\Widgets\TransportKpiWidget;
+use App\Filament\Transport\Widgets\UpcomingTransportsWeekWidget;
+use App\Filament\Transport\Widgets\UpcomingTransportsWidget;
 use App\Http\Middleware\EnforceImpersonationExpiry;
 use App\Http\Middleware\InitialiseTenantFromSession;
 use App\Http\Middleware\RedirectIfTenantSuspended;
 use App\Http\Middleware\RedirectIfTrialExpired;
 use App\Http\Middleware\RequireTenantType;
+use App\Tenancy\TenantManager;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -21,7 +31,6 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -51,7 +60,13 @@ class TransportPanelProvider extends PanelProvider
         return $panel
             ->id('transport')
             ->path('transport')
-            ->brandName('hovera · transport')
+            ->brandName(function () {
+                // Tenant name w topbar — fallback do "hovera · transport"
+                // gdy tenant nieustawiony (np. /transport/login przed auth).
+                $name = trim((string) (app(TenantManager::class)->current()?->name ?? ''));
+
+                return $name !== '' ? $name : 'hovera · transport';
+            })
             ->brandLogo(asset('img/brand/hovera-logo.svg'))
             ->favicon(asset('favicon.svg'))
             ->login()
@@ -78,19 +93,24 @@ class TransportPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Transport/Resources'), for: 'App\\Filament\\Transport\\Resources')
             ->discoverPages(in: app_path('Filament/Transport/Pages'), for: 'App\\Filament\\Transport\\Pages')
             ->pages([
+                // Explicit registration — discoverPages teoretycznie wystarcza,
+                // ale wybrane pages chcemy mieć z pewnym slotem w sidebarze
+                // (Dashboard jako home + Calculator jako kluczowy CTA dla
+                // transportera) niezależnie od kolejności auto-discovery.
                 Pages\Dashboard::class,
+                Calculator::class,
                 Profile::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Transport/Widgets'), for: 'App\\Filament\\Transport\\Widgets')
             ->widgets([
-                \App\Filament\Transport\Widgets\TransportKpiWidget::class,
-                \App\Filament\Transport\Widgets\LeadsKpiWidget::class,
-                \App\Filament\Transport\Widgets\UpcomingTransportsWidget::class,
-                \App\Filament\Transport\Widgets\UpcomingTransportsWeekWidget::class,
-                \App\Filament\Transport\Widgets\PendingInvoicesWidget::class,
-                \App\Filament\Transport\Widgets\TopPaidInvoicesWidget::class,
-                \App\Filament\Transport\Widgets\TopCorridorsWidget::class,
-                \App\Filament\Transport\Widgets\RoutesHeatmapWidget::class,
+                TransportKpiWidget::class,
+                LeadsKpiWidget::class,
+                UpcomingTransportsWidget::class,
+                UpcomingTransportsWeekWidget::class,
+                PendingInvoicesWidget::class,
+                TopPaidInvoicesWidget::class,
+                TopCorridorsWidget::class,
+                RoutesHeatmapWidget::class,
             ])
             ->navigationGroups([
                 NavigationGroup::make(fn () => __('navigation.group.fleet'))->collapsible(),
