@@ -31,6 +31,7 @@ class TransportSettings extends Model
         'ksef_token_encrypted', 'ksef_environment', 'ksef_nip', 'ksef_enabled',
         'default_payment_url_template', 'default_payment_method_label', 'payment_instructions',
         'p24_quote_autopay_enabled',
+        'payu_quote_autopay_enabled',
     ];
 
     /**
@@ -56,6 +57,7 @@ class TransportSettings extends Model
             'routing_provider' => 'array',
             'ksef_enabled' => 'boolean',
             'p24_quote_autopay_enabled' => 'boolean',
+            'payu_quote_autopay_enabled' => 'boolean',
         ];
     }
 

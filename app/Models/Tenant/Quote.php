@@ -32,6 +32,7 @@ class Quote extends TenantModel
         'pdf_url',
         'payment_url', 'payment_method_label', 'payment_completed_at', 'payment_notes',
         'p24_session_id', 'p24_payment_url', 'p24_order_id', 'p24_paid_at',
+        'payu_order_id', 'payu_ext_order_id', 'payu_payment_url', 'payu_paid_at',
     ];
 
     protected function casts(): array
@@ -63,6 +64,7 @@ class Quote extends TenantModel
             'withdrawn_at' => 'datetime',
             'payment_completed_at' => 'datetime',
             'p24_paid_at' => 'datetime',
+            'payu_paid_at' => 'datetime',
         ];
     }
 
