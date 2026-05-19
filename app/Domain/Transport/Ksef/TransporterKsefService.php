@@ -4,53 +4,52 @@ declare(strict_types=1);
 
 namespace App\Domain\Transport\Ksef;
 
+use App\Domain\Transport\Ksef\Api\KsefApiException;
+use App\Domain\Transport\Ksef\Api\KsefHttpClient;
+use App\Domain\Transport\Ksef\Session\KsefSessionManager;
 use App\Enums\TenantType;
 use App\Enums\TransportKsefStatus;
 use App\Models\Tenant\TransportInvoice;
 use App\Models\Tenant\TransportSettings;
-use App\Services\Ksef\CentralKsefService;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
-use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Per-transporter KSeF — passthrough layer dla `TransportInvoice`.
+ * Per-transporter KSeF — passthrough warstwa dla `TransportInvoice`.
  *
  * Hovera NIE jest wystawcą faktur transportowych (patrz docs/TRANSPORT.md
- * §12: marketplace positioning). Każdy transporter wprowadza WŁASNY
- * token autoryzacyjny KSeF w `transport_settings.ksef_token_encrypted`,
- * WŁASNY NIP, i wybiera środowisko (test/prod).
+ * §12 — marketplace positioning). Każdy transporter wprowadza WŁASNY
+ * token autoryzacyjny KSeF, WŁASNY NIP, i wybiera środowisko (test/prod).
  *
- * Ten serwis:
- *   - sięga po credentials z `TransportSettings` aktywnego tenanta;
- *   - buduje payload FA(2/3) (reuse `CentralKsefService::buildInvoiceXml`
- *     z lekkim post-processingiem nagłówka — XML jest semantycznie
- *     identyczny po stronie struktury, różni się tylko `SystemInfo`);
- *   - wykonuje HTTP do KSeF (test / demo / prod) z nagłówkiem
- *     `SessionToken` = token transportera;
- *   - utrwala wynik (status, reference_number, xml cache, error payload);
- *   - loguje przez TENANT audit logger (NIE master) — to akcja
- *     transportera, nie Hovery.
+ * Ten serwis wykonuje pełny handshake KSeF:
+ *   1. AuthorisationChallenge — pobranie challenge'u od MF
+ *   2. InitSessionToken (token-based) — wrap AES-256 klucza przez
+ *      RSA-OAEP z kluczem publicznym MF, zaszyfrowanie {token+timestamp}
+ *      AES-256-CBC, POST XML payload → MF zwraca SessionToken
+ *   3. SessionToken (TTL ~2h) trafia do cachu (KsefSessionManager)
+ *   4. /Invoice/Send z payloadem szyfrowanym AES-256-CBC tym samym
+ *      kluczem co handshake
+ *   5. /Invoice/Status (poll) — async ProcessingCode mapping
  *
- * Token NIGDY nie pojawia się w wyjątkach ani logach. Do debug/ops
- * używamy `TransportSettings::redactedTokenPreview()`.
+ * Token autoryzacyjny NIGDY nie pojawia się w wyjątkach ani logach.
+ * Patrz `TransportSettings::redactedTokenPreview()` dla bezpiecznego
+ * podglądu w ops debug.
  *
- * UWAGA: pełna integracja KSeF wymaga session lifecycle (challenge +
- * AuthTokenRequest + InitToken + EncryptedSession), my w tym PR
- * dostarczamy MVP: token KSeF zdobyty przez transportera w MF służy
- * bezpośrednio jako auth header. Pełen handshake odkładamy do follow-up
- * (analogicznie jak `CentralKsefService` skeleton).
+ * Co NIE jest jeszcze obsługiwane:
+ *   - faktury korygujące (KOR) — XML budowniczy ma case ale flow
+ *     korekt wymaga referencji do oryginalnej FV w KSeF
+ *   - XSD walidacja przed wysyłką (MF i tak waliduje serwerowo)
+ *   - batch endpoint /Invoice/Batch (na razie wysyłamy pojedynczo)
  */
 class TransporterKsefService
 {
     public function __construct(
         private readonly TenantManager $tenants,
         private readonly TenantAuditLogger $audit,
-        private readonly CentralKsefService $xmlBuilder,
+        private readonly KsefHttpClient $client,
+        private readonly KsefSessionManager $sessions,
     ) {}
 
     /**
@@ -70,79 +69,117 @@ class TransporterKsefService
 
     /**
      * Wyślij FV do KSeF w imieniu transportera. Buduje XML, wykonuje
-     * POST, zapisuje stan na FV. Nigdy nie rzuca wyjątkiem zawierającym
-     * token; błędy HTTP są mapowane na `KsefSubmissionResult::error()`.
+     * pełny handshake (lub używa cached session token), zaszyfrowane
+     * AES wysyła do /Invoice/Send, zapisuje stan na FV.
+     *
+     * Nigdy nie rzuca wyjątkiem zawierającym token — błędy HTTP są
+     * mapowane na `KsefSubmissionResult::error()` lub `::rejected()`.
      *
      * @throws KsefNotConfiguredException gdy brakuje credentials
      */
     public function submit(TransportInvoice $invoice): KsefSubmissionResult
     {
         $settings = $this->assertConfigured();
-
         $xml = $this->generateXml($invoice);
 
         // Cache XML zanim wykonamy POST — jeśli MF padnie / timeout,
         // mamy ślad co próbowaliśmy wysłać (do retry / debug).
-        $invoice->forceFill([
-            'ksef_xml' => $xml,
-        ])->save();
+        $invoice->forceFill(['ksef_xml' => $xml])->save();
 
         try {
-            $response = $this->client($settings)
-                ->withBody($xml, 'application/octet-stream')
-                ->post($this->host($settings).'/online/Invoice/Send');
+            $session = $this->sessions->getActiveSession(
+                tenant: $this->tenants->tenantOrFail(),
+                environment: $this->environment($settings),
+                authToken: (string) $settings->getKsefToken(),
+                nip: $this->resolveNip($settings),
+            );
+        } catch (KsefApiException $e) {
+            $this->logError($settings, 'handshake_failed', [
+                'message' => $e->getMessage(),
+                'http_status' => $e->httpStatus,
+            ]);
+
+            return $this->persistError(
+                $invoice,
+                $settings,
+                'KSeF handshake failed: '.$e->getMessage(),
+                $e->payload,
+                isReject: $e->httpStatus >= 400 && $e->httpStatus < 500,
+            );
         } catch (Throwable $e) {
             return $this->handleException($invoice, $settings, $e);
         }
 
-        if ($response->successful()) {
-            $reference = (string) ($response->json('elementReferenceNumber')
-                ?? $response->json('referenceNumber')
-                ?? '');
-
-            if ($reference === '') {
+        try {
+            $result = $this->client->sendInvoice(
+                environment: $this->environment($settings),
+                sessionToken: $session['token'],
+                aesKey: $session['aes_key'],
+                invoiceXml: $xml,
+            );
+        } catch (KsefApiException $e) {
+            // 401 = session token revoked / expired wcześniej niż MF
+            // podał. Spróbujmy raz force-refresh i ponów.
+            if ($e->httpStatus === 401) {
+                try {
+                    $session = $this->sessions->forceRefresh(
+                        tenant: $this->tenants->tenantOrFail(),
+                        environment: $this->environment($settings),
+                        authToken: (string) $settings->getKsefToken(),
+                        nip: $this->resolveNip($settings),
+                    );
+                    $result = $this->client->sendInvoice(
+                        environment: $this->environment($settings),
+                        sessionToken: $session['token'],
+                        aesKey: $session['aes_key'],
+                        invoiceXml: $xml,
+                    );
+                } catch (Throwable $retryError) {
+                    return $this->persistError(
+                        $invoice,
+                        $settings,
+                        'KSeF send failed after re-handshake: '.$retryError->getMessage(),
+                        $e->payload,
+                        isReject: false,
+                    );
+                }
+            } else {
                 return $this->persistError(
                     $invoice,
                     $settings,
-                    'KSeF returned 200 but no referenceNumber',
-                    $this->safePayload($response),
+                    'KSeF send failed: '.$e->getMessage(),
+                    $e->payload,
+                    isReject: $e->httpStatus >= 400 && $e->httpStatus < 500,
                 );
             }
-
-            $invoice->forceFill([
-                'ksef_status' => TransportKsefStatus::Submitted,
-                'ksef_reference_number' => $reference,
-                'ksef_reference' => $reference, // legacy compat
-                'ksef_submitted_at' => now(),
-                'ksef_sent_at' => now(),
-                'ksef_error_payload' => null,
-            ])->save();
-
-            $this->audit->record('transport_invoice.ksef_submitted', 'TransportInvoice', (string) $invoice->id, [
-                'number' => $invoice->number,
-                'reference_number' => $reference,
-                'env' => $settings->ksef_environment,
-                'token_preview' => $settings->redactedTokenPreview(),
-            ]);
-
-            return KsefSubmissionResult::submitted($reference);
+        } catch (Throwable $e) {
+            return $this->handleException($invoice, $settings, $e);
         }
 
-        // 4xx / 5xx
-        $payload = $this->safePayload($response);
+        $reference = $result['element_reference_number'];
 
-        return $this->persistError(
-            $invoice,
-            $settings,
-            'KSeF HTTP '.$response->status(),
-            $payload,
-            isReject: $response->status() >= 400 && $response->status() < 500,
-        );
+        $invoice->forceFill([
+            'ksef_status' => TransportKsefStatus::Submitted,
+            'ksef_reference_number' => $reference,
+            'ksef_reference' => $reference, // legacy compat
+            'ksef_submitted_at' => now(),
+            'ksef_sent_at' => now(),
+            'ksef_error_payload' => null,
+        ])->save();
+
+        $this->audit->record('transport_invoice.ksef_submitted', 'TransportInvoice', (string) $invoice->id, [
+            'number' => $invoice->number,
+            'reference_number' => $reference,
+            'env' => $this->environment($settings),
+            'token_preview' => $settings->redactedTokenPreview(),
+        ]);
+
+        return KsefSubmissionResult::submitted($reference);
     }
 
     /**
      * Sprawdź status wcześniejszego submit. Używane przez UI ("Odśwież
-     * status") oraz przyszły cron pollujący `submitted` starsze niż X.
+     * status") oraz przez cron `transport:ksef:poll-submitted`.
      *
      * @throws KsefNotConfiguredException
      */
@@ -156,75 +193,45 @@ class TransporterKsefService
         }
 
         try {
-            $response = $this->client($settings)
-                ->acceptJson()
-                ->get($this->host($settings).'/online/Invoice/Status/'.$reference);
+            $session = $this->sessions->getActiveSession(
+                tenant: $this->tenants->tenantOrFail(),
+                environment: $this->environment($settings),
+                authToken: (string) $settings->getKsefToken(),
+                nip: $this->resolveNip($settings),
+            );
+        } catch (Throwable $e) {
+            $this->logError($settings, 'refresh_status_handshake_failed', ['error' => $e->getMessage()]);
+
+            return KsefStatusResult::error('KSeF status handshake failed: '.$e->getMessage(), []);
+        }
+
+        try {
+            $status = $this->client->getInvoiceStatus(
+                environment: $this->environment($settings),
+                sessionToken: $session['token'],
+                invoiceElementReference: $reference,
+            );
+        } catch (KsefApiException $e) {
+            $invoice->forceFill([
+                'ksef_status' => TransportKsefStatus::Error,
+                'ksef_error_payload' => $e->payload,
+            ])->save();
+
+            return KsefStatusResult::error('KSeF HTTP '.$e->httpStatus, $e->payload);
         } catch (Throwable $e) {
             $this->logError($settings, 'refresh_status_http_exception', ['error' => $e->getMessage()]);
 
             return KsefStatusResult::error('KSeF status call failed: '.$e->getMessage(), []);
         }
 
-        if (! $response->successful()) {
-            $payload = $this->safePayload($response);
-            $invoice->forceFill([
-                'ksef_status' => TransportKsefStatus::Error,
-                'ksef_error_payload' => $payload,
-            ])->save();
-
-            return KsefStatusResult::error('KSeF HTTP '.$response->status(), $payload);
-        }
-
-        $statusCode = (string) $response->json('processingCode');
-        $statusDesc = (string) $response->json('processingDescription');
-
-        // Mapowanie ProcessingCode MF:
-        //   100 = ok, accepted; 200/300 = in progress; 400+ = błąd
-        if ($statusCode === '200' || $statusCode === '100') {
-            $invoice->forceFill([
-                'ksef_status' => TransportKsefStatus::Accepted,
-                'ksef_accepted_at' => now(),
-                'ksef_error_payload' => null,
-            ])->save();
-
-            $this->audit->record('transport_invoice.ksef_accepted', 'TransportInvoice', (string) $invoice->id, [
-                'number' => $invoice->number,
-                'reference_number' => $reference,
-            ]);
-
-            return KsefStatusResult::accepted($reference);
-        }
-
-        if ($statusCode === '300' || $statusCode === '305' || $statusCode === '315') {
-            // Wciąż pending.
-            return KsefStatusResult::pending($reference);
-        }
-
-        // Odrzucenie / błąd biznesowy.
-        $payload = $this->safePayload($response);
-        $invoice->forceFill([
-            'ksef_status' => TransportKsefStatus::Rejected,
-            'ksef_error_payload' => $payload,
-        ])->save();
-
-        $this->audit->record('transport_invoice.ksef_rejected', 'TransportInvoice', (string) $invoice->id, [
-            'number' => $invoice->number,
-            'reference_number' => $reference,
-            'processing_code' => $statusCode,
-        ]);
-
-        return KsefStatusResult::rejected($statusDesc ?: 'KSeF rejected', $payload, $reference);
+        return $this->mapStatusResponse($invoice, $reference, $status);
     }
 
     /**
-     * Buduje XML FA dla transport FV. Reuse builderu z CentralKsefService
-     * + lekka adaptacja: tag `<SystemInfo>` mówi "Hovera Transport
-     * Passthrough", tak by audyt MF mógł rozpoznać że Hovera jest tylko
-     * software'em, nie wystawcą.
-     *
-     * UWAGA: `CentralKsefService::buildInvoiceXml` przyjmuje
-     * `App\Models\Central\Invoice`, my mamy `Tenant\TransportInvoice` —
-     * inny schemat. Budujemy własny XML, ale identyczny strukturalnie.
+     * Buduje XML FA dla transport FV. Builder identyczny strukturalnie
+     * jak CentralKsefService, ale z `<SystemInfo>Hovera Transport
+     * Passthrough</SystemInfo>` — tak by audyt MF mógł rozpoznać, że
+     * Hovera jest tylko software'em, nie wystawcą.
      */
     public function generateXml(TransportInvoice $invoice): string
     {
@@ -279,9 +286,10 @@ class TransporterKsefService
     }
 
     /**
-     * Lekki "ping" — pyta KSeF czy token jest ważny (najtańszy
-     * auth-only endpoint). Używany przez Settings page "Test connection".
-     * Zwraca [success, message]; NIGDY nie ujawnia tokenu.
+     * Pełen test handshake — pobiera challenge i InitToken, sprawdza
+     * czy MF akceptuje token transportera (faktyczna walidacja, nie
+     * tylko ping endpoint). Zwraca [success, message]; NIGDY nie
+     * ujawnia tokenu.
      *
      * @return array{success: bool, message: string}
      */
@@ -294,20 +302,31 @@ class TransporterKsefService
         }
 
         try {
-            $response = $this->client($settings)
-                ->acceptJson()
-                ->get($this->host($settings).'/online/Session/Status');
+            // Force-refresh — chcemy faktycznie sprawdzić, czy token
+            // wykonuje pełen handshake. Cache'owanie tu byłoby fałszywe
+            // bo cached session != "token jest poprawny".
+            $this->sessions->forceRefresh(
+                tenant: $this->tenants->tenantOrFail(),
+                environment: $this->environment($settings),
+                authToken: (string) $settings->getKsefToken(),
+                nip: $this->resolveNip($settings),
+            );
+        } catch (KsefApiException $e) {
+            return [
+                'success' => false,
+                'message' => 'Token nie został zaakceptowany przez KSeF: '
+                    .$this->cleanErrorMessage($e->getMessage()),
+            ];
         } catch (Throwable $e) {
-            return ['success' => false, 'message' => 'KSeF unreachable: '.$e->getMessage()];
-        }
-
-        if ($response->successful()) {
-            return ['success' => true, 'message' => 'KSeF '.$settings->ksef_environment.' OK'];
+            return [
+                'success' => false,
+                'message' => 'KSeF unreachable: '.$this->cleanErrorMessage($e->getMessage()),
+            ];
         }
 
         return [
-            'success' => false,
-            'message' => 'KSeF HTTP '.$response->status().' — sprawdź token i NIP w ustawieniach.',
+            'success' => true,
+            'message' => 'KSeF '.$this->environment($settings).' OK — handshake powiódł się.',
         ];
     }
 
@@ -321,9 +340,6 @@ class TransporterKsefService
     {
         $tenant = $this->tenants->current();
         if ($tenant !== null && method_exists($tenant, 'isVerifiedTransporter')) {
-            // Tylko sprawdzamy weryfikację dla kont typu transporter —
-            // stajnie (typ inny) nie używają tego service'u w ogóle, ale
-            // defensywnie ich nie blokujemy gdyby trafiły tu przez błąd.
             $type = $tenant->type;
             $isTransporterType = $type instanceof TenantType
                 ? $type === TenantType::Transporter
@@ -363,48 +379,87 @@ class TransporterKsefService
         return TransportSettings::current();
     }
 
-    private function client(TransportSettings $settings): PendingRequest
+    private function environment(TransportSettings $settings): string
     {
-        // KSeF token = wartość trzymana w sekretnym nagłówku `SessionToken`
-        // (tak nazywa to MF). Tutaj uproszczona ścieżka: token transportera
-        // jest długoterminowym tokenem KSeF — pełen handshake (challenge +
-        // RSA-OAEP) odkładamy do follow-up PR.
-        $token = (string) $settings->getKsefToken();
-
-        return Http::withHeaders([
-            'SessionToken' => $token,
-            'Accept' => 'application/json',
-        ])->timeout(30);
-    }
-
-    private function host(TransportSettings $settings): string
-    {
-        return match ((string) $settings->ksef_environment) {
-            'production', 'prod' => CentralKsefService::HOST_PROD,
-            'demo' => CentralKsefService::HOST_DEMO,
-            default => CentralKsefService::HOST_TEST,
+        return match (strtolower((string) $settings->ksef_environment)) {
+            'prod', 'production' => KsefHttpClient::ENV_PROD,
+            'demo' => KsefHttpClient::ENV_DEMO,
+            default => KsefHttpClient::ENV_TEST,
         };
     }
 
-    /**
-     * Zwraca payload odpowiedzi BEZPIECZNY do utrwalenia (bez tokenów,
-     * bez headers, max 16KB). Logiczna ochrona przed przypadkowym
-     * scrubowaniem secretów do bazy / logów.
-     *
-     * @return array<string,mixed>
-     */
-    private function safePayload(Response $response): array
+    private function resolveNip(TransportSettings $settings): string
     {
-        $body = (string) $response->body();
-        if (strlen($body) > 16 * 1024) {
-            $body = substr($body, 0, 16 * 1024).'…[truncated]';
-        }
+        $nip = (string) ($settings->ksef_nip ?? $this->tenants->current()?->tax_id ?? '');
 
-        return [
-            'status' => $response->status(),
-            'body' => $body,
+        return $this->normalizeNip($nip);
+    }
+
+    /**
+     * Mapuje odpowiedź KSeF /Invoice/Status na lokalny enum status.
+     *
+     * @param  array{processing_code: string, processing_description: string, ksef_reference_number: ?string, raw_body: array<string,mixed>, http_status: int}  $status
+     */
+    private function mapStatusResponse(TransportInvoice $invoice, string $reference, array $status): KsefStatusResult
+    {
+        $code = $status['processing_code'];
+        $desc = $status['processing_description'];
+        $payload = [
+            'status' => $status['http_status'],
+            'body' => $status['raw_body'],
             'received_at' => now()->toIso8601String(),
         ];
+
+        // Mapowanie ProcessingCode MF (zgodnie z dokumentacją API):
+        //   100 = waiting for processing
+        //   110 = in progress
+        //   200 = accepted (z numerem KSeF)
+        //   3xx = pending nadal
+        //   4xx = błąd merytoryczny (zły NIP, brak P_15, etc.) → rejected
+        //   5xx = błąd techniczny po stronie MF → error
+        if ($code === '200') {
+            $invoice->forceFill([
+                'ksef_status' => TransportKsefStatus::Accepted,
+                'ksef_accepted_at' => now(),
+                'ksef_reference_number' => $status['ksef_reference_number'] ?? $reference,
+                'ksef_error_payload' => null,
+            ])->save();
+
+            $this->audit->record('transport_invoice.ksef_accepted', 'TransportInvoice', (string) $invoice->id, [
+                'number' => $invoice->number,
+                'reference_number' => $reference,
+            ]);
+
+            return KsefStatusResult::accepted($reference);
+        }
+
+        if (in_array($code, ['100', '110', '300', '305', '315'], true)) {
+            return KsefStatusResult::pending($reference);
+        }
+
+        $intCode = (int) $code;
+        if ($intCode >= 500 && $intCode < 600) {
+            $invoice->forceFill([
+                'ksef_status' => TransportKsefStatus::Error,
+                'ksef_error_payload' => $payload,
+            ])->save();
+
+            return KsefStatusResult::error('KSeF processing error '.$code, $payload);
+        }
+
+        // 4xx / inne — rejection.
+        $invoice->forceFill([
+            'ksef_status' => TransportKsefStatus::Rejected,
+            'ksef_error_payload' => $payload,
+        ])->save();
+
+        $this->audit->record('transport_invoice.ksef_rejected', 'TransportInvoice', (string) $invoice->id, [
+            'number' => $invoice->number,
+            'reference_number' => $reference,
+            'processing_code' => $code,
+        ]);
+
+        return KsefStatusResult::rejected($desc !== '' ? $desc : 'KSeF rejected', $payload, $reference);
     }
 
     /**
@@ -452,13 +507,14 @@ class TransporterKsefService
         TransportSettings $settings,
         Throwable $e,
     ): KsefSubmissionResult {
-        // Scrub: w exception message nie powinno być tokenu, ale defensywnie
-        // nigdy nie propagujemy raw Throwable — wyciągamy tylko getMessage().
-        $message = 'KSeF call failed: '.$e->getMessage();
+        // Scrub: defensive — nigdy nie propagujemy raw Throwable, tylko
+        // getMessage(), które nie powinno zawierać tokenu (KsefHttpClient
+        // i KsefApiException ich nie wstawiają).
+        $message = 'KSeF call failed: '.$this->cleanErrorMessage($e->getMessage());
 
         return $this->persistError($invoice, $settings, $message, [
             'exception' => get_class($e),
-            'message' => $e->getMessage(),
+            'message' => $this->cleanErrorMessage($e->getMessage()),
             'received_at' => now()->toIso8601String(),
         ]);
     }
@@ -471,12 +527,21 @@ class TransporterKsefService
         Log::warning('ksef.transporter.'.$event, array_merge($context, [
             'env' => (string) $settings->ksef_environment,
             'token_preview' => $settings->redactedTokenPreview(),
-            // Świadomie NIE logujemy: pełnego tokenu, pełnego body, NIP w czystej formie.
         ]));
     }
 
     private function normalizeNip(string $nip): string
     {
         return preg_replace('/[^0-9]/', '', $nip) ?? '';
+    }
+
+    /**
+     * Defensywne wyciągnięcie potencjalnych sekretów z error message.
+     * Czyste fragmenty zostawiamy; gdyby user wkleił coś dziwnego w
+     * token, scrubujemy długie alfanumeryczne ciągi (>20 znaków).
+     */
+    private function cleanErrorMessage(string $message): string
+    {
+        return (string) preg_replace('/[A-Za-z0-9+\/]{20,}/', '[REDACTED]', $message);
     }
 }

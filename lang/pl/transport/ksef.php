@@ -43,6 +43,9 @@ return [
 
     'action' => [
         'submit' => 'Wyślij do KSeF',
+        'submit_tooltip' => 'Wymaga handshake z MF (challenge + szyfrowanie). '
+            .'Pierwsza wysyłka po dłuższej przerwie potrwa parę sekund — '
+            .'kolejne w ciągu 2h korzystają z cache\'owanej sesji.',
         'submit_confirm' => 'Wysłać tę fakturę do Krajowego Systemu e-Faktur? Operacji nie da się cofnąć.',
         'submit_bulk' => 'Wyślij zaznaczone do KSeF',
         'submit_bulk_confirm' => 'Wyślij zaznaczone faktury (maks. 50) do KSeF? Operacja nieodwracalna.',
