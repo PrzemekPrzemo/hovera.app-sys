@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Public;
 
 use App\Domain\Transport\Notifications\TransportReviewSubmittedNotification;
+use App\Domain\Transport\Reviews\ReviewSpamFilter;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Models\Central\TransportReview;
@@ -12,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\View\View;
 
@@ -66,9 +68,32 @@ class TransportReviewController extends Controller
             'comment' => 'nullable|string|max:2000',
         ]);
 
+        $comment = isset($data['comment']) ? mb_substr((string) $data['comment'], 0, 2000) : '';
+
+        // Spam filter — patrz docs/TRANSPORT.md §12. Bot z keyword'em lub
+        // duplicate text z ostatnich 30 min dla tego transportera → silent
+        // accept od strony klienta (302 → thanks page jakby zapisane),
+        // ale rekord NIE wpada. Spamerzy nie wiedzą że zostali wycięci.
+        $spamFilter = app(ReviewSpamFilter::class);
+        if ($spamFilter->isSpam([
+            'rating' => (int) $data['rating'],
+            'comment' => (string) $comment,
+            'customer_name' => (string) ($review->customer_name ?? ''),
+            'transporter_tenant_id' => (string) $review->transporter_tenant_id,
+        ])) {
+            Log::warning('Review submit rejected as spam', [
+                'review_id' => $review->id,
+                'tenant_id' => $review->transporter_tenant_id,
+                'ip' => $request->ip(),
+            ]);
+
+            // Silent 302 → bot dostaje thanks page, baza zostaje czysta.
+            return redirect()->route('public.transport.review.thanks');
+        }
+
         $review->forceFill([
             'rating' => (int) $data['rating'],
-            'comment' => isset($data['comment']) ? mb_substr((string) $data['comment'], 0, 2000) : null,
+            'comment' => $comment !== '' ? $comment : null,
             'status' => 'published',
             'submitted_at' => now(),
         ])->save();

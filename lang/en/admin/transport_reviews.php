@@ -21,11 +21,18 @@ return [
     'filter' => [
         'rating' => 'Rating',
         'transporter' => 'Transporter',
+        'flagged' => 'Flagged by transporter',
     ],
     'action' => [
         'publish' => 'Publish',
         'hide' => 'Hide',
         'reject' => 'Reject (delete)',
+    ],
+    'bulk' => [
+        'publish' => 'Publish selected',
+        'publish_done' => 'Published :count reviews',
+        'hide' => 'Hide selected',
+        'hide_done' => 'Hidden :count reviews',
     ],
     'form' => [
         'moderation_notes' => 'Moderation notes',

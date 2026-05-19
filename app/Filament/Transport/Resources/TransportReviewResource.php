@@ -6,6 +6,8 @@ namespace App\Filament\Transport\Resources;
 
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Filament\Transport\Resources\TransportReviewResource\Pages;
+use App\Mail\MasterAdmin\ReviewFlaggedMail;
+use App\Models\Central\Tenant;
 use App\Models\Central\TransportReview;
 use App\Services\Tenancy\TenantRoleGate;
 use App\Tenancy\TenantManager;
@@ -15,6 +17,10 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Lista recenzji widoczna w panelu /transport — read-only z dwoma akcjami:
@@ -171,13 +177,19 @@ class TransportReviewResource extends Resource
                     ])
                     ->requiresConfirmation()
                     ->action(function (TransportReview $record, array $data): void {
+                        $userId = (string) (Auth::id() ?? '');
                         $record->forceFill([
                             'status' => 'flagged',
                             'flagged_reason' => (string) $data['reason'],
                             'flagged_by_tenant_at' => now(),
+                            'flagged_by_user_id' => $userId !== '' ? $userId : null,
                         ])->save();
 
                         TransportReview::forgetAggregateCache($record->transporter_tenant_id);
+
+                        // Powiadom master admin'ów — triage queue w
+                        // `/admin/transport-reviews` filter „Tylko flagged".
+                        self::dispatchFlaggedReviewMail($record);
 
                         Notification::make()
                             ->warning()
@@ -194,5 +206,51 @@ class TransportReviewResource extends Resource
             'index' => Pages\ListTransportReviews::route('/'),
             'view' => Pages\ViewTransportReview::route('/{record}'),
         ];
+    }
+
+    /**
+     * Wysyła mail do master admin'ów (users.is_master_admin=true) po
+     * tym jak transporter zaflagował review. Master admin triage'uje
+     * w `/admin/transport-reviews?filter=flagged`.
+     *
+     * Soft-fail — jeśli mail backend padnie, audit log nie wpada (review
+     * jest już oznaczony jako flagged w DB, admin zobaczy go w panel'u
+     * niezależnie od mail'a).
+     */
+    private static function dispatchFlaggedReviewMail(TransportReview $review): void
+    {
+        try {
+            $recipients = DB::connection('central')
+                ->table('users')
+                ->where('is_master_admin', true)
+                ->whereNull('deleted_at')
+                ->pluck('email')
+                ->filter()
+                ->values()
+                ->all();
+
+            if ($recipients === []) {
+                return;
+            }
+
+            $transporter = Tenant::query()->find($review->transporter_tenant_id);
+            $flaggedByEmail = (string) DB::connection('central')
+                ->table('users')
+                ->where('id', $review->flagged_by_user_id)
+                ->value('email') ?: 'unknown@hovera.app';
+
+            Mail::to($recipients)->send(
+                new ReviewFlaggedMail(
+                    review: $review,
+                    transporterName: (string) ($transporter?->name ?? '—'),
+                    flaggedByEmail: $flaggedByEmail,
+                ),
+            );
+        } catch (\Throwable $e) {
+            Log::warning('ReviewFlaggedMail dispatch failed', [
+                'review_id' => $review->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

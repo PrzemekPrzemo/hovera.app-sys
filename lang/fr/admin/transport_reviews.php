@@ -13,8 +13,18 @@ return [
         'status' => 'Statut',
         'flagged_at' => 'Signalé',
     ]],
-    'filter' => ['rating' => 'Note', 'transporter' => 'Transporteur'],
+    'filter' => [
+        'rating' => 'Note',
+        'transporter' => 'Transporteur',
+        'flagged' => 'Signalé par le transporteur',
+    ],
     'action' => ['publish' => 'Publier', 'hide' => 'Masquer', 'reject' => 'Rejeter (supprimer)'],
+    'bulk' => [
+        'publish' => 'Publier sélectionnés',
+        'publish_done' => ':count avis publiés',
+        'hide' => 'Masquer sélectionnés',
+        'hide_done' => ':count avis masqués',
+    ],
     'form' => ['moderation_notes' => 'Notes de modération'],
     'notify' => [
         'moderated' => 'Avis mis à jour (statut : :status).',
