@@ -24,6 +24,13 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Defensive drop — wcześniejsze próby deployu padały w połowie
+        // (timestamp default, potem długa nazwa indexu) i tabela mogła
+        // zostać częściowo utworzona bez wpisu w `migrations`. CREATE
+        // wtedy crashował na "table already exists". Tabela jest pusta
+        // (deploy nigdy nie wjechał na live), więc drop jest bezpieczny.
+        Schema::connection('central')->dropIfExists('transport_reviews');
+
         Schema::connection('central')->create('transport_reviews', function (Blueprint $table) {
             $table->ulid('id')->primary();
 
