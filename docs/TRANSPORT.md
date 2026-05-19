@@ -857,9 +857,93 @@ i „transporterzy". To samo źródło danych, inny perspektywa.
 
 ### 15.3 `PlanResource`
 
-Plany Stripe (stajnia: Starter/Pro/Multi; transporter: Solo/Pro/Fleet)
+Plany Stripe (stajnia: Starter/Pro/Multi; transporter: Start/Pro/Business/Enterprise)
 z badge'em `audience` ∈ `stable` / `transporter`. Master admin może
 dodać nowy plan dla wybranej grupy bez wycieku do drugiej.
+
+**Multi-currency editor** — sekcja "Ceny w innych walutach" w formularzu
+planu pozwala edytować overlay `prices_per_currency` (EUR/GBP/AUD/NZD)
+przez Repeater. Dla Enterprise sekcja jest ukryta (custom pricing).
+Hovera używa stałych przeliczników — overlay pinujesz ręcznie przy
+każdej zmianie taryfy (nie real-time NBP).
+
+**Active customers column** — kolumna `active_tenants_count` pokazuje
+liczbę tenantów ze statusem `trialing` lub `active` na danym planie.
+Legacy plany (`*_legacy`) mają wizualny czerwony badge wskazujący że
+wymagają migracji (§13.5).
+
+### 13.4 Stripe wizard — tworzenie Product + Price
+
+Każdy plan ma header action **"Utwórz Product + Cenę w Stripe"** widoczny
+dopóki `stripe_price_monthly_id IS NULL`. Klik tworzy:
+
+1. Jeden `\Stripe\Product` z metadata `{plan_code, audience, managed_by}`
+2. Parę `\Stripe\Price` (monthly + yearly) dla bazowej waluty planu
+3. Dodatkowe pary `Price` per waluta z `prices_per_currency` overlay'a
+
+Po sukcesie zapisuje wszystkie `price_*` IDs na Plan (base na top-level,
+overlay'owe w JSON pod `stripe_price_*_id`). Wpis audit log
+`plan.stripe_created` z `product_id` + listą walut.
+
+**Source of truth**: Po utworzeniu **Stripe staje się źródłem prawdy** dla
+produktu/cen. Edycja nazwy, opisu, cen po stronie Hovery NIE synchronizuje
+zmian do Stripe (brak push'a). Future edits = robi się w Stripe Dashboard.
+Operacja jest one-shot — button znika po utworzeniu, żeby nie powstał
+duplikat.
+
+**Enterprise plany pomijane** — `features.is_custom_pricing = true` lub
+`features.marketing_cta = contact_sales` skutkuje pominięciem (notification
+"Enterprise nie wymaga Stripe Product"). Kontrakty Enterprise negocjowane
+są indywidualnie.
+
+Implementacja: `App\Services\Billing\StripeProductCreator` (reużywa
+istniejącego `StripeClient` z `SystemSetting` / `config('services.stripe')`).
+
+### 13.5 Migracja klientów z legacy planów
+
+`/admin/legacy-plan-migration` — strona Filament dla `is_master_admin`.
+Lista tenantów wciąż siedzących na `transport_*_legacy` planach z
+rekomendowanym nowym planem per row.
+
+**Mapping** (hardcoded w `LegacyPlanMigrator::MAPPING`):
+
+| Legacy code             | New code               | Old → New price |
+|-------------------------|------------------------|-----------------|
+| `transport_solo_legacy` | `transport_start`      | 149 → 250 PLN/mc |
+| `transport_pro_legacy`  | `transport_pro`        | 349 → 549 PLN/mc |
+| `transport_fleet_legacy`| `transport_business`   | 699 → 999 PLN/mc |
+
+**UX**:
+- Per-row akcja "Przepnij na nowy plan" — modal z confirmation, polem
+  `effective` (immediate vs next_cycle) i polem `reason` (logowane w
+  audit log). Toggle "Wyślij email" (default true).
+- Bulk action: zaznacz wiele tenantów, jeden submit.
+- Idempotentne — re-run dla tenanta już na docelowym planie = no-op.
+
+**Stripe subscription update**: gdy tenant ma `stripe_subscription_id`
+i nowy plan ma `stripe_price_monthly_id`, automatycznie podmieniamy
+price ID na subskrypcji (`\Stripe\Subscription::update` z
+`items[0].price`). `effective='immediate'` → `proration_behavior=create_prorations`
+(klient dostanie fakturę wyrównawczą). `effective='next_cycle'` →
+`proration_behavior=none` (nowa cena dopiero od kolejnego billing cycle —
+**recommended default**, mniej szok rachunków).
+
+Stripe swap jest best-effort: błąd loguje warning ale nie blokuje
+migracji plan_id w DB. Admin może wtedy ręcznie naprawić w Stripe
+Dashboard.
+
+**Email**: `TenantPlanMigratedNotification` (Markdown, mailer 'default')
+do owner'a tenanta — subject "Twój plan w Hovera został zaktualizowany",
+zawiera stary plan, nowy plan, nową cenę, datę lock-in (`now()+12mc`).
+Lock-in policy (§15) gwarantuje niezmienność tej ceny przez 12 mc od dnia
+migracji.
+
+**Audit log**: każda migracja = wpis `plan.legacy_migrated` z payload
+`{old_plan_code, new_plan_code, effective, stripe_updated, reason}`.
+
+Implementacja: `App\Services\Billing\LegacyPlanMigrator` +
+`App\Filament\Admin\Pages\LegacyPlanMigration` +
+`resources/views/emails/tenant-plan-migrated.blade.php`.
 
 ### 15.4 `InvitationResource` (filtered)
 
