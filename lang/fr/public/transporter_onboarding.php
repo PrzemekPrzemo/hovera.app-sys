@@ -7,6 +7,15 @@ return [
     'heading' => 'Rejoignez hovera en tant que société de transport',
     'subtitle' => 'Marketplace de transport de chevaux — remplissez votre profil en 10 minutes, téléchargez '
         .'les documents et nous vérifierons le compte sous 2-3 jours ouvrables.',
+    'no_commission_banner' => 'hovera.app ne perçoit aucune commission ni des transporteurs ni des clients — '
+        .'uniquement un abonnement mensuel.',
+    'promo' => [
+        'heading' => '🎁 Promotion jusqu\'à fin juillet 2026',
+        'body' => 'Toutes les fonctionnalités. Sans carte. Pas de conversion automatique en payant — '
+            .'choisissez un plan uniquement quand vous êtes sûr de rester.',
+        'body_yearly' => 'L\'inscription avant fin juillet 2026 offre 30 jours gratuits, '
+            .'et le tarif annuel équivaut à 10 × le tarif mensuel (2 mois offerts). Offre limitée dans le temps.',
+    ],
     'perks' => [
         'title' => 'Ce que vous obtenez',
         'item_1' => 'Profil public sur app.hovera.app/t/{slug} indexé par Google',
@@ -37,7 +46,13 @@ return [
     ],
     'documents_disclaimer' => 'Nous exigeons 6 documents conformément à la loi PWL et aux règlements hovera. '
         .'Formats : PDF, JPG, PNG. Max 5 Mo par fichier.',
-    'documents' => ['file_hint' => 'PDF, JPG ou PNG. Max 5 Mo.'],
+    'documents' => [
+        'file_hint' => 'PDF, JPG ou PNG. Max 5 Mo.',
+        'anonymized_heading' => 'Documents uniquement pour vérification',
+        'anonymized_body' => 'Après vérification positive par l\'équipe Hovera, nous montrons les documents aux clients '
+            .'UNIQUEMENT sous forme anonymisée (sans numéros de série, dates d\'expiration, données personnelles). '
+            .'Publiquement visible UNIQUEMENT : « ✓ Vérifié par l\'équipe Hovera ».',
+    ],
     'terms' => [
         'marketplace_position' => 'Hovera est une plateforme marketplace pour les transporteurs. '
             .'Nous ne sommes pas transporteur et ne sommes pas partie au contrat de transport. '

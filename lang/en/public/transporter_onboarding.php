@@ -8,6 +8,18 @@ return [
     'subtitle' => 'Horse transport marketplace — fill in your profile in 10 minutes, upload documents, '
         .'and we will verify your account in 2-3 business days. Customers will find you in the /przewoznicy directory.',
 
+    'no_commission_banner' => 'hovera.app charges no commission from carriers or customers — '
+        .'just a monthly subscription.',
+
+    'promo' => [
+        'heading' => '🎁 Promotion until end of July 2026',
+        'body' => 'Full functionality. No card. No auto-conversion to paid — '
+            .'choose a plan only when you are sure you want to stay.',
+        'body_yearly' => 'Registration before end of July 2026 grants 30 days free, '
+            .'and the annual price equals 10 × the monthly rate (2 months free). '
+            .'Limited-time offer.',
+    ],
+
     'perks' => [
         'title' => 'What you get',
         'item_1' => 'Public profile at app.hovera.app/t/{slug} indexed by Google',
@@ -44,6 +56,10 @@ return [
 
     'documents' => [
         'file_hint' => 'PDF, JPG or PNG. Max 5 MB.',
+        'anonymized_heading' => 'Documents are only for verification',
+        'anonymized_body' => 'After positive verification by the Hovera team, we show documents to customers ONLY '
+            .'in anonymized form (no serial numbers, expiry dates, personal data). '
+            .'Publicly visible is ONLY: "✓ Verified by the Hovera team".',
     ],
 
     'terms' => [

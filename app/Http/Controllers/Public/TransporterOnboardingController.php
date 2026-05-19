@@ -77,6 +77,7 @@ class TransporterOnboardingController extends Controller
         'doc_pwl_t2' => TransporterDocumentType::PwlAuthorizationT2,
         'doc_pwl_driver_handler' => TransporterDocumentType::PwlDriverHandlerCertificate,
         'doc_pwl_vehicle_approval' => TransporterDocumentType::PwlVehicleApprovalCertificate,
+        'doc_wash_disinfection' => TransporterDocumentType::WashDisinfectionLog,
         'doc_carrier_liability' => TransporterDocumentType::CarrierLiabilityInsurance,
     ];
 

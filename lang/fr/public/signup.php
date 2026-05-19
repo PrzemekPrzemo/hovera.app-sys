@@ -48,6 +48,7 @@ return [
         'name_stable' => 'Nom de l’écurie',
         'name_transporter' => 'Nom de la société',
         'slug' => 'Adresse URL de l’écurie',
+        'slug_transporter' => 'Adresse URL de la société de transport',
         'owner_name' => 'Vos nom et prénom',
         'owner_email' => 'E-mail',
         'terms' => 'J’accepte les <a href="/regulamin" target="_blank">conditions générales</a> et la <a href="/polityka-prywatnosci" target="_blank">politique de confidentialité</a>',
@@ -62,6 +63,7 @@ return [
     'helper' => [
         'name' => 'C’est ainsi que votre écurie apparaîtra dans le panneau et sur la page publique.',
         'slug' => 'Uniquement des lettres minuscules, chiffres et tirets. Min. 3 caractères.',
+        'slug_transporter' => 'Uniquement des lettres minuscules, chiffres et tirets. Min. 3 caractères. Le profil de l\'entreprise sera disponible à cette adresse.',
         'owner_email' => 'C’est ici que nous enverrons le lien de définition du mot de passe.',
     ],
 

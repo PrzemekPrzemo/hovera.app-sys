@@ -29,6 +29,8 @@ return [
     'empty_state_transporter_hint' => 'Twoja firma transportowa? Dołącz do bazy:',
     'empty_state_transporter_cta' => 'Zarejestruj firmę',
     'hero_cta_join' => 'Jesteś przewoźnikiem? Dołącz do bazy',
+    'hero_subtitle_collecting' => 'Budujemy bazę zweryfikowanych firm transportu koni — dołącz jako jeden z pierwszych.',
+    'no_commission_banner' => 'hovera.app nie pobiera prowizji od przewoźników ani od zamawiających — tylko subskrypcja miesięczna.',
     'card_voiv_more_tooltip' => 'Pokrywa więcej województw — szczegóły na profilu',
 
     'card_view_profile' => 'Zobacz profil',

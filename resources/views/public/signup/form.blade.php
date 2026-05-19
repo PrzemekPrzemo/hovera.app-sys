@@ -88,16 +88,26 @@
                     <div class="helper">{{ __('public/signup.helper.name') }}</div>
                 </div>
 
+                @php
+                    // Public micro-site prefix per tenant type:
+                    //   - stable    → /s/{slug}
+                    //   - transporter → /t/{slug} (marketplace profile)
+                    $slugPrefix = $type->value === 'transporter' ? '/t/' : '/s/';
+                    $slugLabelKey = $type->value === 'transporter' ? 'label.slug_transporter' : 'label.slug';
+                    $slugHelperKey = $type->value === 'transporter' ? 'helper.slug_transporter' : 'helper.slug';
+                    $slugPlaceholder = $type->value === 'transporter' ? 'moja-firma' : 'moja-stajnia';
+                    $emailPlaceholder = $type->value === 'transporter' ? 'ty@twoja-firma.pl' : 'ty@twoja-stajnia.pl';
+                @endphp
                 <div class="form-row">
-                    <label for="slug">{{ __('public/signup.label.slug') }}</label>
+                    <label for="slug">{{ __('public/signup.'.$slugLabelKey) }}</label>
                     <div class="slug-prefix">
-                        <span>app.hovera.app/s/</span>
+                        <span>app.hovera.app{{ $slugPrefix }}</span>
                         <input type="text" name="slug" id="slug" required minlength="3" maxlength="62"
                                value="{{ $old['slug'] }}"
                                pattern="[a-z0-9](?:[a-z0-9-]{1,60}[a-z0-9])?"
-                               placeholder="moja-stajnia">
+                               placeholder="{{ $slugPlaceholder }}">
                     </div>
-                    <div class="helper">{{ __('public/signup.helper.slug') }}</div>
+                    <div class="helper">{{ __('public/signup.'.$slugHelperKey) }}</div>
                 </div>
 
                 <div class="form-row">
@@ -111,7 +121,7 @@
                     <label for="owner_email">{{ __('public/signup.label.owner_email') }}</label>
                     <input type="email" name="owner_email" id="owner_email" required maxlength="255"
                            value="{{ $old['owner_email'] }}"
-                           placeholder="ty@twoja-stajnia.pl">
+                           placeholder="{{ $emailPlaceholder }}">
                     <div class="helper">{{ __('public/signup.helper.owner_email') }}</div>
                 </div>
 
@@ -135,7 +145,11 @@
         <div class="footer-links">
             <a href="{{ url('/demo') }}">{{ __('public/signup.footer.demo') }}</a>
             ·
-            <a href="{{ route('pricing.show') }}">{{ __('public/signup.footer.pricing') }}</a>
+            {{-- Cennik per typ tenanta: stable → /pricing, transporter → /pricing/transport.
+                 Bez tej rozróżnialności transporter rejestrujący się widziałby cennik stajni. --}}
+            <a href="{{ $type->value === 'transporter' ? route('pricing.transport') : route('pricing.show') }}">
+                {{ __('public/signup.footer.pricing') }}
+            </a>
             ·
             <a href="/app/login">{{ __('public/signup.footer.login') }}</a>
         </div>

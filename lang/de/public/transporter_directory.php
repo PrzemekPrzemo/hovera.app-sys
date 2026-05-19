@@ -28,6 +28,8 @@ return [
     'empty_state_transporter_hint' => 'Sie führen ein Transportunternehmen? Treten Sie dem Verzeichnis bei:',
     'empty_state_transporter_cta' => 'Unternehmen registrieren',
     'hero_cta_join' => 'Sind Sie Spediteur? Treten Sie dem Verzeichnis bei',
+    'hero_subtitle_collecting' => 'Wir bauen ein Verzeichnis verifizierter Pferdetransport-Unternehmen auf — werden Sie einer der Ersten.',
+    'no_commission_banner' => 'hovera.app erhebt keine Provision von Spediteuren oder Kunden — nur ein monatliches Abo.',
     'card_voiv_more_tooltip' => 'Deckt weitere Woiwodschaften ab — siehe Profil',
 
     'card_view_profile' => 'Profil ansehen',

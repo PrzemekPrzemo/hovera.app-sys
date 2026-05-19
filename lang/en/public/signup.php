@@ -48,6 +48,7 @@ return [
         'name_stable' => 'Stable name',
         'name_transporter' => 'Company name',
         'slug' => 'Stable URL',
+        'slug_transporter' => 'Transport company URL',
         'owner_name' => 'Your full name',
         'owner_email' => 'Email',
         'terms' => 'I accept the <a href="/regulamin" target="_blank">terms</a> and <a href="/polityka-prywatnosci" target="_blank">privacy policy</a>',
@@ -62,6 +63,7 @@ return [
     'helper' => [
         'name' => 'This is what shows in the panel and on the public page.',
         'slug' => 'Lowercase letters, digits and dashes only. Min. 3 chars.',
+        'slug_transporter' => 'Lowercase letters, digits and dashes only. Min. 3 chars. Your marketplace profile will live at this address.',
         'owner_email' => 'We send a password setup link here.',
     ],
 
