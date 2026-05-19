@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Billing;
 
+use App\Domain\Transport\Sponsored\SponsoredPlacementService;
 use App\Models\Central\AddonPurchase;
 use App\Models\Central\Invoice;
 use Illuminate\Support\Facades\Cache;
@@ -255,6 +256,18 @@ class PayUService
             'paid_at' => now(),
             'payu_paid_at' => now(),
         ])->save();
+
+        // Side-effect: sponsored placements → flipuje featured + featured_until.
+        // Patrz docs/TRANSPORT.md §16.
+        try {
+            app(SponsoredPlacementService::class)
+                ->applyFromPurchase($purchase->fresh());
+        } catch (\Throwable $e) {
+            Log::warning('Sponsored placement side-effect failed (PayU)', [
+                'purchase_id' => $purchase->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return true;
     }

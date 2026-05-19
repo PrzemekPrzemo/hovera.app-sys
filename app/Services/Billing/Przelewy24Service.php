@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Billing;
 
+use App\Domain\Transport\Sponsored\SponsoredPlacementService;
 use App\Models\Central\AddonPurchase;
 use App\Models\Central\Invoice;
 use Illuminate\Support\Facades\Http;
@@ -240,6 +241,19 @@ class Przelewy24Service
             'p24_paid_at' => now(),
             'p24_order_id' => (string) $orderId,
         ])->save();
+
+        // Side-effect: sponsored placements → flipuje featured + featured_until.
+        // Patrz docs/TRANSPORT.md §16. Soft-fail żeby webhook nadal zwracał
+        // 200 do P24 — featured boost można naprawić ręcznie z panelu.
+        try {
+            app(SponsoredPlacementService::class)
+                ->applyFromPurchase($purchase->fresh());
+        } catch (\Throwable $e) {
+            Log::warning('Sponsored placement side-effect failed', [
+                'purchase_id' => $purchase->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return true;
     }

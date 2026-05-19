@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Central;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -87,5 +88,39 @@ class AddonPurchase extends Model
     public function amountFormatted(): string
     {
         return number_format($this->amount_cents / 100, 2, ',', ' ').' '.$this->currency;
+    }
+
+    /**
+     * Czy purchase to sponsored placement (wyróżnienie 30/60/90 dni).
+     * Patrz docs/TRANSPORT.md §16.
+     */
+    public function isSponsored(): bool
+    {
+        return str_starts_with((string) $this->addon_code, 'sponsored_');
+    }
+
+    /**
+     * Wyciąga liczbę dni z `side_effect_metadata.featured_days`, z fallbackiem
+     * na regex parse `addon_code` (sponsored_30d → 30). Defaultuje na 0
+     * — caller (SponsoredPlacementService) musi sprawdzić isSponsored().
+     */
+    public function featuredDays(): int
+    {
+        $metadata = (array) ($this->side_effect_metadata ?? []);
+        if (isset($metadata['featured_days']) && (int) $metadata['featured_days'] > 0) {
+            return (int) $metadata['featured_days'];
+        }
+
+        // Fallback: parse z code'u (np. `sponsored_60d` → 60).
+        if (preg_match('/^sponsored_(\d+)d$/', (string) $this->addon_code, $m)) {
+            return (int) $m[1];
+        }
+
+        return 0;
+    }
+
+    public function scopeSponsored(Builder $query): Builder
+    {
+        return $query->where('addon_code', 'LIKE', 'sponsored_%');
     }
 }
