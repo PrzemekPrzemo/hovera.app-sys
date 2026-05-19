@@ -97,4 +97,27 @@ return [
         'context_nip' => env('KSEF_CENTRAL_NIP'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | KSeF (per-transporter, handshake flow)
+    |--------------------------------------------------------------------------
+    | Klucz publiczny MF do RSA-OAEP wrap'a AES-256 klucza sesyjnego.
+    | Klucz dystrybuowany jest przez dokumentację KAS (gov.pl) — różny
+    | per środowisko, zmienia się rzadko (rotacja co kilka lat).
+    |
+    | Preferowany flow: ops wgrywa plik PEM do storage/app/ksef/public-key-<env>.pem.
+    | Alternatywnie inline w env KSEF_PUBLIC_KEY_TEST_PEM (z literalnymi \n).
+    |
+    | `public_key_disk` pozwala podmienić disk na 'public' albo s3 jeśli
+    | wgrywanie do storage/app/ nie pasuje do deploy modelu.
+    */
+    'ksef' => [
+        'public_key_disk' => env('KSEF_PUBLIC_KEY_DISK', 'local'),
+        'public_key' => [
+            'test_pem' => env('KSEF_PUBLIC_KEY_TEST_PEM'),
+            'demo_pem' => env('KSEF_PUBLIC_KEY_DEMO_PEM'),
+            'production_pem' => env('KSEF_PUBLIC_KEY_PRODUCTION_PEM'),
+        ],
+    ],
+
 ];

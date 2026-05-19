@@ -953,12 +953,71 @@ Pierwsza wersja per-transporter KSeF jest w `app/Domain/Transport/Ksef/`
   (`ksef_reference_number`, `ksef_submitted_at`, `ksef_accepted_at`,
   `ksef_xml`, `ksef_error_payload` + index `(ksef_status, ksef_submitted_at)`
   pod przyszły cron poll).
-- **Co JESZCZE nie zrobione (follow-up PR):** (1) cron pollujący `submitted`
-  starsze niż X minut i odświeżający status; (2) pełen handshake KSeF
-  z `Session/AuthorisationChallenge` + RSA-OAEP — obecna ścieżka traktuje
-  token transportera jako bezpośredni session token (analogicznie do
-  skeletonu `CentralKsefService`); (3) FA(2) XSD walidacja przed POST;
-  (4) korekt KSeF (KOR).
+- **Pełny handshake KSeF (production-grade flow).** Token autoryzacyjny
+  trzymany przez transportera to NIE jest SessionToken używany w nagłówkach
+  KSeF — to long-lived "klucz" wydany w panelu MF, który musimy wymienić
+  na krótko-żyjący SessionToken (TTL ~2h) przez 3-etapowy handshake:
+  1. `POST /online/Session/AuthorisationChallenge` z body
+     `{contextIdentifier:{type:"onip", identifier:<NIP>}}` → MF zwraca
+     `{challenge, timestamp}`.
+  2. Lokalnie: generujemy świeży AES-256 klucz + IV, wrapujemy klucz przez
+     RSA-OAEP z **klucz publicznym MF** (per-środowisko, dystrybuowany
+     przez dokumentację KAS), szyfrujemy `<token>|<challenge_unix_ms>`
+     przez AES-256-CBC. Buduje to payload `InitSessionTokenRequest`
+     (XML z fragmentami base64).
+  3. `POST /online/Session/InitToken` z tym XML-em → MF zwraca
+     `{sessionToken: {token, expirationDate}}`. Trzymamy oba: SessionToken
+     do nagłówka, AES klucz do dalszego szyfrowania payloadu faktur
+     w obrębie tej samej sesji.
+
+  Implementacja: `app/Domain/Transport/Ksef/Api/KsefHttpClient.php`
+  (low-level), `app/Domain/Transport/Ksef/Session/KsefSessionManager.php`
+  (cache + force-refresh), `TransporterKsefService` (orchestration).
+
+- **Cache SessionToken'ów.** Tabela `ksef_session_tokens` (central DB,
+  migration `2026_05_18_230000`). Klucz unikalny: `(tenant_id, environment)`.
+  Trzymamy zaszyfrowany SessionToken + zaszyfrowany AES klucz + `expires_at`.
+  Re-handshake automatyczny gdy `expires_at` < now + 60s (margines na
+  clock skew). Re-handshake forsowany przy HTTP 401 z MF (token revoked).
+  Bez cachu batch 50 faktur = 150 round-tripów do MF. Z cachem = 1 handshake
+  + 50 sendów. Patrz `KsefSessionManager`.
+
+- **Klucz publiczny MF.** Per-środowisko (test/demo/prod), dystrybuowany
+  przez dokumentację KAS (gov.pl). Strategia ładowania w `KsefHttpClient::getPublicKey()`:
+  (1) plik PEM w `storage/app/ksef/public-key-<env>.pem`,
+  (2) fallback z `KSEF_PUBLIC_KEY_<ENV>_PEM` env var (inline PEM).
+  Świadomie NIE pobieramy klucza z HTTP — MF nie publikuje stabilnego
+  REST endpointa, a fetch over-the-wire wprowadza wektor MITM podmiany
+  klucza. Ops MUSI wgrać klucz ręcznie przy provision'ingu środowiska.
+
+- **Cron `transport:ksef:poll-submitted`.** Polluje wszystkich aktywnych
+  transporter tenantów i dla każdego invoice'a w stanie `submitted`,
+  starszego niż 5 minut (minimum age, żeby dać MF chwilę na processing)
+  a młodszego niż 7 dni (max age, po tygodniu rezygnujemy i zostawiamy
+  do manualnej obsługi) — wywołuje `refreshStatus()`. Mapowanie kodów MF:
+  `200` → `accepted` (+ `ksef_accepted_at`); `100/110/300/305/315` →
+  pozostaje `submitted`; `4xx` → `rejected` + `error_payload`; `5xx`
+  → `error`. Batch limit 200 per tenant per run (`--limit=200`).
+  Harmonogram: co 30 minut między 06:00 a 22:00 Warsaw (zob.
+  `routes/console.php`). `withoutOverlapping(30)` chroni przed
+  podwójnym uruchomieniem. Per-tenant try/catch — jeden zepsuty DB nie
+  blokuje pozostałych.
+
+- **Test handshake'u w UI.** Akcja „Test połączenia z KSeF" na stronie
+  ustawień wykonuje pełen handshake (force-refresh sesji), żeby user
+  od razu wiedział czy token został zaakceptowany przez MF. Komunikat
+  błędu wyciąga sensowną informację, ale nigdy nie pokazuje samego
+  tokenu (`cleanErrorMessage()` scrubuje długie alfanumeryczne ciągi).
+
+- **Co JESZCZE nie zrobione (follow-up PR):**
+  (1) Faktury korygujące (KOR) — XML builder ma case, ale flow korekt
+      wymaga referencji do oryginalnej FV w KSeF.
+  (2) XSD walidacja FA(3) przed wysyłką — MF i tak waliduje serwerowo,
+      ale lokalna walidacja dałaby szybszy feedback w UI.
+  (3) Batch endpoint `/Invoice/Batch` — obecnie wysyłamy pojedynczo.
+      Dla regularnych transporterów (50+ FV/m-c) batch byłby tańszy.
+  (4) Notyfikacje email/in-app dla `rejected` — obecnie status sam się
+      aktualizuje przez cron, ale user musi wejść do UI by go zobaczyć.
 
 ### 14.2 Reviews / opinie transporterów
 

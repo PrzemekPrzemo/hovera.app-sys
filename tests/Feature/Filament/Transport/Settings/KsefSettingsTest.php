@@ -14,6 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -84,11 +85,30 @@ class KsefSettingsTest extends TestCase
                 $held = $t;
             });
             $m->shouldReceive('current')->andReturnUsing(fn () => $held);
+            $m->shouldReceive('tenantOrFail')->andReturnUsing(function () use (&$held) {
+                if ($held === null) {
+                    throw new \RuntimeException('No tenant');
+                }
+
+                return $held;
+            });
             $m->shouldReceive('hasTenant')->andReturnUsing(fn () => $held !== null);
             $m->shouldReceive('forget')->andReturnUsing(function () use (&$held) {
                 $held = null;
             });
         });
+
+        // Fake klucz publiczny MF — testConnection robi pełen handshake.
+        Storage::fake('local');
+        $this->publishFakeKsefPublicKey('test');
+    }
+
+    private function publishFakeKsefPublicKey(string $env): void
+    {
+        $keyConfig = ['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA];
+        $res = openssl_pkey_new($keyConfig);
+        $details = openssl_pkey_get_details($res);
+        Storage::disk('local')->put('ksef/public-key-'.$env.'.pem', $details['key']);
     }
 
     protected function tearDown(): void
@@ -140,7 +160,7 @@ class KsefSettingsTest extends TestCase
         $this->assertFalse((bool) $settings->ksef_enabled);
     }
 
-    public function test_test_connection_action_calls_ksef_api(): void
+    public function test_test_connection_action_runs_full_handshake(): void
     {
         $settings = TransportSettings::current();
         $settings->setKsefToken('working-token');
@@ -149,14 +169,45 @@ class KsefSettingsTest extends TestCase
         $settings->ksef_environment = 'test';
         $settings->save();
 
+        // testConnection() force-refresh handshake — challenge + InitToken.
         Http::fake([
-            '*/online/Session/Status' => Http::response(['ok' => true], 200),
+            '*/Session/AuthorisationChallenge' => Http::response([
+                'challenge' => 'CHL-1',
+                'timestamp' => now()->toIso8601String(),
+            ], 200),
+            '*/Session/InitToken' => Http::response([
+                'sessionToken' => [
+                    'token' => 'sess-from-mf',
+                    'expirationDate' => now()->addHours(2)->toIso8601String(),
+                ],
+            ], 200),
         ]);
 
         $result = app(TransporterKsefService::class)->testConnection();
 
-        $this->assertTrue($result['success']);
-        Http::assertSent(fn ($req) => $req->hasHeader('SessionToken', 'working-token'));
+        $this->assertTrue($result['success'], 'testConnection should succeed; got: '.($result['message'] ?? ''));
+        Http::assertSent(fn ($req) => str_contains($req->url(), '/Session/AuthorisationChallenge'));
+        Http::assertSent(fn ($req) => str_contains($req->url(), '/Session/InitToken'));
+    }
+
+    public function test_test_connection_returns_friendly_message_when_token_rejected_by_mf(): void
+    {
+        $settings = TransportSettings::current();
+        $settings->setKsefToken('bad-token');
+        $settings->ksef_enabled = true;
+        $settings->ksef_nip = '1234567890';
+        $settings->ksef_environment = 'test';
+        $settings->save();
+
+        Http::fake([
+            '*/Session/AuthorisationChallenge' => Http::response(['error' => 'Invalid NIP'], 400),
+        ]);
+
+        $result = app(TransporterKsefService::class)->testConnection();
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('KSeF', $result['message']);
+        $this->assertStringNotContainsString('bad-token', $result['message']);
     }
 
     public function test_test_connection_fails_with_friendly_message_when_not_configured(): void

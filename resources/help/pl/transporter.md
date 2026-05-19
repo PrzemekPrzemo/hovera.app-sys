@@ -142,7 +142,36 @@ otwiera kalkulator z pre-fillowanymi adresami, doklejasz cenę i wysyłasz.
   realizacji. Akcja `Wystaw FV z oferty` przepisuje pozycje z oferty,
   Ty doklejasz tylko datę realizacji. Numeracja Twoja (`FV/YYYY/MM/NNNN`
   domyślnie, konfigurowalne w `Ustawienia → Numeracja`), NIP Twój.
-  KSeF — wkrótce (Faza 9 roadmapy, ETA 2026 Q3).
+
+### KSeF — Twój token, Twoja faktura
+
+- Konfigurujesz w `Ustawienia → KSeF`: wklejasz **token autoryzacyjny
+  KSeF** zdobyty w panelu MF (mf.gov.pl, sekcja "Token autoryzacyjny"),
+  wybierasz środowisko (test / demo / produkcja) i włączasz integrację.
+  Token przechowujemy zaszyfrowany — nigdy nie wyświetlamy go w UI,
+  nigdy nie logujemy w czystej formie.
+- **Test połączenia** (przycisk w `Ustawienia → KSeF`) wykonuje pełen
+  handshake z MF — jeśli zwróci "OK", możesz spokojnie wysyłać faktury.
+  Jeśli zwróci błąd: sprawdź czy token nie został revoke'owany w MF,
+  oraz czy NIP w ustawieniach zgadza się z NIP'em z którym token został
+  wydany.
+- **Wysyłka faktury:** w `Faktury` przy każdej wystawionej FV pojawia
+  się akcja **„Wyślij do KSeF"**. Pierwsza wysyłka po dłuższej przerwie
+  potrwa 2–4 sekundy (handshake z MF), kolejne w ciągu 2h są błyskawiczne
+  (cache'owana sesja). Status FV przechodzi `not_submitted` → `submitted`
+  → `accepted` / `rejected` (`rejected` = MF odrzucił merytorycznie).
+- **Polling statusu:** co 30 minut (w godzinach 06:00–22:00 Warsaw)
+  Hovera automatycznie sprawdza, czy MF zaakceptował Twoje wcześniejsze
+  wysyłki. Możesz też ręcznie wymusić przez akcję „Odśwież status
+  z KSeF" na fakturze.
+- **Limity i ograniczenia:** korekty (KOR) NIE są jeszcze wspierane —
+  follow-up PR. Wysyłka pojedynczo (nie batch) — dla dużych ilości
+  (50+ FV jednorazowo) użyj akcji bulk z confirm modal'em (max 50).
+- **Co się dzieje pod spodem:** Hovera jest tylko software'em
+  pośredniczącym — nie figurujemy nigdzie jako wystawca Twoich
+  faktur. Tag `<SystemInfo>Hovera Transport Passthrough</SystemInfo>`
+  w XML KSeF jest jedynym śladem naszej obecności (dla audytu MF).
+  Numer faktury, NIP wystawcy, treść — wszystko Twoje.
 
 ## Mini-dashboard
 

@@ -243,6 +243,7 @@ class TransportInvoiceResource extends Resource
                     ->label(__('transport/ksef.action.submit'))
                     ->icon('heroicon-o-cloud-arrow-up')
                     ->color('warning')
+                    ->tooltip(__('transport/ksef.action.submit_tooltip'))
                     ->visible(fn (TransportInvoice $i) => self::ksefCanSubmit($i))
                     ->requiresConfirmation()
                     ->modalDescription(__('transport/ksef.action.submit_confirm'))

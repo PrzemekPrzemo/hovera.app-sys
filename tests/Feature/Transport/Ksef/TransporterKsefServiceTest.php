@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Transport\Ksef;
 
+use App\Domain\Transport\Ksef\Api\KsefHttpClient;
 use App\Domain\Transport\Ksef\KsefNotConfiguredException;
 use App\Domain\Transport\Ksef\TransporterKsefService;
 use App\Enums\TenantType;
@@ -11,6 +12,7 @@ use App\Enums\TransportInvoiceKind;
 use App\Enums\TransportInvoiceStatus;
 use App\Enums\TransportKsefStatus;
 use App\Enums\VerificationStatus;
+use App\Models\Central\KsefSessionToken;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\TransportInvoice;
 use App\Models\Tenant\TransportSettings;
@@ -20,16 +22,17 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * Tests dla TransporterKsefService — per-transporter passthrough KSeF.
+ * Tests dla TransporterKsefService — pełen KSeF handshake (challenge +
+ * RSA-OAEP + AES-256-CBC + InitSessionToken + send) + cache sesji.
  *
  * Wszystko mockujemy: TenantManager (current tenant), tenant DB (sqlite
- * in-memory file), HTTP do KSeF (Http::fake). Audit logger nie-noop —
- * jeśli próbuje pisać i nie ma TenantManager, tiketuje silently (patrz
- * TenantAuditLogger).
+ * in-memory file), HTTP do KSeF (Http::fake), klucz publiczny MF
+ * (generujemy świeży RSA keypair w setUp i wgrywamy do storage).
  */
 class TransporterKsefServiceTest extends TestCase
 {
@@ -53,6 +56,11 @@ class TransporterKsefServiceTest extends TestCase
             'foreign_key_constraints' => false,
         ]);
         $this->app->make('db')->purge('tenant');
+
+        // Fake KSeF public key: świeży RSA keypair w pamięci, public część
+        // ląduje w storage tam gdzie KsefHttpClient::getPublicKey() szuka.
+        Storage::fake('local');
+        $this->publishFakeKsefPublicKey('test');
 
         $this->setUpTenantTables();
         $this->tenant = $this->makeTenant(VerificationStatus::Verified);
@@ -85,7 +93,6 @@ class TransporterKsefServiceTest extends TestCase
 
     public function test_throws_when_token_not_configured(): void
     {
-        // Settings istnieje (current() auto-tworzy), ale token nie jest ustawiony.
         TransportSettings::current()->update(['ksef_enabled' => false]);
 
         $invoice = $this->makeInvoice();
@@ -106,24 +113,28 @@ class TransporterKsefServiceTest extends TestCase
         app(TransporterKsefService::class)->submit($invoice);
     }
 
-    public function test_submit_sends_correct_payload_with_per_tenant_token(): void
+    public function test_submit_runs_full_handshake_and_sends_invoice(): void
     {
         $this->configureKsef('per-tenant-token-XYZ');
         $invoice = $this->makeInvoice();
 
-        Http::fake([
-            '*/online/Invoice/Send' => Http::response(
-                ['elementReferenceNumber' => 'KSEF-REF-001'],
-                200,
-            ),
-        ]);
+        $this->fakeSuccessfulHandshakeAndSend('KSEF-REF-001', 'sess-token-abc');
 
         $result = app(TransporterKsefService::class)->submit($invoice);
 
-        $this->assertTrue($result->isSuccess());
-        Http::assertSent(function ($request) {
-            return $request->hasHeader('SessionToken', 'per-tenant-token-XYZ');
+        $this->assertTrue($result->isSuccess(), 'submit() should succeed; got status='.$result->status->value);
+
+        // 1) Challenge endpoint trafiony.
+        Http::assertSent(fn ($r) => str_contains($r->url(), '/Session/AuthorisationChallenge'));
+        // 2) InitToken endpoint trafiony.
+        Http::assertSent(fn ($r) => str_contains($r->url(), '/Session/InitToken'));
+        // 3) Invoice/Send trafiony Z SessionToken (NIE z raw auth tokenem).
+        Http::assertSent(function ($r) {
+            return str_contains($r->url(), '/Invoice/Send')
+                && $r->hasHeader('SessionToken', 'sess-token-abc');
         });
+        // 4) RAW token autoryzacyjny NIE trafia w żadnym headerze.
+        Http::assertNotSent(fn ($r) => $r->hasHeader('SessionToken', 'per-tenant-token-XYZ'));
     }
 
     public function test_submit_updates_invoice_ksef_status_on_success(): void
@@ -131,9 +142,7 @@ class TransporterKsefServiceTest extends TestCase
         $this->configureKsef('tok');
         $invoice = $this->makeInvoice();
 
-        Http::fake([
-            '*' => Http::response(['elementReferenceNumber' => 'REF-OK'], 200),
-        ]);
+        $this->fakeSuccessfulHandshakeAndSend('REF-OK', 'sess-1');
 
         app(TransporterKsefService::class)->submit($invoice);
 
@@ -148,9 +157,7 @@ class TransporterKsefServiceTest extends TestCase
         $this->configureKsef('tok');
         $invoice = $this->makeInvoice();
 
-        Http::fake([
-            '*' => Http::response(['elementReferenceNumber' => 'KSEF-2026-001'], 200),
-        ]);
+        $this->fakeSuccessfulHandshakeAndSend('KSEF-2026-001', 'sess-2');
 
         app(TransporterKsefService::class)->submit($invoice);
 
@@ -164,12 +171,13 @@ class TransporterKsefServiceTest extends TestCase
         $this->configureKsef('tok');
         $invoice = $this->makeInvoice();
 
+        $this->fakeHandshakeOnly('sess-3');
         Http::fake([
-            '*' => Http::response([
-                'code' => '400-1',
-                'message' => 'Invalid NIP',
-            ], 400),
+            '*/online/Invoice/Send' => Http::response(['code' => '400-1', 'message' => 'Invalid NIP'], 400),
         ]);
+        // Re-merge: Http::fake calls REPLACE the prior fake table.
+        // Order matters — explicit setup:
+        $this->fakeFullChainWithSendError(400);
 
         $result = app(TransporterKsefService::class)->submit($invoice);
 
@@ -186,12 +194,17 @@ class TransporterKsefServiceTest extends TestCase
         $invoice = $this->makeInvoice([
             'ksef_status' => TransportKsefStatus::Submitted,
             'ksef_reference_number' => 'KSEF-REF-001',
+            'ksef_submitted_at' => now()->subHour(),
         ]);
+
+        // Cache aktywnego session — pomijamy handshake w teście.
+        $this->seedActiveSession('sess-status-1');
 
         Http::fake([
             '*/online/Invoice/Status/*' => Http::response([
                 'processingCode' => '200',
                 'processingDescription' => 'OK',
+                'ksefReferenceNumber' => 'KSEF-FINAL-XYZ',
             ], 200),
         ]);
 
@@ -203,6 +216,69 @@ class TransporterKsefServiceTest extends TestCase
         $this->assertNotNull($invoice->ksef_accepted_at);
     }
 
+    public function test_session_token_is_reused_within_expiry(): void
+    {
+        $this->configureKsef('tok');
+        $this->fakeSuccessfulHandshakeAndSend('REF-A', 'sess-cache-X');
+
+        // 1st submit — handshake + send.
+        $invoice1 = $this->makeInvoice(['number' => 'FT/2026/05/A']);
+        app(TransporterKsefService::class)->submit($invoice1);
+
+        // 2nd submit — session powinno być cached, więc /InitToken nie
+        // powinno być wywołane drugi raz. Liczymy.
+        $invoice2 = $this->makeInvoice(['number' => 'FT/2026/05/B']);
+        app(TransporterKsefService::class)->submit($invoice2);
+
+        // Powinno być DOKŁADNIE jedno /InitToken wywołanie.
+        $initCalls = collect(Http::recorded())
+            ->filter(fn ($pair) => str_contains((string) $pair[0]->url(), '/Session/InitToken'))
+            ->count();
+        $this->assertSame(1, $initCalls, 'InitToken should be called once when session is cached');
+    }
+
+    public function test_session_token_refreshes_after_expiry(): void
+    {
+        $this->configureKsef('tok');
+        $this->fakeSuccessfulHandshakeAndSend('REF-A', 'sess-fresh-X');
+
+        $invoice1 = $this->makeInvoice(['number' => 'FT/2026/05/A']);
+        app(TransporterKsefService::class)->submit($invoice1);
+
+        // Wymuś stary timestamp w cache → InitToken powinno być wywołane ponownie.
+        KsefSessionToken::query()
+            ->where('tenant_id', $this->tenant->id)
+            ->update(['expires_at' => now()->subMinutes(5)]);
+
+        $invoice2 = $this->makeInvoice(['number' => 'FT/2026/05/B']);
+        app(TransporterKsefService::class)->submit($invoice2);
+
+        $initCalls = collect(Http::recorded())
+            ->filter(fn ($pair) => str_contains((string) $pair[0]->url(), '/Session/InitToken'))
+            ->count();
+        $this->assertGreaterThanOrEqual(2, $initCalls, 'InitToken should be called again after cache expiry');
+    }
+
+    public function test_failed_handshake_persists_error_and_does_not_send_invoice(): void
+    {
+        $this->configureKsef('bad-tok');
+        $invoice = $this->makeInvoice();
+
+        Http::fake([
+            '*/Session/AuthorisationChallenge' => Http::response(['error' => 'Bad NIP'], 400),
+        ]);
+
+        $result = app(TransporterKsefService::class)->submit($invoice);
+
+        $this->assertFalse($result->isSuccess());
+        $invoice->refresh();
+        $this->assertNotSame(TransportKsefStatus::Submitted, $invoice->ksef_status);
+        $this->assertIsArray($invoice->ksef_error_payload);
+
+        // /Invoice/Send NIE powinno być wywołane bo handshake padł.
+        Http::assertNotSent(fn ($r) => str_contains($r->url(), '/Invoice/Send'));
+    }
+
     public function test_token_never_appears_in_logs_or_exceptions(): void
     {
         $secretToken = 'TOP-SECRET-TOKEN-NEVER-LEAK-987654321';
@@ -211,7 +287,7 @@ class TransporterKsefServiceTest extends TestCase
 
         Log::spy();
 
-        // Wymuszamy błąd HTTP, żeby ścieżka logErrori była wykonana.
+        // Sfake'uj 500 error po stronie handshake → ścieżka logError.
         Http::fake([
             '*' => Http::response(['error' => 'boom'], 500),
         ]);
@@ -219,10 +295,9 @@ class TransporterKsefServiceTest extends TestCase
         try {
             app(TransporterKsefService::class)->submit($invoice);
         } catch (\Throwable) {
-            // Nie powinno zostać rzucone, ale defensywnie.
+            // Nie powinno polecieć wyjątkiem.
         }
 
-        // Żaden log entry nie może zawierać pełnego tokenu.
         Log::shouldHaveReceived('warning')->withArgs(function ($message, $context = []) use ($secretToken) {
             $serialized = json_encode([$message, $context]);
             $this->assertStringNotContainsString($secretToken, (string) $serialized);
@@ -230,7 +305,6 @@ class TransporterKsefServiceTest extends TestCase
             return true;
         });
 
-        // Również w error_payload w bazie tokenu być nie może.
         $invoice->refresh();
         $this->assertIsArray($invoice->ksef_error_payload);
         $payloadJson = json_encode($invoice->ksef_error_payload);
@@ -240,7 +314,6 @@ class TransporterKsefServiceTest extends TestCase
     public function test_is_enabled_for_current_transporter_returns_false_when_token_missing(): void
     {
         TransportSettings::current()->update(['ksef_enabled' => true, 'ksef_nip' => '1234567890']);
-        // ale brak tokenu
 
         $this->assertFalse(app(TransporterKsefService::class)->isEnabledForCurrentTransporter());
     }
@@ -263,6 +336,80 @@ class TransporterKsefServiceTest extends TestCase
         $this->assertStringContainsString('*', (string) $preview);
     }
 
+    // ------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------
+
+    private function fakeSuccessfulHandshakeAndSend(string $reference, string $sessionToken): void
+    {
+        Http::fake([
+            '*/Session/AuthorisationChallenge' => Http::response([
+                'challenge' => 'CHL-'.uniqid(),
+                'timestamp' => now()->toIso8601String(),
+            ], 200),
+            '*/Session/InitToken' => Http::response([
+                'sessionToken' => [
+                    'token' => $sessionToken,
+                    'expirationDate' => now()->addHours(2)->toIso8601String(),
+                ],
+            ], 200),
+            '*/Invoice/Send' => Http::response([
+                'elementReferenceNumber' => $reference,
+            ], 200),
+        ]);
+    }
+
+    private function fakeHandshakeOnly(string $sessionToken): void
+    {
+        Http::fake([
+            '*/Session/AuthorisationChallenge' => Http::response([
+                'challenge' => 'CHL-'.uniqid(),
+                'timestamp' => now()->toIso8601String(),
+            ], 200),
+            '*/Session/InitToken' => Http::response([
+                'sessionToken' => [
+                    'token' => $sessionToken,
+                    'expirationDate' => now()->addHours(2)->toIso8601String(),
+                ],
+            ], 200),
+        ]);
+    }
+
+    private function fakeFullChainWithSendError(int $sendStatus): void
+    {
+        Http::fake([
+            '*/Session/AuthorisationChallenge' => Http::response([
+                'challenge' => 'CHL-x', 'timestamp' => now()->toIso8601String(),
+            ], 200),
+            '*/Session/InitToken' => Http::response([
+                'sessionToken' => ['token' => 'sess-err', 'expirationDate' => now()->addHour()->toIso8601String()],
+            ], 200),
+            '*/Invoice/Send' => Http::response(['error' => 'Invalid NIP'], $sendStatus),
+        ]);
+    }
+
+    private function seedActiveSession(string $sessionToken): void
+    {
+        $session = new KsefSessionToken;
+        $session->tenant_id = $this->tenant->id;
+        $session->environment = 'test';
+        $session->setToken($sessionToken);
+        $session->setAesKey(random_bytes(32));
+        $session->expires_at = now()->addHours(2);
+        $session->save();
+    }
+
+    private function publishFakeKsefPublicKey(string $env): void
+    {
+        $keyConfig = [
+            'private_key_bits' => 2048,
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+        ];
+        $res = openssl_pkey_new($keyConfig);
+        $details = openssl_pkey_get_details($res);
+        Storage::disk('local')->put('ksef/public-key-'.$env.'.pem', $details['key']);
+    }
+
     private function configureKsef(string $token): void
     {
         $settings = TransportSettings::current();
@@ -278,7 +425,7 @@ class TransporterKsefServiceTest extends TestCase
     {
         return TransportInvoice::create(array_merge([
             'id' => (string) Str::ulid(),
-            'number' => 'FT/2026/05/0001',
+            'number' => 'FT/2026/05/'.uniqid(),
             'kind' => TransportInvoiceKind::Fv,
             'status' => TransportInvoiceStatus::Issued,
             'seller_name' => 'Firma Transport',

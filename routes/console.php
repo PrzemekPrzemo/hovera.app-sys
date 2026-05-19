@@ -52,3 +52,15 @@ Schedule::command('transporter:docs-expiry-notify')
     ->dailyAt('04:00')
     ->withoutOverlapping()
     ->onOneServer();
+
+// KSeF poll — co 30 minut w godzinach roboczych Warsaw aktualizuje
+// status submitted invoice'ów do accepted/rejected (asynchroniczne
+// callback'i MF). 5min minimum wieku chroni przed natychmiastowym
+// pollem (MF potrzebuje czasu na processing), 7 dni max wieku odcina
+// utknięte awarie do manualnej obsługi. Patrz docs/TRANSPORT.md §14.1.
+Schedule::command('transport:ksef:poll-submitted')
+    ->everyThirtyMinutes()
+    ->between('06:00', '22:00')
+    ->timezone('Europe/Warsaw')
+    ->withoutOverlapping(30)
+    ->onOneServer();
