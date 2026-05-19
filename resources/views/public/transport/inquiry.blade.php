@@ -64,6 +64,14 @@
                 </div>
             @endif
 
+            @if (! empty($originatorStable))
+                <div class="direct-banner">
+                    {!! __('public/transport_inquiry.originator_banner.from_stable', ['name' => '<strong>'.e($originatorStable->name).'</strong>']) !!}
+                    —
+                    <a href="{{ url('/app/transport') }}">{{ __('public/transport_inquiry.originator_banner.back_to_app') }}</a>
+                </div>
+            @endif
+
             @if ($errors->any())
                 <div class="errors">
                     <strong>{{ __('public/transport_inquiry.errors_heading') }}</strong>

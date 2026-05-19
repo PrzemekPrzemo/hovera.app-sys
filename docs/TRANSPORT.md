@@ -50,6 +50,24 @@ Cel: **dwa rynki naraz, w tym samym ekosystemie.**
 Jedna osoba może mieć **i stajnię, i firmę transportową** — multi-tenancy bez zmian,
 istniejący tenant-switcher obsługuje to natywnie.
 
+**Stable users dostają moduł transport BEZPŁATNIE w ramach swojego planu Hovery
+(z wyjątkiem `free`)** — surface'owane w `/app/transport` (Filament Page
+`TransportEntry`). Trzy ścieżki discovery z poziomu panelu:
+
+1. **Broadcast** — `/transport/zapytanie?from=app&stable={tenant_id}`
+   (publiczny formularz pre-fill'owany imieniem/mailem/adresem stable owna,
+   `originator_tenant_id` ustawiane w leadzie).
+2. **Directory** — `/przewoznicy` (publiczny katalog firm).
+3. **Ulubieni** — `/app/transport-favorites` (max 5, patrz §5.1).
+
+Wejścia z karty konia (`/app/horses/{id}/edit`) — header action "Zamów transport"
+przepuszcza dodatkowo `?horse={id}` → notes pre-fill "Koń: {name}".
+
+Gate na entry-pointach: `Tenant::canUseTransport()` (free plan → nav ukryty,
+direct URL hit → redirect na `billing.show` z flash'em "Moduł transportu
+dostępny od planu Start"). Promo widget na dashboardzie pojawia się tylko
+gdy stable nie zamówił transportu w ostatnich 30 dniach (session-dismissible).
+
 ### 1.4 Onboarding transportera — dokumenty PWL (obowiązkowe)
 
 Każdy nowy transporter musi przed pierwszą ofertą wgrać 6 dokumentów PWL

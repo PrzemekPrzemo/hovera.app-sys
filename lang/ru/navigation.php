@@ -45,6 +45,7 @@ return [
     'vehicles' => 'Транспортные средства',
     'drivers' => 'Водители',
     'quotes' => 'Предложения',
+    'transport' => 'Транспорт лошадей',
 
     // Pages (non-resource)
     'pages' => [

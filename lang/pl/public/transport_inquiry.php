@@ -11,6 +11,15 @@ return [
     'direct_target_banner' => 'Wysyłasz zapytanie bezpośrednio do :name. Otrzymasz odpowiedź tylko od tej firmy.',
     'direct_target_switch_to_broadcast' => 'Wolę wysłać do wszystkich pasujących przewoźników',
 
+    'originator_banner' => [
+        'from_stable' => 'Zlecenie z poziomu stajni :name',
+        'back_to_app' => 'wróć do panelu',
+    ],
+
+    'prefill' => [
+        'horse_note' => 'Koń: :name',
+    ],
+
     'label' => [
         'customer_name' => 'Imię i nazwisko',
         'customer_email' => 'E-mail',

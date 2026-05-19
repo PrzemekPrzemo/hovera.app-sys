@@ -11,6 +11,15 @@ return [
     'direct_target_banner' => 'You are sending this inquiry directly to :name. Only this company will reply.',
     'direct_target_switch_to_broadcast' => 'I prefer to send it to all matching carriers',
 
+    'originator_banner' => [
+        'from_stable' => 'Request from stable :name',
+        'back_to_app' => 'back to panel',
+    ],
+
+    'prefill' => [
+        'horse_note' => 'Horse: :name',
+    ],
+
     'label' => [
         'customer_name' => 'Full name',
         'customer_email' => 'Email',
