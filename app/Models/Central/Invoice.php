@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Central;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -64,6 +65,20 @@ class Invoice extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * P24 zwraca orderId jako 64-bit integer, ale używamy go głównie do
+     * logów / referencji w panelu klienta, więc normalizujemy do stringa.
+     * Migracja deklaruje `unsignedBigInteger`, ale SQLite (testy) i tak
+     * zwracał int natywnie — service zapisywał `(string) $orderId` i ta
+     * niespójność była łapana przez `assertSame('555', ...)`.
+     */
+    protected function p24OrderId(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value === null ? null : (string) $value,
+        );
     }
 
     public function isPaid(): bool

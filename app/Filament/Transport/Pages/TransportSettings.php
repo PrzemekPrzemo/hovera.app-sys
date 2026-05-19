@@ -94,6 +94,7 @@ class TransportSettings extends Page implements HasForms
             'default_payment_url_template' => $settings->default_payment_url_template,
             'default_payment_method_label' => $settings->default_payment_method_label,
             'payment_instructions' => $settings->payment_instructions,
+            'p24_quote_autopay_enabled' => (bool) $settings->p24_quote_autopay_enabled,
         ]);
     }
 
@@ -325,6 +326,31 @@ class TransportSettings extends Page implements HasForms
                                 ->openUrlInNewTab(),
                         ])->columnSpanFull(),
                     ]),
+
+                // P24 quote autopay — patrz docs/TRANSPORT.md §15.5.
+                // Hovera tylko technicznie odpala P24 register z creds
+                // transportera — pieniądze idą bezpośrednio na konto P24
+                // transportera. Hovera nie pośredniczy. Sam credential
+                // żyje w /app/payment-settings (PaymentSettings page) —
+                // single source of truth.
+                Forms\Components\Section::make(__('transport/p24.section.title'))
+                    ->description(__('transport/p24.section.description'))
+                    ->schema([
+                        Forms\Components\Placeholder::make('p24_disclaimer')
+                            ->label('')
+                            ->content(__('transport/p24.section.disclaimer'))
+                            ->columnSpanFull(),
+
+                        Forms\Components\Toggle::make('p24_quote_autopay_enabled')
+                            ->label(__('transport/p24.form.label.autopay_enabled'))
+                            ->helperText(__('transport/p24.form.helper.autopay_enabled'))
+                            ->inline(false),
+
+                        Forms\Components\Placeholder::make('p24_creds_pointer')
+                            ->label('')
+                            ->content(__('transport/p24.form.helper.credentials_pointer'))
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -424,6 +450,7 @@ class TransportSettings extends Page implements HasForms
             'default_payment_url_template' => $form['default_payment_url_template'] ?: null,
             'default_payment_method_label' => $form['default_payment_method_label'] ?: null,
             'payment_instructions' => $form['payment_instructions'] ?: null,
+            'p24_quote_autopay_enabled' => (bool) ($form['p24_quote_autopay_enabled'] ?? false),
         ]);
 
         // Token: jeśli user wpisał nowy → szyfrujemy i zapisujemy. Jeśli

@@ -28,6 +28,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhooks/stripe',
             'webhooks/stripe-connect',
             'webhooks/przelewy24',
+            // Per-transporter P24 quote webhook + central P24 add-on webhook —
+            // patrz docs/TRANSPORT.md §15.5 i §13. Sign weryfikowany wewnątrz
+            // kontrolerów.
+            'transport/p24/webhook/*',
+            'webhooks/przelewy24/addon',
             'api/*',
         ]);
 

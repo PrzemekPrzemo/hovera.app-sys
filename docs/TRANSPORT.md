@@ -850,7 +850,53 @@ deterministyczną listę slotów PWL (KRS, zezwolenie zawód, PWL T1/T2
 `/transport/transporter-documents` (X/Y wgranych) i w master adminie
 (tooltip blokady verify-tenant).
 
-### 13.2 `TenantResource` (audience filter)
+### 13.2 Add-on purchases — Hovera-as-merchant (P24 one-time)
+
+Master admin sprzedaje stajniom add-ony jednorazowe i recurring
+zdefiniowane w `TransportAddonsSeeder` (migrate_excel, migrate_system,
+onboarding_live, invoice_setup; recurring: extra_driver, extra_vehicle).
+**Hovera jest tu merchant of record** — pieniądze wpływają na konto P24
+Hovery (`services.przelewy24.*`), my wystawiamy FV z naszego NIPu.
+Kontrast z §15.6 (quote payments) gdzie pieniądze idą do transportera.
+
+**Flow:**
+
+1. `/admin/addon-purchases` → "Utwórz" — admin wybiera tenanta + add-on
+   z katalogu (auto-snapshot kodu/nazwy/ceny). Status=pending.
+2. Action "Wygeneruj link P24" → `Przelewy24Service::chargeAddon($purchase)`
+   → POST `/api/v1/transaction/register` z central P24 creds (NIE
+   transportera) → checkout URL zapisany w `addon_purchases.p24_payment_url`.
+3. Notification w panelu z linkiem do skopiowania → admin handoff mailem.
+4. Tenant klika link → P24 hosted checkout → po sukcesie webhook
+   `POST /webhooks/przelewy24/addon` → `Przelewy24Service::processAddonWebhook`
+   weryfikuje sign + verify call → status=paid + p24_paid_at.
+
+**Tabela:**
+
+| Kolumna | Opis |
+|---|---|
+| `addon_purchases.id` | ULID, używane jako P24 sessionId |
+| `addon_purchases.tenant_id` | który tenant kupił |
+| `addon_purchases.plan_addon_id` | referencja do katalogu |
+| `addon_purchases.addon_code` | snapshot — np. `migrate_excel` |
+| `addon_purchases.addon_name` | snapshot human-readable |
+| `addon_purchases.amount_cents` | snapshot ceny (zabezpiecza historię przed zmianą cennika) |
+| `addon_purchases.status` | `pending` / `paid` / `failed` / `cancelled` |
+| `addon_purchases.p24_session_id` | == id (unique constraint) |
+| `addon_purchases.p24_order_id` | orderId z webhooka po sukcesie |
+| `addon_purchases.side_effect_metadata` | np. `{"extended_limit": "max_drivers", "delta": 1}` dla recurring add-onów |
+
+**Side-effects (post-MVP):** dla `extra_driver` / `extra_vehicle` po
+`status=paid` system powinien podnieść `tenants.settings.transport.max_drivers`.
+W tym PR side-effect framework jest tylko schemowy
+(`side_effect_metadata` + `side_effect_applied_at`), pełny dispatcher
+będzie w follow-up wraz z recurring billing dla extra_driver.
+
+**Tests:** patrz `tests/Feature/Billing/AddonPurchaseP24Test.php` —
+sign generation, register HTTP fake, webhook idempotency, amount
+mismatch rejection.
+
+### 13.3 `TenantResource` (audience filter)
 ### 15.2 `TenantResource` (audience filter)
 
 Bazowa lista wszystkich tenantów (stajnie + transporterzy) z filtrem
@@ -1458,6 +1504,79 @@ Każdy krok activates tylko gdy poprzedni nie zadziałał. Stripe Connect failur
 - Akcję „Sprawdź status Stripe" (`sync_stripe_connect`) widoczną gdy
   `stripe_connect_account_id IS NOT NULL` — przydatne gdy transporter
   zgłasza „dokończyłem KYC, ale Hovera widzi pending".
+
+### 15.6 Przelewy24 — alternatywa Stripe Payment Link (per-transporter quote autopay)
+
+**Status:** ✅ wdrożone w gałęzi `claude/transport-przelewy24-onetime`.
+
+Direct-charge MVP (§15.1) jest URL-based: transporter wkleja `payment_url`
+ręcznie. P24 quote autopay automatyzuje to dla transporterów którzy mają
+**konto Przelewy24** — zamiast ręcznego wklejania URL, system po `CreateQuote`
+generuje sesję P24 (via API REST v1) i wstawia hostowany URL jako
+`payment_url`. Klient na landing page'u widzi standardowy przycisk
+"Zapłać teraz" — kliknięcie prowadzi do BLIK / przelew / karta.
+
+**Marketplace positioning (§12):** Hovera **NIE** jest tu merchant of
+record. Credentials (merchant_id / pos_id / crc / api_key) trzymane są w
+`tenants.settings.payments.p24` (encrypted, single source of truth ze
+stable-side `P24PaymentProvider`). Hovera **tylko technicznie** odpala
+`POST /api/v1/transaction/register` z credsami transportera — pieniądze
+trafiają bezpośrednio na **konto P24 transportera**. Hovera nie pośredniczy.
+
+**Konfiguracja (per-transporter, dwukrokowa):**
+
+1. `/app/payment-settings` (Filament `PaymentSettings` page) → wklej P24
+   credentials (encrypted at rest). To samo źródło dla stable booking
+   payments i transport quote payments.
+2. `/app/transport-settings` → toggle **„Auto-generuj link P24 dla nowych
+   ofert"** (sekcja Przelewy24, tabela `transport_settings.p24_quote_autopay_enabled`).
+
+**Flow:**
+
+```
+CreateQuote → afterCreate
+  ↓
+  if (quote.payment_url puste
+      && transport_settings.p24_quote_autopay_enabled
+      && tenant.settings.payments.p24 skonfigurowane
+      && quote.currency === 'PLN'
+      && quote.gross_total > 0)
+    → TransporterP24QuoteService::createPaymentSession(tenant, quote)
+    → POST sandbox/secure.przelewy24.pl/api/v1/transaction/register
+       (sign = SHA384({sessionId, merchantId, amount, currency, crc}))
+    → response.data.token → checkout URL = {host}/trnRequest/{token}
+    → quote.p24_session_id = quote.id
+    → quote.p24_payment_url = url
+    → quote.payment_url = url (publiczny landing CTA)
+    → quote.payment_method_label = 'Przelewy24'
+  else fallback do default_payment_url_template (§15.1)
+```
+
+**Tabele:**
+
+| Tabela / kolumna | Opis |
+|---|---|
+| `quotes.p24_session_id` | `quote.id` (unique per merchant — wymóg P24) |
+| `quotes.p24_payment_url` | hosted URL P24 (mirror `payment_url` ale niemodyfikowalny) |
+| `quotes.p24_order_id` | orderId z webhooka po sukcesie |
+| `quotes.p24_paid_at` | timestamp potwierdzenia z webhooka |
+| `transport_settings.p24_quote_autopay_enabled` | per-transporter toggle |
+
+**Webhook (opcjonalny):** `POST /transport/p24/webhook/{tenant_slug}` —
+Hovera może hostować webhook dla transportera (sign verified z creds
+transportera). MVP: domyślnie transporter **nie konfiguruje tego URL'a**
+w panelu P24 — używamy ręcznego "Oznacz jako opłacone" w `/transport/quotes`
+(opcja B w spec'u). Opcja A (Hovera hostuje webhook per-transporter)
+działa technicznie ale wymaga ręcznej konfiguracji w P24 panelu transportera.
+
+**Ograniczenia MVP:**
+
+- Tylko PLN (P24 oficjalnie wspiera EUR/GBP/CZK dla kart, ale BLIK/przelewy
+  tylko PLN — dla MVP whitelisting PLN żeby uniknąć confusion).
+- Bez refundów (P24 refundy idą przez panel — UI w Hovera = post-MVP).
+- Soft-fail: jeśli P24 register zwróci błąd (np. wygasłe api_key), quote
+  jest stworzony bez `payment_url`, transporter dostaje notification i może
+  wrócić do edycji.
 
 ---
 

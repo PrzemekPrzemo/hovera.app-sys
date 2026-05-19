@@ -15,7 +15,11 @@ use App\Http\Controllers\Public\InstructorCalendarController;
 use App\Http\Controllers\Public\LegalController;
 use App\Http\Controllers\Public\PaymentWebhookController;
 use App\Http\Controllers\Public\PricingController;
+use App\Http\Controllers\Public\Przelewy24AddonReturnController;
+use App\Http\Controllers\Public\Przelewy24AddonWebhookController;
 use App\Http\Controllers\Public\Przelewy24Controller;
+use App\Http\Controllers\Public\Przelewy24QuoteReturnController;
+use App\Http\Controllers\Public\Przelewy24QuoteWebhookController;
 use App\Http\Controllers\Public\Przelewy24WebhookController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicInvoiceController;
@@ -277,6 +281,48 @@ Route::post('/webhooks/przelewy24', Przelewy24WebhookController::class)
 Route::middleware(['web'])
     ->get('/payments/p24/return/{invoiceId}', [Przelewy24Controller::class, 'return'])
     ->name('payments.p24.return');
+
+/*
+ * Per-transporter P24 quote payments — patrz docs/TRANSPORT.md §15.5.
+ *
+ * Klient klika "Zapłać P24" na quote landing → P24 hosted checkout →
+ * po sukcesie redirect (.return) + async notification (.webhook).
+ * Webhook idzie z `tenant_slug` w URL'u żeby router znał kontekst
+ * przed switch'em do tenant DB (slug jest publiczny — `t/{slug}`).
+ *
+ * Throttle 60/min — P24 zwykle wysyła <10/min per merchant.
+ */
+Route::middleware(['web'])
+    ->prefix('/transport/p24')
+    ->name('public.transport.p24.')
+    ->group(function () {
+        Route::get('/return/{tenant_slug}/{quote_id}', [Przelewy24QuoteReturnController::class, 'return'])
+            ->where('tenant_slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
+            ->name('return');
+        Route::post('/webhook/{tenant_slug}', [Przelewy24QuoteWebhookController::class, 'handle'])
+            ->where('tenant_slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
+            ->middleware('throttle:60,1')
+            ->name('webhook');
+    });
+
+/*
+ * P24 add-on purchases — Hovera-as-merchant flow. Patrz
+ * docs/TRANSPORT.md §13 (master admin add-on purchases).
+ *
+ * Return: nazwany `admin.p24.addon.return` (używany przez
+ * Przelewy24Service::chargeAddon do generowania urlReturn — niezależny
+ * od /admin auth, bo P24 robi pure redirect bez session). Webhook:
+ * `webhooks.p24.addon` — separated od `webhooks.p24` żeby routing był
+ * one-line jasny (Invoice vs AddonPurchase).
+ */
+Route::middleware(['web'])
+    ->get('/admin/p24/addon/return/{purchase_id}', [Przelewy24AddonReturnController::class, 'return'])
+    ->where('purchase_id', '[0-9A-Za-z]{26}')
+    ->name('admin.p24.addon.return');
+
+Route::post('/webhooks/przelewy24/addon', Przelewy24AddonWebhookController::class)
+    ->middleware(['throttle:60,1'])
+    ->name('webhooks.p24.addon');
 
 /*
  * Import wizard helpers — pobranie szablonu .xlsx (klienci / konie) z jedną

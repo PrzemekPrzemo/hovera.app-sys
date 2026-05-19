@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Transport\Resources\QuoteResource\Pages;
 
 use App\Domain\Transport\Payments\PaymentUrlTemplate;
+use App\Domain\Transport\Payments\Przelewy24\TransporterP24QuoteService;
 use App\Domain\Transport\Payments\Stripe\TransporterStripeConnectService;
 use App\Domain\Transport\Quotes\QuoteNumberGenerator;
 use App\Filament\Transport\Resources\QuoteResource;
@@ -12,6 +13,7 @@ use App\Models\Tenant\Quote;
 use App\Models\Tenant\TransportSettings;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Log;
 
@@ -78,14 +80,17 @@ class CreateQuote extends CreateRecord
 
     protected function afterCreate(): void
     {
-        // Stripe Connect ma pierwszeństwo nad URL-template — jeśli transporter
-        // ma aktywne Connect Express konto, generujemy server-side Checkout
-        // Session i wstawiamy URL do quote'a. Patrz docs/TRANSPORT.md §15.6.
-        $applied = $this->applyStripeConnectCheckoutIfEnabled();
-
-        if (! $applied) {
-            $this->applyDefaultPaymentUrlIfBlank();
-        }
+        // Kolejność preferencji payment_url (każdy guard early-returnuje gdy
+        // $quote->payment_url jest już ustawione, więc pierwszy konfigurowany
+        // wygrywa):
+        //   1. Stripe Connect Express — server-side Checkout Session
+        //      (docs/TRANSPORT.md §15.6)
+        //   2. Przelewy24 autopay — hosted checkout transportera
+        //      (docs/TRANSPORT.md §15.5)
+        //   3. default_payment_url_template — fallback na własny URL transportera
+        $this->applyStripeConnectCheckoutIfEnabled();
+        $this->tryGenerateP24PaymentLink();
+        $this->applyDefaultPaymentUrlIfBlank();
 
         app(TenantAuditLogger::class)->record(
             'quote.create',
@@ -93,6 +98,72 @@ class CreateQuote extends CreateRecord
             (string) $this->record->getKey(),
             ['number' => $this->record->number],
         );
+    }
+
+    /**
+     * P24 quote autopay — patrz docs/TRANSPORT.md §15.5.
+     *
+     * Jeśli transporter ma:
+     *   1. `transport_settings.p24_quote_autopay_enabled = true`
+     *   2. skonfigurowane creds w `tenants.settings.payments.p24`
+     *   3. quote w PLN i z dodatnią kwotą
+     * → generuje sesję P24 i ustawia quote.payment_url + payment_method_label.
+     *
+     * Soft-fail — jeśli P24 zwróci błąd (np. wygasł api_key), logujemy
+     * + notification w panelu, ale create quote'a nie roluje wstecz.
+     * Transporter może wrócić do edycji i wkleić URL ręcznie lub naprawić
+     * settings.
+     */
+    private function tryGenerateP24PaymentLink(): void
+    {
+        /** @var Quote $quote */
+        $quote = $this->record;
+
+        if ($quote->payment_url) {
+            return; // user already provided own URL — don't override
+        }
+
+        $settings = TransportSettings::current();
+        if (! ($settings->p24_quote_autopay_enabled ?? false)) {
+            return;
+        }
+
+        $tenant = app(TenantManager::class)->current();
+        if ($tenant === null) {
+            return;
+        }
+
+        $svc = app(TransporterP24QuoteService::class);
+        if (! $svc->isConfigured($tenant)) {
+            // Toggle on, ale brak creds — nie spamujemy logów, transporter
+            // sam zobaczy w /app/payment-settings że nic nie wpisał.
+            return;
+        }
+
+        try {
+            $url = $svc->createPaymentSession($tenant, $quote);
+
+            $quote->forceFill([
+                'payment_url' => $url,
+                'payment_method_label' => $quote->payment_method_label ?: 'Przelewy24',
+            ])->save();
+        } catch (\Throwable $e) {
+            // Soft-fail — quote zostaje stworzona bez payment_url, fallback
+            // do template'a (applyDefaultPaymentUrlIfBlank) ewentualnie
+            // zadziała. Logujemy + notification dla user'a.
+            Log::warning('P24 quote autopay failed', [
+                'quote_id' => $quote->id,
+                'tenant' => $tenant->slug,
+                'error' => $e->getMessage(),
+            ]);
+
+            Notification::make()
+                ->warning()
+                ->title(__('transport/p24.notify.autopay_failed'))
+                ->body($e->getMessage())
+                ->persistent()
+                ->send();
+        }
     }
 
     /**
