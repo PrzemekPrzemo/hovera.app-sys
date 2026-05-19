@@ -23,7 +23,12 @@ return [
     'clear_filters' => 'Réinitialiser les filtres',
 
     'empty_state_title' => 'Aucun transporteur ne correspond à ces critères.',
+    'empty_state_subtitle' => 'Essayez d\'élargir les filtres ou de consulter les voïvodies voisines.',
     'empty_state_action' => 'Voir tous les transporteurs',
+    'empty_state_transporter_hint' => 'Vous dirigez une société de transport ? Rejoignez l\'annuaire :',
+    'empty_state_transporter_cta' => 'Inscrire l\'entreprise',
+    'hero_cta_join' => 'Vous êtes transporteur ? Rejoignez l\'annuaire',
+    'card_voiv_more_tooltip' => 'Couvre d\'autres voïvodies — voir le profil',
 
     'card_view_profile' => 'Voir le profil',
     'featured_badge' => 'Recommandé',

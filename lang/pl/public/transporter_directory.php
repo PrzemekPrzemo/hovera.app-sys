@@ -24,7 +24,12 @@ return [
     'clear_filters' => 'Wyczyść filtry',
 
     'empty_state_title' => 'Brak transporterów spełniających kryteria.',
+    'empty_state_subtitle' => 'Spróbuj rozszerzyć filtry albo poszukaj sąsiednich województw.',
     'empty_state_action' => 'Pokaż wszystkich',
+    'empty_state_transporter_hint' => 'Twoja firma transportowa? Dołącz do bazy:',
+    'empty_state_transporter_cta' => 'Zarejestruj firmę',
+    'hero_cta_join' => 'Jesteś przewoźnikiem? Dołącz do bazy',
+    'card_voiv_more_tooltip' => 'Pokrywa więcej województw — szczegóły na profilu',
 
     'card_view_profile' => 'Zobacz profil',
     'featured_badge' => 'Polecany',

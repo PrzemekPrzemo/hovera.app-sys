@@ -20,7 +20,9 @@
         .hero { background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 70%, #000) 100%); color: #fff; padding: 3rem 1.25rem 2rem; text-align: center; }
         .hero-inner { max-width: 1080px; margin: 0 auto; }
         .hero h1 { margin: 0 0 .5rem; font-size: 2.1rem; letter-spacing: -.01em; }
-        .hero .subtitle { font-size: 1.02rem; opacity: .92; margin: 0; }
+        .hero .subtitle { font-size: 1.02rem; opacity: .92; margin: 0 0 1.5rem; }
+        .hero-cta { display: inline-block; padding: .8rem 1.6rem; background: #fff; color: var(--primary); border-radius: 10px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 14px rgba(0,0,0,.15); transition: transform .15s; }
+        .hero-cta:hover { transform: translateY(-2px); }
         .container { max-width: 1080px; margin: 0 auto; padding: 0 1.25rem; }
         .filters { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--border); padding: .9rem 1.25rem; }
         .filters-inner { max-width: 1080px; margin: 0 auto; display: grid; gap: .65rem; grid-template-columns: 1fr 1fr 1fr auto; align-items: end; }
@@ -45,8 +47,12 @@
         .card-logo { width: 56px; height: 56px; border-radius: 10px; object-fit: contain; background: #eee; padding: 4px; flex-shrink: 0; }
         .card-logo-placeholder { width: 56px; height: 56px; border-radius: 10px; background: color-mix(in srgb, var(--primary) 18%, #fff); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; flex-shrink: 0; }
         .card h3 { margin: 0; font-size: 1.05rem; color: #3D2E22; line-height: 1.25; }
-        .card .voiv-pill { display: inline-block; margin-top: .25rem; padding: .12rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 600; background: color-mix(in srgb, var(--primary) 15%, transparent); color: color-mix(in srgb, var(--primary) 80%, #000); }
-        .card .featured-badge { display: inline-block; margin-left: .35rem; padding: .12rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 700; background: linear-gradient(135deg, #f5c542 0%, #d99e1f 100%); color: #5b3a00; letter-spacing: .02em; }
+        .card .voiv-pill { display: inline-block; padding: .12rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 600; background: color-mix(in srgb, var(--primary) 15%, transparent); color: color-mix(in srgb, var(--primary) 80%, #000); }
+        .card .voivs { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .3rem; }
+        .card .voiv-more { display: inline-block; padding: .12rem .5rem; border-radius: 999px; font-size: .7rem; font-weight: 600; background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--muted); }
+        .card .featured-badge { display: inline-block; margin-left: .35rem; padding: .12rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 700; background: linear-gradient(135deg, #f5c542 0%, #d99e1f 50%, #f5c542 100%); background-size: 200% 100%; color: #5b3a00; letter-spacing: .02em; animation: featured-shimmer 3s ease-in-out infinite; }
+        @keyframes featured-shimmer { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        @media (prefers-reduced-motion: reduce) { .card .featured-badge { animation: none; } }
         .card .tagline { color: var(--muted); font-size: .88rem; margin: .35rem 0 .65rem; flex-grow: 1; }
         .card .rating-row { display: flex; align-items: center; gap: .4rem; font-size: .86rem; margin-bottom: .35rem; }
         .card .rating-stars { color: var(--primary); font-weight: 700; letter-spacing: .04em; }
@@ -106,6 +112,9 @@
             <p class="subtitle">
                 {{ __('public/transporter_directory.hero_subtitle', ['count' => $totalVerifiedCount]) }}
             </p>
+            <a href="{{ url('/przewoznicy/dolacz') }}" class="hero-cta">
+                {{ __('public/transporter_directory.hero_cta_join') }} →
+            </a>
         </div>
     </section>
 
@@ -151,7 +160,12 @@
             @if ($transporters->isEmpty())
                 <div class="empty">
                     <h2>{{ __('public/transporter_directory.empty_state_title') }}</h2>
+                    <p style="margin-bottom: 1rem;">{{ __('public/transporter_directory.empty_state_subtitle') }}</p>
                     <a href="{{ url('/przewoznicy') }}">{{ __('public/transporter_directory.empty_state_action') }}</a>
+                    <p style="margin: 1.25rem 0 .5rem; font-size: .85rem;">{{ __('public/transporter_directory.empty_state_transporter_hint') }}</p>
+                    <a href="{{ url('/przewoznicy/dolacz') }}" style="background: transparent; color: var(--primary); border: 2px solid var(--primary);">
+                        {{ __('public/transporter_directory.empty_state_transporter_cta') }} →
+                    </a>
                 </div>
             @else
                 <p class="results-meta">
@@ -176,10 +190,22 @@
                                 @else
                                     <div class="card-logo-placeholder" aria-hidden="true">{{ $initial }}</div>
                                 @endif
-                                <div>
+                                <div style="flex-grow:1;min-width:0;">
                                     <h3>{{ $tenant->name }}@if ($tenant->is_featured)<span class="featured-badge">★ {{ __('public/transporter_directory.featured_badge') }}</span>@endif</h3>
-                                    @if ($voiv)
-                                        <span class="voiv-pill">{{ $voiv }}</span>
+                                    @php
+                                        $allVoivs = is_array($tenant->all_voivodeships ?? null) ? $tenant->all_voivodeships : [];
+                                        $shown = array_slice($allVoivs, 0, 3);
+                                        $extra = max(0, count($allVoivs) - count($shown));
+                                    @endphp
+                                    @if ($shown !== [])
+                                        <div class="voivs">
+                                            @foreach ($shown as $v)
+                                                <span class="voiv-pill">{{ $v }}</span>
+                                            @endforeach
+                                            @if ($extra > 0)
+                                                <span class="voiv-more" title="{{ __('public/transporter_directory.card_voiv_more_tooltip') }}">+{{ $extra }}</span>
+                                            @endif
+                                        </div>
                                     @endif
                                 </div>
                             </div>

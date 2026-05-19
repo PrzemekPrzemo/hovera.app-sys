@@ -23,7 +23,12 @@ return [
     'clear_filters' => 'Filter zurücksetzen',
 
     'empty_state_title' => 'Keine Transport-Anbieter entsprechen den Kriterien.',
+    'empty_state_subtitle' => 'Erweitern Sie die Filter oder prüfen Sie benachbarte Woiwodschaften.',
     'empty_state_action' => 'Alle anzeigen',
+    'empty_state_transporter_hint' => 'Sie führen ein Transportunternehmen? Treten Sie dem Verzeichnis bei:',
+    'empty_state_transporter_cta' => 'Unternehmen registrieren',
+    'hero_cta_join' => 'Sind Sie Spediteur? Treten Sie dem Verzeichnis bei',
+    'card_voiv_more_tooltip' => 'Deckt weitere Woiwodschaften ab — siehe Profil',
 
     'card_view_profile' => 'Profil ansehen',
     'featured_badge' => 'Empfohlen',
