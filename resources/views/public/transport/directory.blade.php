@@ -46,6 +46,7 @@
         .card-logo-placeholder { width: 56px; height: 56px; border-radius: 10px; background: color-mix(in srgb, var(--primary) 18%, #fff); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; flex-shrink: 0; }
         .card h3 { margin: 0; font-size: 1.05rem; color: #3D2E22; line-height: 1.25; }
         .card .voiv-pill { display: inline-block; margin-top: .25rem; padding: .12rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 600; background: color-mix(in srgb, var(--primary) 15%, transparent); color: color-mix(in srgb, var(--primary) 80%, #000); }
+        .card .featured-badge { display: inline-block; margin-left: .35rem; padding: .12rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 700; background: linear-gradient(135deg, #f5c542 0%, #d99e1f 100%); color: #5b3a00; letter-spacing: .02em; }
         .card .tagline { color: var(--muted); font-size: .88rem; margin: .35rem 0 .65rem; flex-grow: 1; }
         .card .rating-row { display: flex; align-items: center; gap: .4rem; font-size: .86rem; margin-bottom: .35rem; }
         .card .rating-stars { color: var(--primary); font-weight: 700; letter-spacing: .04em; }
@@ -176,7 +177,7 @@
                                     <div class="card-logo-placeholder" aria-hidden="true">{{ $initial }}</div>
                                 @endif
                                 <div>
-                                    <h3>{{ $tenant->name }}</h3>
+                                    <h3>{{ $tenant->name }}@if ($tenant->is_featured)<span class="featured-badge">★ {{ __('public/transporter_directory.featured_badge') }}</span>@endif</h3>
                                     @if ($voiv)
                                         <span class="voiv-pill">{{ $voiv }}</span>
                                     @endif

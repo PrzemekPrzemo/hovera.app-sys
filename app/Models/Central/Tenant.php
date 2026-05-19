@@ -25,6 +25,7 @@ class Tenant extends Model
     protected $fillable = [
         'slug', 'name', 'legal_name', 'tax_id', 'type',
         'verification_status', 'verified_at', 'verified_by_user_id', 'verification_notes',
+        'is_featured', 'featured_at', 'featured_by_user_id',
         'db_host', 'db_port', 'db_name', 'db_username', 'db_password_encrypted',
         'country', 'locale', 'timezone', 'currency',
         'plan_id', 'status', 'trial_ends_at',
@@ -43,6 +44,8 @@ class Tenant extends Model
             'type' => TenantType::class,
             'verification_status' => VerificationStatus::class,
             'verified_at' => 'datetime',
+            'is_featured' => 'boolean',
+            'featured_at' => 'datetime',
             'branding' => 'array',
             'settings' => 'array',
             'trial_ends_at' => 'datetime',
@@ -82,6 +85,47 @@ class Tenant extends Model
     public function scopeTransporters(Builder $query): Builder
     {
         return $query->where('type', TenantType::Transporter);
+    }
+
+    /**
+     * Boost rankingowania publicznego — tenant pokazany na top'cie Top 10
+     * landing'i `/transport` oraz katalogu `/przewoznicy`. Manualny toggle
+     * przez master admina (TransporterResource action). Patrz docs/TRANSPORT.md §16.
+     */
+    public function scopeFeatured(Builder $query): Builder
+    {
+        return $query->where('is_featured', true);
+    }
+
+    /**
+     * Master admin akcja "Polecany ON". Idempotentna — drugi toggle ON nie
+     * resetuje featured_at (przydatne żeby utrzymać kolejność „dawno polecany").
+     * Audit log wewnątrz TransporterResource action (kontekst master usera).
+     */
+    public function markFeatured(?string $byUserId = null): void
+    {
+        if ($this->is_featured) {
+            return;
+        }
+
+        $this->forceFill([
+            'is_featured' => true,
+            'featured_at' => now(),
+            'featured_by_user_id' => $byUserId,
+        ])->save();
+    }
+
+    public function unmarkFeatured(): void
+    {
+        if (! $this->is_featured) {
+            return;
+        }
+
+        $this->forceFill([
+            'is_featured' => false,
+            'featured_at' => null,
+            'featured_by_user_id' => null,
+        ])->save();
     }
 
     public function isStable(): bool

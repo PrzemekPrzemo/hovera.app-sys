@@ -26,6 +26,7 @@ return [
     'empty_state_action' => 'Voir tous les transporteurs',
 
     'card_view_profile' => 'Voir le profil',
+    'featured_badge' => 'Recommandé',
     'card_disclaimer_verified' => 'Vérifié par Hovera. Hovera est un intermédiaire marketplace.',
     'card_disclaimer_link_label' => 'conditions',
 

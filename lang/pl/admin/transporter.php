@@ -45,6 +45,8 @@ return [
     'action' => [
         'verify' => 'Zatwierdź konto',
         'reject' => 'Odrzuć konto',
+        'feature' => 'Oznacz jako Polecany',
+        'unfeature' => 'Cofnij Polecany',
         'login_as_owner' => [
             'label' => 'Zaloguj jako transporter',
             'reason_label' => 'Powód impersonacji (audit RODO)',
@@ -60,6 +62,8 @@ return [
         'verified_body' => 'Konto firmy :name aktywowane. Firma może wystawiać oferty i faktury.',
         'rejected' => 'Konto odrzucone',
         'rejected_body' => 'Konto firmy :name odrzucone. Firma otrzymała mail z powodem.',
+        'featured' => 'Oznaczono jako Polecany',
+        'unfeatured' => 'Cofnięto status Polecany',
     ],
 
     // Sekcja Dokumenty — relation manager w master adminie.

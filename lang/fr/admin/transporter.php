@@ -45,6 +45,8 @@ return [
     'action' => [
         'verify' => 'Approuver le compte',
         'reject' => 'Refuser le compte',
+        'feature' => 'Marquer comme Recommandé',
+        'unfeature' => 'Retirer Recommandé',
         'login_as_owner' => [
             'label' => 'Se connecter en tant que transporteur',
             'reason_label' => 'Motif de l’impersonation (audit RGPD)',
@@ -60,6 +62,8 @@ return [
         'verified_body' => 'Société :name activée. Elle peut envoyer des devis et des factures.',
         'rejected' => 'Compte refusé',
         'rejected_body' => 'Société :name refusée. Elle a reçu un e-mail avec le motif.',
+        'featured' => 'Marqué comme Recommandé',
+        'unfeatured' => 'Statut Recommandé retiré',
     ],
 
     'documents' => [

@@ -44,6 +44,7 @@ return [
 
     'action' => [
         'respond' => 'Ответить предложением',
+        'open_in_calculator' => 'Открыть в калькуляторе',
     ],
 
     'notify' => [

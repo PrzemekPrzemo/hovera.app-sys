@@ -39,6 +39,10 @@ return [
         'failed' => 'Berechnung fehlgeschlagen',
         'save_as_quote' => 'Als Angebot speichern',
     ],
+    'notify' => [
+        'lead_prefilled_title' => 'Anfragedaten vorausgefüllt',
+        'lead_prefilled_body' => 'Adressen und Kundenkontakt sind bereits ausgefüllt — klicken Sie auf "Berechnen", um den Preis zu ermitteln.',
+    ],
 
     'result' => [
         'heading' => 'Angebotsergebnis',

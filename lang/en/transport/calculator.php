@@ -39,6 +39,10 @@ return [
         'failed' => 'Could not calculate quote',
         'save_as_quote' => 'Save as quote',
     ],
+    'notify' => [
+        'lead_prefilled_title' => 'Inquiry data prefilled',
+        'lead_prefilled_body' => 'Addresses and customer contact are already filled — click "Calculate" to compute the price.',
+    ],
 
     'result' => [
         'heading' => 'Quote result',

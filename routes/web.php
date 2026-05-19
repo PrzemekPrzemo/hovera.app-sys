@@ -33,6 +33,7 @@ use App\Http\Controllers\Public\TransporterDirectoryController;
 use App\Http\Controllers\Public\TransporterOgImageController;
 use App\Http\Controllers\Public\TransporterProfileController;
 use App\Http\Controllers\Public\TransportInquiryController;
+use App\Http\Controllers\Public\TransportLandingController;
 use App\Http\Controllers\Public\TransportReviewController;
 use App\Http\Controllers\Tenant\BillingController;
 use App\Http\Controllers\Tenant\BugReportController;
@@ -425,6 +426,23 @@ Route::middleware(['web', 'throttle:30,1'])
         Route::get('/cancel/{entry}', [BookingCancellationController::class, 'show'])->name('cancel.show');
         Route::post('/cancel/{entry}', [BookingCancellationController::class, 'submit'])->name('cancel.submit');
     });
+
+/*
+ * Publiczny landing pod /transport — hero + embed formularz zapytania + Top 10
+ * zweryfikowanych przewoźników. Patrz docs/TRANSPORT.md §16.
+ *
+ * Kolizja URL z panelem Filament `/transport` jest rozwiązana priorytetem
+ * routingu Laravel: web.php rejestruje publiczne trasy przed Filament resolverem,
+ * więc exact `/transport` trafia tu (do publicznego landing'i). Sub-route'y
+ * panelu (`/transport/quotes`, `/transport/leads`, …) działają normalnie —
+ * Filament obsługuje wszystko z prefixem `/transport/*` poza root.
+ *
+ * Auth-aware redirect w controllerze: transporter → panel, stable → zapytanie
+ * z pre-fillem, guest/master/multi-tenant → render landing'a.
+ */
+Route::middleware('web')
+    ->get('/transport', [TransportLandingController::class, 'show'])
+    ->name('public.transport.landing');
 
 /*
  * Publiczny katalog zweryfikowanych przewoźników pod /przewoznicy.
