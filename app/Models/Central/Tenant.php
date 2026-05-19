@@ -26,6 +26,7 @@ class Tenant extends Model
         'slug', 'name', 'legal_name', 'tax_id', 'type',
         'verification_status', 'verified_at', 'verified_by_user_id', 'verification_notes',
         'is_featured', 'featured_at', 'featured_by_user_id',
+        'embed_allowed_origins', 'embed_api_token',
         'db_host', 'db_port', 'db_name', 'db_username', 'db_password_encrypted',
         'country', 'locale', 'timezone', 'currency',
         'plan_id', 'status', 'trial_ends_at',
@@ -46,6 +47,8 @@ class Tenant extends Model
             'verified_at' => 'datetime',
             'is_featured' => 'boolean',
             'featured_at' => 'datetime',
+            'embed_allowed_origins' => 'array',
+            'embed_api_token' => 'encrypted',
             'branding' => 'array',
             'settings' => 'array',
             'trial_ends_at' => 'datetime',
@@ -126,6 +129,49 @@ class Tenant extends Model
             'featured_at' => null,
             'featured_by_user_id' => null,
         ])->save();
+    }
+
+    /**
+     * Sprawdza czy podany origin jest na embed whitelist transportera.
+     * Trim'uje trailing slash i normalizuje wielkość liter (browsers wysyłają
+     * lowercase scheme + host). Patrz docs/TRANSPORT.md §16.
+     */
+    public function isEmbedOriginAllowed(string $origin): bool
+    {
+        $origins = $this->embed_allowed_origins ?? [];
+        if (! is_array($origins) || $origins === []) {
+            return false;
+        }
+
+        $normalised = rtrim(mb_strtolower(trim($origin)), '/');
+        if ($normalised === '') {
+            return false;
+        }
+
+        foreach ($origins as $allowed) {
+            if (! is_string($allowed)) {
+                continue;
+            }
+            if (rtrim(mb_strtolower(trim($allowed)), '/') === $normalised) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Generuje nowy embed API token (32 bajty → 64 hex). Stary token jest
+     * invalidated natychmiast — wszystkie istniejące embed'y na cudzych
+     * stronach przestaną działać do momentu zaktualizowania snippet'u.
+     */
+    public function regenerateEmbedApiToken(): string
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->embed_api_token = $token;
+        $this->save();
+
+        return $token;
     }
 
     public function isStable(): bool
