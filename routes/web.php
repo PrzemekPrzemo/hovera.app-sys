@@ -36,6 +36,7 @@ use App\Http\Controllers\Public\StripeConnectWebhookController;
 use App\Http\Controllers\Public\StripeWebhookController;
 use App\Http\Controllers\Public\TransporterDirectoryController;
 use App\Http\Controllers\Public\TransporterOgImageController;
+use App\Http\Controllers\Public\TransporterOnboardingController;
 use App\Http\Controllers\Public\TransporterProfileController;
 use App\Http\Controllers\Public\TransportInquiryController;
 use App\Http\Controllers\Public\TransportLandingController;
@@ -518,6 +519,27 @@ Route::middleware('web')
 Route::middleware('web')
     ->get('/przewoznicy', [TransporterDirectoryController::class, 'index'])
     ->name('public.transporters.directory');
+
+/*
+ * Publiczna rejestracja firmy transportowej z dokumentami (PWL T1/T2 +
+ * licencja zawodu + certyfikat kierowcy + świadectwo pojazdu + OC).
+ * Pełny multi-section signup zastępujący lean `/signup?type=transporter`
+ * dla firm które od razu chcą wgrać dokumenty. Patrz docs/TRANSPORT.md §15.
+ *
+ * Throttle 1/h/IP — anti-abuse dla document uploads (6 plików × max 5MB).
+ */
+Route::middleware(['web', 'throttle:1,60'])
+    ->get('/przewoznicy/dolacz', [TransporterOnboardingController::class, 'show'])
+    ->name('public.transport.onboarding.show');
+
+Route::middleware(['web', 'throttle:1,60'])
+    ->post('/przewoznicy/dolacz', [TransporterOnboardingController::class, 'submit'])
+    ->name('public.transport.onboarding.submit');
+
+Route::middleware('web')
+    ->get('/przewoznicy/dolacz/dziekujemy/{slug}', [TransporterOnboardingController::class, 'thanks'])
+    ->where('slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
+    ->name('public.transport.onboarding.thanks');
 
 /*
  * Publiczny profil transportera pod /t/{slug} — marketing/SEO landing.

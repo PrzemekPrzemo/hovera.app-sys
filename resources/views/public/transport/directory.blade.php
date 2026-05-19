@@ -238,7 +238,7 @@
 
     {{-- Stopka — CTA dla transporterów + powered by. --}}
     <div class="footer-strip">
-        <a href="{{ url('/signup?type=transporter') }}">{{ __('public/transporter_directory.footer_cta_join_marketplace') }} →</a>
+        <a href="{{ route('public.transport.onboarding.show') }}">{{ __('public/transporter_directory.footer_cta_join_marketplace') }} →</a>
     </div>
 </body>
 </html>
