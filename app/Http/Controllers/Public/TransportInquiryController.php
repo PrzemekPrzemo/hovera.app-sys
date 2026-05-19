@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Public;
 use App\Domain\Transport\Geocoding\Exceptions\GeocodingException;
 use App\Domain\Transport\Geocoding\MapboxGeocoder;
 use App\Domain\Transport\Leads\LeadDispatcher;
+use App\Mail\Customer\TransportLeadAccessMail;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Models\Central\TransportLead;
@@ -18,8 +19,11 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Throwable;
 
 /**
  * Publiczny formularz zapytania o transport koni. Bez auth — każdy może
@@ -100,6 +104,7 @@ class TransportInquiryController extends Controller
 
         $lead = TransportLead::create([
             'id' => (string) Str::ulid(),
+            'access_slug' => (string) Str::uuid(),
             'mode' => $isDirect ? 'direct' : 'broadcast',
             'targeted_transporter_ids' => $isDirect ? [$targetTransporter->id] : null,
             'originator_tenant_id' => $originatorStable?->id,
@@ -130,7 +135,31 @@ class TransportInquiryController extends Controller
         // pozostałych (per-transporter try/catch).
         app(LeadDispatcher::class)->dispatch($lead);
 
+        $this->sendLeadAccessMail($lead);
+
         return redirect()->route('public.transport.inquiry.thanks', ['lead' => $lead->id]);
+    }
+
+    /**
+     * Email do klienta z permanent linkiem do portalu zapytania. Soft-fail —
+     * przerwa w mailerze nie blokuje lead submit'u, klient i tak dostanie
+     * thanks page i może użyć tego linka z URL (chyba że zgubił maila).
+     */
+    private function sendLeadAccessMail(TransportLead $lead): void
+    {
+        if (! $lead->originator_email || ! $lead->access_slug) {
+            return;
+        }
+
+        try {
+            $url = route('public.transport.lead_portal', ['slug' => $lead->access_slug]);
+            Mail::to($lead->originator_email)->send(new TransportLeadAccessMail($lead, $url));
+        } catch (Throwable $e) {
+            Log::warning('Transport lead access mail failed', [
+                'lead_id' => $lead->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function thanks(string $leadId): View
@@ -235,7 +264,7 @@ class TransportInquiryController extends Controller
             return app(TenantManager::class)->execute($stable, function () use ($horseId): ?Horse {
                 return Horse::query()->find($horseId);
             });
-        } catch (\Throwable) {
+        } catch (Throwable) {
             // Tenant connection nieczynny / mig nie wykonana → ignoruj.
             return null;
         }

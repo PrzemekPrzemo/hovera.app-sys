@@ -17,6 +17,7 @@ class TransportLead extends Model
     protected $table = 'transport_leads';
 
     protected $fillable = [
+        'access_slug', 'access_revoked_at',
         'originator_tenant_id', 'originator_user_id',
         'originator_email', 'originator_phone', 'originator_name',
         'mode', 'targeted_transporter_ids',
@@ -38,9 +39,19 @@ class TransportLead extends Model
             'dropoff_lng' => 'float',
             'preferred_date' => 'date',
             'expires_at' => 'datetime',
+            'access_revoked_at' => 'datetime',
             'flexible_date' => 'boolean',
             'horse_count' => 'integer',
         ];
+    }
+
+    /**
+     * Czy klient publiczny może otworzyć portal po slug'u (link z maila).
+     * Link działa permanentnie, ale możemy revoke'ować ręcznie z admin'a.
+     */
+    public function isPortalAccessible(): bool
+    {
+        return $this->access_slug !== null && $this->access_revoked_at === null;
     }
 
     public function dispatches(): HasMany

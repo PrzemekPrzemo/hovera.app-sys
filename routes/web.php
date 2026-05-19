@@ -40,6 +40,7 @@ use App\Http\Controllers\Public\TransporterOnboardingController;
 use App\Http\Controllers\Public\TransporterProfileController;
 use App\Http\Controllers\Public\TransportInquiryController;
 use App\Http\Controllers\Public\TransportLandingController;
+use App\Http\Controllers\Public\TransportLeadPortalController;
 use App\Http\Controllers\Public\TransportReviewController;
 use App\Http\Controllers\Tenant\BillingController;
 use App\Http\Controllers\Tenant\BugReportController;
@@ -607,6 +608,16 @@ Route::middleware(['web'])
             ->where('lead', '[0-9A-Za-z]{26}')
             ->name('.thanks');
     });
+
+/*
+ * Portal klienta dla pojedynczego leada — permanent slug (UUID) z maila
+ * wysyłanego po submit'cie /transport/zapytanie. Klient widzi swoje
+ * zapytanie + napływające oferty. Patrz TransportLeadPortalController.
+ */
+Route::middleware(['web'])
+    ->get('/transport/zapytanie/portal/{slug}', [TransportLeadPortalController::class, 'show'])
+    ->where('slug', '[0-9a-fA-F-]{36}')
+    ->name('public.transport.lead_portal');
 
 /*
  * Publiczny formularz recenzji marketplace'u — magic link bez autoryzacji.
