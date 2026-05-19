@@ -14,6 +14,9 @@ use App\Http\Controllers\Public\HelpController;
 use App\Http\Controllers\Public\InstructorCalendarController;
 use App\Http\Controllers\Public\LegalController;
 use App\Http\Controllers\Public\PaymentWebhookController;
+use App\Http\Controllers\Public\PayUAddonReturnController;
+use App\Http\Controllers\Public\PayUAddonWebhookController;
+use App\Http\Controllers\Public\PayUWebhookController;
 use App\Http\Controllers\Public\PricingController;
 use App\Http\Controllers\Public\Przelewy24AddonReturnController;
 use App\Http\Controllers\Public\Przelewy24AddonWebhookController;
@@ -324,6 +327,46 @@ Route::middleware(['web'])
 Route::post('/webhooks/przelewy24/addon', Przelewy24AddonWebhookController::class)
     ->middleware(['throttle:60,1'])
     ->name('webhooks.p24.addon');
+
+/*
+ * PayU webhook (CENTRAL hovera billing — invoice flow). Patrz docs/TRANSPORT.md §16.
+ *
+ * CSRF excluded w bootstrap/app.php. Signature SHA256 z raw body + md5_key
+ * weryfikowana wewnątrz PayUService::verifyWebhookSignature.
+ */
+Route::post('/webhooks/payu', PayUWebhookController::class)
+    ->middleware(['throttle:60,1'])
+    ->name('webhooks.payu');
+
+/*
+ * PayU add-on purchases — Hovera-as-merchant. Analogiczne do P24 add-on
+ * flow. Return URL nazwany `admin.payu.addon.return` (używany przez
+ * PayUService::chargeAddon do generowania continueUrl), webhook
+ * `webhooks.payu.addon` — separated od `webhooks.payu` (Invoice vs AddonPurchase).
+ */
+Route::middleware(['web'])
+    ->get('/admin/payu/addon/return/{purchase_id}', [PayUAddonReturnController::class, 'return'])
+    ->where('purchase_id', '[0-9A-Za-z]{26}')
+    ->name('admin.payu.addon.return');
+
+Route::post('/webhooks/payu/addon', PayUAddonWebhookController::class)
+    ->middleware(['throttle:60,1'])
+    ->name('webhooks.payu.addon');
+
+/*
+ * PayU invoice return URL — user-facing redirect po sesji PayU. Status
+ * jest pobierany async z webhooka (źródło prawdy), tu tylko user-facing
+ * landing flash message.
+ */
+Route::middleware(['web'])
+    ->get('/payments/payu/return/{invoice_id}', function (string $invoiceId) {
+        return redirect('/app/billing')->with(
+            'status',
+            __('admin/billing.payu_return_message'),
+        );
+    })
+    ->where('invoice_id', '[0-9A-Za-z]{26}')
+    ->name('webhooks.payu.return');
 
 /*
  * Import wizard helpers — pobranie szablonu .xlsx (klienci / konie) z jedną

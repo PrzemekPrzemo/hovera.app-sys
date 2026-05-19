@@ -99,6 +99,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | PayU (central) — Hovera as merchant for SaaS billing
+    |--------------------------------------------------------------------------
+    | Hovera-level PayU credentials — używane gdy MASTER ADMIN inkasuje od
+    | tenantów (Hovera-as-merchant: FV za subskrypcje + add-ony).
+    | Per-tenant PayU (stable→klient, transporter→klient) żyje w
+    | `tenants.settings.payments.payu`, encrypted.
+    |
+    | PayU API uses OAuth2 client_credentials grant — `oauth_client_id` +
+    | `oauth_client_secret` wymieniane na access_token (1h TTL, cache'owany).
+    | Signature webhook: SHA256 z surowego body + `md5_key`, header
+    | `OpenPayU-Signature`. Reference: https://developers.payu.com/europe/pl/
+    */
+    'payu' => [
+        'pos_id' => env('PAYU_POS_ID'),
+        'oauth_client_id' => env('PAYU_OAUTH_CLIENT_ID'),
+        'oauth_client_secret' => env('PAYU_OAUTH_CLIENT_SECRET'),
+        'md5_key' => env('PAYU_MD5_KEY'),
+        'second_key' => env('PAYU_SECOND_KEY'),
+        'env' => env('PAYU_ENV', 'sandbox'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | KSeF (central) — hovera as VAT taxpayer
     |--------------------------------------------------------------------------
     | hovera (jako podatnik VAT) wystawia faktury stajniom za subskrypcje;
