@@ -93,22 +93,30 @@
             .review-response { background: #322820; }
         }
         @media (max-width: 600px) {
-            .hero { padding: 2rem 1rem 3rem; }
-            .hero h1 { font-size: 1.7rem; }
+            .hero { padding: 2rem 1rem 2.5rem; }
+            .hero h1 { font-size: 1.55rem; }
+            .hero .tagline { font-size: .95rem; }
+            .section { padding: 1.5rem 0; }
+            .section h2 { font-size: 1.2rem; }
+            .container { padding: 0 1rem; }
+            .grid { grid-template-columns: 1fr; gap: .85rem; }
+            .vehicle { padding: 1rem; }
+            .contact { padding: 1.1rem; }
+            /* Etykieta kontaktu nad wartością na małym ekranie żeby dłuższe
+               wartości (np. URL strony www) nie wypychały labelki poza ekran. */
+            .contact-row { flex-direction: column; align-items: flex-start; gap: .1rem; }
+            .contact-row .label { min-width: 0; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+            .contact-row a, .contact-row span { word-break: break-word; }
+            .reviews-summary { gap: .65rem; }
+            .reviews-avg { font-size: 2rem; }
+            .footer-cta { padding: 2rem 1rem; }
+            .verified-badge .tooltip { width: 280px; max-width: calc(100vw - 2rem); }
         }
     </style>
 </head>
 <body>
     <section class="hero">
         <div class="hero-inner">
-            {{-- Link „Wszystkie firmy" — pomaga SEO crawlerom dotrzeć do katalogu
-                 z profili linkowanych zewnętrznie, plus UX dla użytkowników którzy
-                 chcą porównać kilku przewoźników. Patrz docs/TRANSPORT.md §16. --}}
-            <div style="text-align: left; margin-bottom: 1rem;">
-                <a href="{{ url('/przewoznicy') }}" style="color: rgba(255,255,255,.85); text-decoration: none; font-size: .88rem;">
-                    {{ __('public/transporter_directory.back_to_directory') }}
-                </a>
-            </div>
             @if ($logo_url)
                 <img src="{{ $logo_url }}" alt="{{ $tenant->name }}" class="logo-img">
             @endif

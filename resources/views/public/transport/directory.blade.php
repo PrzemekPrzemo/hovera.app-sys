@@ -84,7 +84,17 @@
         }
         @media (max-width: 600px) {
             .hero { padding: 2rem 1rem 1.5rem; }
-            .hero h1 { font-size: 1.6rem; }
+            .hero h1 { font-size: 1.5rem; }
+            .hero .subtitle { font-size: .92rem; }
+            .filters { padding: .75rem 1rem; }
+            .container { padding: 0 1rem; }
+            .grid { grid-template-columns: 1fr; gap: .85rem; }
+            .card { min-height: 0; padding: 1rem; }
+            .card-head { gap: .7rem; }
+            .card-logo, .card-logo-placeholder { width: 48px; height: 48px; }
+            .cta-section { padding: 2rem 1rem; }
+            .cta-section h2 { font-size: 1.2rem; }
+            .filters input, .filters select { font-size: 16px; /* anty-zoom iOS */ }
         }
     </style>
 </head>

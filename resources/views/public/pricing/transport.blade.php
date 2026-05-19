@@ -42,7 +42,8 @@
         .cta.secondary { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
         h2 { font-size: 1.6rem; color: var(--brown); margin: 3rem 0 .5rem; text-align: center; }
         .h2-sub { text-align: center; color: #6b7280; margin-bottom: 2rem; }
-        .addons-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,.05); overflow: hidden; }
+        .addons-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,.05); }
+        .addons-table { width: 100%; min-width: 520px; border-collapse: collapse; background: #fff; overflow: hidden; }
         .addons-table th, .addons-table td { padding: .85rem 1rem; text-align: left; border-bottom: 1px solid var(--sand); font-size: .9rem; }
         .addons-table th { color: var(--brown); font-weight: 700; background: var(--bg); }
         .addons-table tr:last-child td { border-bottom: 0; }
@@ -50,7 +51,22 @@
         .addons-table .type-col { color: #6b7280; font-size: .82rem; }
         .footer { text-align: center; margin-top: 3rem; color: #6b7280; font-size: .85rem; }
         .footer a { color: var(--primary); text-decoration: none; margin: 0 .5rem; }
-        @media (max-width: 720px) { h1 { font-size: 1.6rem; } .nav-links a { display: none; } }
+        @media (max-width: 720px) {
+            h1 { font-size: 1.6rem; }
+            .nav-links a { display: none; }
+            .nav-links .nav-cta { display: inline-block; }
+        }
+        @media (max-width: 600px) {
+            body { padding: 1.25rem .75rem 3rem; }
+            .nav { margin-bottom: 1.5rem; }
+            .hero h1 { font-size: 1.45rem; }
+            .lede { font-size: .95rem; }
+            .grid { grid-template-columns: 1fr; gap: 1rem; }
+            .plan { padding: 1.4rem 1.2rem; }
+            .price { font-size: 1.8rem; }
+            h2 { font-size: 1.3rem; margin-top: 2rem; }
+            .addons-table th, .addons-table td { padding: .65rem .75rem; font-size: .85rem; }
+        }
     </style>
 </head>
 <body>
@@ -130,6 +146,7 @@
         <h2>{{ __('transport/plans.addons_heading') }}</h2>
         <div class="h2-sub">{{ __('transport/plans.addons_sub') }}</div>
 
+        <div class="addons-table-wrap">
         <table class="addons-table">
             <thead>
                 <tr>
@@ -165,6 +182,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
 
         <div class="footer">
             <a href="{{ route('signup.show') }}">{{ __('transport/plans.footer.signup') }}</a>

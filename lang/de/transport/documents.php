@@ -51,7 +51,6 @@ return [
         'allowed_formats' => 'Akzeptiert: PDF, JPG, PNG. Maximal 10 MB pro Datei. Alle Dateien in verschlüsseltem EU-Speicher.',
     ],
 
-    // @todo native review — maschinell übersetzt aus PL/EN.
     'section' => [
         'pwl_required' => 'PWL-Dokumente (pflicht für Verifizierung)',
         'pwl_optional' => 'Optionale Dokumente',

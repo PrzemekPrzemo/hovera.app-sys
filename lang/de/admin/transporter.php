@@ -62,7 +62,6 @@ return [
         'rejected_body' => 'Unternehmen :name abgelehnt. Es erhielt eine E-Mail mit der Begründung.',
     ],
 
-    // @todo native review.
     'documents' => [
         'title' => 'Verifizierungsdokumente',
         'column' => [

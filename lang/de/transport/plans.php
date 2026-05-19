@@ -3,96 +3,98 @@
 declare(strict_types=1);
 
 /**
- * @todo native review — currently uses EN copy as placeholder.
  * Marketing source of truth: hovera.app/produkt/transport/.
  * Keys MUST mirror lang/pl/transport/plans.php.
+ *
+ * Translated DE — business-grade German, formal "Sie". Technische Begriffe
+ * (KSeF, HGV, ORS) bleiben im Original, da es sich um Eigennamen handelt.
  */
 return [
-    'page_title' => 'Pricing for carrier companies',
-    'meta_description' => 'Hovera pricing for horse transport companies: Start from PLN 250/mo. 4 plans, 5 currencies, 12-month price-lock guarantee.',
+    'page_title' => 'Preise für Transportunternehmen',
+    'meta_description' => 'Hovera-Preise für Pferdetransport-Unternehmen: ab 250 PLN/Monat. 4 Tarife, 5 Währungen, 12-monatige Preisgarantie.',
 
-    'heading' => 'Pricing for carrier companies',
-    'lede' => 'Pick a plan that matches the scale of your business. Every plan includes the HGV routing quote calculator, PDF quotes with public client acceptance and a customer CRM. 1-month free trial starts after successful document verification.',
+    'heading' => 'Preise für Transportunternehmen',
+    'lede' => 'Wählen Sie einen Tarif, der zum Umfang Ihres Unternehmens passt. Jeder Tarif enthält den HGV-Routing-Angebotsrechner, PDF-Angebote mit öffentlicher Annahme durch den Kunden sowie ein Kunden-CRM. Die einmonatige kostenlose Testphase beginnt nach erfolgreicher Dokumenten-Verifizierung.',
 
-    'lock_in_note' => '12-month lock-in — price-lock guarantee',
-    'promo_note' => 'Promo until 2026-07-31',
+    'lock_in_note' => '12-Monats-Bindung — Preisgarantie',
+    'promo_note' => 'Aktion bis 31.07.2026',
 
-    'most_popular' => 'Most popular',
+    'most_popular' => 'Am beliebtesten',
 
-    'currency_label' => 'Currency',
-    'month_short' => 'mo',
-    'net_notice' => 'net per month, billed at period end',
+    'currency_label' => 'Währung',
+    'month_short' => 'Mon.',
+    'net_notice' => 'netto pro Monat, abgerechnet am Periodenende',
 
-    'custom_price' => 'Custom pricing',
-    'custom_price_note' => 'Price agreed after a call with our sales team',
-    'price_unavailable' => 'Price unavailable in :currency — contact us',
+    'custom_price' => 'Individueller Preis',
+    'custom_price_note' => 'Preis nach Gespräch mit unserem Vertrieb',
+    'price_unavailable' => 'Preis in :currency nicht verfügbar — kontaktieren Sie uns',
 
     'cta' => [
-        'start_trial' => 'Start now',
-        'contact' => 'Contact us',
-        'contact_subject' => 'Hovera Transport Enterprise — inquiry',
+        'start_trial' => 'Jetzt starten',
+        'contact' => 'Kontakt aufnehmen',
+        'contact_subject' => 'Hovera Transport Enterprise — Anfrage',
     ],
 
     'audience_hint' => [
         'default' => '—',
-        'small_carriers' => 'Small businesses and individual carriers',
-        'growing_carriers' => 'Growing companies with a larger fleet',
-        'mid_large_carriers' => 'Medium and large companies',
-        'enterprise' => 'Above 15 drivers / 25 vehicles',
+        'small_carriers' => 'Kleine Unternehmen und Einzelunternehmer',
+        'growing_carriers' => 'Wachsende Unternehmen mit größerem Fuhrpark',
+        'mid_large_carriers' => 'Mittlere und große Unternehmen',
+        'enterprise' => 'Über 15 Fahrer / 25 Fahrzeuge',
     ],
 
     'feature' => [
-        'calculator_hgv' => 'Full quote calculator with HGV routing (OpenRouteService)',
-        'pdf_quotes_public_acceptance' => 'PDF quotes + public client acceptance + WhatsApp/email distribution',
-        'crm_clients' => 'Customer CRM with per-client custom rates',
-        'poi_google_import' => 'POI: custom places + Google Maps import',
-        'calendar_ical' => 'Transport calendar + iCal feed (Google/Apple Calendar)',
-        'public_page_pl' => 'Public company page (PL)',
-        'payments_csv_import' => 'Payments + costs with CSV import',
-        'invoices_ksef' => 'Invoices (KSeF and other formats)',
-        'reports_basic' => 'Reports: drivers, customers, vehicles, cash-flow',
-        'support_email_24h' => 'Email support · 24h response time',
+        'calculator_hgv' => 'Vollständiger Angebotsrechner mit HGV-Routing (OpenRouteService)',
+        'pdf_quotes_public_acceptance' => 'PDF-Angebote + öffentliche Annahme durch Kunden + Versand per WhatsApp/E-Mail',
+        'crm_clients' => 'Kunden-CRM mit individuellen Tarifen je Kunde',
+        'poi_google_import' => 'POI: eigene Orte + Import aus Google Maps',
+        'calendar_ical' => 'Transportkalender + iCal-Feed (Google/Apple Kalender)',
+        'public_page_pl' => 'Öffentliche Firmenseite (PL)',
+        'payments_csv_import' => 'Zahlungen + Kosten mit CSV-Import',
+        'invoices_ksef' => 'Rechnungen (KSeF und weitere Formate)',
+        'reports_basic' => 'Berichte: Fahrer, Kunden, Fahrzeuge, Cashflow',
+        'support_email_24h' => 'E-Mail-Support · Antwortzeit 24 Stunden',
 
-        'multilang_public_page' => 'Multilingual public page (PL + EN + DE)',
-        'custom_rates_per_client' => 'Per-client custom rates and minimums',
-        'auto_toll_estimation' => 'Auto toll estimation (ORS tollways)',
-        'stop_types_dictionary' => 'Stop type dictionary (loading/unloading/vet/overnight)',
-        'public_gallery' => 'Public gallery with transport photos',
+        'multilang_public_page' => 'Mehrsprachige öffentliche Seite (PL + EN + DE)',
+        'custom_rates_per_client' => 'Kundenspezifische Tarife und Mindestbeträge',
+        'auto_toll_estimation' => 'Automatische Mautberechnung (ORS Tollways)',
+        'stop_types_dictionary' => 'Stopp-Typ-Wörterbuch (Beladung/Entladung/Tierarzt/Übernachtung)',
+        'public_gallery' => 'Öffentliche Galerie mit Transportfotos',
 
-        'custom_branding' => 'Custom branding (logo + colors on public page and PDFs)',
-        'advanced_reports' => 'Advanced reports: margins, top routes, route popularity',
-        'export_csv_json_gdpr' => 'CSV/JSON export of all data (GDPR art. 20)',
-        'configurable_toll_rates' => 'Configurable toll rates (light vs HGV)',
-        'roadmap_priority' => 'Roadmap priority (feature voting)',
+        'custom_branding' => 'Eigenes Branding (Logo + Farben auf öffentlicher Seite und PDFs)',
+        'advanced_reports' => 'Erweiterte Berichte: Margen, Top-Routen, Routen-Popularität',
+        'export_csv_json_gdpr' => 'CSV/JSON-Export aller Daten (DSGVO Art. 20)',
+        'configurable_toll_rates' => 'Konfigurierbare Mautsätze (PKW vs. LKW)',
+        'roadmap_priority' => 'Roadmap-Priorität (Feature-Voting)',
 
-        'dedicated_environment' => 'Dedicated environment (separate VPS)',
-        'sla_financial_99_9' => '99.9% SLA with financial guarantee',
-        'live_onboarding' => 'Live onboarding with a trainer (2–4 h)',
-        'data_migration_free' => 'Data migration — free',
-        'white_label' => 'White-label (system under client brand)',
-        'api_rest' => 'REST API for integrations',
-        'dedicated_storage' => 'Backup to dedicated storage (S3 / GDrive)',
-        'custom_integrations' => 'Custom integrations (CRM / ERP / accounting)',
+        'dedicated_environment' => 'Dedizierte Umgebung (eigener VPS)',
+        'sla_financial_99_9' => '99,9 % SLA mit finanzieller Garantie',
+        'live_onboarding' => 'Live-Onboarding mit Trainer (2–4 Std.)',
+        'data_migration_free' => 'Datenmigration — kostenlos',
+        'white_label' => 'White-Label (System unter Kundenmarke)',
+        'api_rest' => 'REST-API für Integrationen',
+        'dedicated_storage' => 'Backup auf dediziertem Speicher (S3 / GDrive)',
+        'custom_integrations' => 'Individuelle Integrationen (CRM / ERP / Buchhaltung)',
     ],
 
-    'addons_heading' => 'Add-ons',
-    'addons_sub' => 'All add-ons are global — available regardless of the plan you pick.',
+    'addons_heading' => 'Zusatzleistungen',
+    'addons_sub' => 'Alle Zusatzleistungen sind global — verfügbar unabhängig vom gewählten Tarif.',
     'addons_table' => [
-        'name' => 'Add-on',
-        'type' => 'Billing',
-        'price' => 'Price',
+        'name' => 'Zusatzleistung',
+        'type' => 'Abrechnung',
+        'price' => 'Preis',
     ],
     'addon_type' => [
-        'one_time' => 'one-time',
-        'recurring_monthly' => 'monthly',
+        'one_time' => 'einmalig',
+        'recurring_monthly' => 'monatlich',
     ],
 
     'nav' => [
-        'stable_pricing' => 'Stables pricing',
-        'signup' => 'Sign up',
+        'stable_pricing' => 'Preise für Ställe',
+        'signup' => 'Registrieren',
     ],
     'footer' => [
-        'signup' => 'Sign up',
-        'terms' => 'Terms',
+        'signup' => 'Registrieren',
+        'terms' => 'AGB',
     ],
 ];

@@ -37,6 +37,20 @@
             .subtitle, .helper { color: #C8B8A4; }
             input, textarea { background: #1F1A17; border-color: #4a3d31; color: #F7F4EF; }
         }
+        /* Mobile (≤600px) — pojedyncze kolumny, mniej paddingu, większe taps. */
+        @media (max-width: 600px) {
+            body { padding: 1rem .75rem; }
+            .card { padding: 1.25rem 1rem; border-radius: 12px; }
+            h1 { font-size: 1.25rem; }
+            .row-two { grid-template-columns: 1fr; gap: 0; }
+            .direct-banner { padding: .65rem .85rem; font-size: .85rem; }
+            input[type=text], input[type=email], input[type=tel], input[type=number],
+            input[type=date], input[type=time], textarea {
+                font-size: 16px; /* zapobiega zoomowi iOS przy focus */
+                padding: .75rem .85rem;
+            }
+            button[type=submit] { padding: 1rem; font-size: 1.05rem; }
+        }
     </style>
 </head>
 <body>
@@ -47,28 +61,11 @@
             <h1>{{ __('public/transport_inquiry.heading') }}</h1>
             <div class="subtitle">{{ __('public/transport_inquiry.subtitle') }}</div>
 
-            {{-- Subtle link do katalogu /przewoznicy — alternatywna ścieżka
-                 dla klienta który woli przejrzeć ręcznie zamiast broadcast'u.
-                 Patrz docs/TRANSPORT.md §16. --}}
-            <div style="margin: -0.5rem 0 1rem; font-size: .85rem;">
-                <a href="{{ url('/przewoznicy') }}" style="color: var(--primary); text-decoration: none;">
-                    {{ __('public/transporter_directory.link_browse_directory_from_inquiry') }}
-                </a>
-            </div>
-
             @if (! empty($targetTransporter))
                 <div class="direct-banner">
                     {!! __('public/transport_inquiry.direct_target_banner', ['name' => '<strong>'.e($targetTransporter->name).'</strong>']) !!}
                     <br>
                     <a href="{{ route('public.transport.inquiry') }}">{{ __('public/transport_inquiry.direct_target_switch_to_broadcast') }}</a>
-                </div>
-            @endif
-
-            @if (! empty($originatorStable))
-                <div class="direct-banner">
-                    {!! __('public/transport_inquiry.originator_banner.from_stable', ['name' => '<strong>'.e($originatorStable->name).'</strong>']) !!}
-                    —
-                    <a href="{{ url('/app/transport') }}">{{ __('public/transport_inquiry.originator_banner.back_to_app') }}</a>
                 </div>
             @endif
 

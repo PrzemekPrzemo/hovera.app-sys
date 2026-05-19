@@ -54,6 +54,20 @@
             .terms { background: #1F1A17; color: #E9E2D3; }
             .btn-reject { background: #2a221c; color: #fca5a5; border-color: #57342f; }
         }
+        /* Mobile (≤600px) — etykiety nad wartościami, przyciski jeden pod drugim,
+           mniej paddingu w karcie, większe taps dla accept/reject. */
+        @media (max-width: 600px) {
+            body { padding: 1rem .75rem; }
+            .card { padding: 1.25rem 1rem; border-radius: 12px; }
+            h1 { font-size: 1.3rem; }
+            .grid .row { flex-direction: column; gap: .1rem; padding-bottom: .35rem; }
+            .grid .row .l { flex: none; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+            .grid .row .v { word-break: break-word; }
+            .actions { flex-direction: column; gap: .6rem; }
+            .btn { padding: 1rem; font-size: 1.05rem; }
+            .pricing-row.total { font-size: 1.05rem; }
+            .payment-pay-btn { padding: 1.1rem; font-size: 1rem; }
+        }
     </style>
 </head>
 <body>

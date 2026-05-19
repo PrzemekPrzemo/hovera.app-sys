@@ -33,8 +33,7 @@ return [
 
     'disclaimer_intermediary' => 'Profil exploité par <strong>:transporter_name</strong>. Hovera = intermédiaire de marketplace (<a href="/regulamin-marketplace" target="_blank">conditions</a>) — n’effectue pas les transports, n’est pas partie au contrat.',
 
-    // @todo native review — traduction automatique depuis PL/EN.
     'verified_badge_label' => 'Vérifié par Hovera',
-    'verified_badge_tooltip' => 'Hovera a vérifié la validité de : licence d’exercice de la profession de transporteur routier, autorisation PWL T1/T2, certificats de compétence des conducteurs/convoyeurs, certificat d’agrément du moyen de transport, registre de lavage/désinfection et assurance RC transporteur. Hovera a vérifié les documents — elle N’ASSUME PAS la responsabilité de l’exécution réelle du transport (voir conditions du marketplace).',
+    'verified_badge_tooltip' => 'Hovera a vérifié la validité des documents suivants : licence d’exercice de la profession de transporteur routier de marchandises, agrément pour le transport d’animaux vivants (types 1 et 2), certificats de compétence des conducteurs et convoyeurs, certificat d’agrément du véhicule de transport, registre de nettoyage et désinfection, ainsi que l’assurance responsabilité civile du transporteur. Hovera contrôle les documents — mais N’ASSUME AUCUNE responsabilité quant à l’exécution effective du transport (voir les conditions du marketplace).',
     'verified_badge_link_label' => 'conditions du marketplace',
 ];

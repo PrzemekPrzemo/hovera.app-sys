@@ -33,6 +33,17 @@
             h1 { color: #E9E2D3; }
             textarea { background: #1F1A17; color: #E9E2D3; border-color: #4a3d31; }
         }
+        /* Mobile (≤600px) — kompaktowy padding karty, większe gwiazdki dla
+           kciuka, button full-width żeby był łatwy do tapnięcia. */
+        @media (max-width: 600px) {
+            .wrap { padding: 1.5rem .75rem; }
+            .card { padding: 1.25rem 1rem; }
+            h1 { font-size: 1.2rem; }
+            .lead { font-size: .92rem; }
+            .stars label { font-size: 2.6rem; padding: .15rem .1rem; /* większe taps */ }
+            textarea { font-size: 16px; /* anty-zoom iOS */ }
+            .submit { display: block; width: 100%; padding: 1rem; font-size: 1.05rem; }
+        }
     </style>
 </head>
 <body>

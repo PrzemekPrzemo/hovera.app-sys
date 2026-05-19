@@ -62,7 +62,6 @@ return [
         'rejected_body' => 'Société :name refusée. Elle a reçu un e-mail avec le motif.',
     ],
 
-    // @todo native review.
     'documents' => [
         'title' => 'Documents de vérification',
         'column' => [
