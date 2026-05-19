@@ -64,6 +64,20 @@ return [
             'secret' => env('STRIPE_WEBHOOK_SECRET'),
             'tolerance' => 300,
         ],
+        /*
+        | Stripe Connect Express — per-transporter direct charges.
+        | Patrz App\Domain\Transport\Payments\Stripe\TransporterStripeConnectService.
+        | Webhook secret jest ODDZIELNY od central — Stripe pozwala podpiąć
+        | jeden endpoint do platform events i drugi do connect events.
+        | application_fee_percent = prowizja platformy (Hovera) od każdej
+        | transakcji transportowej. Default 0 — Hovera bierze tylko abonament
+        | SaaS, nie cut z transakcji. Włączenie wymaga update'u regulaminu §15.
+        */
+        'connect' => [
+            'webhook_secret' => env('STRIPE_CONNECT_WEBHOOK_SECRET'),
+            'application_fee_percent' => (float) env('STRIPE_CONNECT_APPLICATION_FEE_PERCENT', 0),
+            'country' => env('STRIPE_CONNECT_COUNTRY', 'PL'),
+        ],
     ],
 
     /*

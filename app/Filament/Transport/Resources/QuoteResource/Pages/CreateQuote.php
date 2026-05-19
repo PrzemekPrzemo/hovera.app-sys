@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Filament\Transport\Resources\QuoteResource\Pages;
 
 use App\Domain\Transport\Payments\PaymentUrlTemplate;
+use App\Domain\Transport\Payments\Stripe\TransporterStripeConnectService;
 use App\Domain\Transport\Quotes\QuoteNumberGenerator;
 use App\Filament\Transport\Resources\QuoteResource;
 use App\Models\Tenant\Quote;
 use App\Models\Tenant\TransportSettings;
 use App\Services\TenantAuditLogger;
+use App\Tenancy\TenantManager;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Log;
 
 class CreateQuote extends CreateRecord
 {
@@ -75,7 +78,14 @@ class CreateQuote extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $this->applyDefaultPaymentUrlIfBlank();
+        // Stripe Connect ma pierwszeństwo nad URL-template — jeśli transporter
+        // ma aktywne Connect Express konto, generujemy server-side Checkout
+        // Session i wstawiamy URL do quote'a. Patrz docs/TRANSPORT.md §15.6.
+        $applied = $this->applyStripeConnectCheckoutIfEnabled();
+
+        if (! $applied) {
+            $this->applyDefaultPaymentUrlIfBlank();
+        }
 
         app(TenantAuditLogger::class)->record(
             'quote.create',
@@ -114,5 +124,64 @@ class CreateQuote extends CreateRecord
             'payment_method_label' => $quote->payment_method_label
                 ?: ($settings->default_payment_method_label ?: null),
         ])->save();
+    }
+
+    /**
+     * Stripe Connect Express — patrz docs/TRANSPORT.md §15.6.
+     *
+     * Jeśli transporter ma aktywne Stripe Connect Express konto i quote nie
+     * ma jeszcze ręcznie wklejonego payment_url'a — generujemy server-side
+     * Stripe Checkout Session na koncie transportera i wstawiamy redirect URL.
+     *
+     * Pieniądze idą BEZPOŚREDNIO do transportera (direct charge); webhook
+     * `checkout.session.completed` po sukcesie ustawi payment_completed_at.
+     *
+     * Failure mode: jeśli Stripe API rzuci, logujemy + fallback do
+     * default_payment_url_template (zwracamy false → caller wywoła template path).
+     */
+    private function applyStripeConnectCheckoutIfEnabled(): bool
+    {
+        /** @var Quote $quote */
+        $quote = $this->record;
+
+        if ($quote->payment_url) {
+            return true; // już ustawione ręcznie, nie nadpisujemy
+        }
+
+        $tenant = app(TenantManager::class)->current();
+        if ($tenant === null || ! $tenant->hasStripeConnectEnabled()) {
+            return false;
+        }
+
+        try {
+            $session = app(TransporterStripeConnectService::class)->createCheckoutSession(
+                quote: $quote,
+                tenant: $tenant,
+                successUrl: url("/transport/quote/{$tenant->slug}/{$quote->accept_token}?paid=1"),
+                cancelUrl: url("/transport/quote/{$tenant->slug}/{$quote->accept_token}?cancelled=1"),
+            );
+
+            if (! is_string($session->url) || $session->url === '') {
+                return false;
+            }
+
+            $quote->forceFill([
+                'payment_url' => $session->url,
+                'payment_method_label' => __('transport/stripe_connect.payment_method_label'),
+            ])->save();
+
+            return true;
+        } catch (\Throwable $e) {
+            // Nie blokujemy create — quote zostaje bez Stripe URL, transporter
+            // zobaczy w UI że można wkleić linka ręcznie. Logujemy żeby ops
+            // wiedział że konfiguracja Stripe transportera się rozjechała.
+            Log::warning('Stripe Connect Checkout creation failed; falling back', [
+                'tenant_id' => $tenant->id,
+                'quote_id' => $quote->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 }

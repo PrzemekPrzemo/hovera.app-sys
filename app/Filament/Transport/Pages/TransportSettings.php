@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Filament\Transport\Pages;
 
 use App\Domain\Transport\Ksef\TransporterKsefService;
+use App\Domain\Transport\Payments\Stripe\TransporterStripeConnectService;
 use App\Domain\Transport\Routing\RoutingProviderProbe;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\TransportSettings as TransportSettingsModel;
 use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
+use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -17,6 +19,7 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\HtmlString;
 
 /**
  * Singleton — konfiguracja stawek transportowych. Patrz docs/TRANSPORT.md §4.4.
@@ -282,7 +285,115 @@ class TransportSettings extends Page implements HasForms
                             ->helperText(__('transport/settings.form.helper.payment_instructions'))
                             ->rows(4),
                     ]),
+
+                // Stripe Connect Express — direct charge per transporter.
+                // Patrz docs/TRANSPORT.md §15.6.
+                Forms\Components\Section::make(__('transport/stripe_connect.section.title'))
+                    ->description(__('transport/stripe_connect.section.description'))
+                    ->schema([
+                        Forms\Components\Placeholder::make('stripe_connect_disclaimer')
+                            ->label('')
+                            ->content(__('transport/stripe_connect.section.disclaimer'))
+                            ->columnSpanFull(),
+
+                        Forms\Components\Placeholder::make('stripe_connect_status_badge')
+                            ->label(__('transport/stripe_connect.form.label.status'))
+                            ->content(fn () => $this->renderStripeConnectStatusBadge())
+                            ->columnSpanFull(),
+
+                        Forms\Components\Actions::make([
+                            Forms\Components\Actions\Action::make('stripeConnectOnboard')
+                                ->label(__('transport/stripe_connect.action.connect'))
+                                ->icon('heroicon-o-link')
+                                ->color('primary')
+                                ->visible(fn () => in_array($this->stripeConnectStatus(), ['none', 'restricted', 'rejected'], true))
+                                ->url('/transport/stripe/connect/onboard'),
+
+                            Forms\Components\Actions\Action::make('stripeConnectRefresh')
+                                ->label(__('transport/stripe_connect.action.refresh_status'))
+                                ->icon('heroicon-o-arrow-path')
+                                ->color('gray')
+                                ->visible(fn () => $this->stripeConnectStatus() !== 'none')
+                                ->action(fn () => $this->refreshStripeConnectStatus()),
+
+                            Forms\Components\Actions\Action::make('stripeConnectDashboard')
+                                ->label(__('transport/stripe_connect.action.open_dashboard'))
+                                ->icon('heroicon-o-arrow-top-right-on-square')
+                                ->color('info')
+                                ->visible(fn () => $this->stripeConnectStatus() === 'enabled')
+                                ->url('/transport/stripe/connect/dashboard')
+                                ->openUrlInNewTab(),
+                        ])->columnSpanFull(),
+                    ]),
             ]);
+    }
+
+    /**
+     * Status Stripe Connect z aktualnego tenant'a (central DB). Read-only
+     * w form'cie — modyfikowany przez StripeConnectController + webhooki.
+     */
+    private function stripeConnectStatus(): string
+    {
+        $tenant = app(TenantManager::class)->current();
+
+        return (string) ($tenant?->stripe_connect_status ?? 'none');
+    }
+
+    private function renderStripeConnectStatusBadge(): Htmlable
+    {
+        $status = $this->stripeConnectStatus();
+        $color = match ($status) {
+            'enabled' => 'success',
+            'pending' => 'warning',
+            'restricted' => 'danger',
+            'rejected' => 'danger',
+            default => 'gray',
+        };
+        $label = __("transport/stripe_connect.status.{$status}");
+
+        // Filament's `Badge` blade nie jest tu dostępny w placeholderze —
+        // wstrzykujemy minimalny HTML zgodny z tailwind palette stripe_connect.
+        $palette = match ($color) {
+            'success' => 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+            'warning' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+            'danger' => 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+            default => 'bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-300',
+        };
+
+        return new HtmlString(
+            '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium '.e($palette).'">'
+            .e($label).'</span>'
+        );
+    }
+
+    /**
+     * Wywołane przyciskiem „Sprawdź status" — robi POST na endpoint
+     * StripeConnectController::refresh przez Filament action. Idempotentne.
+     */
+    public function refreshStripeConnectStatus(): void
+    {
+        abort_unless(self::canAccess(), 403);
+
+        $tenant = app(TenantManager::class)->current();
+        if ($tenant === null || ! $tenant->isTransporter()) {
+            return;
+        }
+
+        try {
+            app(TransporterStripeConnectService::class)
+                ->syncAccountStatus($tenant);
+
+            Notification::make()
+                ->success()
+                ->title(__('transport/stripe_connect.notify.refreshed'))
+                ->send();
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->danger()
+                ->title(__('transport/stripe_connect.notify.status_sync_failed'))
+                ->body($e->getMessage())
+                ->send();
+        }
     }
 
     public function save(): void

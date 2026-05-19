@@ -30,6 +30,7 @@ class Tenant extends Model
         'plan_id', 'status', 'trial_ends_at',
         'trial_max_horses', 'trial_max_clients',
         'stripe_customer_id', 'stripe_subscription_id',
+        'stripe_connect_account_id', 'stripe_connect_status', 'stripe_connect_onboarded_at',
         'current_period_ends_at', 'subscription_ends_at',
         'branding', 'settings',
         'custom_domain', 'custom_domain_verified_at',
@@ -47,6 +48,7 @@ class Tenant extends Model
             'trial_ends_at' => 'datetime',
             'current_period_ends_at' => 'datetime',
             'subscription_ends_at' => 'datetime',
+            'stripe_connect_onboarded_at' => 'datetime',
             'suspended_at' => 'datetime',
             'last_activity_at' => 'datetime',
             'custom_domain_verified_at' => 'datetime',
@@ -250,6 +252,18 @@ class Tenant extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * Stripe Connect Express — transporter ma własne konto Stripe (KYC u Stripe,
+     * pieniądze trafiają bezpośrednio do niego). Patrz docs/TRANSPORT.md §15.6.
+     * Hovera = platforma; transporter = merchant of record.
+     */
+    public function hasStripeConnectEnabled(): bool
+    {
+        return $this->isTransporter()
+            && $this->stripe_connect_account_id !== null
+            && $this->stripe_connect_status === 'enabled';
     }
 
     /**
