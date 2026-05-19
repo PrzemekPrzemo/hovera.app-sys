@@ -32,8 +32,9 @@ use Throwable;
  *
  *   1. Firma: nazwa, slug, NIP, REGON, adres
  *   2. Kontakt owner: imię, email, telefon
- *   3. Dokumenty (6 plików): licencja zawodu, PWL T1, PWL T2, certyfikat
- *      kierowcy, świadectwo pojazdu, OC przewoźnika
+ *   3. Dokumenty (6 plików): licencja zawodu, zezwolenie PWL (T1 LUB T2,
+ *      transporter wybiera typ przez radio), certyfikat kierowcy,
+ *      świadectwo pojazdu, książka mycia, OC przewoźnika
  *   4. Akceptacja regulaminu marketplace
  *
  * Po submit:
@@ -63,28 +64,49 @@ class TransporterOnboardingController extends Controller
     private const MAX_FILE_KB = 5120;
 
     /**
-     * 6 typów dokumentów wymaganych dla pełnej rejestracji. Mapowanie
-     * file-input name → TransporterDocumentType. Każdy plik MUSI być
-     * wgrany na public form (bez tego admin nie ma czego weryfikować).
+     * Proste dokumenty 1:1 (jeden input → jeden TransporterDocumentType).
+     * Mapowanie file-input name → TransporterDocumentType. Każdy plik MUSI
+     * być wgrany na public form (bez tego admin nie ma czego weryfikować).
      *
      * Wzorzec ze `TransporterDocumentType::pwlRequiredCases()` ale
      * eksplicitnie listowany żeby zmiany enum'a nie zaskakiwały public
      * form'a (controlled scope).
+     *
+     * UWAGA: zezwolenie PWL T1 / T2 NIE jest tu — to merged field
+     * (`doc_pwl_authorization` + radio `pwl_authorization_type`),
+     * obsługiwany osobno bo PWL traktuje T1/T2 alternatywnie (< 8h vs > 8h).
+     *
+     * @var array<string, TransporterDocumentType>
      */
     private const REQUIRED_DOCUMENTS = [
         'doc_road_carrier_license' => TransporterDocumentType::RoadCarrierLicense,
-        'doc_pwl_t1' => TransporterDocumentType::PwlAuthorizationT1,
-        'doc_pwl_t2' => TransporterDocumentType::PwlAuthorizationT2,
         'doc_pwl_driver_handler' => TransporterDocumentType::PwlDriverHandlerCertificate,
         'doc_pwl_vehicle_approval' => TransporterDocumentType::PwlVehicleApprovalCertificate,
         'doc_wash_disinfection' => TransporterDocumentType::WashDisinfectionLog,
         'doc_carrier_liability' => TransporterDocumentType::CarrierLiabilityInsurance,
     ];
 
+    private const PWL_AUTHORIZATION_INPUT = 'doc_pwl_authorization';
+
+    private const PWL_AUTHORIZATION_RADIO = 'pwl_authorization_type';
+
+    /**
+     * Dozwolone wartości radia `pwl_authorization_type` → enum case.
+     *
+     * @var array<string, TransporterDocumentType>
+     */
+    private const PWL_AUTHORIZATION_TYPES = [
+        't1' => TransporterDocumentType::PwlAuthorizationT1,
+        't2' => TransporterDocumentType::PwlAuthorizationT2,
+    ];
+
     public function show(Request $request): View
     {
         return view('public.transport.onboarding', [
             'requiredDocuments' => self::REQUIRED_DOCUMENTS,
+            'pwlAuthorizationInput' => self::PWL_AUTHORIZATION_INPUT,
+            'pwlAuthorizationRadio' => self::PWL_AUTHORIZATION_RADIO,
+            'pwlAuthorizationTypes' => array_keys(self::PWL_AUTHORIZATION_TYPES),
             'old' => [
                 'name' => (string) old('name', $request->query('name', '')),
                 'slug' => (string) old('slug', ''),
@@ -160,8 +182,13 @@ class TransporterOnboardingController extends Controller
         // TransporterDocument rows + putFileAs w storage tenant'a.
         $tenants->setCurrent($tenant);
 
+        // Merged PWL T1/T2 — radio decyduje który enum case użyć.
+        $pwlAuthorizationType = self::PWL_AUTHORIZATION_TYPES[$data['pwl_authorization_type']];
+        $uploads = self::REQUIRED_DOCUMENTS;
+        $uploads[self::PWL_AUTHORIZATION_INPUT] = $pwlAuthorizationType;
+
         $uploadedCount = 0;
-        foreach (self::REQUIRED_DOCUMENTS as $inputName => $type) {
+        foreach ($uploads as $inputName => $type) {
             $file = $request->file($inputName);
             if (! $file instanceof UploadedFile) {
                 continue; // validation już to złapała ale defensive
@@ -192,7 +219,7 @@ class TransporterOnboardingController extends Controller
                 'tax_id' => $data['tax_id'],
                 'owner_email' => $data['owner_email'],
                 'documents_uploaded' => $uploadedCount,
-                'documents_required' => count(self::REQUIRED_DOCUMENTS),
+                'documents_required' => count(self::REQUIRED_DOCUMENTS) + 1,
             ],
         );
 
@@ -204,7 +231,7 @@ class TransporterOnboardingController extends Controller
                 Mail::to($recipients)->send(new TransporterOnboardingSubmittedMail(
                     tenant: $tenant->fresh(),
                     documentsUploaded: $uploadedCount,
-                    documentsRequired: count(self::REQUIRED_DOCUMENTS),
+                    documentsRequired: count(self::REQUIRED_DOCUMENTS) + 1,
                 ));
             }
         } catch (Throwable $e) {
@@ -233,10 +260,17 @@ class TransporterOnboardingController extends Controller
      * @return array{
      *   name:string, slug:string, tax_id:string, regon:string, address:string,
      *   owner_name:string, owner_email:string, owner_phone:string,
+     *   pwl_authorization_type:string,
      * }
      */
     private function validate(Request $request): array
     {
+        $fileRules = [
+            'required', 'file',
+            'mimes:pdf,jpg,jpeg,png',
+            'max:'.self::MAX_FILE_KB,
+        ];
+
         $rules = [
             'name' => ['required', 'string', 'min:2', 'max:200'],
             'slug' => [
@@ -251,15 +285,13 @@ class TransporterOnboardingController extends Controller
             'owner_email' => ['required', 'email:rfc,strict', 'max:255'],
             'owner_phone' => ['required', 'string', 'min:7', 'max:40'],
             'terms' => ['accepted'],
+            self::PWL_AUTHORIZATION_RADIO => ['required', Rule::in(array_keys(self::PWL_AUTHORIZATION_TYPES))],
+            self::PWL_AUTHORIZATION_INPUT => $fileRules,
         ];
 
-        // Każdy dokument jest required, pdf/jpg/png, max 5MB.
+        // Pozostałe dokumenty 1:1 (required, pdf/jpg/png, max 5MB).
         foreach (self::REQUIRED_DOCUMENTS as $inputName => $_) {
-            $rules[$inputName] = [
-                'required', 'file',
-                'mimes:pdf,jpg,jpeg,png',
-                'max:'.self::MAX_FILE_KB,
-            ];
+            $rules[$inputName] = $fileRules;
         }
 
         $data = $request->validate($rules, [
@@ -268,6 +300,8 @@ class TransporterOnboardingController extends Controller
             'tax_id.regex' => __('public/transporter_onboarding.errors.tax_id_format'),
             'regon.regex' => __('public/transporter_onboarding.errors.regon_format'),
             'terms.accepted' => __('public/transporter_onboarding.errors.terms'),
+            self::PWL_AUTHORIZATION_RADIO.'.required' => __('public/transporter_onboarding.errors.pwl_authorization_type_required'),
+            self::PWL_AUTHORIZATION_RADIO.'.in' => __('public/transporter_onboarding.errors.pwl_authorization_type_required'),
         ]);
 
         $data['slug'] = Str::lower($data['slug']);

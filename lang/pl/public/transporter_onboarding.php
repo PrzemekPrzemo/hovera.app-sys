@@ -55,6 +55,15 @@ return [
         .'Logistyczna) i regulaminami hovera. Bez kompletu nie możemy aktywować konta. '
         .'Formaty: PDF, JPG, PNG. Max 5 MB per plik.',
 
+    'pwl_authorization' => [
+        'label' => 'Zezwolenie przewoźnika PWL',
+        'description' => 'Zezwolenie na transport zwierząt żywych wg Rozp. WE 1/2005. '
+            .'Wybierz typ: T1 (krótkie trasy, do 8h) lub T2 (długie trasy, powyżej 8h) — '
+            .'i wgraj odpowiedni skan.',
+        'type_t1' => 'Typ 1 (transport do 8 godzin)',
+        'type_t2' => 'Typ 2 (transport powyżej 8 godzin)',
+    ],
+
     'documents' => [
         'file_hint' => 'PDF, JPG lub PNG. Max 5 MB.',
         'anonymized_heading' => 'Dokumenty są tylko dla weryfikacji',
@@ -84,6 +93,7 @@ return [
         'tax_id_format' => 'NIP musi mieć 10 cyfr (bez kresek i spacji).',
         'regon_format' => 'REGON musi mieć 9 lub 14 cyfr.',
         'terms' => 'Musisz zaakceptować regulamin żeby kontynuować.',
+        'pwl_authorization_type_required' => 'Wybierz typ zezwolenia PWL (T1 lub T2).',
         'provisioning_failed' => 'Niestety nie udało się utworzyć konta — spróbuj ponownie '
             .'za chwilę. Jeśli problem się powtarza, napisz do office@hovera.app.',
     ],
