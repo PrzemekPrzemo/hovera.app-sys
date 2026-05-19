@@ -55,25 +55,25 @@ return [
 
         // Legacy — veraltet, im neuen UI ausgeblendet, aus Rückwärtskompatibilität erhalten.
         'animal_transport_cert' => 'Tiertransport-Zertifikat (legacy)',
-        'animal_transport_cert_description' => 'Altes EU-VO 1/2005 — ersetzt durch das PWL-Zulassungszertifikat des Transportmittels.',
+        'animal_transport_cert_description' => 'Altes EU-VO 1/2005 — ersetzt durch das PLW-Zulassungszertifikat des Transportmittels.',
         'insurance_ocp' => 'Frachtführer-Haftpflicht (legacy)',
-        'insurance_ocp_description' => 'Ersetzt durch den neuen Eintrag „Frachtführer-Haftpflicht" in der PWL-Liste.',
+        'insurance_ocp_description' => 'Ersetzt durch den neuen Eintrag „Frachtführer-Haftpflicht" in der PLW-Liste.',
         'insurance_ocs' => 'Transportversicherung (Ladung)',
         'insurance_ocs_description' => 'Versicherung gegen Schäden am transportierten Tier. Optional, aber empfohlen.',
         'vehicle_registration' => 'Fahrzeugschein (legacy)',
-        'vehicle_registration_description' => 'Ersetzt durch das PWL-Zulassungszertifikat des Transportmittels.',
+        'vehicle_registration_description' => 'Ersetzt durch das PLW-Zulassungszertifikat des Transportmittels.',
 
-        // PWL — polnisches Regime für innergemeinschaftliche Lebendtiertransporte.
+        // PLW — polnisches Regime für innergemeinschaftliche Lebendtiertransporte.
         // @todo native review — DE-Übersetzung der polnischen Regulierungstexte.
         'road_carrier_license' => 'Genehmigung zur Ausübung des Berufs Kraftverkehrsunternehmer',
         'road_carrier_license_description' => 'Ausgestellt von GITD oder Starosta gemäß EU-VO 1071/2009 + polnischem Straßentransportgesetz von 2001.',
-        'pwl_authorization_type1' => 'PWL-Frachtführergenehmigung — Typ 1 (< 8h)',
+        'pwl_authorization_type1' => 'PLW-Frachtführergenehmigung — Typ 1 (< 8h)',
         'pwl_authorization_type1_description' => 'Genehmigung des PIW (Veterinäramt) für Transporte bis 8 Stunden. Typ 1 wählen, falls nur Kurztransporte.',
-        'pwl_authorization_type2' => 'PWL-Frachtführergenehmigung — Typ 2 (> 8h)',
+        'pwl_authorization_type2' => 'PLW-Frachtführergenehmigung — Typ 2 (> 8h)',
         'pwl_authorization_type2_description' => 'PIW-Genehmigung für Langtransporte über 8 Stunden. Deckt auch Typ-1-Anwendungen ab.',
-        'pwl_driver_handler_certificate' => 'PWL-Kompetenznachweis für Fahrer und Tierbetreuer',
+        'pwl_driver_handler_certificate' => 'PLW-Kompetenznachweis für Fahrer und Tierbetreuer',
         'pwl_driver_handler_certificate_description' => 'Artikel 6 EU-VO 1/2005 — Kompetenznachweis für Fahrer und Tierbetreuer. Bitte alle Teammitglieder hochladen.',
-        'pwl_vehicle_approval_certificate' => 'PWL-Zulassungszertifikat des Transportmittels',
+        'pwl_vehicle_approval_certificate' => 'PLW-Zulassungszertifikat des Transportmittels',
         'pwl_vehicle_approval_certificate_description' => 'EU-VO 1/2005 Art. 18 (< 8h) oder Art. 19 (> 8h). Pflicht für jedes Pferdetransportfahrzeug.',
         'wash_disinfection_log' => 'Wasch- und Desinfektionsbuch des Transportmittels',
         'wash_disinfection_log_description' => 'Pflicht laut polnischem Tiergesundheitsschutzgesetz von 2004. Aktuelle Einträge der letzten 12 Monate hochladen.',

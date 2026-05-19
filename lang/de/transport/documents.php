@@ -52,9 +52,9 @@ return [
     ],
 
     'section' => [
-        'pwl_required' => 'PWL-Dokumente (pflicht für Verifizierung)',
+        'pwl_required' => 'PLW-Dokumente (pflicht für Verifizierung)',
         'pwl_optional' => 'Optionale Dokumente',
-        'legacy' => 'Legacy-Dokumente (zählen nicht für PWL)',
+        'legacy' => 'Legacy-Dokumente (zählen nicht für PLW)',
     ],
 
     'helper' => [
@@ -64,11 +64,11 @@ return [
     ],
 
     'checklist' => [
-        'heading' => 'PWL-Dokumenten-Checkliste',
+        'heading' => 'PLW-Dokumenten-Checkliste',
         'progress' => ':done von :total Dokumenten verifiziert',
         'missing_intro' => 'Fehlt:',
         'all_complete' => 'Alle Pflichtdokumente verifiziert.',
-        'pwl_authorization_alternative' => 'PWL-Genehmigung (Typ 1 ODER Typ 2)',
+        'pwl_authorization_alternative' => 'PLW-Genehmigung (Typ 1 ODER Typ 2)',
     ],
 
     'admin' => [
@@ -78,7 +78,7 @@ return [
         'rejection_reason_required' => 'Ablehnungsgrund (für Transporteur sichtbar)',
         'notify_doc_verified' => 'Dokument freigegeben',
         'notify_doc_rejected' => 'Dokument abgelehnt',
-        'cannot_verify_tenant' => 'Bitte zuerst alle PWL-Pflichtdokumente verifizieren (:done/:total). Siehe Checkliste unten.',
+        'cannot_verify_tenant' => 'Bitte zuerst alle PLW-Pflichtdokumente verifizieren (:done/:total). Siehe Checkliste unten.',
     ],
 
     'expiry_notify' => [

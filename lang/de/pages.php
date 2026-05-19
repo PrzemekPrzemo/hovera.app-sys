@@ -76,7 +76,7 @@ return [
             'client' => 'Stallkunde',
             'client_desc' => 'Portal: Buchungen, Karten, mein Pferd.',
             'transporter' => 'Transportunternehmen',
-            'transporter_desc' => 'Fahrzeuge, Fahrer, Leads, Angebote, PWL-Dokumente.',
+            'transporter_desc' => 'Fahrzeuge, Fahrer, Leads, Angebote, PLW-Dokumente.',
         ],
         'legal' => [
             'open_in_new_tab' => 'Öffentliche Version öffnen',

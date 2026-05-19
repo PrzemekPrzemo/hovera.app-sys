@@ -19,7 +19,7 @@ return [
     'perks' => [
         'title' => 'Ce que vous obtenez',
         'item_1' => 'Profil public sur app.hovera.app/t/{slug} indexé par Google',
-        'item_2' => 'Demandes directes + diffusion dans toute la Pologne (PWL)',
+        'item_2' => 'Demandes directes + diffusion dans toute la Pologne (PLW)',
         'item_3' => 'Calculateur de devis + PDF automatique + paiement en ligne',
         'item_4' => 'Premier mois gratuit à partir de la vérification',
     ],
@@ -44,10 +44,10 @@ return [
         'owner_email_hint' => 'Nous enverrons un lien magique après vérification.',
         'owner_phone' => 'Téléphone de contact',
     ],
-    'documents_disclaimer' => 'Nous exigeons 6 documents conformément à la loi PWL et aux règlements hovera. '
+    'documents_disclaimer' => 'Nous exigeons 6 documents conformément à la loi PLW et aux règlements hovera. '
         .'Formats : PDF, JPG, PNG. Max 5 Mo par fichier.',
     'pwl_authorization' => [
-        'label' => 'Autorisation PWL du transporteur',
+        'label' => 'Autorisation PLW du transporteur',
         'description' => 'Autorisation de transport d\'animaux vivants selon le Règlement CE 1/2005. '
             .'Choisissez le type : T1 (trajets courts, jusqu\'à 8h) ou T2 (trajets longs, plus de 8h) — '
             .'et téléchargez le scan correspondant.',
@@ -79,7 +79,7 @@ return [
         'tax_id_format' => 'Le NIP doit comporter 10 chiffres.',
         'regon_format' => 'Le REGON doit comporter 9 ou 14 chiffres.',
         'terms' => 'Vous devez accepter les CGV.',
-        'pwl_authorization_type_required' => 'Choisissez le type d\'autorisation PWL (T1 ou T2).',
+        'pwl_authorization_type_required' => 'Choisissez le type d\'autorisation PLW (T1 ou T2).',
         'provisioning_failed' => 'Impossible de créer le compte — réessayez dans un instant.',
     ],
     'notify' => ['thanks_silent' => 'Merci — nous examinerons votre demande.'],

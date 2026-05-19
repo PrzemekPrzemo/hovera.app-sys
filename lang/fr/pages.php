@@ -76,7 +76,7 @@ return [
             'client' => 'Client de l’écurie',
             'client_desc' => 'Portail : réservations, cartes, mon cheval.',
             'transporter' => 'Société de transport',
-            'transporter_desc' => 'Véhicules, conducteurs, demandes, devis, documents PWL.',
+            'transporter_desc' => 'Véhicules, conducteurs, demandes, devis, documents PLW.',
         ],
         'legal' => [
             'open_in_new_tab' => 'Ouvrir la version publique',

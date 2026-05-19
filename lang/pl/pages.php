@@ -76,7 +76,7 @@ return [
             'client' => 'Klient stajni',
             'client_desc' => 'Portal: rezerwacje, karnety, mój koń.',
             'transporter' => 'Firma transportowa',
-            'transporter_desc' => 'Pojazdy, kierowcy, leady, oferty, dokumenty PWL.',
+            'transporter_desc' => 'Pojazdy, kierowcy, leady, oferty, dokumenty PLW.',
         ],
         'legal' => [
             'open_in_new_tab' => 'Otwórz wersję publiczną',

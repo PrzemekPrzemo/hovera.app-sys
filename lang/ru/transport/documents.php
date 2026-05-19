@@ -52,9 +52,9 @@ return [
     ],
 
     'section' => [
-        'pwl_required' => 'Документы PWL (обязательны для верификации)',
+        'pwl_required' => 'Документы PLW (обязательны для верификации)',
         'pwl_optional' => 'Опциональные документы',
-        'legacy' => 'Legacy документы (не учитываются для PWL)',
+        'legacy' => 'Legacy документы (не учитываются для PLW)',
     ],
 
     'helper' => [
@@ -64,11 +64,11 @@ return [
     ],
 
     'checklist' => [
-        'heading' => 'Чек-лист обязательных документов PWL',
+        'heading' => 'Чек-лист обязательных документов PLW',
         'progress' => ':done из :total документов верифицированы',
         'missing_intro' => 'Отсутствует:',
         'all_complete' => 'Все обязательные документы верифицированы.',
-        'pwl_authorization_alternative' => 'Авторизация PWL (Тип 1 ИЛИ Тип 2)',
+        'pwl_authorization_alternative' => 'Авторизация PLW (Тип 1 ИЛИ Тип 2)',
     ],
 
     'admin' => [
@@ -78,7 +78,7 @@ return [
         'rejection_reason_required' => 'Причина отклонения (видна перевозчику)',
         'notify_doc_verified' => 'Документ утверждён',
         'notify_doc_rejected' => 'Документ отклонён',
-        'cannot_verify_tenant' => 'Сначала верифицируйте все обязательные документы PWL (:done/:total). См. чек-лист ниже.',
+        'cannot_verify_tenant' => 'Сначала верифицируйте все обязательные документы PLW (:done/:total). См. чек-лист ниже.',
     ],
 
     'expiry_notify' => [
