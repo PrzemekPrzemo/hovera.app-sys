@@ -12,6 +12,9 @@ return [
         'dates' => 'Daty',
         'route' => 'Trasa',
         'notes' => 'Notatki',
+        'correction' => 'Korekta faktury',
+        'correction_help' => 'Wskaż oryginalną fakturę którą koryguje ta KOR. KSeF wymaga reference '
+            .'w XML (`<NrFaKorygowanej>` + `<DataWystFaKorygowanej>`).',
     ],
 
     'form' => [
@@ -21,6 +24,12 @@ return [
             'net_total' => 'Netto',
             'vat_total' => 'VAT',
             'gross_total' => 'Brutto',
+            'corrects_invoice' => 'Faktura korygowana',
+        ],
+        'helper' => [
+            'kind' => 'Wybierz „Korekta" jeśli ta FV koryguje wcześniej wystawioną. '
+                .'Niezmienialne po wystawieniu (zmiana kind po wysyłce do KSeF łamie zgodność).',
+            'corrects_invoice' => 'Numer oryginalnej FV. Pojawia się w XML w bloku `<DaneFaKorygowanej>`.',
         ],
     ],
 

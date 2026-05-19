@@ -69,6 +69,16 @@ class TransportInvoice extends TenantModel
         return $this->belongsTo(Quote::class);
     }
 
+    /**
+     * Faktura korygowana — dla `kind === fv_korekta`. KSeF FA(3) wymaga
+     * reference do oryginalnej FV w `<DaneFaKorygowanej>` block.
+     * Patrz docs/TRANSPORT.md §16.
+     */
+    public function correctsInvoice(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'corrects_invoice_id');
+    }
+
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);

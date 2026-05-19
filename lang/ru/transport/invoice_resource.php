@@ -12,6 +12,8 @@ return [
         'dates' => 'Даты',
         'route' => 'Маршрут',
         'notes' => 'Заметки',
+        'correction' => 'Корректировка счёта',
+        'correction_help' => 'Выберите оригинальный счёт, который исправляет эта KOR.',
     ],
 
     'form' => [
@@ -21,6 +23,11 @@ return [
             'net_total' => 'Без НДС',
             'vat_total' => 'НДС',
             'gross_total' => 'С НДС',
+            'corrects_invoice' => 'Корректируемый счёт',
+        ],
+        'helper' => [
+            'kind' => 'Выберите «Korekta» если этот счёт корректирует ранее выставленный.',
+            'corrects_invoice' => 'Номер оригинального счёта. Появляется в XML в блоке `<DaneFaKorygowanej>`.',
         ],
     ],
 

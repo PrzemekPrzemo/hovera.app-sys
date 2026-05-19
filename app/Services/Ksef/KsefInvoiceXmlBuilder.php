@@ -23,7 +23,7 @@ class KsefInvoiceXmlBuilder
 
     public function build(Invoice $invoice): string
     {
-        $invoice->loadMissing('items');
+        $invoice->loadMissing(['items', 'correctsInvoice']);
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'
             .'<Faktura xmlns="'.self::SCHEMA_NS.'" xmlns:etd="http://crd.gov.pl/xml/schematy/dziedzinowe/mf/2022/01/05/eD/DefinicjeTypy/">'
@@ -125,6 +125,31 @@ class KsefInvoiceXmlBuilder
 
     private function summaryXml(Invoice $invoice): string
     {
+        $kind = (string) ($invoice->kind?->value ?? 'fv');
+        $rodzajFaktury = match ($kind) {
+            'fv_korekta' => 'KOR',
+            'fv_proforma' => 'PRO',
+            default => 'VAT',
+        };
+
+        // FA(3) wymaga `<DaneFaKorygowanej>` w `<Fa>` block gdy
+        // RodzajFaktury=KOR — bez tego XML waliduje się serwerowo z błędem
+        // „missing reference". Patrz docs/TRANSPORT.md §16.
+        $correctionRefXml = '';
+        if ($kind === 'fv_korekta' && $invoice->corrects_invoice_id) {
+            $original = $invoice->correctsInvoice;
+            if ($original !== null) {
+                $origNumber = htmlspecialchars((string) $original->number, ENT_XML1);
+                $origIssued = $original->issued_at?->format('Y-m-d')
+                    ?? $invoice->issued_at?->format('Y-m-d')
+                    ?? date('Y-m-d');
+                $correctionRefXml = '<DaneFaKorygowanej>'
+                    .'<NrFaKorygowanej>'.$origNumber.'</NrFaKorygowanej>'
+                    .'<DataWystFaKorygowanej>'.$origIssued.'</DataWystFaKorygowanej>'
+                    .'</DaneFaKorygowanej>';
+            }
+        }
+
         return '<Fa>'
             .'<KodWaluty>'.htmlspecialchars($invoice->currency ?? 'PLN', ENT_XML1).'</KodWaluty>'
             .'<P_1>'.($invoice->issued_at?->format('Y-m-d') ?? date('Y-m-d')).'</P_1>'      // data wystawienia
@@ -133,6 +158,8 @@ class KsefInvoiceXmlBuilder
             .'<P_13_1>'.$this->cents($invoice->subtotal_cents).'</P_13_1>'  // suma netto 23%
             .'<P_14_1>'.$this->cents($invoice->vat_cents).'</P_14_1>'      // VAT
             .'<P_15>'.$this->cents($invoice->total_cents).'</P_15>'        // suma brutto
+            .'<RodzajFaktury>'.$rodzajFaktury.'</RodzajFaktury>'
+            .$correctionRefXml
             .'</Fa>';
     }
 

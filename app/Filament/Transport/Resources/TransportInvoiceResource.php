@@ -18,6 +18,7 @@ use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -80,10 +81,36 @@ class TransportInvoiceResource extends Resource
                     Forms\Components\TextInput::make('number')->disabled(),
                     Forms\Components\Select::make('kind')
                         ->options(TransportInvoiceKind::options())
-                        ->disabled(),
+                        // Enabled na create (KOR wymagany przy korekcie),
+                        // disabled na edit (zmiana kind po submit do KSeF
+                        // wprowadziłaby niespójność). Patrz docs/TRANSPORT.md §16.
+                        ->disabledOn('edit')
+                        ->required()
+                        ->default(TransportInvoiceKind::Fv->value)
+                        ->live()
+                        ->helperText(__('transport/invoice_resource.form.helper.kind')),
                     Forms\Components\Select::make('status')
                         ->options(TransportInvoiceStatus::options())
                         ->disabled(),
+                ]),
+
+            // Sekcja korekty — wymagana gdy kind=Korekta dla zgodności z FA(3).
+            Forms\Components\Section::make(__('transport/invoice_resource.section.correction'))
+                ->description(__('transport/invoice_resource.section.correction_help'))
+                ->visible(fn (Get $get) => $get('kind') === TransportInvoiceKind::Korekta->value)
+                ->schema([
+                    Forms\Components\Select::make('corrects_invoice_id')
+                        ->label(__('transport/invoice_resource.form.label.corrects_invoice'))
+                        ->helperText(__('transport/invoice_resource.form.helper.corrects_invoice'))
+                        ->options(fn () => TransportInvoice::query()
+                            ->where('kind', TransportInvoiceKind::Fv->value)
+                            ->whereNotIn('status', ['draft', 'cancelled'])
+                            ->orderByDesc('issued_at')
+                            ->limit(200)
+                            ->pluck('number', 'id')
+                            ->all())
+                        ->searchable()
+                        ->required(fn (Get $get) => $get('kind') === TransportInvoiceKind::Korekta->value),
                 ]),
 
             Forms\Components\Section::make(__('transport/invoice_resource.section.parties'))
