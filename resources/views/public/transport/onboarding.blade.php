@@ -9,9 +9,15 @@
     <x-pwa-head />
     <style>
         :root { --primary: #A8956B; --primary-dark: #8F8576; --bg: #F7F4EF; --text: #1F1A17; --danger: #b91c1c; --success: #166534; }
+        /* Tryb jasny only — wymóg user spec (2026-05-19). Brak prefers-color-scheme:dark override. */
         * { box-sizing: border-box; }
-        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+        html, body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); color-scheme: light; }
         body { padding: 2rem 1rem; }
+        .commission-banner { max-width: 760px; margin: 0 auto 1rem; padding: .85rem 1.1rem; background: #ecfdf5; border: 1px solid #86efac; border-radius: 10px; color: var(--success); font-size: .92rem; font-weight: 600; text-align: center; }
+        .promo-callout { background: linear-gradient(135deg, #fff8e1 0%, #fef3c7 100%); border: 2px solid #d4b95c; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; color: #5d4d22; }
+        .promo-callout h3 { margin: 0 0 .5rem; font-size: 1.1rem; color: #3D2E22; }
+        .promo-callout p { margin: 0 0 .5rem; font-size: .92rem; line-height: 1.55; }
+        .promo-callout p:last-child { margin: 0; font-weight: 700; }
         .container { max-width: 760px; margin: 0 auto; }
         .logo { text-align: center; margin-bottom: 1.5rem; font-size: 1.4rem; font-weight: 700; letter-spacing: -.02em; color: #3D2E22; }
         .card { background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 6px 24px rgba(0,0,0,.06); margin-bottom: 1.5rem; }
@@ -55,11 +61,21 @@
 </head>
 <body>
 <div class="container">
+    <div class="commission-banner">
+        {{ __('public/transporter_onboarding.no_commission_banner') }}
+    </div>
+
     <div class="logo">hovera · transport</div>
 
     <div class="card">
         <h1>{{ __('public/transporter_onboarding.heading') }}</h1>
         <p class="subtitle">{{ __('public/transporter_onboarding.subtitle') }}</p>
+
+        <div class="promo-callout">
+            <h3>{{ __('public/transporter_onboarding.promo.heading') }}</h3>
+            <p>{{ __('public/transporter_onboarding.promo.body') }}</p>
+            <p>{{ __('public/transporter_onboarding.promo.body_yearly') }}</p>
+        </div>
 
         <div class="perks">
             <strong>{{ __('public/transporter_onboarding.perks.title') }}</strong>
@@ -159,6 +175,10 @@
             <h2>3. {{ __('public/transporter_onboarding.section.documents') }}</h2>
             <div class="marketplace-disclaimer">
                 {{ __('public/transporter_onboarding.documents_disclaimer') }}
+            </div>
+            <div class="marketplace-disclaimer" style="background:#ecfdf5;border-left-color:#16a34a;color:#166534;margin-top:.75rem;">
+                <strong>🛡️ {{ __('public/transporter_onboarding.documents.anonymized_heading') }}</strong><br>
+                {{ __('public/transporter_onboarding.documents.anonymized_body') }}
             </div>
             <div class="form-grid" style="grid-template-columns: 1fr;">
                 @foreach ($requiredDocuments as $inputName => $type)

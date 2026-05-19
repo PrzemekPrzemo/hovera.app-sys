@@ -48,6 +48,7 @@ return [
         'name_stable' => 'Nazwa stajni',
         'name_transporter' => 'Nazwa firmy',
         'slug' => 'Adres URL stajni',
+        'slug_transporter' => 'Adres URL firmy transportowej',
         'owner_name' => 'Twoje imię i nazwisko',
         'owner_email' => 'E-mail',
         'terms' => 'Akceptuję <a href="/regulamin" target="_blank">regulamin</a> i <a href="/polityka-prywatnosci" target="_blank">politykę prywatności</a>',
@@ -64,6 +65,7 @@ return [
     'helper' => [
         'name' => 'Tak będzie wyświetlane w panelu i na publicznej stronie.',
         'slug' => 'Same małe litery, cyfry i myślniki. Min. 3 znaki.',
+        'slug_transporter' => 'Same małe litery, cyfry i myślniki. Min. 3 znaki. Profil firmy będzie pod tym adresem w marketplace.',
         'owner_email' => 'Tu wyślemy link do ustawienia hasła.',
     ],
 

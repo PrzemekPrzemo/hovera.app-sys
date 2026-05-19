@@ -80,6 +80,10 @@ class TransporterOnboardingTest extends TestCase
         $response->assertOk();
         $response->assertSee('doc_road_carrier_license', false);
         $response->assertSee('doc_pwl_t1', false);
+        $response->assertSee('doc_pwl_t2', false);
+        $response->assertSee('doc_pwl_driver_handler', false);
+        $response->assertSee('doc_pwl_vehicle_approval', false);
+        $response->assertSee('doc_wash_disinfection', false);
         $response->assertSee('doc_carrier_liability', false);
     }
 
@@ -209,6 +213,7 @@ class TransporterOnboardingTest extends TestCase
             'doc_pwl_t2' => UploadedFile::fake()->create('pwl_t2.pdf', 100, 'application/pdf'),
             'doc_pwl_driver_handler' => UploadedFile::fake()->create('driver.pdf', 100, 'application/pdf'),
             'doc_pwl_vehicle_approval' => UploadedFile::fake()->create('vehicle.pdf', 100, 'application/pdf'),
+            'doc_wash_disinfection' => UploadedFile::fake()->create('wash.pdf', 100, 'application/pdf'),
             'doc_carrier_liability' => UploadedFile::fake()->create('oc.pdf', 100, 'application/pdf'),
         ];
     }

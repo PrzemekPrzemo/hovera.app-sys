@@ -78,17 +78,9 @@
         .footer-strip { text-align: center; padding: 1.5rem 1.25rem; color: var(--muted); font-size: .85rem; background: var(--bg); }
         .footer-strip a { color: var(--primary); text-decoration: none; font-weight: 600; }
         .footer-strip a:hover { text-decoration: underline; }
-        @media (prefers-color-scheme: dark) {
-            html, body { background: #1F1A17; color: #F7F4EF; }
-            .card, .cta-section, .empty { background: #2a221c; color: #E9E2D3; }
-            .card h3, .cta-section h2, .empty h2 { color: #E9E2D3; }
-            .filters { background: #1F1A17; border-color: #4a3d31; }
-            .filters input, .filters select { background: #2a221c; border-color: #4a3d31; color: #F7F4EF; }
-            .pagination-wrap a { background: #2a221c; border-color: #4a3d31; color: #E9E2D3; }
-            .footer-strip { background: #1F1A17; }
-            .footer-strip, .footer-strip a { color: #C8B8A4; }
-            .footer-strip a { color: var(--primary); }
-        }
+        /* Light mode only — wymóg user spec (2026-05-19). Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
+        .commission-banner { background: #ecfdf5; border-bottom: 1px solid #86efac; padding: .65rem 1.25rem; text-align: center; color: #166534; font-size: .9rem; font-weight: 600; }
         @media (max-width: 600px) {
             .hero { padding: 2rem 1rem 1.5rem; }
             .hero h1 { font-size: 1.5rem; }
@@ -106,11 +98,18 @@
     </style>
 </head>
 <body>
+    <div class="commission-banner">
+        {{ __('public/transporter_directory.no_commission_banner') }}
+    </div>
+
     <section class="hero">
         <div class="hero-inner">
             <h1>{{ __('public/transporter_directory.hero_title') }}</h1>
             <p class="subtitle">
-                {{ __('public/transporter_directory.hero_subtitle', ['count' => $totalVerifiedCount]) }}
+                {{-- Ukrywamy count podczas zbierania bazy (decyzja user 2026-05-19).
+                     Po N>=10 zweryfikowanych firm odkomentować linię niżej i usunąć alternative_subtitle. --}}
+                {{-- {{ __('public/transporter_directory.hero_subtitle', ['count' => $totalVerifiedCount]) }} --}}
+                {{ __('public/transporter_directory.hero_subtitle_collecting') }}
             </p>
             <a href="{{ url('/przewoznicy/dolacz') }}" class="hero-cta">
                 {{ __('public/transporter_directory.hero_cta_join') }} →

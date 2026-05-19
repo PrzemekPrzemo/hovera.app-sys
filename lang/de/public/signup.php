@@ -48,6 +48,7 @@ return [
         'name_stable' => 'Reitstall-Name',
         'name_transporter' => 'Firmenname',
         'slug' => 'URL des Reitstalls',
+        'slug_transporter' => 'URL des Transportunternehmens',
         'owner_name' => 'Ihr Vor- und Nachname',
         'owner_email' => 'E-Mail',
         'terms' => 'Ich akzeptiere die <a href="/regulamin" target="_blank">AGB</a> und die <a href="/polityka-prywatnosci" target="_blank">Datenschutzerklärung</a>',
@@ -62,6 +63,7 @@ return [
     'helper' => [
         'name' => 'So wird es im Panel und auf der öffentlichen Seite angezeigt.',
         'slug' => 'Nur Kleinbuchstaben, Ziffern und Bindestriche. Min. 3 Zeichen.',
+        'slug_transporter' => 'Nur Kleinbuchstaben, Ziffern und Bindestriche. Min. 3 Zeichen. Ihr Marketplace-Profil wird unter dieser Adresse verfügbar sein.',
         'owner_email' => 'Hierhin senden wir den Link zur Passwortvergabe.',
     ],
 

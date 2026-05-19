@@ -28,6 +28,8 @@ return [
     'empty_state_transporter_hint' => 'Run a transport company? Join the directory:',
     'empty_state_transporter_cta' => 'Register your company',
     'hero_cta_join' => 'Are you a carrier? Join the directory',
+    'hero_subtitle_collecting' => 'We are building a directory of verified horse transport companies — join as one of the first.',
+    'no_commission_banner' => 'hovera.app charges no commission from carriers or customers — just a monthly subscription.',
     'card_voiv_more_tooltip' => 'Covers more voivodeships — see profile',
 
     'card_view_profile' => 'View profile',

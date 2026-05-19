@@ -7,6 +7,14 @@ return [
     'heading' => 'Werden Sie hovera-Transportunternehmen',
     'subtitle' => 'Marketplace für Pferdetransport — füllen Sie Ihr Profil in 10 Minuten aus, laden Sie Dokumente hoch '
         .'und wir verifizieren das Konto in 2-3 Werktagen.',
+    'no_commission_banner' => 'hovera.app erhebt keine Provision von Spediteuren oder Kunden — nur ein monatliches Abo.',
+    'promo' => [
+        'heading' => '🎁 Aktion bis Ende Juli 2026',
+        'body' => 'Volle Funktionalität. Keine Karte. Keine automatische Umwandlung in zahlungspflichtig — '
+            .'wählen Sie einen Tarif erst, wenn Sie bleiben möchten.',
+        'body_yearly' => 'Registrierung bis Ende Juli 2026 gewährt 30 Tage gratis, '
+            .'und der Jahrespreis entspricht 10 × Monatspreis (2 Monate gratis). Zeitlich begrenztes Angebot.',
+    ],
     'perks' => [
         'title' => 'Was Sie erhalten',
         'item_1' => 'Öffentliches Profil unter app.hovera.app/t/{slug} (Google-indiziert)',
@@ -37,7 +45,13 @@ return [
     ],
     'documents_disclaimer' => 'Wir benötigen 6 Dokumente gemäß PWL-Gesetz und hovera-Regulierungen. '
         .'Formate: PDF, JPG, PNG. Max 5 MB pro Datei.',
-    'documents' => ['file_hint' => 'PDF, JPG oder PNG. Max 5 MB.'],
+    'documents' => [
+        'file_hint' => 'PDF, JPG oder PNG. Max 5 MB.',
+        'anonymized_heading' => 'Dokumente nur zur Verifizierung',
+        'anonymized_body' => 'Nach erfolgreicher Verifizierung durch das Hovera-Team zeigen wir Kunden Dokumente NUR '
+            .'in anonymisierter Form (ohne Seriennummern, Ablaufdaten, persönliche Daten). '
+            .'Öffentlich sichtbar ist NUR: „✓ Vom Hovera-Team verifiziert".',
+    ],
     'terms' => [
         'marketplace_position' => 'Hovera ist eine Marketplace-Plattform für Transportunternehmen. '
             .'Wir sind kein Spediteur und nicht Vertragspartei. Der Transportvertrag wird direkt zwischen '

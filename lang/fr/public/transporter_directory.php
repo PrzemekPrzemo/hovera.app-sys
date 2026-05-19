@@ -28,6 +28,8 @@ return [
     'empty_state_transporter_hint' => 'Vous dirigez une société de transport ? Rejoignez l\'annuaire :',
     'empty_state_transporter_cta' => 'Inscrire l\'entreprise',
     'hero_cta_join' => 'Vous êtes transporteur ? Rejoignez l\'annuaire',
+    'hero_subtitle_collecting' => 'Nous construisons un annuaire de transporteurs équins vérifiés — rejoignez-nous parmi les premiers.',
+    'no_commission_banner' => 'hovera.app ne perçoit aucune commission ni des transporteurs ni des clients — uniquement un abonnement mensuel.',
     'card_voiv_more_tooltip' => 'Couvre d\'autres voïvodies — voir le profil',
 
     'card_view_profile' => 'Voir le profil',

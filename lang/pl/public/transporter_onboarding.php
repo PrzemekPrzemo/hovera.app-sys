@@ -8,6 +8,18 @@ return [
     'subtitle' => 'Marketplace transportu koni — zapełnij profil w 10 minut, wgraj dokumenty, '
         .'a my zweryfikujemy konto w 2-3 dni robocze. Klienci znajdą Ciebie w katalogu /przewoznicy.',
 
+    'no_commission_banner' => 'hovera.app nie pobiera prowizji od przewoźników ani od zamawiających — '
+        .'tylko subskrypcja miesięczna.',
+
+    'promo' => [
+        'heading' => '🎁 Promocja do końca lipca 2026',
+        'body' => 'Pełna funkcjonalność. Bez karty. Bez automatycznej zamiany na płatny — '
+            .'wybierzesz plan dopiero gdy będziesz pewny że chcesz zostać.',
+        'body_yearly' => 'Rejestracja do końca lipca 2026 daje 30 dni za darmo, '
+            .'a opłata roczna to 10 × stawka miesięczna (2 miesiące gratis). '
+            .'Oferta limitowana czasowo.',
+    ],
+
     'perks' => [
         'title' => 'Co dostajesz?',
         'item_1' => 'Publiczny profil pod app.hovera.app/t/{slug} indeksowany przez Google',
@@ -45,6 +57,10 @@ return [
 
     'documents' => [
         'file_hint' => 'PDF, JPG lub PNG. Max 5 MB.',
+        'anonymized_heading' => 'Dokumenty są tylko dla weryfikacji',
+        'anonymized_body' => 'Po pozytywnej weryfikacji przez zespół Hovera, dokumenty pokazujemy klientom WYŁĄCZNIE '
+            .'w formie zanonimizowanej (bez numerów seryjnych, dat ważności, danych osobowych). '
+            .'Publicznie widoczna jest TYLKO informacja: „✓ Pozytywnie zweryfikowany przez zespół Hovera".',
     ],
 
     'terms' => [
