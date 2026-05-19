@@ -23,7 +23,12 @@ return [
     'clear_filters' => 'Clear filters',
 
     'empty_state_title' => 'No transporters match the criteria.',
+    'empty_state_subtitle' => 'Try widening filters or checking neighboring voivodeships.',
     'empty_state_action' => 'Show all',
+    'empty_state_transporter_hint' => 'Run a transport company? Join the directory:',
+    'empty_state_transporter_cta' => 'Register your company',
+    'hero_cta_join' => 'Are you a carrier? Join the directory',
+    'card_voiv_more_tooltip' => 'Covers more voivodeships — see profile',
 
     'card_view_profile' => 'View profile',
     'featured_badge' => 'Featured',
