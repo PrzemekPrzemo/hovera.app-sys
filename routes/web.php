@@ -613,11 +613,26 @@ Route::middleware(['web'])
  * Portal klienta dla pojedynczego leada — permanent slug (UUID) z maila
  * wysyłanego po submit'cie /transport/zapytanie. Klient widzi swoje
  * zapytanie + napływające oferty. Patrz TransportLeadPortalController.
+ *
+ * Opt-in account creation: /signup form z polem hasła, submit tworzy central
+ * User, backfill'uje originator_user_id na wszystkich leadach tego maila,
+ * auto-login, redirect na /transport/moje-zapytania (historia).
  */
 Route::middleware(['web'])
-    ->get('/transport/zapytanie/portal/{slug}', [TransportLeadPortalController::class, 'show'])
-    ->where('slug', '[0-9a-fA-F-]{36}')
-    ->name('public.transport.lead_portal');
+    ->where(['slug' => '[0-9a-fA-F-]{36}'])
+    ->group(function () {
+        Route::get('/transport/zapytanie/portal/{slug}', [TransportLeadPortalController::class, 'show'])
+            ->name('public.transport.lead_portal');
+        Route::get('/transport/zapytanie/portal/{slug}/signup', [TransportLeadPortalController::class, 'signupForm'])
+            ->name('public.transport.lead_portal.signup');
+        Route::post('/transport/zapytanie/portal/{slug}/signup', [TransportLeadPortalController::class, 'signupSubmit'])
+            ->middleware('throttle:5,60')
+            ->name('public.transport.lead_portal.signup.submit');
+    });
+
+Route::middleware(['web', 'auth'])
+    ->get('/transport/moje-zapytania', [TransportLeadPortalController::class, 'myInquiries'])
+    ->name('public.transport.my_inquiries');
 
 /*
  * Publiczny formularz recenzji marketplace'u — magic link bez autoryzacji.
