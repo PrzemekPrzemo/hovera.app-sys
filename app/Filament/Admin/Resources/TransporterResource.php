@@ -7,6 +7,7 @@ namespace App\Filament\Admin\Resources;
 use App\Actions\Impersonation\StartImpersonation;
 use App\Domain\Transport\Notifications\TransporterRejectedNotification;
 use App\Domain\Transport\Notifications\TransporterVerifiedNotification;
+use App\Domain\Transport\Payments\Stripe\TransporterStripeConnectService;
 use App\Domain\Transport\Verification\VerificationChecklist;
 use App\Domain\Transport\Verification\VerificationChecklistService;
 use App\Enums\TenantType;
@@ -167,6 +168,20 @@ class TransporterResource extends Resource
                         'suspended', 'churned' => 'danger',
                         default => 'gray',
                     }),
+                // Stripe Connect Express status — patrz docs/TRANSPORT.md §15.6.
+                // Toggleable, hidden by default (master admin może włączyć
+                // gdy debuguje płatności konkretnego transportera).
+                Tables\Columns\TextColumn::make('stripe_connect_status')
+                    ->label('Stripe Connect')
+                    ->badge()
+                    ->color(fn ($state) => match ((string) $state) {
+                        'enabled' => 'success',
+                        'pending' => 'warning',
+                        'restricted', 'rejected' => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn ($state) => __('transport/stripe_connect.status.'.((string) $state ?: 'none')))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('country')->sortable()->toggleable(),
                 Tables\Columns\TextColumn::make('verified_at')
                     ->label(__('admin/transporter.table.column.verified_at'))
@@ -284,6 +299,32 @@ class TransporterResource extends Resource
                     })
                     ->successRedirectUrl('/transport')
                     ->modalSubmitActionLabel(__('admin/transporter.action.login_as_owner.submit')),
+                // Sync Stripe Connect status — przydatne gdy transporter
+                // mówi „dokończyłem KYC, ale Hovera widzi pending" (webhook
+                // mógł się zgubić albo opóźnić). Patrz docs/TRANSPORT.md §15.6.
+                Tables\Actions\Action::make('sync_stripe_connect')
+                    ->label(__('transport/stripe_connect.action.admin_sync'))
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('gray')
+                    ->visible(fn (Tenant $t) => $t->stripe_connect_account_id !== null)
+                    ->action(function (Tenant $record) {
+                        try {
+                            app(TransporterStripeConnectService::class)
+                                ->syncAccountStatus($record);
+                            $record->refresh();
+                            Notification::make()
+                                ->success()
+                                ->title(__('transport/stripe_connect.notify.refreshed'))
+                                ->body((string) $record->stripe_connect_status)
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title(__('transport/stripe_connect.notify.status_sync_failed'))
+                                ->body($e->getMessage())
+                                ->send();
+                        }
+                    }),
                 Tables\Actions\EditAction::make(),
             ]);
     }

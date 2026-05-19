@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Domain\Transport\Payments\Stripe\TransporterStripeConnectService;
 use App\Models\Central\SystemSetting;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\Payment;
@@ -15,6 +16,7 @@ use App\Services\Integrations\LiveJumping\LiveJumpingClient;
 use App\Services\Integrations\LiveJumping\LiveJumpingFeatureGate;
 use App\Services\Integrations\TodoistClient;
 use App\Services\Ksef\CentralKsefService;
+use App\Services\TenantAuditLogger;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,6 +33,21 @@ class AppServiceProvider extends ServiceProvider
                 secret: (string) ($config['secret'] ?? ''),
                 webhookSecret: $config['webhook']['secret'] ?? null,
                 webhookTolerance: (int) ($config['webhook']['tolerance'] ?? 300),
+            );
+        });
+
+        // Stripe Connect Express — per-transporter direct charges (NIE
+        // pomyl z central StripeBillingService — to inny scope: connected
+        // accounts, nie platform account). Patrz docs/TRANSPORT.md §15.6.
+        $this->app->singleton(TransporterStripeConnectService::class, function ($app) {
+            $stripe = $app['config']->get('services.stripe', []);
+            $connect = $stripe['connect'] ?? [];
+
+            return new TransporterStripeConnectService(
+                secret: (string) ($stripe['secret'] ?? ''),
+                country: (string) ($connect['country'] ?? 'PL'),
+                applicationFeePercent: (float) ($connect['application_fee_percent'] ?? 0),
+                audit: $app->make(TenantAuditLogger::class),
             );
         });
 

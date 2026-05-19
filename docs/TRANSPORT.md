@@ -1241,17 +1241,137 @@ nowych planach. **TODO przed produkcją.**
 
 ### 15.5 Co świadomie pominięte (post-MVP)
 
-- **Stripe Connect API** (Express / Standard accounts) — pełna integracja
-  z OAuth flow, encrypted credentials, server-side payment intents.
-- **Webhooki PSP** — auto-mark-as-paid po `payment.succeeded` (zamiast ręcznie).
+- ~~**Stripe Connect API** (Express / Standard accounts) — pełna integracja
+  z OAuth flow, encrypted credentials, server-side payment intents.~~
+  ✅ Zaimplementowane w §15.6.
+- ~~**Webhooki PSP** — auto-mark-as-paid po `payment.succeeded` (zamiast ręcznie).~~
+  ✅ Zaimplementowane w §15.6.
 - **Multi-step payments** — zaliczka + pozostała kwota jako osobne URL'e.
 - **Refundy / dispute handling** — UI dla zwrotów i sporów.
 - **KSeF auto-fakturowanie** po `payment_completed_at` — w połączeniu z
   `IssueTransportInvoiceFromQuote`.
 
-Decyzja: MVP wystarczy do walidacji UX. Pełna integracja Stripe Connect ma sens
-dopiero gdy mamy 10+ aktywnych transporterów wystawiających 100+ ofert/mc —
-inaczej koszt utrzymania webhooków > value.
+---
+
+### 15.6 Stripe Connect Express — direct charge per transporter
+
+Następca §15.2 (manual URL paste). Transporter ma własne Stripe Connect Express
+konto (KYC u Stripe, dane bankowe u Stripe), Hovera = platforma facylitująca
+onboarding + checkout. Pieniądze idą **bezpośrednio** do transportera.
+
+#### Model: direct charge, nie destination charge
+
+Stripe oferuje dwa modele dla platform marketplace:
+
+- **Direct charge** (nasz wybór): PaymentIntent powstaje na koncie transportera
+  (`Stripe-Account: acct_xxx` header). Klient widzi descriptor transportera,
+  pieniądze są na koncie transportera od razu, refundy go obciążają. Hovera
+  opcjonalnie bierze `application_fee_amount` (default 0).
+- ~~Destination charge~~: PaymentIntent na koncie Hovery, automatyczny transfer
+  do transportera. Klient widzi descriptor Hovery — to NIE pasuje do
+  positioning (Hovera = pośrednik, NIE merchant of record).
+
+#### Onboarding flow
+
+```
+Transporter w /transport/settings
+   ↓ klika „Połącz konto Stripe"
+StripeConnectController::onboard
+   ↓ tworzy Account (type=express, country=PL, mcc=4214)
+   ↓ generuje AccountLink (type=account_onboarding)
+   ↓ 302 → Stripe Express dashboard (KYC u Stripe: dokumenty, dane firmy,
+            konto bankowe)
+   ↓ Stripe redirect → /transport/stripe/connect/return
+syncAccountStatus
+   ↓ pull Account → mapAccountStatus → enum (none/pending/enabled/restricted/rejected)
+   ↓ persist tenants.stripe_connect_status + stripe_connect_onboarded_at
+```
+
+Status sync także triggerowany przez:
+- webhook `account.updated` (preferred — real-time)
+- przycisk „Sprawdź status" w UI transportera (fallback gdy webhook się zgubi)
+- akcja `sync_stripe_connect` w master adminie (debugging gdy klient zgłasza
+  rozbieżność)
+
+#### Tworzenie Checkout Session
+
+Po `CreateQuote::afterCreate`, jeśli `tenant->hasStripeConnectEnabled()`:
+
+```php
+$session = $svc->createCheckoutSession(
+    quote: $quote, tenant: $tenant,
+    successUrl: '/transport/quote/{slug}/{token}?paid=1',
+    cancelUrl:  '/transport/quote/{slug}/{token}?cancelled=1',
+);
+$quote->payment_url = $session->url;
+```
+
+Internally: `stripe.checkout.sessions.create(params, ['stripe_account' => $tenant->stripe_connect_account_id])`
+— `Stripe-Account` header sprawia że Session żyje na koncie transportera.
+
+`metadata.tenant_id` + `metadata.quote_id` propagują się do PaymentIntent —
+webhook handler znajduje quote'a po nich.
+
+#### Webhooki (`/webhooks/stripe-connect`)
+
+Endpoint ODDZIELNY od `/webhooks/stripe` (central billing) — w Stripe
+dashboardzie konfigurujemy DWA endpointy z DWOMA signing secrets
+(`STRIPE_WEBHOOK_SECRET` vs `STRIPE_CONNECT_WEBHOOK_SECRET`), żeby
+kompromis jednego nie obalał drugiego.
+
+Obsługiwane eventy:
+
+| Event                            | Akcja                                                                 |
+|----------------------------------|------------------------------------------------------------------------|
+| `account.updated`                | `syncAccountStatus` — refresh tenant'a                                |
+| `checkout.session.completed`     | Find quote po metadata → `payment_completed_at = now()`               |
+| `payment_intent.succeeded`       | Find quote po metadata → `payment_completed_at = now()` (fallback)    |
+| `payment_intent.payment_failed`  | Log warning + opcjonalna notyfikacja                                  |
+
+Dedupe po `event_id` (unique index na `stripe_webhook_events.event_id`).
+Cross-tenant smuggling chroniony przez sanity check
+`event.account == tenant.stripe_connect_account_id` przed markowaniem paid'a.
+
+#### Application fee (commission)
+
+`config('services.stripe.connect.application_fee_percent')` — default `0`.
+Gdy `> 0`, każdy Checkout dolicza `application_fee_amount` (Stripe transferuje
+do konta Hovery automatycznie).
+
+**Default 0 zgodnie z positioning'iem**: Hovera bierze tylko abonament SaaS, nie
+cut z transakcji transportowych. Włączenie wymaga update'u regulaminu marketplace
+§15 i komunikacji do transporterów.
+
+#### Fallback chain
+
+`CreateQuote::afterCreate` próbuje w kolejności:
+
+1. **Stripe Connect** (`hasStripeConnectEnabled()`) → server-side Checkout Session
+2. **PaymentUrlTemplate** (PR #226) → `default_payment_url_template` z `{quote_number}` etc.
+3. **Manual** → transporter wkleja URL ręcznie w form'cie quote'a
+4. **Bank transfer / instructions** → `payment_instructions` (tylko display)
+
+Każdy krok activates tylko gdy poprzedni nie zadziałał. Stripe Connect failure
+(np. API down) loguje warning i schodzi do kroku 2 — nie blokuje create quote'a.
+
+#### Bezpieczeństwo
+
+- **Hovera NIE dotyka PAN/CVV** — Stripe Checkout to hosted page, karta wpisywana
+  u Stripe, nie u nas (PCI scope minimal — `SAQ A`).
+- **Webhook signature verification** — `\Stripe\Webhook::constructEvent` z
+  `STRIPE_CONNECT_WEBHOOK_SECRET`, tolerancja 300s.
+- **Idempotency** — dedupe po `event_id`; duplicate delivery zwraca 200 bez
+  re-processingu.
+- **Cross-tenant guard** — webhook nie oznaczy quote'a paid'em jeśli
+  `event.account ≠ tenant.stripe_connect_account_id`.
+
+#### Master admin overview
+
+`TransporterResource` (panel admina) ma:
+- Toggleable kolumnę `stripe_connect_status` (default hidden) z badge.
+- Akcję „Sprawdź status Stripe" (`sync_stripe_connect`) widoczną gdy
+  `stripe_connect_account_id IS NOT NULL` — przydatne gdy transporter
+  zgłasza „dokończyłem KYC, ale Hovera widzi pending".
 
 ---
 

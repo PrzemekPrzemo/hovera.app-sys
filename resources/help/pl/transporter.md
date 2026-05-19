@@ -173,6 +173,46 @@ otwiera kalkulator z pre-fillowanymi adresami, doklejasz cenę i wysyłasz.
   w XML KSeF jest jedynym śladem naszej obecności (dla audytu MF).
   Numer faktury, NIP wystawcy, treść — wszystko Twoje.
 
+## Stripe Connect — szybka aktywacja online płatności
+
+Jeden klik aktywuje przyjmowanie płatności online (karta, BLIK,
+Przelewy24) na każdej Twojej ofercie. Pieniądze trafiają **bezpośrednio
+do Ciebie** (Hovera nie pośredniczy w cash flow).
+
+**Jak aktywować:**
+
+1. Wejdź w `Cennik i stawki` → sekcja **„Stripe Connect Express"**.
+2. Kliknij **„Połącz konto Stripe"** — przekieruje Cię do Stripe.
+3. U Stripe (KYC): podaj NIP, dane firmy, konto bankowe — to Twoja
+   umowa z Stripe, nie z Hovera.
+4. Po zatwierdzeniu (typowo 1–2 dni roboczych Stripe) wracasz do
+   panelu Hovera, status zmienia się na **„Aktywne ✓"**.
+
+**Co zyskujesz:**
+
+- Każda nowa oferta automatycznie dostaje przycisk „Zapłać online"
+  z linkiem do Stripe Checkout (karta / BLIK / Przelewy24).
+- Webhook Stripe automatycznie oznacza zlecenie jako **opłacone** w
+  momencie wpływu płatności — nie musisz klikać ręcznie „Oznacz jako
+  opłacone".
+- Stripe daje Ci dashboard z wypłatami, raportami, refundami.
+
+**Ważne:**
+
+- To **Twoje konto Stripe** — Hovera tylko technicznie umożliwia
+  checkout. Reklamacje, refundy, dyspuy chargeback — załatwiasz
+  bezpośrednio przez Stripe.
+- Stripe pobiera prowizję transakcyjną (~1.4% + 0.25 PLN dla kart EU,
+  ~0.5% dla BLIK/P24) — to standardowa opłata Stripe, identyczna
+  jakbyś otworzył konto Stripe sam. Hovera **nie dolicza** swojej
+  prowizji (chyba że w przyszłości regulamin §15 to zmieni — wtedy
+  poinformujemy mailem z 30-dniowym wyprzedzeniem).
+- Możesz w każdej chwili wyłączyć Stripe w panelu — wrócisz do paste'owania
+  URL'a ręcznie albo dyktowania danych do przelewu.
+
+**Status nie aktualizuje się?** Kliknij „Sprawdź status" — Hovera
+pobierze najnowszy stan z Stripe (czasem webhook się opóźnia).
+
 ## Mini-dashboard
 
 `Pulpit` (główny widok po zalogowaniu) — 4 widgety:

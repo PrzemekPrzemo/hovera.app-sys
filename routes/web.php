@@ -23,6 +23,7 @@ use App\Http\Controllers\Public\PublicSiteController;
 use App\Http\Controllers\Public\QuoteAcceptanceController;
 use App\Http\Controllers\Public\SignupController;
 use App\Http\Controllers\Public\SitemapController;
+use App\Http\Controllers\Public\StripeConnectWebhookController;
 use App\Http\Controllers\Public\StripeWebhookController;
 use App\Http\Controllers\Public\TransporterDirectoryController;
 use App\Http\Controllers\Public\TransporterOgImageController;
@@ -33,6 +34,7 @@ use App\Http\Controllers\Tenant\BillingController;
 use App\Http\Controllers\Tenant\BugReportController;
 use App\Http\Controllers\Tenant\ImportTemplateController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
+use App\Http\Controllers\Transport\StripeConnectController;
 use App\Http\Middleware\InitialiseTenantFromSession;
 use App\Tenancy\TenantManager;
 use Illuminate\Support\Facades\Route;
@@ -227,6 +229,35 @@ Route::middleware(['web', 'auth'])
 Route::post('/webhooks/stripe', StripeWebhookController::class)
     ->middleware(['throttle:60,1'])
     ->name('webhooks.stripe');
+
+/*
+ * Stripe Connect (per-transporter) webhook target. ODDZIELNY od central
+ * /webhooks/stripe — w Stripe dashboardzie konfigurujemy dwa webhook'i
+ * (platform events + connect events) z dwoma osobnymi signing secrets.
+ * Patrz docs/TRANSPORT.md §15.6.
+ */
+Route::post('/webhooks/stripe-connect', StripeConnectWebhookController::class)
+    ->middleware(['throttle:120,1'])
+    ->name('webhooks.stripe_connect');
+
+/*
+ * Stripe Connect Express onboarding (transporter). Patrz docs/TRANSPORT.md §15.6.
+ *   - /onboard   → create account if needed + AccountLink → redirect to Stripe KYC
+ *   - /return    → po finiszu KYC: syncAccountStatus + redirect do /transport/settings
+ *   - /refresh   → manual „Sprawdź status" przycisk
+ *   - /dashboard → Stripe Express dashboard login link
+ *
+ * Wymagane: auth + tenant context + FULL_ADMIN role (sprawdzane w controllerze).
+ */
+Route::middleware(['web', 'auth'])
+    ->prefix('/transport/stripe/connect')
+    ->name('transport.stripe_connect.')
+    ->group(function () {
+        Route::get('/onboard', [StripeConnectController::class, 'onboard'])->name('onboard');
+        Route::get('/return', [StripeConnectController::class, 'return'])->name('return');
+        Route::post('/refresh', [StripeConnectController::class, 'refresh'])->name('refresh');
+        Route::get('/dashboard', [StripeConnectController::class, 'dashboard'])->name('dashboard');
+    });
 
 /*
  * Przelewy24 webhook (CENTRAL hovera billing — NOT per-tenant). CSRF
