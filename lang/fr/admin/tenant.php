@@ -37,6 +37,13 @@ return [
             'type' => 'Détermine le panneau après connexion (Écurie → /app, Transport → /transport) et les plans disponibles. Immuable après création.',
             'plan' => 'Liste des plans filtrée par le type de locataire sélectionné.',
         ],
+        'lookup' => [
+            'action_label' => 'Récupérer depuis GUS/CEIDG/KRS',
+            'invalid_nip' => 'NIP invalide — vérifiez la somme de contrôle.',
+            'not_found' => 'Entreprise introuvable. Vérifiez le NIP ou saisissez les données manuellement.',
+            'success' => 'Données récupérées des registres publics.',
+            'success_sources' => 'Sources : :sources',
+        ],
     ],
 
     'notify' => [

@@ -37,6 +37,13 @@ return [
             'type' => 'Określa panel po zalogowaniu (Stajnia → /app, Transport → /transport) i listę dostępnych planów. Po utworzeniu niezmienialny.',
             'plan' => 'Lista planów filtrowana wybranym typem tenanta.',
         ],
+        'lookup' => [
+            'action_label' => 'Pobierz z GUS/CEIDG/KRS',
+            'invalid_nip' => 'Niepoprawny NIP — sprawdź sumę kontrolną.',
+            'not_found' => 'Nie znaleziono firmy. Sprawdź NIP albo wprowadź dane ręcznie.',
+            'success' => 'Dane pobrane z rejestrów państwowych.',
+            'success_sources' => 'Źródła: :sources',
+        ],
     ],
 
     'notify' => [

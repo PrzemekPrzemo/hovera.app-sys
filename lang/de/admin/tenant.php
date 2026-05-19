@@ -37,6 +37,13 @@ return [
             'type' => 'Bestimmt das Panel nach dem Login (Reitstall → /app, Transport → /transport) und welche Tarife verfügbar sind. Nach Erstellung unveränderlich.',
             'plan' => 'Tarifliste gefiltert nach gewähltem Mandantentyp.',
         ],
+        'lookup' => [
+            'action_label' => 'Aus GUS/CEIDG/KRS abrufen',
+            'invalid_nip' => 'Ungültige NIP — Prüfsumme prüfen.',
+            'not_found' => 'Firma nicht gefunden. NIP prüfen oder Daten manuell eingeben.',
+            'success' => 'Daten aus öffentlichen Registern abgerufen.',
+            'success_sources' => 'Quellen: :sources',
+        ],
     ],
 
     'notify' => [

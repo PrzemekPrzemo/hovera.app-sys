@@ -10,6 +10,9 @@ use App\Enums\TenantType;
 use App\Filament\Admin\Resources\TenantResource\Pages;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
+use App\Services\CompanyLookup\CeidgApiService;
+use App\Services\CompanyLookup\CompanyLookupService;
+use App\Services\CompanyLookup\GusApiService;
 use App\Services\Exports\TenantDataExporter;
 use App\Services\MasterAuditLogger;
 use App\Tenancy\TenantManager;
@@ -82,7 +85,58 @@ class TenantResource extends Resource
                     Forms\Components\TextInput::make('legal_name')->maxLength(255),
                     Forms\Components\TextInput::make('tax_id')
                         ->label(__('admin/tenant.form.label.tax_id'))
-                        ->maxLength(32),
+                        ->maxLength(32)
+                        ->live(onBlur: true)
+                        ->suffixAction(
+                            Forms\Components\Actions\Action::make('lookupCompany')
+                                ->label(__('admin/tenant.form.lookup.action_label'))
+                                ->icon('heroicon-m-magnifying-glass')
+                                ->visible(fn () => app(GusApiService::class)->isConfigured()
+                                    || app(CeidgApiService::class)->isConfigured())
+                                ->action(function (Forms\Get $get, Forms\Set $set) {
+                                    $nip = (string) $get('tax_id');
+                                    if (! CompanyLookupService::isValidNip($nip)) {
+                                        Notification::make()
+                                            ->title(__('admin/tenant.form.lookup.invalid_nip'))
+                                            ->danger()->send();
+
+                                        return;
+                                    }
+
+                                    $data = app(CompanyLookupService::class)->lookupByNip($nip);
+                                    if ($data === null) {
+                                        Notification::make()
+                                            ->title(__('admin/tenant.form.lookup.not_found'))
+                                            ->warning()->send();
+
+                                        return;
+                                    }
+
+                                    if (! empty($data['name'])) {
+                                        $set('name', (string) $data['name']);
+                                        $set('legal_name', (string) $data['name']);
+                                    }
+
+                                    $addressLine = self::composeAddressLine($data);
+                                    if ($addressLine !== '') {
+                                        $set('settings.public_profile.address', $addressLine);
+                                    }
+                                    if (! empty($data['email'])) {
+                                        $set('settings.public_profile.email', (string) $data['email']);
+                                    }
+                                    if (! empty($data['phone'])) {
+                                        $set('settings.public_profile.phone', (string) $data['phone']);
+                                    }
+
+                                    $sources = (array) ($data['sources'] ?? []);
+                                    Notification::make()
+                                        ->title(__('admin/tenant.form.lookup.success'))
+                                        ->body(__('admin/tenant.form.lookup.success_sources', [
+                                            'sources' => implode(', ', array_map('strtoupper', $sources)),
+                                        ]))
+                                        ->success()->send();
+                                }),
+                        ),
                 ]),
 
             Forms\Components\Section::make(__('admin/tenant.form.section.location'))
@@ -550,5 +604,27 @@ class TenantResource extends Resource
             'create' => Pages\CreateTenant::route('/create'),
             'edit' => Pages\EditTenant::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Sklej adres z pól GUS/CEIDG/KRS w jeden czytelny string dla
+     * settings.public_profile.address (Tenant nie ma rozbitych kolumn).
+     *
+     * @param  array<string,mixed>  $data
+     */
+    private static function composeAddressLine(array $data): string
+    {
+        $street = (string) ($data['street'] ?? '');
+        $building = (string) ($data['building'] ?? '');
+        $apartment = (string) ($data['apartment'] ?? '');
+        $postal = (string) ($data['postal_code'] ?? '');
+        $city = (string) ($data['city'] ?? '');
+
+        $streetPart = trim($street.' '.$building.($apartment !== '' ? '/'.$apartment : ''));
+        $cityPart = trim($postal.' '.$city);
+
+        $parts = array_filter([$streetPart, $cityPart], fn (string $p) => $p !== '');
+
+        return implode(', ', $parts);
     }
 }

@@ -37,6 +37,13 @@ return [
             'type' => 'Determines the panel after login (Stable → /app, Transport → /transport) and which plans are available. Immutable after creation.',
             'plan' => 'Plan list filtered by selected tenant type.',
         ],
+        'lookup' => [
+            'action_label' => 'Fetch from GUS/CEIDG/KRS',
+            'invalid_nip' => 'Invalid NIP — check the checksum.',
+            'not_found' => 'Company not found. Verify the NIP or enter data manually.',
+            'success' => 'Data fetched from public registries.',
+            'success_sources' => 'Sources: :sources',
+        ],
     ],
 
     'notify' => [
