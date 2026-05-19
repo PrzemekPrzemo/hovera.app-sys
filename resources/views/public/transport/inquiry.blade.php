@@ -47,6 +47,15 @@
             <h1>{{ __('public/transport_inquiry.heading') }}</h1>
             <div class="subtitle">{{ __('public/transport_inquiry.subtitle') }}</div>
 
+            {{-- Subtle link do katalogu /przewoznicy — alternatywna ścieżka
+                 dla klienta który woli przejrzeć ręcznie zamiast broadcast'u.
+                 Patrz docs/TRANSPORT.md §16. --}}
+            <div style="margin: -0.5rem 0 1rem; font-size: .85rem;">
+                <a href="{{ url('/przewoznicy') }}" style="color: var(--primary); text-decoration: none;">
+                    {{ __('public/transporter_directory.link_browse_directory_from_inquiry') }}
+                </a>
+            </div>
+
             @if (! empty($targetTransporter))
                 <div class="direct-banner">
                     {!! __('public/transport_inquiry.direct_target_banner', ['name' => '<strong>'.e($targetTransporter->name).'</strong>']) !!}

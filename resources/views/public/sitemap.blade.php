@@ -11,6 +11,11 @@
         <priority>0.8</priority>
     </url>
     <url>
+        <loc>{{ url('/przewoznicy') }}</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
         <loc>{{ url('/transport/calculator') }}</loc>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>

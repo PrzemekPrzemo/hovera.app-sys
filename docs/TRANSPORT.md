@@ -1178,6 +1178,49 @@ inaczej koszt utrzymania webhooków > value.
 
 ---
 
-> **Status dokumentu:** v2.1 — odzwierciedla faktyczny stan modułu po PR #211–#228
-> (2026-05-18). Dodano §15 (Płatności direct charge MVP). Aktualizacja: każda zmiana
-> decyzji w §2 lub §12 → wpis w `git log` z prefixem `docs(transport):`.
+## 16. Publiczny katalog przewoźników — `/przewoznicy`
+
+Trzecia ścieżka odkrywania marketplace'u — obok bezpośredniego linku
+`/t/{slug}` (znanego z wcześniejszych kontaktów / wizytówki) i broadcast'u
+`/transport/zapytanie` (formularz dla niezdecydowanych). Katalog zamyka
+discovery gap: dotąd profil zweryfikowanego przewoźnika był osiągalny tylko
+przez bezpośredni URL lub wpis w `/sitemap.xml`.
+
+### 16.1 Listing rules
+
+- Tylko `verification_status = verified` (jak `/t/{slug}`).
+- Tylko `status ∈ {trialing, active, past_due}` — suspended / churned /
+  deleted **niewidoczni** (anty-spam: zawieszony tenant nie powinien linkować
+  klientów do nieaktywnego konta).
+- Soft-deleted (`deleted_at IS NOT NULL`) wykluczeni automatycznie przez
+  `SoftDeletes` w `Tenant`.
+- Stable tenant'y (type=stable) wykluczone z definicji.
+
+### 16.2 Filtry i sort
+
+- **Voivodeship** — single select (16 województw + „wszystkie"). JOIN do
+  `transport_service_areas`, DISTINCT na poziomie `tenant_id`.
+- **Search `q`** — `LOWER(name) LIKE %q%`, case-insensitive, max 80 znaków.
+- **Sort** (domyślnie `rating_desc`):
+  - `rating_desc` — LEFT JOIN subquery z AVG(rating) GROUP BY transporter; bez
+    opinii → COALESCE 0 → na koniec listy. Tie-break: review_count DESC,
+    potem `created_at` DESC (najnowsi nad starymi).
+  - `recent` — `created_at DESC`.
+  - `name` — `name ASC`.
+
+### 16.3 Anti-N+1
+
+Aggregates recenzji dla 20-row strony liczone **w jednym** `GROUP BY` zapytaniu
+(`attachAggregates()`), nie per-row przez `TransportReview::aggregateFor()`.
+Cache `public, max-age=60, s-maxage=300` (jak `/t/{slug}`). Sitemap zawiera
+`/przewoznicy` jako static URL (priority 0.8, changefreq weekly).
+
+Pełen kontrolery: `App\Http\Controllers\Public\TransporterDirectoryController`,
+widok: `resources/views/public/transport/directory.blade.php`, testy:
+`tests/Feature/Transport/Directory/TransporterDirectoryControllerTest.php`.
+
+---
+
+> **Status dokumentu:** v2.2 — odzwierciedla faktyczny stan modułu po PR #211–#228
+> (2026-05-18) + dodanie publicznego katalogu `/przewoznicy` (§16). Aktualizacja:
+> każda zmiana decyzji w §2 lub §12 → wpis w `git log` z prefixem `docs(transport):`.

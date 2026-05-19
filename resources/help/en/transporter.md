@@ -240,6 +240,33 @@ shows the average + last 10 reviews. You can share the profile link
 (Facebook, Google My Business, business cards) — reviews are real and
 non-deletable by the transporter, which adds credibility.
 
+## Public directory `/przewoznicy`
+
+Your profile appears in the verified-transporters directory
+(`/przewoznicy`) **automatically after verification** by the Hovera
+team. No extra action needed — the directory reads the list of
+verified tenants straight from the database.
+
+**Ranking:**
+
+1. **Rating descending** (Reviews — average of published opinions).
+2. Review count (more = more trust at the same average).
+3. **Recency** (`created_at` DESC) — new transporters appear even
+   without reviews.
+
+**What improves visibility:**
+
+- Complete branding (logo + primary color) — the card looks better.
+- Filled `tagline` (1-2 sentences) — appears under the company name.
+- Service-area voivodeships — directory filters surface you to
+  clients searching that region.
+- Active review collection — average + count drive sorting.
+
+**Anti-spam:** a `suspended` tenant disappears from the directory
+immediately (60 s s-maxage cache). Suspended ≠ unverified — your
+verification status is preserved, but the marketplace hides you
+until Hovera lifts the suspension.
+
 ## Support
 
 - **Support email:** `support@hovera.app` (response time: 1 business
