@@ -31,7 +31,8 @@ return [
             'preferred_time' => 'Time',
             'round_trip' => 'Round trip',
             'loaded' => 'Loaded (with horse)',
-            'vehicle' => 'Vehicle',
+            'vehicle' => 'Vehicle (powered)',
+            'trailer' => 'Trailer (optional)',
             'driver' => 'Driver',
             'distance_km' => 'Distance',
             'rate_per_km' => 'Rate',
@@ -54,6 +55,8 @@ return [
             'mark_as_paid_reason' => 'Reason / transaction reference (optional)',
         ],
         'helper' => [
+            'vehicle' => 'Powered vehicle only — trucks. Fuel consumption is calculated from this one.',
+            'trailer' => 'Optional trailer (no engine) attached to the leading vehicle.',
             'terms' => 'Visible to the customer on the quote / PDF.',
             'notes' => 'Team-only notes — not shared with customer.',
             'payment_url' => 'Paste your gateway link (Stripe / Przelewy24 / bank link). Hovera does NOT process payments — the customer pays you directly.',

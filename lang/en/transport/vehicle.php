@@ -12,6 +12,7 @@ return [
 
     'form' => [
         'label' => [
+            'vehicle_type' => 'Vehicle type',
             'name' => 'Vehicle name',
             'registration_plate' => 'Registration plate',
             'year_of_manufacture' => 'Year of manufacture',
@@ -25,6 +26,9 @@ return [
             'sort_order' => 'Sort order',
             'notes' => 'Notes',
         ],
+        'helper' => [
+            'vehicle_type' => 'Trailers have no engine and no fuel consumption — they combine with a powered vehicle (truck) in offers.',
+        ],
         'placeholder' => [
             'name' => 'e.g. Volvo FH16 — big rig',
         ],
@@ -35,6 +39,7 @@ return [
 
     'table' => [
         'column' => [
+            'vehicle_type' => 'Type',
             'name' => 'Name',
             'registration_plate' => 'Plate',
             'capacity_horses' => 'Horses',

@@ -9,6 +9,7 @@ use App\Domain\Transport\Notifications\QuoteSentNotification;
 use App\Domain\Transport\Quotes\QuoteNumberGenerator;
 use App\Domain\Transport\Quotes\QuotePdfGenerator;
 use App\Enums\QuoteStatus;
+use App\Enums\VehicleType;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Filament\Transport\Resources\QuoteResource\Pages;
 use App\Models\Tenant\Driver;
@@ -162,11 +163,23 @@ class QuoteResource extends Resource
                 ]),
 
             Forms\Components\Section::make(__('transport/quote.section.resources'))
-                ->columns(2)
+                ->columns(3)
                 ->schema([
                     Forms\Components\Select::make('vehicle_id')
                         ->label(__('transport/quote.form.label.vehicle'))
-                        ->options(fn () => Vehicle::query()->where('is_active', true)
+                        ->helperText(__('transport/quote.form.helper.vehicle'))
+                        ->options(fn () => Vehicle::query()
+                            ->where('is_active', true)
+                            ->where('vehicle_type', VehicleType::Truck->value)
+                            ->pluck('name', 'id')->all())
+                        ->searchable()
+                        ->native(false),
+                    Forms\Components\Select::make('trailer_id')
+                        ->label(__('transport/quote.form.label.trailer'))
+                        ->helperText(__('transport/quote.form.helper.trailer'))
+                        ->options(fn () => Vehicle::query()
+                            ->where('is_active', true)
+                            ->where('vehicle_type', VehicleType::Trailer->value)
                             ->pluck('name', 'id')->all())
                         ->searchable()
                         ->native(false),

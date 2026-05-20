@@ -12,6 +12,7 @@ return [
 
     'form' => [
         'label' => [
+            'vehicle_type' => 'Тип ТС',
             'name' => 'Название транспорта',
             'registration_plate' => 'Гос. номер',
             'year_of_manufacture' => 'Год выпуска',
@@ -25,6 +26,9 @@ return [
             'sort_order' => 'Порядок',
             'notes' => 'Примечания',
         ],
+        'helper' => [
+            'vehicle_type' => 'У прицепа нет двигателя и расхода топлива — в предложении он комбинируется с ведущим ТС (truck).',
+        ],
         'placeholder' => [
             'name' => 'напр. Volvo FH16 — большой коневоз',
         ],
@@ -35,6 +39,7 @@ return [
 
     'table' => [
         'column' => [
+            'vehicle_type' => 'Тип',
             'name' => 'Название',
             'registration_plate' => 'Номер',
             'capacity_horses' => 'Лош.',

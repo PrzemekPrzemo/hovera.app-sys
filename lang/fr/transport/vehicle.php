@@ -12,6 +12,7 @@ return [
 
     'form' => [
         'label' => [
+            'vehicle_type' => 'Type de véhicule',
             'name' => 'Nom du véhicule',
             'registration_plate' => 'Plaque d’immatriculation',
             'year_of_manufacture' => 'Année de fabrication',
@@ -25,6 +26,9 @@ return [
             'sort_order' => 'Ordre',
             'notes' => 'Notes',
         ],
+        'helper' => [
+            'vehicle_type' => 'Les remorques n’ont ni moteur ni consommation de carburant — elles se combinent avec un véhicule tracteur (truck) dans les offres.',
+        ],
         'placeholder' => [
             'name' => 'p. ex. Volvo FH16 — grand camion',
         ],
@@ -35,6 +39,7 @@ return [
 
     'table' => [
         'column' => [
+            'vehicle_type' => 'Type',
             'name' => 'Nom',
             'registration_plate' => 'Plaque',
             'capacity_horses' => 'Chev.',

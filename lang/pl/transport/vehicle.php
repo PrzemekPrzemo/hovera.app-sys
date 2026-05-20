@@ -12,6 +12,7 @@ return [
 
     'form' => [
         'label' => [
+            'vehicle_type' => 'Typ pojazdu',
             'name' => 'Nazwa pojazdu',
             'registration_plate' => 'Numer rejestracyjny',
             'year_of_manufacture' => 'Rok produkcji',
@@ -25,6 +26,9 @@ return [
             'sort_order' => 'Kolejność',
             'notes' => 'Notatki',
         ],
+        'helper' => [
+            'vehicle_type' => 'Przyczepa nie ma silnika ani spalania — w ofercie kombinuje się z pojazdem prowadzącym (truck).',
+        ],
         'placeholder' => [
             'name' => 'np. Volvo FH16 — wóz duży',
         ],
@@ -35,6 +39,7 @@ return [
 
     'table' => [
         'column' => [
+            'vehicle_type' => 'Typ',
             'name' => 'Nazwa',
             'registration_plate' => 'Nr rej.',
             'capacity_horses' => 'Koni',

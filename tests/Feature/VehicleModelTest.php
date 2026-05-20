@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\VehicleType;
 use App\Models\Tenant\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
@@ -107,6 +108,38 @@ class VehicleModelTest extends TestCase
         $this->assertNotNull(Vehicle::withTrashed()->find($vehicle->id));
     }
 
+    public function test_default_vehicle_type_is_truck(): void
+    {
+        $vehicle = Vehicle::create([
+            'name' => 'Default truck',
+            'registration_plate' => 'X',
+            'capacity_horses' => 2,
+        ]);
+
+        $this->assertSame(VehicleType::Truck, $vehicle->refresh()->vehicle_type);
+        $this->assertFalse($vehicle->isTrailer());
+    }
+
+    public function test_trailers_and_trucks_scopes_filter_by_type(): void
+    {
+        Vehicle::create([
+            'name' => 'Volvo FH16',
+            'vehicle_type' => VehicleType::Truck->value,
+            'registration_plate' => 'PL-T1',
+            'capacity_horses' => 4,
+        ]);
+        Vehicle::create([
+            'name' => 'Bockmann Comfort',
+            'vehicle_type' => VehicleType::Trailer->value,
+            'registration_plate' => 'PL-A1',
+            'capacity_horses' => 2,
+        ]);
+
+        $this->assertSame(1, Vehicle::query()->trucks()->count());
+        $this->assertSame(1, Vehicle::query()->trailers()->count());
+        $this->assertTrue(Vehicle::query()->trailers()->first()->isTrailer());
+    }
+
     public function test_filament_route_is_registered(): void
     {
         $routes = collect(app('router')->getRoutes())
@@ -124,6 +157,7 @@ class VehicleModelTest extends TestCase
         Schema::connection('tenant')->create('vehicles', function ($t) {
             $t->string('id', 26)->primary();
             $t->string('name', 120);
+            $t->string('vehicle_type', 16)->default('truck');
             $t->string('registration_plate', 16);
             $t->unsignedTinyInteger('capacity_horses');
             $t->decimal('gross_weight_kg', 8, 0)->nullable();
