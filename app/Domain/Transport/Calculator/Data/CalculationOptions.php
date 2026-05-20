@@ -33,6 +33,13 @@ final readonly class CalculationOptions
         // Marża procentowa do zastosowania na sumę kosztów. null = bierz
         // settings.surcharge_percent_default. Liczona PO minimum_adjustment.
         public ?float $surchargePercent = null,
+        // Waypoints pośrednie między pickup i dropoff. Lista [{lat, lng,
+        // address?}] w kolejności podanej przez user'a. CalculatorService
+        // przepuszcza multi-leg routing przez RoutingService (suma segmentów).
+        // Pusta tablica = direct A → B (default).
+        //
+        // @var list<array{lat: float, lng: float, address?: string}>
+        public array $waypoints = [],
     ) {}
 
     public function resolveMode(): CalculationMode

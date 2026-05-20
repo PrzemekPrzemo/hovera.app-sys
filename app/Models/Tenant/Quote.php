@@ -7,6 +7,7 @@ namespace App\Models\Tenant;
 use App\Enums\CalculationMode;
 use App\Enums\QuoteStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Quote extends TenantModel
@@ -108,6 +109,15 @@ class Quote extends TenantModel
     public function driver(): BelongsTo
     {
         return $this->belongsTo(Driver::class);
+    }
+
+    /**
+     * Waypoints w kolejności sort_order. Multi-leg routing
+     * (pickup → wp1 → wp2 → ... → dropoff) — patrz CalculatorService.
+     */
+    public function waypoints(): HasMany
+    {
+        return $this->hasMany(QuoteWaypoint::class)->orderBy('sort_order');
     }
 
     /**
