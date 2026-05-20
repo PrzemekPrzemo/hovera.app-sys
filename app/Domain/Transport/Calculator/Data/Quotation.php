@@ -54,6 +54,11 @@ final readonly class Quotation implements Wireable
         // Marża procentowa + jej kwota (suma kosztów × percent/100).
         public float $surchargePercent = 0.0,
         public float $surchargeAmount = 0.0,
+        // Multi-currency: kurs PLN per 1 jednostka `currency` użyty do
+        // konwersji wszystkich kwot powyżej. 1.0 dla quote'a w PLN
+        // (no-op). Patrz docs/MARKETPLACE-ROADMAP.md "Multi-currency".
+        public float $exchangeRateToPln = 1.0,
+        public ?string $exchangeRateDate = null,
     ) {}
 
     /** @return array<string,mixed> */
@@ -72,6 +77,8 @@ final readonly class Quotation implements Wireable
             'fixed_fees_total' => $this->fixedFeesTotal,
             'surcharge_percent' => $this->surchargePercent,
             'surcharge_amount' => $this->surchargeAmount,
+            'exchange_rate_to_pln' => $this->exchangeRateToPln,
+            'exchange_rate_date' => $this->exchangeRateDate,
             'minimum_adjustment' => $this->minimumAdjustment,
             'net_total' => $this->netTotal,
             'vat_rate' => $this->vatRate,
@@ -99,6 +106,8 @@ final readonly class Quotation implements Wireable
             'fixedFeesTotal' => $this->fixedFeesTotal,
             'surchargePercent' => $this->surchargePercent,
             'surchargeAmount' => $this->surchargeAmount,
+            'exchangeRateToPln' => $this->exchangeRateToPln,
+            'exchangeRateDate' => $this->exchangeRateDate,
             'minimumAdjustment' => $this->minimumAdjustment,
             'netTotal' => $this->netTotal,
             'vatRate' => $this->vatRate,
@@ -134,6 +143,8 @@ final readonly class Quotation implements Wireable
             fixedFeesTotal: (float) ($value['fixedFeesTotal'] ?? 0),
             surchargePercent: (float) ($value['surchargePercent'] ?? 0),
             surchargeAmount: (float) ($value['surchargeAmount'] ?? 0),
+            exchangeRateToPln: (float) ($value['exchangeRateToPln'] ?? 1.0),
+            exchangeRateDate: isset($value['exchangeRateDate']) ? (string) $value['exchangeRateDate'] : null,
         );
     }
 }

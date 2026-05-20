@@ -330,6 +330,8 @@ class QuoteResource extends Resource
                     Forms\Components\Hidden::make('fixed_fees_snapshot'),
                     Forms\Components\Hidden::make('surcharge_percent_snapshot'),
                     Forms\Components\Hidden::make('surcharge_amount_snapshot'),
+                    Forms\Components\Hidden::make('exchange_rate_to_pln'),
+                    Forms\Components\Hidden::make('exchange_rate_date'),
                     Forms\Components\Hidden::make('minimum_adjustment')->default(0),
                     Forms\Components\Hidden::make('vat_amount')->default(0),
                     Forms\Components\Hidden::make('duration_seconds')->default(0),

@@ -395,6 +395,8 @@ class Calculator extends Page implements HasForms
             'fixed_fees_snapshot' => $q->fixedFees,
             'surcharge_percent_snapshot' => $q->surchargePercent,
             'surcharge_amount_snapshot' => $q->surchargeAmount,
+            'exchange_rate_to_pln' => $q->exchangeRateToPln,
+            'exchange_rate_date' => $q->exchangeRateDate,
             'minimum_adjustment' => $q->minimumAdjustment,
             'net_total' => $q->netTotal,
             'vat_rate' => $q->vatRate,

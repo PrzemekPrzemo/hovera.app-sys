@@ -6,6 +6,7 @@ namespace App\Domain\Transport\Calculator;
 
 use App\Domain\Transport\Calculator\Data\CalculationOptions;
 use App\Domain\Transport\Calculator\Data\Quotation;
+use App\Domain\Transport\Currency\NbpExchangeRateService;
 use App\Domain\Transport\Fuel\FuelPriceService;
 use App\Domain\Transport\Routing\Data\Coords;
 use App\Domain\Transport\Routing\Data\RouteOptions;
@@ -35,6 +36,7 @@ class CalculatorService
     public function __construct(
         private readonly RoutingService $routing,
         private readonly FuelPriceService $fuel,
+        private readonly NbpExchangeRateService $exchange,
     ) {}
 
     public function calculate(
@@ -149,6 +151,41 @@ class CalculatorService
         $vatAmount = round($netTotal * ($vatRate / 100), 2);
         $grossTotal = round($netTotal + $vatAmount, 2);
 
+        // Multi-currency: wszystkie powyższe wartości zostały policzone w
+        // PLN (rate_per_km, fuel_base_price_pln, extra_horse_fee są w PLN
+        // domain). Gdy target currency != PLN, dzielimy przez kurs średni
+        // NBP (PLN → EUR/CZK). Snapshot kursu trafia do Quotation żeby
+        // CreateQuote zapisał go w `exchange_rate_to_pln` / `exchange_rate_date`.
+        //
+        // Patrz docs/MARKETPLACE-ROADMAP.md "Multi-currency z NBP".
+        $targetCurrency = strtoupper((string) $settings->currency);
+        $exchangeRate = 1.0;
+        $exchangeRateDate = null;
+
+        if ($targetCurrency !== 'PLN' && $targetCurrency !== '') {
+            $snapshot = $this->exchange->currentRateWithDate($targetCurrency);
+            $exchangeRate = $snapshot['rate'];
+            $exchangeRateDate = $snapshot['date'];
+
+            if ($exchangeRate > 0 && $exchangeRate !== 1.0) {
+                $baseCost = round($baseCost / $exchangeRate, 2);
+                $fuelSurcharge = round($fuelSurcharge / $exchangeRate, 2);
+                $extraHorseFeeTotal = round($extraHorseFeeTotal / $exchangeRate, 2);
+                $extraHorseFeePerHead = round($extraHorseFeePerHead / $exchangeRate, 2);
+                $fixedFeesTotal = round($fixedFeesTotal / $exchangeRate, 2);
+                $fixedFees = array_map(static fn (array $f) => [
+                    'name' => $f['name'],
+                    'amount' => round($f['amount'] / $exchangeRate, 2),
+                ], $fixedFees);
+                $minimumAdjustment = round($minimumAdjustment / $exchangeRate, 2);
+                $surchargeAmount = round($surchargeAmount / $exchangeRate, 2);
+                $netTotal = round($netTotal / $exchangeRate, 2);
+                $vatAmount = round($vatAmount / $exchangeRate, 2);
+                $grossTotal = round($grossTotal / $exchangeRate, 2);
+                $rateUsed = round($rateUsed / $exchangeRate, 4);
+            }
+        }
+
         return new Quotation(
             distanceKm: round($distanceKm, 2),
             durationSeconds: $route->durationSeconds,
@@ -160,7 +197,7 @@ class CalculatorService
             vatRate: $vatRate,
             vatAmount: $vatAmount,
             grossTotal: $grossTotal,
-            currency: (string) $settings->currency,
+            currency: $targetCurrency !== '' ? $targetCurrency : 'PLN',
             routingProvider: $route->providerId,
             polyline: $route->polyline,
             extraHorseFeeTotal: $extraHorseFeeTotal,
@@ -170,6 +207,8 @@ class CalculatorService
             fixedFeesTotal: $fixedFeesTotal,
             surchargePercent: $surchargePercent,
             surchargeAmount: $surchargeAmount,
+            exchangeRateToPln: $exchangeRate,
+            exchangeRateDate: $exchangeRateDate,
         );
     }
 

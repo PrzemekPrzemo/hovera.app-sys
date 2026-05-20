@@ -259,6 +259,8 @@ class QuoteSendVerificationGateTest extends TestCase
             $t->decimal('vat_amount', 10, 2);
             $t->decimal('gross_total', 10, 2);
             $t->string('currency', 3)->default('PLN');
+            $t->decimal('exchange_rate_to_pln', 10, 4)->nullable();
+            $t->date('exchange_rate_date')->nullable();
             $t->text('terms')->nullable();
             $t->text('notes')->nullable();
             $t->date('valid_until')->nullable();
