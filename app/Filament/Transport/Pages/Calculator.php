@@ -86,6 +86,8 @@ class Calculator extends Page implements HasForms
         'avoid_ferries' => false,
         'profile' => 'truck',
         'horses_count' => 1,
+        'fixed_fees' => [],
+        'surcharge_percent' => null,
     ];
 
     public ?Quotation $quotation = null;
@@ -224,6 +226,40 @@ class Calculator extends Page implements HasForms
                             ->label(__('transport/calculator.form.label.avoid_ferries'))
                             ->inline(false),
                     ]),
+                Forms\Components\Section::make(__('transport/calculator.section.extra_costs'))
+                    ->description(__('transport/calculator.section.extra_costs_description'))
+                    ->collapsed()
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\Repeater::make('fixed_fees')
+                            ->label(__('transport/calculator.form.label.fixed_fees'))
+                            ->helperText(__('transport/calculator.form.helper.fixed_fees'))
+                            ->columnSpanFull()
+                            ->schema([
+                                Forms\Components\TextInput::make('name')
+                                    ->label(__('transport/calculator.form.label.fixed_fees_name'))
+                                    ->required()
+                                    ->maxLength(120),
+                                Forms\Components\TextInput::make('amount')
+                                    ->label(__('transport/calculator.form.label.fixed_fees_amount'))
+                                    ->required()
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->step(0.01),
+                            ])
+                            ->columns(2)
+                            ->reorderable(false)
+                            ->defaultItems(0)
+                            ->addActionLabel(__('transport/calculator.form.action.add_fixed_fee')),
+                        Forms\Components\TextInput::make('surcharge_percent')
+                            ->label(__('transport/calculator.form.label.surcharge_percent'))
+                            ->helperText(__('transport/calculator.form.helper.surcharge_percent'))
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(500)
+                            ->step(0.01)
+                            ->suffix('%'),
+                    ]),
             ]);
     }
 
@@ -278,6 +314,16 @@ class Calculator extends Page implements HasForms
                     mode: $mode,
                     routingProfile: (string) ($form['profile'] ?? 'truck'),
                     horsesCount: max(1, (int) ($form['horses_count'] ?? 1)),
+                    // null = bierz default z settings. Pusta tablica =
+                    // user opt-out (Repeater bez itemów = []). Surcharge:
+                    // null/empty string = settings default, 0 = explicit
+                    // opt-out.
+                    fixedFees: is_array($form['fixed_fees'] ?? null)
+                        ? $form['fixed_fees']
+                        : null,
+                    surchargePercent: isset($form['surcharge_percent']) && $form['surcharge_percent'] !== ''
+                        ? (float) $form['surcharge_percent']
+                        : null,
                 ),
             );
         } catch (RoutingException $e) {
@@ -346,6 +392,9 @@ class Calculator extends Page implements HasForms
             'base_cost' => $q->baseCost,
             'fuel_surcharge' => $q->fuelSurcharge,
             'extra_horse_fee_snapshot' => $q->extraHorseFeePerHead,
+            'fixed_fees_snapshot' => $q->fixedFees,
+            'surcharge_percent_snapshot' => $q->surchargePercent,
+            'surcharge_amount_snapshot' => $q->surchargeAmount,
             'minimum_adjustment' => $q->minimumAdjustment,
             'net_total' => $q->netTotal,
             'vat_rate' => $q->vatRate,

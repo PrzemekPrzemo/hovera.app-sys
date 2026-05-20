@@ -285,6 +285,9 @@ class TransportInvoiceTest extends TestCase
             $t->decimal('base_cost', 10, 2);
             $t->decimal('fuel_surcharge', 10, 2)->default(0);
             $t->decimal('extra_horse_fee_snapshot', 10, 2)->default(0);
+            $t->json('fixed_fees_snapshot')->nullable();
+            $t->decimal('surcharge_percent_snapshot', 5, 2)->nullable();
+            $t->decimal('surcharge_amount_snapshot', 10, 2)->nullable();
             $t->decimal('minimum_adjustment', 10, 2)->default(0);
             $t->decimal('net_total', 10, 2);
             $t->decimal('vat_rate', 4, 2);

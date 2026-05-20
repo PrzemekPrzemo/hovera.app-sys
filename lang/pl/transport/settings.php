@@ -25,6 +25,10 @@ return [
             'rate_per_km_loaded' => 'Stawka za km z koniem',
             'minimum_charge' => 'Minimalna opłata zlecenia',
             'extra_horse_fee_default' => 'Dopłata za dodatkowego konia',
+            'fixed_fees_default' => 'Domyślne stałe opłaty',
+            'fixed_fees_name' => 'Nazwa',
+            'fixed_fees_amount' => 'Kwota',
+            'surcharge_percent_default' => 'Domyślna marża %',
             'fuel_consumption_l_per_100km' => 'Spalanie (L/100 km)',
             'fuel_surcharge_enabled' => 'Włącz dopłatę paliwową',
             'fuel_base_price_pln' => 'Cena bazowa ON',
@@ -39,6 +43,8 @@ return [
         'helper' => [
             'rate_per_km_loaded' => 'Pozostaw puste jeśli taka sama jak bez koni.',
             'extra_horse_fee_default' => 'Nalicza się od drugiego konia w górę. 0 = brak doliczenia (kalkulator nie różnicuje cen).',
+            'fixed_fees_default' => 'Pre-fill dla nowych wycen (autostrady, prom, etc.). Każda pozycja zostanie automatycznie dodana — user może usunąć/edytować per wycena.',
+            'surcharge_percent_default' => 'Marża doliczana procentowo do sumy kosztów (po dopasowaniu do opłaty minimalnej, przed VAT). Wartości typowe: 10–25%. Puste = brak marży.',
             'fuel_surcharge_enabled' => 'Doliczamy różnicę pomiędzy ceną aktualną a bazową.',
             'routing_api_key' => 'Klucz API dla wybranego dostawcy. Przechowujemy bezpiecznie w bazie.',
             'default_payment_url_template' => 'Twój link do bramki — wspierane placeholdery: {quote_number}, {gross_total_pln}, {customer_name}. Auto-wstawiany do nowej oferty (możesz nadpisać per oferta).',
@@ -51,6 +57,9 @@ return [
                 'mapbox' => 'Mapbox (własny klucz)',
                 'google' => 'Google Maps Routes (własny klucz)',
             ],
+        ],
+        'action' => [
+            'add_fixed_fee' => 'Dodaj opłatę',
         ],
     ],
 

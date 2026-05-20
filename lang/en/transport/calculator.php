@@ -9,6 +9,8 @@ return [
     'section' => [
         'route' => 'Route',
         'options' => 'Options',
+        'extra_costs' => 'Extra fees and margin',
+        'extra_costs_description' => 'Fixed fees (tolls, ferry, etc.) and percent margin for this quote. Empty = defaults from Transport Settings.',
     ],
 
     'form' => [
@@ -22,10 +24,19 @@ return [
             'avoid_ferries' => 'Avoid ferries',
             'profile' => 'Vehicle profile',
             'horses_count' => 'Number of horses',
+            'fixed_fees' => 'Fixed fees (tolls, ferry, etc.)',
+            'fixed_fees_name' => 'Name',
+            'fixed_fees_amount' => 'Amount',
+            'surcharge_percent' => 'Margin %',
         ],
         'helper' => [
             'mode' => '"Return to home base" adds km from drop-off back to the transporter base. Requires a base set in Transport Settings — otherwise falls back to round trip.',
             'horses_count' => 'Surcharge applies from the second horse onwards, per the rate in Transport Settings.',
+            'fixed_fees' => 'Each item is added to the quote. Leave empty to use defaults from Transport Settings.',
+            'surcharge_percent' => 'Percent margin added to costs (after minimum-charge adjustment, before VAT). Empty = default from Settings. 0 = no margin.',
+        ],
+        'action' => [
+            'add_fixed_fee' => 'Add fee',
         ],
         'placeholder' => [
             'from_address' => 'e.g. Marymoncka 1 Stable, Warsaw',
@@ -60,6 +71,7 @@ return [
         'base_cost' => 'Base cost',
         'fuel_surcharge' => 'Fuel surcharge',
         'extra_horse_fee' => 'Extra horses: :count × :rate :currency',
+        'surcharge' => 'Margin (:percent%)',
         'minimum_adjustment' => 'Minimum-charge adjustment',
         'net_total' => 'Net total',
         'vat' => 'VAT (:rate%)',

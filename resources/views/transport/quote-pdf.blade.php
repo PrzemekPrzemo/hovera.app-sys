@@ -135,10 +135,24 @@
                         <td class="amount">{{ number_format($extraTotal, 2, ',', ' ') }} {{ $quote->currency }}</td>
                     </tr>
                 @endif
+                @foreach ((array) ($quote->fixed_fees_snapshot ?? []) as $fee)
+                    @if (! empty($fee['name']) && (float) ($fee['amount'] ?? 0) > 0)
+                        <tr>
+                            <td>{{ $fee['name'] }}</td>
+                            <td class="amount">{{ number_format((float) $fee['amount'], 2, ',', ' ') }} {{ $quote->currency }}</td>
+                        </tr>
+                    @endif
+                @endforeach
                 @if ((float) $quote->minimum_adjustment > 0)
                     <tr>
                         <td>{{ __('transport/pdf.label.minimum_adjustment') }}</td>
                         <td class="amount">{{ number_format((float) $quote->minimum_adjustment, 2, ',', ' ') }} {{ $quote->currency }}</td>
+                    </tr>
+                @endif
+                @if ((float) ($quote->surcharge_amount_snapshot ?? 0) > 0)
+                    <tr>
+                        <td>{{ __('transport/pdf.label.surcharge', ['percent' => rtrim(rtrim(number_format((float) ($quote->surcharge_percent_snapshot ?? 0), 2, ',', ' '), '0'), ',')]) }}</td>
+                        <td class="amount">{{ number_format((float) $quote->surcharge_amount_snapshot, 2, ',', ' ') }} {{ $quote->currency }}</td>
                     </tr>
                 @endif
                 <tr class="subtotal">

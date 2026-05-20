@@ -25,6 +25,10 @@ return [
             'rate_per_km_loaded' => 'Rate per km loaded',
             'minimum_charge' => 'Minimum charge per job',
             'extra_horse_fee_default' => 'Surcharge per extra horse',
+            'fixed_fees_default' => 'Default fixed fees',
+            'fixed_fees_name' => 'Name',
+            'fixed_fees_amount' => 'Amount',
+            'surcharge_percent_default' => 'Default margin %',
             'fuel_consumption_l_per_100km' => 'Fuel consumption (L/100 km)',
             'fuel_surcharge_enabled' => 'Enable fuel surcharge',
             'fuel_base_price_pln' => 'Base diesel price',
@@ -39,6 +43,8 @@ return [
         'helper' => [
             'rate_per_km_loaded' => 'Leave empty if the same as unloaded.',
             'extra_horse_fee_default' => 'Applies from the second horse onwards. 0 = disabled (the calculator returns the same price regardless of horse count).',
+            'fixed_fees_default' => 'Pre-fill for new quotes (tolls, ferry, etc.). Each item is added automatically — user can remove/edit per quote.',
+            'surcharge_percent_default' => 'Percent margin added to costs (after minimum-charge adjustment, before VAT). Typical values: 10–25%. Empty = no margin.',
             'fuel_surcharge_enabled' => 'We add the difference between current and base price.',
             'routing_api_key' => 'API key for the selected provider. Stored securely in the database.',
             'default_payment_url_template' => 'Your payment gateway URL. Supported placeholders: {quote_number}, {gross_total_pln}, {customer_name}. Auto-applied to new quotes (you can override per-quote).',
@@ -51,6 +57,9 @@ return [
                 'mapbox' => 'Mapbox (your key)',
                 'google' => 'Google Maps Routes (your key)',
             ],
+        ],
+        'action' => [
+            'add_fixed_fee' => 'Add fee',
         ],
     ],
 

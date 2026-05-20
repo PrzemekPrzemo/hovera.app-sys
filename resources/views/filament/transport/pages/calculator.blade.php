@@ -53,10 +53,22 @@
                                 <td class="px-4 py-2 text-right">{{ number_format($quotation->extraHorseFeeTotal, 2, ',', ' ') }} {{ $quotation->currency }}</td>
                             </tr>
                         @endif
+                        @foreach ($quotation->fixedFees as $fee)
+                            <tr>
+                                <td class="px-4 py-2 text-gray-500">{{ $fee['name'] }}</td>
+                                <td class="px-4 py-2 text-right">{{ number_format((float) $fee['amount'], 2, ',', ' ') }} {{ $quotation->currency }}</td>
+                            </tr>
+                        @endforeach
                         @if ($quotation->minimumAdjustment > 0)
                             <tr>
                                 <td class="px-4 py-2 text-gray-500">{{ __('transport/calculator.result.minimum_adjustment') }}</td>
                                 <td class="px-4 py-2 text-right">{{ number_format($quotation->minimumAdjustment, 2, ',', ' ') }} {{ $quotation->currency }}</td>
+                            </tr>
+                        @endif
+                        @if ($quotation->surchargeAmount > 0)
+                            <tr>
+                                <td class="px-4 py-2 text-gray-500">{{ __('transport/calculator.result.surcharge', ['percent' => rtrim(rtrim(number_format($quotation->surchargePercent, 2, ',', ' '), '0'), ',')]) }}</td>
+                                <td class="px-4 py-2 text-right">{{ number_format($quotation->surchargeAmount, 2, ',', ' ') }} {{ $quotation->currency }}</td>
                             </tr>
                         @endif
                         <tr class="bg-gray-50 dark:bg-gray-900">

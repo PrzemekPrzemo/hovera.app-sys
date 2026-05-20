@@ -25,6 +25,14 @@ final readonly class CalculationOptions
         // przy przekazywaniu do RouteOptions.
         public ?int $vehicleGrossWeightKg = null,
         public ?int $vehicleHeightCm = null,
+        // Stałe opłaty (autostrady, prom etc.) — lista pozycji {name, amount}.
+        // null = bierz settings.fixed_fees_default. [] = brak opłat (user opt-out).
+        //
+        // @var ?list<array{name: string, amount: float|int|string}>
+        public ?array $fixedFees = null,
+        // Marża procentowa do zastosowania na sumę kosztów. null = bierz
+        // settings.surcharge_percent_default. Liczona PO minimum_adjustment.
+        public ?float $surchargePercent = null,
     ) {}
 
     public function resolveMode(): CalculationMode
