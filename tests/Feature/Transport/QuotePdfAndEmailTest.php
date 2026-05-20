@@ -9,6 +9,7 @@ use App\Domain\Transport\Quotes\QuotePdfGenerator;
 use App\Enums\QuoteStatus;
 use App\Filament\Transport\Resources\QuoteResource;
 use App\Models\Tenant\Quote;
+use App\Services\TenantAuditLogger;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\Facades\Schema;
@@ -39,7 +40,7 @@ class QuotePdfAndEmailTest extends TestCase
         $this->setUpQuotesTable();
         $this->setUpTransportSettingsTable();
 
-        $this->mock(\App\Services\TenantAuditLogger::class, function (MockInterface $m) {
+        $this->mock(TenantAuditLogger::class, function (MockInterface $m) {
             $m->shouldReceive('record')->andReturnNull();
         });
     }
@@ -84,6 +85,8 @@ class QuotePdfAndEmailTest extends TestCase
         $quote = $this->makeQuote([
             'customer_email' => 'klient@example.com',
             'status' => QuoteStatus::Draft,
+            'vehicle_id' => (string) Str::ulid(),
+            'driver_id' => (string) Str::ulid(),
         ]);
 
         QuoteResource::sendQuote($quote);
@@ -103,6 +106,8 @@ class QuotePdfAndEmailTest extends TestCase
         $quote = $this->makeQuote([
             'customer_email' => null,
             'status' => QuoteStatus::Draft,
+            'vehicle_id' => (string) Str::ulid(),
+            'driver_id' => (string) Str::ulid(),
         ]);
 
         QuoteResource::sendQuote($quote);
@@ -117,7 +122,7 @@ class QuotePdfAndEmailTest extends TestCase
         $quote = $this->makeQuote();
         $notification = new QuoteSentNotification($quote);
 
-        $message = $notification->toMail(new \stdClass());
+        $message = $notification->toMail(new \stdClass);
 
         $this->assertSame('transport', $message->mailer);
         $this->assertStringContainsString($quote->number, $message->subject);

@@ -104,6 +104,8 @@ return [
         'verification_required' => 'Konto nie jest zweryfikowane',
         'verification_required_body' => 'Aby wysłać ofertę do klienta, musisz najpierw przejść weryfikację konta — wgraj wymagane dokumenty.',
         'open_documents' => 'Otwórz dokumenty',
+        'resources_required_title' => 'Przypisz zasoby przed wysłaniem oferty',
+        'resources_required_body' => 'Brakuje: :fields. Edytuj ofertę i uzupełnij. Bez tego po acceptacji statystyki per-pojazd/kierowca nie będą się zgadzać.',
         'invoice_issued' => 'Faktura wystawiona',
         'invoice_issued_body' => 'Faktura :number wystawiona ze snapshotu oferty.',
         'invoice_failed' => 'Nie udało się wystawić faktury',
