@@ -31,7 +31,8 @@ return [
             'preferred_time' => 'Godzina',
             'round_trip' => 'Trasa z powrotem',
             'loaded' => 'Z koniem',
-            'vehicle' => 'Pojazd',
+            'vehicle' => 'Pojazd (prowadzący)',
+            'trailer' => 'Przyczepa (opcjonalna)',
             'driver' => 'Kierowca',
             'distance_km' => 'Dystans',
             'rate_per_km' => 'Stawka',
@@ -54,6 +55,8 @@ return [
             'mark_as_paid_reason' => 'Powód / numer transakcji (opcjonalnie)',
         ],
         'helper' => [
+            'vehicle' => 'Pojazd z silnikiem — tylko trucks. Ten pojazd liczy spalanie.',
+            'trailer' => 'Opcjonalna przyczepa (bez silnika) doczepiana do pojazdu prowadzącego.',
             'terms' => 'Tekst widoczny dla klienta na ofercie / PDF.',
             'notes' => 'Notatki tylko dla zespołu — nie idą do klienta.',
             'payment_url' => 'Wklej link do swojej bramki (Stripe / Przelewy24 / link bankowy). Hovera NIE pośredniczy w płatności — klient płaci bezpośrednio do Ciebie.',

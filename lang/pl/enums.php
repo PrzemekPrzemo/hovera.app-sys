@@ -8,6 +8,11 @@ return [
         'transporter' => 'Firma transportowa',
     ],
 
+    'vehicle_type' => [
+        'truck' => 'Pojazd (z silnikiem)',
+        'trailer' => 'Przyczepa',
+    ],
+
     'quote_status' => [
         'draft' => 'Szkic',
         'sent' => 'Wysłana',

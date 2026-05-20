@@ -8,6 +8,11 @@ return [
         'transporter' => 'Transport company',
     ],
 
+    'vehicle_type' => [
+        'truck' => 'Vehicle (powered)',
+        'trailer' => 'Trailer',
+    ],
+
     'quote_status' => [
         'draft' => 'Draft',
         'sent' => 'Sent',

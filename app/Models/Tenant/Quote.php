@@ -21,7 +21,7 @@ class Quote extends TenantModel
         'pickup_address', 'pickup_lat', 'pickup_lng',
         'dropoff_address', 'dropoff_lat', 'dropoff_lng',
         'preferred_date', 'preferred_time', 'round_trip', 'loaded',
-        'vehicle_id', 'driver_id',
+        'vehicle_id', 'trailer_id', 'driver_id',
         'distance_km', 'duration_seconds', 'routing_provider', 'polyline',
         'rate_per_km', 'base_cost', 'fuel_surcharge', 'minimum_adjustment',
         'net_total', 'vat_rate', 'vat_amount', 'gross_total', 'currency',
@@ -71,6 +71,17 @@ class Quote extends TenantModel
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    /**
+     * Opcjonalna przyczepa kombinowana z `vehicle` (np. samochód + przyczepa
+     * do koni). Cel: w ofercie pokazać klientowi że jedziemy z konkretną
+     * przyczepą o ileś-koniach miejscach. Calculator NIE łączy spalania
+     * (przyczepa = bez silnika, paliwo liczy się od `vehicle`).
+     */
+    public function trailer(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class, 'trailer_id');
     }
 
     public function driver(): BelongsTo

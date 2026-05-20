@@ -12,6 +12,7 @@ return [
 
     'form' => [
         'label' => [
+            'vehicle_type' => 'Fahrzeugtyp',
             'name' => 'Fahrzeugname',
             'registration_plate' => 'Kennzeichen',
             'year_of_manufacture' => 'Baujahr',
@@ -25,6 +26,9 @@ return [
             'sort_order' => 'Reihenfolge',
             'notes' => 'Notizen',
         ],
+        'helper' => [
+            'vehicle_type' => 'Anhänger haben keinen Motor und keinen Kraftstoffverbrauch — sie werden in Angeboten mit einem Zugfahrzeug (Truck) kombiniert.',
+        ],
         'placeholder' => [
             'name' => 'z. B. Volvo FH16 — Großtransporter',
         ],
@@ -35,6 +39,7 @@ return [
 
     'table' => [
         'column' => [
+            'vehicle_type' => 'Typ',
             'name' => 'Name',
             'registration_plate' => 'Kennz.',
             'capacity_horses' => 'Pferde',

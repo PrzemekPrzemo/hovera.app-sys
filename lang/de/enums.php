@@ -8,6 +8,11 @@ return [
         'transporter' => 'Transportunternehmen',
     ],
 
+    'vehicle_type' => [
+        'truck' => 'Fahrzeug (motorisiert)',
+        'trailer' => 'Anhänger',
+    ],
+
     'quote_status' => [
         'draft' => 'Entwurf',
         'sent' => 'Versendet',

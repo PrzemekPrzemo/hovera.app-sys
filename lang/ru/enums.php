@@ -8,6 +8,11 @@ return [
         'transporter' => 'Транспортная компания',
     ],
 
+    'vehicle_type' => [
+        'truck' => 'Автомобиль (с двигателем)',
+        'trailer' => 'Прицеп',
+    ],
+
     'quote_status' => [
         'draft' => 'Черновик',
         'sent' => 'Отправлена',

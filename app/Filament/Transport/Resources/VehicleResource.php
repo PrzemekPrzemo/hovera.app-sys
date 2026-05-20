@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Transport\Resources;
 
+use App\Enums\VehicleType;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Filament\Transport\Resources\VehicleResource\Pages;
 use App\Models\Tenant\Vehicle;
@@ -59,6 +60,13 @@ class VehicleResource extends Resource
         return $form->schema([
             Forms\Components\Section::make(__('transport/vehicle.section.identification'))
                 ->schema([
+                    Forms\Components\Select::make('vehicle_type')
+                        ->label(__('transport/vehicle.form.label.vehicle_type'))
+                        ->helperText(__('transport/vehicle.form.helper.vehicle_type'))
+                        ->options(VehicleType::options())
+                        ->default(VehicleType::Truck->value)
+                        ->required()
+                        ->native(false),
                     Forms\Components\TextInput::make('name')
                         ->label(__('transport/vehicle.form.label.name'))
                         ->required()
@@ -73,7 +81,7 @@ class VehicleResource extends Resource
                         ->numeric()
                         ->minValue(1980)
                         ->maxValue((int) date('Y') + 1),
-                ])->columns(3),
+                ])->columns(2),
 
             Forms\Components\Section::make(__('transport/vehicle.section.capacity'))
                 ->schema([
@@ -126,6 +134,11 @@ class VehicleResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('vehicle_type')
+                    ->label(__('transport/vehicle.table.column.vehicle_type'))
+                    ->badge()
+                    ->formatStateUsing(fn (VehicleType $state) => $state->label())
+                    ->color(fn (VehicleType $state) => $state === VehicleType::Trailer ? 'warning' : 'info'),
                 Tables\Columns\TextColumn::make('name')
                     ->label(__('transport/vehicle.table.column.name'))
                     ->searchable()
@@ -153,6 +166,9 @@ class VehicleResource extends Resource
             ])
             ->defaultSort('sort_order')
             ->filters([
+                Tables\Filters\SelectFilter::make('vehicle_type')
+                    ->label(__('transport/vehicle.table.column.vehicle_type'))
+                    ->options(VehicleType::options()),
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label(__('transport/vehicle.table.column.is_active')),
                 Tables\Filters\TrashedFilter::make(),

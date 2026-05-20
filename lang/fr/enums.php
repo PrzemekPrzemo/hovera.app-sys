@@ -8,6 +8,11 @@ return [
         'transporter' => 'Société de transport',
     ],
 
+    'vehicle_type' => [
+        'truck' => 'Véhicule (motorisé)',
+        'trailer' => 'Remorque',
+    ],
+
     'quote_status' => [
         'draft' => 'Brouillon',
         'sent' => 'Envoyée',
