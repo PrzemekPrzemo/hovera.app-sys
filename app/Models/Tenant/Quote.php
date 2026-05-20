@@ -31,6 +31,7 @@ class Quote extends TenantModel
         'minimum_adjustment',
         'net_total', 'vat_rate', 'vat_amount', 'gross_total', 'currency',
         'exchange_rate_to_pln', 'exchange_rate_date',
+        'line_items',
         'terms', 'notes', 'valid_until',
         'accept_token',
         'sent_at', 'accepted_at', 'rejected_at', 'expired_at', 'withdrawn_at',
@@ -71,6 +72,7 @@ class Quote extends TenantModel
             'gross_total' => 'decimal:2',
             'exchange_rate_to_pln' => 'decimal:4',
             'exchange_rate_date' => 'date',
+            'line_items' => 'array',
             'sent_at' => 'datetime',
             'accepted_at' => 'datetime',
             'rejected_at' => 'datetime',
@@ -106,5 +108,52 @@ class Quote extends TenantModel
     public function driver(): BelongsTo
     {
         return $this->belongsTo(Driver::class);
+    }
+
+    /**
+     * Defensive normalizer dla `line_items`. Skip pozycje bez nazwy /
+     * z ujemnym/zero unit_price. Każda zwrócona pozycja ma już wyliczone
+     * `line_total_net = quantity × unit_price_net`.
+     *
+     * @param  array<mixed>  $raw
+     * @return list<array{name: string, quantity: float, unit: ?string, unit_price_net: float, line_total_net: float}>
+     */
+    public static function normaliseLineItems(array $raw): array
+    {
+        $out = [];
+        foreach ($raw as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $name = trim((string) ($item['name'] ?? ''));
+            $qty = (float) ($item['quantity'] ?? 1);
+            $unitPrice = (float) ($item['unit_price_net'] ?? 0);
+            if ($name === '' || $unitPrice <= 0 || $qty <= 0) {
+                continue;
+            }
+            $out[] = [
+                'name' => $name,
+                'quantity' => round($qty, 3),
+                'unit' => isset($item['unit']) && $item['unit'] !== '' ? (string) $item['unit'] : null,
+                'unit_price_net' => round($unitPrice, 2),
+                'line_total_net' => round($qty * $unitPrice, 2),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Sumuje line_total_net wszystkich pozycji. Defensive parse na
+     * wypadek JSON'a z nie-arraya / null'i.
+     */
+    public function lineItemsTotal(): float
+    {
+        $items = is_array($this->line_items) ? $this->line_items : [];
+
+        return round(
+            array_sum(array_map(fn ($i) => (float) ($i['line_total_net'] ?? 0), $items)),
+            2,
+        );
     }
 }

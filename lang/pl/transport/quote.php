@@ -10,6 +10,8 @@ return [
         'resources' => 'Zasoby (opcjonalne)',
         'pricing' => 'Wycena',
         'terms' => 'Warunki i uwagi',
+        'line_items' => 'Pozycje dodatkowe',
+        'line_items_description' => 'Ad-hoc pozycje doliczane do wyceny (np. postój, opłaty dodatkowe). Każda pozycja sumuje się do netto, VAT i brutto przeliczane.',
         'payment' => 'Płatność (direct charge)',
         'payment_description' => 'Hovera NIE przyjmuje płatności. Klient płaci bezpośrednio do Ciebie — wklej link do swojej bramki lub zostaw puste i wypełnij instrukcje w ustawieniach.',
     ],
@@ -40,6 +42,10 @@ return [
             'fixed_fees_snapshot' => 'Stałe opłaty',
             'surcharge_percent_snapshot' => 'Marża %',
             'surcharge_amount_snapshot' => 'Kwota marży',
+            'line_item_name' => 'Pozycja',
+            'line_item_quantity' => 'Ilość',
+            'line_item_unit' => 'Jednostka',
+            'line_item_unit_price' => 'Cena jedn. netto',
             'vehicle' => 'Pojazd (prowadzący)',
             'trailer' => 'Przyczepa (opcjonalna)',
             'driver' => 'Kierowca',
@@ -82,6 +88,10 @@ return [
         ],
         'placeholder' => [
             'payment_method_label' => 'Stripe / Przelewy24 / BLIK / Przelew tradycyjny',
+            'line_item_unit' => 'szt / h / km',
+        ],
+        'action' => [
+            'add_line_item' => 'Dodaj pozycję',
         ],
         'value' => [
             'payment_completed_at' => 'Opłacone — potwierdzone :date',
