@@ -111,6 +111,47 @@ class CreateQuote extends CreateRecord
             $data['currency'] = (string) TransportSettings::current()->currency;
         }
 
+        // Line items — ad-hoc pozycje wyceny (Repeater w form'ie). Każda
+        // pozycja dolicza się do net_total, VAT i gross przeliczane.
+        // Patrz Quote::normaliseLineItems + docs/MARKETPLACE-ROADMAP.md
+        // "Calculator: quote_items line items + PDF".
+        $data = $this->applyLineItemsToTotals($data);
+
+        return $data;
+    }
+
+    /**
+     * Aplikuje line_items'y do net_total (+ vat + gross). Idempotent —
+     * gdy line_items jest puste / null, nic nie modyfikuje.
+     *
+     * @param  array<string,mixed>  $data
+     * @return array<string,mixed>
+     */
+    private function applyLineItemsToTotals(array $data): array
+    {
+        $rawItems = $data['line_items'] ?? [];
+        if (! is_array($rawItems) || $rawItems === []) {
+            $data['line_items'] = [];
+
+            return $data;
+        }
+
+        $items = Quote::normaliseLineItems($rawItems);
+        $data['line_items'] = $items;
+
+        $itemsTotal = array_sum(array_column($items, 'line_total_net'));
+        if ($itemsTotal <= 0) {
+            return $data;
+        }
+
+        $netTotal = (float) ($data['net_total'] ?? 0) + $itemsTotal;
+        $vatRate = (float) ($data['vat_rate'] ?? 0);
+        $vatAmount = round($netTotal * ($vatRate / 100), 2);
+
+        $data['net_total'] = round($netTotal, 2);
+        $data['vat_amount'] = $vatAmount;
+        $data['gross_total'] = round($netTotal + $vatAmount, 2);
+
         return $data;
     }
 

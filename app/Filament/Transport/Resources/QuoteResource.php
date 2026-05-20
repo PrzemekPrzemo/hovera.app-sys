@@ -339,6 +339,50 @@ class QuoteResource extends Resource
                     Forms\Components\Hidden::make('routing_provider')->default('manual'),
                 ]),
 
+            // Ad-hoc pozycje wyceny — patrz docs/MARKETPLACE-ROADMAP.md
+            // "Calculator: quote_items line items + PDF breakdown".
+            // Wartości dolicza się DO net_total (lifecycle hook
+            // CreateQuote/EditQuote przelicza VAT + gross).
+            Forms\Components\Section::make(__('transport/quote.section.line_items'))
+                ->description(__('transport/quote.section.line_items_description'))
+                ->collapsed(fn (?Quote $record) => $record === null || empty($record->line_items))
+                ->schema([
+                    Forms\Components\Repeater::make('line_items')
+                        ->label('')
+                        ->columnSpanFull()
+                        ->columns(4)
+                        ->schema([
+                            Forms\Components\TextInput::make('name')
+                                ->label(__('transport/quote.form.label.line_item_name'))
+                                ->required()
+                                ->maxLength(200)
+                                ->columnSpan(2),
+                            Forms\Components\TextInput::make('quantity')
+                                ->label(__('transport/quote.form.label.line_item_quantity'))
+                                ->numeric()
+                                ->default(1)
+                                ->minValue(0)
+                                ->step(0.001),
+                            Forms\Components\TextInput::make('unit')
+                                ->label(__('transport/quote.form.label.line_item_unit'))
+                                ->placeholder(__('transport/quote.form.placeholder.line_item_unit'))
+                                ->maxLength(32),
+                            Forms\Components\TextInput::make('unit_price_net')
+                                ->label(__('transport/quote.form.label.line_item_unit_price'))
+                                ->numeric()
+                                ->minValue(0)
+                                ->step(0.01)
+                                ->required()
+                                ->suffix(fn (Forms\Get $get) => (string) ($get('../../currency') ?? 'PLN'))
+                                ->columnSpan(2),
+                            // line_total_net jest computed w Quote::normaliseLineItems
+                            // przy save'ie — UI nie pokazuje pola (sum widać w PDF).
+                        ])
+                        ->reorderable(true)
+                        ->defaultItems(0)
+                        ->addActionLabel(__('transport/quote.form.action.add_line_item')),
+                ]),
+
             Forms\Components\Section::make(__('transport/quote.section.terms'))
                 ->schema([
                     Forms\Components\Textarea::make('terms')

@@ -155,6 +155,21 @@
                         <td class="amount">{{ number_format((float) $quote->surcharge_amount_snapshot, 2, ',', ' ') }} {{ $quote->currency }}</td>
                     </tr>
                 @endif
+                @foreach ((array) ($quote->line_items ?? []) as $item)
+                    @if (! empty($item['name']) && (float) ($item['line_total_net'] ?? 0) > 0)
+                        <tr>
+                            <td>
+                                {{ $item['name'] }}
+                                @if ((float) ($item['quantity'] ?? 1) !== 1.0 || ! empty($item['unit']))
+                                    <span style="color: #6b7280; font-size: .85em;">
+                                        ({{ rtrim(rtrim(number_format((float) ($item['quantity'] ?? 1), 3, ',', ' '), '0'), ',') }}{{ ! empty($item['unit']) ? ' '.$item['unit'] : '' }} × {{ number_format((float) ($item['unit_price_net'] ?? 0), 2, ',', ' ') }} {{ $quote->currency }})
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="amount">{{ number_format((float) $item['line_total_net'], 2, ',', ' ') }} {{ $quote->currency }}</td>
+                        </tr>
+                    @endif
+                @endforeach
                 <tr class="subtotal">
                     <td>{{ __('transport/pdf.label.net_total') }}</td>
                     <td class="amount">{{ number_format((float) $quote->net_total, 2, ',', ' ') }} {{ $quote->currency }}</td>

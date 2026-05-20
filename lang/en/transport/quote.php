@@ -10,6 +10,8 @@ return [
         'resources' => 'Resources (optional)',
         'pricing' => 'Pricing',
         'terms' => 'Terms & notes',
+        'line_items' => 'Additional line items',
+        'line_items_description' => 'Ad-hoc items added to the quote (e.g. waiting time, extra fees). Each line adds to net total; VAT and gross are recalculated.',
         'payment' => 'Payment (direct charge)',
         'payment_description' => 'Hovera does NOT process payments. The customer pays you directly — paste your gateway URL or leave empty to fall back to settings instructions.',
     ],
@@ -40,6 +42,10 @@ return [
             'fixed_fees_snapshot' => 'Fixed fees',
             'surcharge_percent_snapshot' => 'Margin %',
             'surcharge_amount_snapshot' => 'Margin amount',
+            'line_item_name' => 'Item',
+            'line_item_quantity' => 'Quantity',
+            'line_item_unit' => 'Unit',
+            'line_item_unit_price' => 'Unit price (net)',
             'vehicle' => 'Vehicle (powered)',
             'trailer' => 'Trailer (optional)',
             'driver' => 'Driver',
@@ -82,6 +88,10 @@ return [
         ],
         'placeholder' => [
             'payment_method_label' => 'Stripe / Przelewy24 / BLIK / Bank transfer',
+            'line_item_unit' => 'pcs / h / km',
+        ],
+        'action' => [
+            'add_line_item' => 'Add line item',
         ],
         'value' => [
             'payment_completed_at' => 'Paid — confirmed :date',
