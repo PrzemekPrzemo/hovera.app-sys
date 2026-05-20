@@ -12,14 +12,17 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Po PR #241 (publiczny landing) URL `/transport` przeszedł na
- * `TransportLandingController` — root jest publiczny, panel Filament
- * żyje pod sub-route'ami (`/transport/leads`, `/transport/calculator`, etc.).
+ * URL `/transport` należy do `TransportLandingController` (publiczny landing).
+ * Panel Filament żyje pod sub-route'ami:
+ *   - `/transport/dashboard` — custom TransportDashboard (PR #267) z hero CTA,
+ *     ma `protected static string $routePath = '/dashboard'` żeby NIE konfliktować
+ *     z public landing'iem na root /transport.
+ *   - `/transport/leads`, `/transport/calculator`, `/transport/quotes` — reszta panelu.
  *
- * Auth-aware landing zachowuje się tak:
+ * Auth-aware landing:
  *   - guest → 200 (publiczny landing z hero + Top 10 + formularz)
  *   - auth stable owner → 302 do `/transport/zapytanie?stable={id}`
- *   - auth transporter owner → 302 do `/transport/quotes` (panel home)
+ *   - auth transporter owner → 302 do `/transport/dashboard` (panel home z hero CTA)
  *
  * Patrz `TransportLandingController::redirectForAuthenticated()`.
  */
@@ -62,14 +65,27 @@ class TransportPanelAccessTest extends TestCase
         $this->assertStringContainsString('stable='.$tenant->id, $location);
     }
 
-    public function test_calculator_and_login_routes_are_registered(): void
+    public function test_transporter_owner_redirected_to_dashboard(): void
     {
-        // Dashboard route name (`filament.transport.pages.dashboard`) nie
-        // istnieje już po #241 bo TransportLandingController przejął root
-        // `/transport`. Sprawdzamy zamiast tego dwie inne route'y żeby
-        // potwierdzić że panel Filament jest skonfigurowany:
+        // Po loginie transporter ląduje na panelu z hero CTA (Calculator/Leads/
+        // Quotes/Invoices) — TransportDashboard pod /transport/dashboard.
+        [$user, $tenant] = $this->makeOwner(TenantType::Transporter);
+
+        $response = $this->actingAs($user)
+            ->withSession(['current_tenant_id' => $tenant->id])
+            ->get('/transport');
+
+        $response->assertRedirect();
+        $location = (string) $response->headers->get('Location');
+        $this->assertStringContainsString('/transport/dashboard', $location);
+    }
+
+    public function test_panel_routes_are_registered(): void
+    {
+        // Sprawdzamy że panel Filament jest właściwie skonfigurowany:
         //   - `filament.transport.pages.calculator` (key page, #244 dodał do
         //     explicit pages[])
+        //   - `filament.transport.pages.transport-dashboard` (PR #267 + slug fix)
         //   - `filament.transport.auth.login` (Filament login flow działa)
         $routes = collect(app('router')->getRoutes())
             ->map(fn ($r) => $r->getName())
@@ -79,6 +95,10 @@ class TransportPanelAccessTest extends TestCase
         $this->assertTrue(
             $routes->contains('filament.transport.pages.calculator'),
             'Calculator route should be registered (added explicitly in #244).'
+        );
+        $this->assertTrue(
+            $routes->contains('filament.transport.pages.transport-dashboard'),
+            'TransportDashboard route should be registered at /transport/dashboard.'
         );
         $this->assertTrue(
             $routes->contains('filament.transport.auth.login'),

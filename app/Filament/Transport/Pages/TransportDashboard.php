@@ -24,6 +24,14 @@ use Illuminate\Contracts\Support\Htmlable;
  */
 class TransportDashboard extends Dashboard
 {
+    // Override routePath żeby NIE konfliktować z publicznym landingiem
+    // `TransportLandingController` na URL `/transport` (routes/web.php).
+    // Filament `Pages\Dashboard` defaultuje na '/' (panel root). My
+    // przesuwamy na `/dashboard` → URL `/transport/dashboard`.
+    // TransportLandingController robi 302 → /transport/dashboard dla
+    // authenticated transportera.
+    protected static string $routePath = '/dashboard';
+
     protected static ?string $navigationIcon = 'heroicon-o-home';
 
     protected static string $view = 'filament.transport.pages.transport-dashboard';

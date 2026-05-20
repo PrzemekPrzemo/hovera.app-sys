@@ -105,10 +105,14 @@ class TransportLandingController extends Controller
             }
 
             if ($tenant->type === TenantType::Transporter) {
-                // Panel home transportera. Filament resolveuje `/transport/leads`
-                // jako pierwszą widzialną sekcję dla dispatch group; dashboard
-                // sam się przekieruje albo wyrenderuje co należy.
-                return redirect('/transport/leads');
+                // Panel home transportera — custom TransportDashboard mountowany
+                // pod `/transport/dashboard` (slug). Hero CTA grid z Calculator
+                // / Leads / Quotes / Invoices + onboarding checklist + widgety
+                // KPI. Patrz PR #267.
+                //
+                // NIE redirectuj na samo `/transport` — to publiczny landing
+                // (TransportLandingController), wpadlibyśmy z powrotem tutaj.
+                return redirect('/transport/dashboard');
             }
 
             if ($tenant->type === TenantType::Stable) {

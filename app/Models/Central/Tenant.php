@@ -6,6 +6,7 @@ namespace App\Models\Central;
 
 use App\Enums\TenantType;
 use App\Enums\VerificationStatus;
+use App\Models\Tenant\TransporterDocument;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -264,6 +265,26 @@ class Tenant extends Model
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Stub relacja `documents()` — TransporterDocument żyje w per-tenant DB
+     * i nie ma FK do central `tenants`, więc prawdziwej Eloquent relacji
+     * NIE da się zdefiniować. Filament 3 jednak wymaga aby `RelationManager`
+     * miał wywoływalną metodę o nazwie zadeklarowanej w
+     * `protected static string $relationship = 'documents'`.
+     *
+     * Zwracamy whereRaw('1=0') — Filament dostaje typowo HasMany ale nigdy
+     * nie złapie żadnego rekordu tym path'em (klasy `TransporterDocument`
+     * używa się tylko po `TenantManager::setCurrent()` z poziomu Relation-
+     * Managera; query budowane jest w jego `table()->query()` od zera).
+     *
+     * Patrz `TransporterResource\RelationManagers\TransporterDocumentsRelationManager`.
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(TransporterDocument::class, 'tenant_id')
+            ->whereRaw('1 = 0');
     }
 
     public function getDbPasswordAttribute(): string
