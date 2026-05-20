@@ -52,7 +52,15 @@ return new class extends Migration
             // Jeden boarding per (horse, stable, status). Pozwala na
             // historię (ended) + current (active/pending), ale zapobiega
             // duplikatowi w tym samym statusie.
-            $table->unique(['central_horse_id', 'stable_tenant_id', 'status']);
+            //
+            // Explicit constraint name — auto-generowane Laravel'em
+            // 'horse_boarding_assignments_central_horse_id_stable_tenant_id_status_unique'
+            // ma 73 znaki, MySQL limit identyfikatora to 64. Skracamy
+            // na `hba_horse_stable_status_unique` (30 znaków).
+            $table->unique(
+                ['central_horse_id', 'stable_tenant_id', 'status'],
+                'hba_horse_stable_status_unique',
+            );
         });
     }
 

@@ -27,13 +27,7 @@
         .errors { background: #fee; border: 1px solid #fcc; border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1rem; color: #800; }
         .disclaimer { font-size: .8rem; color: var(--muted); margin-top: 1.5rem; line-height: 1.4; }
         .disclaimer a { color: var(--primary); }
-        @media (prefers-color-scheme: dark) {
-            html, body { background: #1F1A17; color: #F7F4EF; }
-            .card { background: #2a221c; }
-            h1 { color: #E9E2D3; }
-            textarea { background: #1F1A17; color: #E9E2D3; border-color: #4a3d31; }
-        }
-        /* Mobile (≤600px) — kompaktowy padding karty, większe gwiazdki dla
+                /* Mobile (≤600px) — kompaktowy padding karty, większe gwiazdki dla
            kciuka, button full-width żeby był łatwy do tapnięcia. */
         @media (max-width: 600px) {
             .wrap { padding: 1.5rem .75rem; }
@@ -44,6 +38,8 @@
             textarea { font-size: 16px; /* anty-zoom iOS */ }
             .submit { display: block; width: 100%; padding: 1rem; font-size: 1.05rem; }
         }
+            /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
     </style>
 </head>
 <body>

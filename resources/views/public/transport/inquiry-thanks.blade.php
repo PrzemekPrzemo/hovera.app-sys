@@ -16,13 +16,8 @@
         h1 { margin: 0 0 1rem; color: #3D2E22; }
         p { color: #6b7280; line-height: 1.6; }
         .lead-meta { background: #F7F4EF; padding: .75rem 1rem; border-radius: 8px; margin-top: 1.25rem; font-size: .85rem; color: #3D2E22; font-family: monospace; }
-        @media (prefers-color-scheme: dark) {
-            html, body { background: #1F1A17; color: #F7F4EF; }
-            .card { background: #2a221c; }
-            h1 { color: #E9E2D3; }
-            p { color: #C8B8A4; }
-            .lead-meta { background: #1F1A17; color: #E9E2D3; }
-        }
+                    /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
     </style>
 </head>
 <body>

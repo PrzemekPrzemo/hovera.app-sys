@@ -13,11 +13,8 @@
         .card { background: var(--card); border-radius: 14px; padding: 2rem 1.75rem; box-shadow: 0 3px 14px rgba(0,0,0,.06); }
         h1 { margin: 0 0 .75rem; color: #3D2E22; }
         p { color: var(--muted); line-height: 1.55; }
-        @media (prefers-color-scheme: dark) {
-            html, body { background: #1F1A17; color: #F7F4EF; }
-            .card { background: #2a221c; }
-            h1 { color: #E9E2D3; }
-        }
+                    /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
     </style>
 </head>
 <body>

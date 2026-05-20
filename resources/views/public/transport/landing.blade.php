@@ -92,17 +92,7 @@
         .footer-disclaimer { background: var(--bg); padding: 2rem 1.25rem; text-align: center; color: var(--muted); font-size: .82rem; line-height: 1.6; }
         .footer-disclaimer-inner { max-width: 720px; margin: 0 auto; }
 
-        @media (prefers-color-scheme: dark) {
-            html, body { background: #1F1A17; color: #F7F4EF; }
-            .inquiry-card, .card, .top-section, .paths-section { background: #2a221c; color: #E9E2D3; }
-            .inquiry-card h2, .card h3, .path-card h3, .section-title { color: #E9E2D3; }
-            label { color: #E9E2D3; }
-            input, textarea { background: #1F1A17; border-color: #4a3d31; color: #F7F4EF; }
-            .footer-disclaimer, .inquiry-section, .empty-state, .top-section { background: #1F1A17; }
-            .path-card { background: #1F1A17; }
-            .path-card p { color: #C8B8A4; }
-        }
-
+        
         @media (max-width: 600px) {
             .hero { padding: 2.5rem 1rem 3.5rem; }
             .hero h1 { font-size: 1.65rem; }
@@ -120,6 +110,8 @@
                 font-size: 16px; /* anty-zoom iOS */
             }
         }
+            /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
     </style>
 </head>
 <body>
