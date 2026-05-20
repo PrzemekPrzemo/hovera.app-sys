@@ -39,6 +39,12 @@ final readonly class Quotation implements Wireable
         public string $currency,
         public string $routingProvider,    // 'ors' / 'mapbox' / 'google'
         public ?string $polyline = null,
+        // Doliczenie za dodatkowe konie powyżej pierwszego: extra_per_horse
+        // × (horses_count − 1). Zaokrąglone do 2 miejsc. `extraHorseFeePerHead`
+        // to snapshot stawki użytej do liczenia (do PDF breakdown'u).
+        public float $extraHorseFeeTotal = 0.0,
+        public float $extraHorseFeePerHead = 0.0,
+        public int $horsesCount = 1,
     ) {}
 
     /** @return array<string,mixed> */
@@ -50,6 +56,9 @@ final readonly class Quotation implements Wireable
             'rate_used' => $this->rateUsed,
             'base_cost' => $this->baseCost,
             'fuel_surcharge' => $this->fuelSurcharge,
+            'extra_horse_fee_total' => $this->extraHorseFeeTotal,
+            'extra_horse_fee_per_head' => $this->extraHorseFeePerHead,
+            'horses_count' => $this->horsesCount,
             'minimum_adjustment' => $this->minimumAdjustment,
             'net_total' => $this->netTotal,
             'vat_rate' => $this->vatRate,
@@ -70,6 +79,9 @@ final readonly class Quotation implements Wireable
             'rateUsed' => $this->rateUsed,
             'baseCost' => $this->baseCost,
             'fuelSurcharge' => $this->fuelSurcharge,
+            'extraHorseFeeTotal' => $this->extraHorseFeeTotal,
+            'extraHorseFeePerHead' => $this->extraHorseFeePerHead,
+            'horsesCount' => $this->horsesCount,
             'minimumAdjustment' => $this->minimumAdjustment,
             'netTotal' => $this->netTotal,
             'vatRate' => $this->vatRate,
@@ -98,6 +110,9 @@ final readonly class Quotation implements Wireable
             currency: (string) ($value['currency'] ?? 'PLN'),
             routingProvider: (string) ($value['routingProvider'] ?? ''),
             polyline: isset($value['polyline']) ? (string) $value['polyline'] : null,
+            extraHorseFeeTotal: (float) ($value['extraHorseFeeTotal'] ?? 0),
+            extraHorseFeePerHead: (float) ($value['extraHorseFeePerHead'] ?? 0),
+            horsesCount: (int) ($value['horsesCount'] ?? 1),
         );
     }
 }

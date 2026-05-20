@@ -36,6 +36,7 @@ return [
         'amount' => 'Kwota',
         'base_cost' => 'Koszt podstawowy',
         'fuel_surcharge' => 'Dopłata paliwowa',
+        'extra_horse_fee' => 'Dodatkowe konie: :count × :rate :currency',
         'minimum_adjustment' => 'Dobór do opłaty minimalnej',
         'net_total' => 'Razem netto',
         'vat' => 'VAT (:rate%)',

@@ -198,6 +198,15 @@ class QuoteResource extends Resource
                         ->label(__('transport/quote.form.label.loaded'))
                         ->default(true)
                         ->inline(false),
+                    Forms\Components\TextInput::make('horses_count')
+                        ->label(__('transport/quote.form.label.horses_count'))
+                        ->helperText(__('transport/quote.form.helper.horses_count'))
+                        ->numeric()
+                        ->integer()
+                        ->minValue(1)
+                        ->maxValue(30)
+                        ->default(1)
+                        ->required(),
                 ]),
 
             Forms\Components\Section::make(__('transport/quote.section.resources'))
@@ -257,6 +266,12 @@ class QuoteResource extends Resource
                         ->label(__('transport/quote.form.label.fuel_surcharge'))
                         ->numeric()
                         ->default(0),
+                    Forms\Components\TextInput::make('extra_horse_fee_snapshot')
+                        ->label(__('transport/quote.form.label.extra_horse_fee_snapshot'))
+                        ->helperText(__('transport/quote.form.helper.extra_horse_fee_snapshot'))
+                        ->numeric()
+                        ->default(0)
+                        ->suffix(fn (Forms\Get $get) => (string) ($get('currency') ?? 'PLN')),
                     Forms\Components\TextInput::make('minimum_adjustment')
                         ->label(__('transport/quote.form.label.minimum_adjustment'))
                         ->numeric()

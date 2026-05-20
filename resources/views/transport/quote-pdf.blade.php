@@ -125,6 +125,16 @@
                         <td class="amount">{{ number_format((float) $quote->fuel_surcharge, 2, ',', ' ') }} {{ $quote->currency }}</td>
                     </tr>
                 @endif
+                @if ((int) ($quote->horses_count ?? 1) > 1 && (float) ($quote->extra_horse_fee_snapshot ?? 0) > 0)
+                    @php
+                        $extraHorses = (int) $quote->horses_count - 1;
+                        $extraTotal = $extraHorses * (float) $quote->extra_horse_fee_snapshot;
+                    @endphp
+                    <tr>
+                        <td>{{ __('transport/pdf.label.extra_horse_fee', ['count' => $extraHorses, 'rate' => number_format((float) $quote->extra_horse_fee_snapshot, 2, ',', ' '), 'currency' => $quote->currency]) }}</td>
+                        <td class="amount">{{ number_format($extraTotal, 2, ',', ' ') }} {{ $quote->currency }}</td>
+                    </tr>
+                @endif
                 @if ((float) $quote->minimum_adjustment > 0)
                     <tr>
                         <td>{{ __('transport/pdf.label.minimum_adjustment') }}</td>

@@ -44,7 +44,7 @@ class FuelPriceServiceTest extends TestCase
     {
         config()->set('transport.fuel.fallback_price', 6.99);
 
-        $service = new FuelPriceService();
+        $service = new FuelPriceService;
         $this->assertSame(6.99, $service->current());
     }
 
@@ -58,7 +58,7 @@ class FuelPriceServiceTest extends TestCase
             'created_at' => now()->subDay(),
         ]);
 
-        $this->assertSame(6.45, (new FuelPriceService())->current());
+        $this->assertSame(6.45, (new FuelPriceService)->current());
     }
 
     public function test_ignores_stale_snapshot_older_than_ttl(): void
@@ -74,7 +74,7 @@ class FuelPriceServiceTest extends TestCase
             'created_at' => now()->subDays(10),
         ]);
 
-        $this->assertSame(7.10, (new FuelPriceService())->current());
+        $this->assertSame(7.10, (new FuelPriceService)->current());
     }
 
     public function test_per_tenant_manual_override_wins_over_central(): void
@@ -89,7 +89,7 @@ class FuelPriceServiceTest extends TestCase
 
         TransportSettings::current()->forceFill(['manual_fuel_price_pln' => 5.20])->save();
 
-        $this->assertSame(5.20, (new FuelPriceService())->current());
+        $this->assertSame(5.20, (new FuelPriceService)->current());
     }
 
     public function test_calculate_surcharge_positive_diff(): void
@@ -104,7 +104,7 @@ class FuelPriceServiceTest extends TestCase
 
         // current=7.50, base=7.00, diff=0.50, consumption 32.5 L/100km, distance 100 km
         //   → litres = 32.5, surcharge = 32.5 * 0.50 = 16.25
-        $service = new FuelPriceService();
+        $service = new FuelPriceService;
         $this->assertSame(16.25, $service->calculateSurcharge(
             consumptionLPer100km: 32.5,
             distanceKm: 100,
@@ -122,7 +122,7 @@ class FuelPriceServiceTest extends TestCase
             'created_at' => now(),
         ]);
 
-        $this->assertSame(0.0, (new FuelPriceService())->calculateSurcharge(
+        $this->assertSame(0.0, (new FuelPriceService)->calculateSurcharge(
             consumptionLPer100km: 32.5,
             distanceKm: 500,
             basePricePln: 7.00,
@@ -136,6 +136,7 @@ class FuelPriceServiceTest extends TestCase
             $t->decimal('rate_per_km', 6, 2)->default(4.50);
             $t->decimal('rate_per_km_loaded', 6, 2)->nullable();
             $t->decimal('minimum_charge', 8, 2)->default(800.00);
+            $t->decimal('extra_horse_fee_default', 8, 2)->default(0);
             $t->decimal('fuel_consumption_l_per_100km', 5, 2)->default(32.5);
             $t->boolean('fuel_surcharge_enabled')->default(true);
             $t->decimal('fuel_base_price_pln', 5, 2)->default(7.00);

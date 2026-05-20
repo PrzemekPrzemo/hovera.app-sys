@@ -15,6 +15,10 @@ final readonly class CalculationOptions
         public bool $avoidFerries = false,
         public string $routingProfile = 'truck',
         public ?CalculationMode $mode = null,
+        // Liczba koni do przewozu — wpływa na cenę gdy transporter ma
+        // ustawione `extra_horse_fee_default` > 0 w TransportSettings.
+        // 1 = brak doliczenia. Walidacja UI: 1–30.
+        public int $horsesCount = 1,
     ) {}
 
     public function resolveMode(): CalculationMode

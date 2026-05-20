@@ -267,11 +267,99 @@ class CalculatorServiceTest extends TestCase
             currency: 'PLN',
             routingProvider: 'ors',
             polyline: 'abc_def',
+            extraHorseFeeTotal: 300.00,
+            extraHorseFeePerHead: 150.00,
+            horsesCount: 3,
         );
 
         $hydrated = Quotation::fromLivewire($q->toLivewire());
 
         $this->assertEquals($q, $hydrated);
+    }
+
+    public function test_extra_horse_fee_zero_when_horses_count_is_one(): void
+    {
+        TransportSettings::current()->forceFill([
+            'extra_horse_fee_default' => 150.00,
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(horsesCount: 1),
+        );
+
+        // 1 koń = 0 dodatkowych = brak doliczenia, niezależnie od stawki.
+        $this->assertSame(0.0, $q->extraHorseFeeTotal);
+        $this->assertSame(150.00, $q->extraHorseFeePerHead);
+        $this->assertSame(1, $q->horsesCount);
+    }
+
+    public function test_extra_horse_fee_charges_per_extra_horse(): void
+    {
+        TransportSettings::current()->forceFill([
+            'extra_horse_fee_default' => 150.00,
+            // Pump rate'y żeby base_cost przekroczył minimum_charge — łatwiej
+            // zweryfikować net_total bez efektu minimum_adjustment.
+            'rate_per_km' => 20.00,
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(horsesCount: 4),
+        );
+
+        // 4 konie - 1 (w cenie bazowej) = 3 × 150 = 450
+        $this->assertSame(450.00, $q->extraHorseFeeTotal);
+        $this->assertSame(150.00, $q->extraHorseFeePerHead);
+        $this->assertSame(4, $q->horsesCount);
+
+        // net = base 2000 + fuel 16.25 + extra 450 = 2466.25; minimum (800)
+        // już dawno przekroczone więc min_adjustment=0
+        $this->assertSame(0.0, $q->minimumAdjustment);
+        $this->assertSame(2466.25, $q->netTotal);
+    }
+
+    public function test_extra_horse_fee_disabled_when_default_is_zero(): void
+    {
+        // Domyślny stan TransportSettings: extra_horse_fee_default=0.
+        // Niezależnie od liczby koni, cena = ta sama (legacy behaviour).
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(horsesCount: 5),
+        );
+
+        $this->assertSame(0.0, $q->extraHorseFeeTotal);
+    }
+
+    public function test_extra_horse_fee_with_minimum_charge_adjustment(): void
+    {
+        // Sprawdzamy że extra_horse_fee wchodzi DO subtotalu PRZED
+        // minimum_adjustment — gdy base+fuel+extra < min_charge, dobór
+        // doliczy się do minimum (a nie minimum + extra).
+        TransportSettings::current()->forceFill([
+            'extra_horse_fee_default' => 50.00,
+            'rate_per_km' => 3.00,           // base = 300
+            'minimum_charge' => 1000.00,
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(horsesCount: 3),
+        );
+
+        // base=300 + fuel=16.25 + extra=100 (2 dodatkowe × 50) = 416.25
+        // min_adj = 1000 - 416.25 = 583.75 → net = 1000
+        $this->assertSame(100.00, $q->extraHorseFeeTotal);
+        $this->assertSame(583.75, $q->minimumAdjustment);
+        $this->assertSame(1000.00, $q->netTotal);
     }
 
     public function test_currency_passes_through_from_settings(): void
@@ -294,6 +382,7 @@ class CalculatorServiceTest extends TestCase
             $t->decimal('rate_per_km', 6, 2)->default(4.50);
             $t->decimal('rate_per_km_loaded', 6, 2)->nullable();
             $t->decimal('minimum_charge', 8, 2)->default(800.00);
+            $t->decimal('extra_horse_fee_default', 8, 2)->default(0);
             $t->decimal('fuel_consumption_l_per_100km', 5, 2)->default(32.5);
             $t->boolean('fuel_surcharge_enabled')->default(true);
             $t->decimal('fuel_base_price_pln', 5, 2)->default(7.00);

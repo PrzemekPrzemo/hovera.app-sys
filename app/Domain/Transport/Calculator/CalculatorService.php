@@ -97,7 +97,14 @@ class CalculatorService
             );
         }
 
-        $subtotal = round($baseCost + $fuelSurcharge, 2);
+        // Doliczenie za dodatkowe konie: tylko konie POWYŻEJ pierwszego — ten
+        // jest w cenie bazowej. Jeśli tenant nie ustawił `extra_horse_fee_default`
+        // (default=0), liczenie jest no-opem niezależnie od horsesCount.
+        $horsesCount = max(1, $options->horsesCount);
+        $extraHorseFeePerHead = (float) $settings->extra_horse_fee_default;
+        $extraHorseFeeTotal = round($extraHorseFeePerHead * max(0, $horsesCount - 1), 2);
+
+        $subtotal = round($baseCost + $fuelSurcharge + $extraHorseFeeTotal, 2);
         $minimumCharge = (float) $settings->minimum_charge;
         $minimumAdjustment = max(0.0, round($minimumCharge - $subtotal, 2));
 
@@ -120,6 +127,9 @@ class CalculatorService
             currency: (string) $settings->currency,
             routingProvider: $route->providerId,
             polyline: $route->polyline,
+            extraHorseFeeTotal: $extraHorseFeeTotal,
+            extraHorseFeePerHead: $extraHorseFeePerHead,
+            horsesCount: $horsesCount,
         );
     }
 
