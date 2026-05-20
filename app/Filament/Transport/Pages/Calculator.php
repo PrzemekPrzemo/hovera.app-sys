@@ -27,6 +27,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Http\RedirectResponse;
+use Livewire\Features\SupportRedirects\Redirector;
 use Throwable;
 
 /**
@@ -294,7 +295,7 @@ class Calculator extends Page implements HasForms
      * (CreateQuote::fillForm konsumuje pending). Wymaga wcześniejszego
      * udanego `calculate()` — przycisk widoczny tylko gdy mamy `$quotation`.
      */
-    public function saveAsQuote(): RedirectResponse
+    public function saveAsQuote(): RedirectResponse|Redirector
     {
         abort_unless(self::canAccess(), 403);
         abort_unless($this->quotation !== null, 422);
