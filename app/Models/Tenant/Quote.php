@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Tenant;
 
+use App\Enums\CalculationMode;
 use App\Enums\QuoteStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -20,7 +21,7 @@ class Quote extends TenantModel
         'customer_company', 'customer_tax_id', 'customer_address',
         'pickup_address', 'pickup_lat', 'pickup_lng',
         'dropoff_address', 'dropoff_lat', 'dropoff_lng',
-        'preferred_date', 'preferred_time', 'round_trip', 'loaded',
+        'preferred_date', 'preferred_time', 'round_trip', 'calculation_mode', 'loaded',
         'vehicle_id', 'trailer_id', 'driver_id',
         'distance_km', 'duration_seconds', 'routing_provider', 'polyline',
         'rate_per_km', 'base_cost', 'fuel_surcharge', 'minimum_adjustment',
@@ -39,6 +40,7 @@ class Quote extends TenantModel
     {
         return [
             'status' => QuoteStatus::class,
+            'calculation_mode' => CalculationMode::class,
             'pickup_lat' => 'float',
             'pickup_lng' => 'float',
             'dropoff_lat' => 'float',

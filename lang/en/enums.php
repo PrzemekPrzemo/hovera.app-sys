@@ -13,6 +13,12 @@ return [
         'trailer' => 'Trailer',
     ],
 
+    'calculation_mode' => [
+        'one_way' => 'One-way trip',
+        'round_trip' => 'Round trip',
+        'return_home' => 'Direct return to base',
+    ],
+
     'quote_status' => [
         'draft' => 'Draft',
         'sent' => 'Sent',

@@ -17,9 +17,13 @@ return [
             'to_address' => 'Adres dostarczenia',
             'loaded' => 'Z koniem (z ładunkiem)',
             'round_trip' => 'Trasa z powrotem',
+            'mode' => 'Tryb kalkulacji',
             'avoid_tolls' => 'Omijaj autostrady płatne',
             'avoid_ferries' => 'Omijaj promy',
             'profile' => 'Profil pojazdu',
+        ],
+        'helper' => [
+            'mode' => '„Powrót do bazy" doliczy km z punktu docelowego do bazy transportera. Wymaga ustawionej bazy w Ustawieniach Transportu — bez tego spada do trybu „w dwie strony".',
         ],
         'placeholder' => [
             'from_address' => 'np. Stajnia Marymoncka 1, Warszawa',

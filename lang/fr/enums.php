@@ -13,6 +13,12 @@ return [
         'trailer' => 'Remorque',
     ],
 
+    'calculation_mode' => [
+        'one_way' => 'Aller simple',
+        'round_trip' => 'Aller-retour',
+        'return_home' => 'Retour direct à la base',
+    ],
+
     'quote_status' => [
         'draft' => 'Brouillon',
         'sent' => 'Envoyée',

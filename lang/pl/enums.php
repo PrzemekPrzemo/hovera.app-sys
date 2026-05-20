@@ -13,6 +13,12 @@ return [
         'trailer' => 'Przyczepa',
     ],
 
+    'calculation_mode' => [
+        'one_way' => 'Jazda w jedną stronę',
+        'round_trip' => 'Jazda w dwie strony',
+        'return_home' => 'Bezpośredni powrót do bazy',
+    ],
+
     'quote_status' => [
         'draft' => 'Szkic',
         'sent' => 'Wysłana',

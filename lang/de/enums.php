@@ -13,6 +13,12 @@ return [
         'trailer' => 'Anhänger',
     ],
 
+    'calculation_mode' => [
+        'one_way' => 'Einfache Fahrt',
+        'round_trip' => 'Hin- und Rückfahrt',
+        'return_home' => 'Direkte Rückkehr zur Basis',
+    ],
+
     'quote_status' => [
         'draft' => 'Entwurf',
         'sent' => 'Versendet',

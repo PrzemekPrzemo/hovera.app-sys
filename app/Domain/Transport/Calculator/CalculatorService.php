@@ -10,6 +10,7 @@ use App\Domain\Transport\Fuel\FuelPriceService;
 use App\Domain\Transport\Routing\Data\Coords;
 use App\Domain\Transport\Routing\Data\RouteOptions;
 use App\Domain\Transport\Routing\RoutingService;
+use App\Enums\CalculationMode;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\TransportSettings;
 
@@ -42,23 +43,46 @@ class CalculatorService
         Coords $to,
         ?CalculationOptions $options = null,
     ): Quotation {
-        $options ??= new CalculationOptions();
+        $options ??= new CalculationOptions;
         $settings = TransportSettings::current();
 
-        $route = $this->routing->calculate(
-            $tenant,
-            $from,
-            $to,
-            new RouteOptions(
-                profile: $options->routingProfile,
-                avoidTolls: $options->avoidTolls,
-                avoidFerries: $options->avoidFerries,
-            ),
+        $routeOptions = new RouteOptions(
+            profile: $options->routingProfile,
+            avoidTolls: $options->avoidTolls,
+            avoidFerries: $options->avoidFerries,
         );
 
+        $route = $this->routing->calculate($tenant, $from, $to, $routeOptions);
+
+        // Tryb kalkulacji (user feedback: "jazda w jedną stronę / w dwie strony /
+        // bezpośredni powrót do domu").
+        //
+        //   - OneWay     : tylko A→B
+        //   - RoundTrip  : A→B + B→A — zakładamy tę samą trasę (×2)
+        //   - ReturnHome : A→B + B→base. Wymaga home_lat/home_lng — soft
+        //                  fallback do RoundTrip gdy nie ustawione.
+        $mode = $options->resolveMode();
         $distanceKm = $route->distanceKm;
-        if ($options->roundTrip) {
+
+        if ($mode === CalculationMode::RoundTrip) {
             $distanceKm *= 2;
+        } elseif ($mode === CalculationMode::ReturnHome) {
+            $homeLat = $settings->home_lat !== null ? (float) $settings->home_lat : null;
+            $homeLng = $settings->home_lng !== null ? (float) $settings->home_lng : null;
+
+            if ($homeLat !== null && $homeLng !== null) {
+                $returnLeg = $this->routing->calculate(
+                    $tenant,
+                    $to,
+                    new Coords($homeLat, $homeLng),
+                    $routeOptions,
+                );
+                $distanceKm += $returnLeg->distanceKm;
+            } else {
+                // Brak bazy w settings — fallback na RoundTrip żeby calculate()
+                // nie crashował. Calculator UI ostrzega w widoku.
+                $distanceKm *= 2;
+            }
         }
 
         $rateUsed = $this->resolveRate($settings, $options->loaded);
