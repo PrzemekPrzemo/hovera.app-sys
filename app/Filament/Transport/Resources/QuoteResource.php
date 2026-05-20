@@ -418,6 +418,31 @@ class QuoteResource extends Resource
             return;
         }
 
+        // Resource assignment gate — vehicle + driver muszą być przypisane przed
+        // wysłaniem (trailer opcjonalny). Bez tego po acceptacji statystyki
+        // per-vehicle/per-driver nie miały by co liczyć — patrz user feedback
+        // "do oferty trzeba dodać samochód i przyczepę i kierowce by poźniej po
+        // zaakceptowaniu oferty była możliwość liczenia statystyk".
+        $missing = [];
+        if (! $quote->vehicle_id) {
+            $missing[] = __('transport/quote.form.label.vehicle');
+        }
+        if (! $quote->driver_id) {
+            $missing[] = __('transport/quote.form.label.driver');
+        }
+        if ($missing !== []) {
+            Notification::make()
+                ->warning()
+                ->title(__('transport/quote.notify.resources_required_title'))
+                ->body(__('transport/quote.notify.resources_required_body', [
+                    'fields' => implode(', ', $missing),
+                ]))
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
         $quote->forceFill([
             'status' => QuoteStatus::Sent,
             'sent_at' => now(),

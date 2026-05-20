@@ -104,6 +104,8 @@ return [
         'verification_required' => 'Account not verified',
         'verification_required_body' => 'To send a quote to a customer, you must first complete account verification — upload the required documents.',
         'open_documents' => 'Open documents',
+        'resources_required_title' => 'Assign resources before sending the quote',
+        'resources_required_body' => 'Missing: :fields. Edit the quote and fill them in. Without these, per-vehicle/driver stats after acceptance won\'t add up.',
         'invoice_issued' => 'Invoice issued',
         'invoice_issued_body' => 'Invoice :number created from this quote.',
         'invoice_failed' => 'Could not issue invoice',

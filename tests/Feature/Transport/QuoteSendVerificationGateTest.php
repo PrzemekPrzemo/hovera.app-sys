@@ -10,6 +10,7 @@ use App\Enums\VerificationStatus;
 use App\Filament\Transport\Resources\QuoteResource;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\Quote;
+use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
@@ -46,7 +47,7 @@ class QuoteSendVerificationGateTest extends TestCase
 
         $this->setUpQuotesTable();
 
-        $this->mock(\App\Services\TenantAuditLogger::class, function (MockInterface $m) {
+        $this->mock(TenantAuditLogger::class, function (MockInterface $m) {
             $m->shouldReceive('record')->andReturnNull();
         });
     }
@@ -95,7 +96,10 @@ class QuoteSendVerificationGateTest extends TestCase
     public function test_send_passes_when_tenant_verified(): void
     {
         $this->bindTenantManager($this->makeTenant(VerificationStatus::Verified));
-        $quote = $this->makeQuote(QuoteStatus::Draft);
+        $quote = $this->makeQuote(QuoteStatus::Draft, [
+            'vehicle_id' => (string) Str::ulid(),
+            'driver_id' => (string) Str::ulid(),
+        ]);
 
         QuoteResource::sendQuote($quote);
 
@@ -108,11 +112,51 @@ class QuoteSendVerificationGateTest extends TestCase
     {
         // Pure unit: bez aktywnego tenant'a w TenantManager (np. CLI command)
         // gate przepuszcza (no-op). Stable tenant'y też nie mają verification.
-        $quote = $this->makeQuote(QuoteStatus::Draft);
+        $quote = $this->makeQuote(QuoteStatus::Draft, [
+            'vehicle_id' => (string) Str::ulid(),
+            'driver_id' => (string) Str::ulid(),
+        ]);
 
         QuoteResource::sendQuote($quote);
 
         $this->assertSame(QuoteStatus::Sent, $quote->fresh()->status);
+    }
+
+    public function test_send_blocked_when_vehicle_missing(): void
+    {
+        $this->bindTenantManager($this->makeTenant(VerificationStatus::Verified));
+        $quote = $this->makeQuote(QuoteStatus::Draft, [
+            'vehicle_id' => null,
+            'driver_id' => (string) Str::ulid(),
+        ]);
+
+        QuoteResource::sendQuote($quote);
+
+        $this->assertSame(QuoteStatus::Draft, $quote->fresh()->status, 'status MUST stay draft when vehicle not assigned');
+        $this->assertNull($quote->fresh()->sent_at);
+    }
+
+    public function test_send_blocked_when_driver_missing(): void
+    {
+        $this->bindTenantManager($this->makeTenant(VerificationStatus::Verified));
+        $quote = $this->makeQuote(QuoteStatus::Draft, [
+            'vehicle_id' => (string) Str::ulid(),
+            'driver_id' => null,
+        ]);
+
+        QuoteResource::sendQuote($quote);
+
+        $this->assertSame(QuoteStatus::Draft, $quote->fresh()->status, 'status MUST stay draft when driver not assigned');
+    }
+
+    public function test_send_blocked_when_both_resources_missing(): void
+    {
+        $this->bindTenantManager($this->makeTenant(VerificationStatus::Verified));
+        $quote = $this->makeQuote(QuoteStatus::Draft);
+
+        QuoteResource::sendQuote($quote);
+
+        $this->assertSame(QuoteStatus::Draft, $quote->fresh()->status);
     }
 
     public function test_ensure_tenant_verified_returns_true_for_stable_tenant(): void

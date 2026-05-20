@@ -7,6 +7,7 @@ namespace Tests\Feature\Transport;
 use App\Enums\QuoteStatus;
 use App\Filament\Transport\Resources\QuoteResource;
 use App\Models\Tenant\Quote;
+use App\Services\TenantAuditLogger;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -37,7 +38,7 @@ class QuoteResourceWorkflowTest extends TestCase
 
         // Tłumimy audit logger żeby nie próbował zapisywać do nieskonfigurowanej
         // tabeli audit_log w tenant DB.
-        $this->mock(\App\Services\TenantAuditLogger::class, function (MockInterface $m) {
+        $this->mock(TenantAuditLogger::class, function (MockInterface $m) {
             $m->shouldReceive('record')->andReturnNull();
         });
     }
@@ -50,7 +51,10 @@ class QuoteResourceWorkflowTest extends TestCase
 
     public function test_send_quote_transitions_draft_to_sent_and_generates_accept_token(): void
     {
-        $quote = $this->makeQuote(QuoteStatus::Draft);
+        $quote = $this->makeQuote(QuoteStatus::Draft, [
+            'vehicle_id' => (string) Str::ulid(),
+            'driver_id' => (string) Str::ulid(),
+        ]);
         $this->assertNull($quote->accept_token);
         $this->assertNull($quote->sent_at);
 
@@ -65,7 +69,11 @@ class QuoteResourceWorkflowTest extends TestCase
 
     public function test_send_quote_preserves_existing_accept_token_if_present(): void
     {
-        $quote = $this->makeQuote(QuoteStatus::Draft, ['accept_token' => 'preset-token-xyz']);
+        $quote = $this->makeQuote(QuoteStatus::Draft, [
+            'accept_token' => 'preset-token-xyz',
+            'vehicle_id' => (string) Str::ulid(),
+            'driver_id' => (string) Str::ulid(),
+        ]);
 
         QuoteResource::sendQuote($quote);
 
