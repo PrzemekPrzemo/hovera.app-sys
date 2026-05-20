@@ -15,6 +15,9 @@ return [
         'tools' => 'Tools',
         'fleet' => 'Fleet',
         'dispatch' => 'Dispatch',
+        'owner_horses' => 'My horses',
+        'owner_transport' => 'Transport',
+        'owner_finance' => 'Invoices',
     ],
 
     'tenants' => 'Stables',

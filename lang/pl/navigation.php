@@ -17,6 +17,10 @@ return [
         // Transport module
         'fleet' => 'Flota',
         'dispatch' => 'Zlecenia',
+        // Owner panel
+        'owner_horses' => 'Moje konie',
+        'owner_transport' => 'Transport',
+        'owner_finance' => 'Faktury',
     ],
 
     // Resource labels
