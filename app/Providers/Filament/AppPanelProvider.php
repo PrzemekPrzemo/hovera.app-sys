@@ -9,6 +9,7 @@ use App\Http\Middleware\EnforceImpersonationExpiry;
 use App\Http\Middleware\InitialiseTenantFromSession;
 use App\Http\Middleware\RedirectIfTenantSuspended;
 use App\Http\Middleware\RedirectIfTrialExpired;
+use App\Http\Middleware\RequireTenantType;
 use App\Services\Tenancy\TenantRoleGate;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -187,6 +188,11 @@ class AppPanelProvider extends PanelProvider
                 Authenticate::class,
                 EnforceImpersonationExpiry::class,
                 InitialiseTenantFromSession::class,
+                // Symetrycznie do TransportPanelProvider — transporter który
+                // wylądował na /app (np. po loginie /app/login bez explicit
+                // panel routingu) jest bouncowany na /transport. Master admin
+                // bypassed przez RequireTenantType lines 42-45.
+                RequireTenantType::class.':stable',
                 // Forces /app/* → /app/billing once trial_ends_at is past
                 // and no Stripe subscription is bound. Must come AFTER
                 // InitialiseTenantFromSession so $tenant is hydrated.
