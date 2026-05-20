@@ -7,6 +7,7 @@ namespace App\Domain\Transport\Geocoding;
 use App\Domain\Transport\Geocoding\Data\GeocodedAddress;
 use App\Domain\Transport\Geocoding\Exceptions\GeocodingException;
 use App\Domain\Transport\Routing\Data\Coords;
+use App\Models\Central\SystemSetting;
 use Illuminate\Http\Client\Factory as HttpFactory;
 
 /**
@@ -32,7 +33,12 @@ class MapboxGeocoder
         ?string $accessToken = null,
         ?int $timeoutSeconds = null,
     ) {
-        $this->accessToken = $accessToken ?? (string) config('transport.providers.mapbox.access_token', '');
+        // SystemSetting > .env config > '' — master admin UI ma pierwszeństwo
+        // przed plikiem .env. Pozwala master adminowi rotować klucze bez
+        // dotykania serwera (patrz /admin/maps-providers-settings).
+        $this->accessToken = $accessToken
+            ?? SystemSetting::getSecret('transport.mapbox.token')
+            ?? (string) config('transport.providers.mapbox.access_token', '');
         $this->timeoutSeconds = $timeoutSeconds ?? (int) config('transport.providers.mapbox.timeout', 15);
     }
 

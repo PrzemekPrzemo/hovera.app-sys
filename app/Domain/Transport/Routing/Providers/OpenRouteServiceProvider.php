@@ -9,6 +9,7 @@ use App\Domain\Transport\Routing\Data\Coords;
 use App\Domain\Transport\Routing\Data\Route;
 use App\Domain\Transport\Routing\Data\RouteOptions;
 use App\Domain\Transport\Routing\Exceptions\RoutingException;
+use App\Models\Central\SystemSetting;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Http\Client\PendingRequest;
 
@@ -37,7 +38,10 @@ class OpenRouteServiceProvider implements RoutingProvider
         ?string $apiKey = null,
         ?int $timeoutSeconds = null,
     ) {
-        $this->apiKey = $apiKey ?? (string) config('transport.providers.ors.api_key', '');
+        // SystemSetting > .env config — patrz /admin/maps-providers-settings.
+        $this->apiKey = $apiKey
+            ?? SystemSetting::getSecret('transport.ors.api_key')
+            ?? (string) config('transport.providers.ors.api_key', '');
         $this->timeoutSeconds = $timeoutSeconds ?? (int) config('transport.providers.ors.timeout', 15);
     }
 
