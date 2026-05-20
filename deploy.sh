@@ -101,11 +101,29 @@ log "→ composer install (production)"
 run "$COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autoloader"
 
 # ── Permissions ────────────────────────────────────────────────────
+# Po `git pull` nowe pliki + katalogi należą do user'a SSH. PHP-FPM
+# (np. `psaserv` na Plesku, `www-data` na VPS) musi mieć write żeby:
+#   - kompilować Blade views → storage/framework/views/*.php
+#   - cachować data → storage/framework/cache/*
+#   - logować → storage/logs/*
+# Stąd recursive chmod 775 + sticky bit (2755) na katalogach żeby nowe
+# pliki dziedziczyły group ownership. Chown używa HOVERA_VHOST_USER/GROUP
+# z scripts/detect-env.sh (Plesk) lub fallback www-data (VPS).
 log "→ Permissions storage + bootstrap/cache"
-run "chmod -R ug+rw storage bootstrap/cache"
+HOVERA_VHOST_USER="${HOVERA_VHOST_USER:-www-data}"
+HOVERA_VHOST_GROUP="${HOVERA_VHOST_GROUP:-www-data}"
+run "chown -R ${HOVERA_VHOST_USER}:${HOVERA_VHOST_GROUP} storage bootstrap/cache 2>/dev/null || true"
+run "chmod -R u+rwX,g+rwX,o+rX storage bootstrap/cache"
+run "find storage bootstrap/cache -type d -exec chmod 2775 {} \\; 2>/dev/null || true"
 
 # ── Cache wipe + warm ───────────────────────────────────────────────
 log "→ Cache config + routes + views"
+# Fizyczne usunięcie compiled views — `view:clear` czasem zostawia pliki
+# z starym ownerem (root) jeśli artisan był odpalany jako root przy
+# pierwszym installu. Bez tego nowe compile trafiało na "permission
+# denied" mimo że chown wyżej naprawił katalogi.
+run "rm -rf storage/framework/views/*.php 2>/dev/null || true"
+run "rm -rf storage/framework/cache/data/* 2>/dev/null || true"
 run "$PHP_BIN artisan config:clear"
 run "$PHP_BIN artisan route:clear"
 run "$PHP_BIN artisan view:clear"
