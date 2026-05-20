@@ -39,16 +39,9 @@
         .feature-text span { font-size: .82rem; color: #6b7280; }
         .footer-links { text-align: center; margin-top: 1rem; font-size: .85rem; color: #6b7280; }
         .footer-links a { color: var(--primary); text-decoration: none; margin: 0 .35rem; }
-        @media (prefers-color-scheme: dark) {
-            html, body { background: #1F1A17; color: #F7F4EF; }
-            .card { background: #2a221c; }
-            .logo, label, .terms, h1, h2, .feature-text strong { color: #E9E2D3; }
-            .subtitle, .helper, .footer-links, .feature-text span { color: #C8B8A4; }
-            input[type=text], input[type=email], input[type=tel] { background: #1F1A17; border-color: #4a3d31; color: #F7F4EF; }
-            .features { border-top-color: #4a3d31; }
-            .feature-icon { background: #1F1A17; }
-            .invite-banner { background: #2a221c; border-color: #4a3d31; color: #fde68a; }
-        }
+        .stable-hint-banner { background: #ecfdf5; border: 1px solid #86efac; padding: .75rem 1rem; border-radius: 10px; margin-bottom: 1.25rem; font-size: .88rem; color: #166534; line-height: 1.5; }
+        /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
     </style>
 </head>
 <body>
@@ -61,6 +54,8 @@
 
             @if (! empty($invite_stable_id))
                 <div class="invite-banner">{{ __('public/horse_owner_registration.invite.banner') }}</div>
+            @else
+                <div class="stable-hint-banner">{{ __('public/horse_owner_registration.stable_hint.banner') }}</div>
             @endif
 
             @if ($errors->any())
@@ -134,6 +129,14 @@
                     <div class="feature-text">
                         <strong>{{ __('public/horse_owner_registration.features.horse_docs.title') }}</strong>
                         <span>{{ __('public/horse_owner_registration.features.horse_docs.body') }}</span>
+                    </div>
+                </div>
+
+                <div class="feature">
+                    <div class="feature-icon">🏇</div>
+                    <div class="feature-text">
+                        <strong>{{ __('public/horse_owner_registration.features.stable_relation.title') }}</strong>
+                        <span>{{ __('public/horse_owner_registration.features.stable_relation.body') }}</span>
                     </div>
                 </div>
 
