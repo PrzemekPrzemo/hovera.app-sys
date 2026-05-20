@@ -3,6 +3,8 @@
 > Stan: maj 2026 · uzupełniany na bieżąco
 >
 > Ten dokument trzyma kierunek rozwoju produktu poza tym, co jest już w `FEATURES.md`. Każda pozycja jest świadomą decyzją produktową — można ją wyciąć / przesunąć, ale jeśli wchodzi do realizacji, opis tutaj służy jako spec.
+>
+> **🔗 Marketplace + Calculator parity:** patrz `docs/MARKETPLACE-ROADMAP.md` — osobny dokument z listą otwartych PR-ów po sesji deep-dive analizy TransportKoni-Kalkulator i fundamentu HorseOwner (#297-#300).
 
 ---
 
