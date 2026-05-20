@@ -112,7 +112,29 @@ run "$COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autolo
 log "→ Permissions storage + bootstrap/cache"
 HOVERA_VHOST_USER="${HOVERA_VHOST_USER:-www-data}"
 HOVERA_VHOST_GROUP="${HOVERA_VHOST_GROUP:-www-data}"
-run "chown -R ${HOVERA_VHOST_USER}:${HOVERA_VHOST_GROUP} storage bootstrap/cache 2>/dev/null || true"
+
+# Chown wymaga roota lub sudo. Bez tego deploy "udaje sukces" ale PHP-FPM
+# nadal nie może pisać — i potem klient dostaje "Permission denied" przy
+# kompilacji Blade. Wyraźnie informujemy zamiast cichego `|| true`.
+if [[ "$EUID" -eq 0 ]]; then
+    CHOWN_CMD="chown"
+elif command -v sudo >/dev/null 2>&1; then
+    CHOWN_CMD="sudo -n chown"  # -n = non-interactive (fail jeśli wymaga hasła)
+else
+    CHOWN_CMD=""
+fi
+
+if [[ -n "$CHOWN_CMD" ]]; then
+    if ! run "$CHOWN_CMD -R ${HOVERA_VHOST_USER}:${HOVERA_VHOST_GROUP} storage bootstrap/cache" 2>&1; then
+        warn "chown failed — sprawdź czy uruchamiasz deploy jako root lub user z sudo NOPASSWD."
+        warn "Bez chown PHP-FPM nie zapisze do storage/. Manual fix:"
+        warn "  sudo chown -R ${HOVERA_VHOST_USER}:${HOVERA_VHOST_GROUP} storage bootstrap/cache"
+    fi
+else
+    warn "Brak uprawnień do chown (nie root + brak sudo). Storage permissions mogą być błędne."
+    warn "Manual fix po deploy: sudo chown -R ${HOVERA_VHOST_USER}:${HOVERA_VHOST_GROUP} storage bootstrap/cache"
+fi
+
 run "chmod -R u+rwX,g+rwX,o+rX storage bootstrap/cache"
 run "find storage bootstrap/cache -type d -exec chmod 2775 {} \\; 2>/dev/null || true"
 
