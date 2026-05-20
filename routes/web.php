@@ -42,6 +42,7 @@ use App\Http\Controllers\Public\TransporterProfileController;
 use App\Http\Controllers\Public\TransportInquiryController;
 use App\Http\Controllers\Public\TransportLandingController;
 use App\Http\Controllers\Public\TransportLeadPortalController;
+use App\Http\Controllers\Public\TransportMarketplaceController;
 use App\Http\Controllers\Public\TransportReviewController;
 use App\Http\Controllers\Tenant\BillingController;
 use App\Http\Controllers\Tenant\BugReportController;
@@ -659,6 +660,21 @@ Route::middleware(['web'])
     ->get('/transport/zapytanie/portal/{slug}', [TransportLeadPortalController::class, 'show'])
     ->where('slug', '[0-9a-fA-F-]{36}')
     ->name('public.transport.lead_portal');
+
+/*
+ * Publiczna giełda otwartych leadów transportowych — PR 8 z
+ * docs/MARKETPLACE-ROADMAP.md. Lista status='open' leadów z filtrami
+ * voivodeship/horses_count/date_window. Privacy: tylko województwa,
+ * NIE pełne adresy.
+ */
+Route::middleware(['web'])
+    ->get('/transport/marketplace', [TransportMarketplaceController::class, 'index'])
+    ->name('public.transport.marketplace');
+
+Route::middleware(['web'])
+    ->post('/transport/marketplace/{lead}/claim', [TransportMarketplaceController::class, 'claim'])
+    ->where('lead', '[0-9A-Za-z]{26}')
+    ->name('public.transport.marketplace.claim');
 
 /*
  * Publiczny formularz recenzji marketplace'u — magic link bez autoryzacji.
