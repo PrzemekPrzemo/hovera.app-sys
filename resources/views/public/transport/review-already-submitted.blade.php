@@ -14,11 +14,8 @@
         h1 { margin: 0 0 .75rem; color: #3D2E22; }
         p { color: var(--muted); line-height: 1.55; }
         a.btn { display: inline-block; margin-top: 1rem; padding: .65rem 1.1rem; background: var(--primary); color: #fff; border-radius: 10px; text-decoration: none; font-weight: 600; }
-        @media (prefers-color-scheme: dark) {
-            html, body { background: #1F1A17; color: #F7F4EF; }
-            .card { background: #2a221c; }
-            h1 { color: #E9E2D3; }
-        }
+                    /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
     </style>
 </head>
 <body>

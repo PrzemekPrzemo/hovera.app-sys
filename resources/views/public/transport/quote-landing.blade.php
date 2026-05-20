@@ -45,16 +45,7 @@
         .payment-instructions strong { display: block; margin-bottom: .25rem; }
         .payment-contact { padding: 1rem; background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; border-radius: 10px; font-size: .9rem; line-height: 1.5; }
         .footer { text-align: center; margin-top: 1.5rem; font-size: .75rem; color: var(--muted); }
-        @media (prefers-color-scheme: dark) {
-            html, body { background: #1F1A17; color: #F7F4EF; }
-            .card { background: #2a221c; }
-            .seller, h1 { color: #E9E2D3; }
-            .grid .row .v { color: #F7F4EF; }
-            .grid .row .l, .number, .footer { color: #C8B8A4; }
-            .terms { background: #1F1A17; color: #E9E2D3; }
-            .btn-reject { background: #2a221c; color: #fca5a5; border-color: #57342f; }
-        }
-        /* Mobile (≤600px) — etykiety nad wartościami, przyciski jeden pod drugim,
+                /* Mobile (≤600px) — etykiety nad wartościami, przyciski jeden pod drugim,
            mniej paddingu w karcie, większe taps dla accept/reject. */
         @media (max-width: 600px) {
             body { padding: 1rem .75rem; }
@@ -68,6 +59,8 @@
             .pricing-row.total { font-size: 1.05rem; }
             .payment-pay-btn { padding: 1.1rem; font-size: 1rem; }
         }
+            /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
     </style>
 </head>
 <body>

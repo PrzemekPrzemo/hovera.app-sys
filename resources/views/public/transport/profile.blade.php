@@ -62,14 +62,7 @@
         .verified-badge .tooltip { visibility: hidden; opacity: 0; position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); background: #2a221c; color: #E9E2D3; padding: .85rem 1rem; border-radius: 8px; width: 320px; max-width: 90vw; font-size: .78rem; font-weight: 400; line-height: 1.4; text-align: left; box-shadow: 0 8px 24px rgba(0,0,0,.3); z-index: 10; }
         .verified-badge:hover .tooltip, .verified-badge:focus-within .tooltip { visibility: visible; opacity: 1; }
         .verified-badge .tooltip a { color: #E9E2D3; text-decoration: underline; }
-        @media (prefers-color-scheme: dark) {
-            html, body { background: #1F1A17; color: #F7F4EF; }
-            .vehicle, .contact, .footer-cta, .voiv { background: #2a221c; color: #E9E2D3; border-color: #4a3d31; }
-            .section h2, .vehicle h3 { color: #E9E2D3; }
-            .lead { color: #E9E2D3; }
-            .powered, .powered a { color: #C8B8A4; }
-        }
-        .reviews-summary { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+                .reviews-summary { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
         .reviews-avg { font-size: 2.4rem; font-weight: 700; color: #3D2E22; line-height: 1; }
         .reviews-stars-big { color: var(--primary); font-size: 1.3rem; letter-spacing: .05em; }
         .reviews-count { color: var(--muted); font-size: .95rem; }
@@ -86,13 +79,7 @@
         .review-verified { display: inline-block; padding: .12rem .55rem; border-radius: 999px; font-size: .7rem; background: color-mix(in srgb, var(--primary) 15%, transparent); color: color-mix(in srgb, var(--primary) 80%, #000); }
         .review-response { margin-top: .75rem; padding: .75rem 1rem; background: color-mix(in srgb, var(--primary) 8%, var(--bg)); border-left: 3px solid var(--primary); border-radius: 6px; }
         .review-response-label { font-weight: 600; color: #3D2E22; font-size: .85rem; margin-bottom: .25rem; }
-        @media (prefers-color-scheme: dark) {
-            .review { background: #2a221c; }
-            .reviews-avg, .review-author, .review-comment, .review-response-label { color: #E9E2D3; }
-            .reviews-dist-bar { background: #4a3d31; }
-            .review-response { background: #322820; }
-        }
-        @media (max-width: 600px) {
+                @media (max-width: 600px) {
             .hero { padding: 2rem 1rem 2.5rem; }
             .hero h1 { font-size: 1.55rem; }
             .hero .tagline { font-size: .95rem; }
@@ -112,6 +99,8 @@
             .footer-cta { padding: 2rem 1rem; }
             .verified-badge .tooltip { width: 280px; max-width: calc(100vw - 2rem); }
         }
+            /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
     </style>
 </head>
 <body>

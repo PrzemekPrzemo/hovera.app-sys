@@ -30,14 +30,7 @@
         .direct-banner { background: color-mix(in srgb, var(--primary) 12%, #fff); border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border)); color: #3D2E22; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: .9rem; line-height: 1.5; }
         .direct-banner a { color: var(--primary); text-decoration: underline; }
         .direct-banner strong { color: #3D2E22; }
-        @media (prefers-color-scheme: dark) {
-            html, body { background: #1F1A17; color: #F7F4EF; }
-            .card { background: #2a221c; }
-            .logo, h1, label { color: #E9E2D3; }
-            .subtitle, .helper { color: #C8B8A4; }
-            input, textarea { background: #1F1A17; border-color: #4a3d31; color: #F7F4EF; }
-        }
-        /* Mobile (≤600px) — pojedyncze kolumny, mniej paddingu, większe taps. */
+                /* Mobile (≤600px) — pojedyncze kolumny, mniej paddingu, większe taps. */
         @media (max-width: 600px) {
             body { padding: 1rem .75rem; }
             .card { padding: 1.25rem 1rem; border-radius: 12px; }
@@ -51,6 +44,8 @@
             }
             button[type=submit] { padding: 1rem; font-size: 1.05rem; }
         }
+            /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
     </style>
 </head>
 <body>

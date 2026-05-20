@@ -15,11 +15,8 @@
         p { color: var(--muted); line-height: 1.55; }
         .disclaimer { font-size: .8rem; color: var(--muted); margin-top: 1.5rem; }
         .disclaimer a { color: var(--primary); }
-        @media (prefers-color-scheme: dark) {
-            html, body { background: #1F1A17; color: #F7F4EF; }
-            .card { background: #2a221c; }
-            h1 { color: #E9E2D3; }
-        }
+                    /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
     </style>
 </head>
 <body>

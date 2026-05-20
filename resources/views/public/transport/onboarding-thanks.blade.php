@@ -18,6 +18,8 @@
         ol { text-align: left; background: var(--bg); padding: 1.25rem 1.25rem 1.25rem 2.5rem; border-radius: 10px; line-height: 1.7; font-size: .92rem; color: #3D2E22; }
         .cta { display: inline-block; padding: .75rem 1.5rem; background: var(--primary); color: #fff; border-radius: 10px; text-decoration: none; font-weight: 700; margin-top: 1rem; }
         .cta:hover { background: var(--primary-dark); }
+            /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
+        html { color-scheme: light; }
     </style>
 </head>
 <body>
