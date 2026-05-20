@@ -12,6 +12,7 @@ use App\Enums\QuoteStatus;
 use App\Enums\VehicleType;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Filament\Transport\Resources\QuoteResource\Pages;
+use App\Models\Tenant\Customer;
 use App\Models\Tenant\Driver;
 use App\Models\Tenant\Quote;
 use App\Models\Tenant\TransportInvoice;
@@ -95,6 +96,41 @@ class QuoteResource extends Resource
             Forms\Components\Section::make(__('transport/quote.section.customer'))
                 ->columns(2)
                 ->schema([
+                    Forms\Components\Select::make('customer_id')
+                        ->label(__('transport/quote.form.label.customer_picker'))
+                        ->helperText(__('transport/quote.form.helper.customer_picker'))
+                        ->columnSpanFull()
+                        ->searchable()
+                        ->preload()
+                        ->getSearchResultsUsing(fn (string $search) => Customer::query()
+                            ->where(fn ($q) => $q->where('name', 'like', "%{$search}%")
+                                ->orWhere('company', 'like', "%{$search}%")
+                                ->orWhere('tax_id', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%"))
+                            ->orderBy('name')
+                            ->limit(20)
+                            ->get()
+                            ->mapWithKeys(fn (Customer $c) => [$c->id => $c->displayLabel()])
+                            ->all())
+                        ->getOptionLabelUsing(fn ($value) => Customer::query()->find($value)?->displayLabel())
+                        ->afterStateUpdated(function ($state, Forms\Set $set) {
+                            if (! $state) {
+                                return;
+                            }
+                            $c = Customer::query()->find($state);
+                            if (! $c) {
+                                return;
+                            }
+                            // Snapshot na quote — historyczna dokładność. Edycja
+                            // klienta po wystawieniu oferty NIE zmieni już złożonej oferty.
+                            $set('customer_name', $c->name);
+                            $set('customer_email', $c->email);
+                            $set('customer_phone', $c->phone);
+                            $set('customer_company', $c->company);
+                            $set('customer_tax_id', $c->tax_id);
+                            $set('customer_address', $c->address);
+                        })
+                        ->live(),
                     Forms\Components\TextInput::make('customer_name')
                         ->label(__('transport/quote.form.label.customer_name'))
                         ->required()

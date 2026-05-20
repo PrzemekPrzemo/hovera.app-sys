@@ -19,6 +19,7 @@ return [
             'number' => 'Numer',
             'status' => 'Status',
             'valid_until' => 'Ważne do',
+            'customer_picker' => 'Klient (wybierz z bazy)',
             'customer_name' => 'Imię i nazwisko',
             'customer_email' => 'Email',
             'customer_phone' => 'Telefon',
@@ -55,6 +56,7 @@ return [
             'mark_as_paid_reason' => 'Powód / numer transakcji (opcjonalnie)',
         ],
         'helper' => [
+            'customer_picker' => 'Wybierz istniejącego klienta z bazy (search po imieniu/firmie/NIP) albo zostaw puste i wypełnij dane ręcznie poniżej. Po wybraniu — dane zostaną skopiowane jako snapshot na ofercie.',
             'vehicle' => 'Pojazd z silnikiem — tylko trucks. Ten pojazd liczy spalanie.',
             'trailer' => 'Opcjonalna przyczepa (bez silnika) doczepiana do pojazdu prowadzącego.',
             'terms' => 'Tekst widoczny dla klienta na ofercie / PDF.',

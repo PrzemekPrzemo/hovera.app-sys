@@ -16,6 +16,7 @@ class Quote extends TenantModel
 
     protected $fillable = [
         'number', 'status',
+        'customer_id',
         'customer_name', 'customer_email', 'customer_phone',
         'customer_company', 'customer_tax_id', 'customer_address',
         'pickup_address', 'pickup_lat', 'pickup_lng',
@@ -66,6 +67,11 @@ class Quote extends TenantModel
             'p24_paid_at' => 'datetime',
             'payu_paid_at' => 'datetime',
         ];
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function vehicle(): BelongsTo
