@@ -105,11 +105,30 @@ CURRENT_REV=$(git rev-parse --short HEAD)
 log "Rewizja: $CURRENT_REV"
 
 # ── 5. Composer install (jako vhost user — żeby vendor/ miał właściwy owner) ──
+# Resolve absolute path composer'a. Powód: `detect-php.sh` zwraca COMPOSER_BIN
+# jako "composer" gdy w PATH roota. Po sudo -u na vhost user PATH ten może NIE
+# zawierać composera → `Could not open input file: composer`. Rozwiązujemy
+# absolute path przez `command -v composer` (root PATH lookup).
+#
+# Composer phar zwykle ma shebang `#!/usr/bin/env php` → można odpalić wprost.
+# Ale my chcemy WYMUSIĆ PHP 8.4 (nie systemowy 7.4), więc prefix'ujemy PHP_BIN.
+COMPOSER_PHAR=""
+if [[ "$COMPOSER_BIN" == "composer" ]]; then
+    COMPOSER_PHAR="$(command -v composer || true)"
+    [[ -n "$COMPOSER_PHAR" ]] || fail "Composer nie znaleziony — sprawdź 'which composer'."
+elif [[ "$COMPOSER_BIN" =~ ^[^[:space:]]+[[:space:]](.+)$ ]]; then
+    # detect-php.sh wstawił "php /path/composer.phar" — wyciągamy drugi token
+    COMPOSER_PHAR="${BASH_REMATCH[1]}"
+else
+    COMPOSER_PHAR="$COMPOSER_BIN"
+fi
+log "  composer phar: $COMPOSER_PHAR"
+
 log "→ composer install z PHP 8.4 (jako ${VHOST_USER})"
 if $DRY_RUN; then
-    printf '\033[35m[dry]\033[0m sudo -u %s %s %s install --no-dev --no-interaction --prefer-dist --optimize-autoloader\n' "$VHOST_USER" "$PHP_BIN" "$COMPOSER_BIN"
+    printf '\033[35m[dry]\033[0m sudo -u %s %s %s install --no-dev --no-interaction --prefer-dist --optimize-autoloader\n' "$VHOST_USER" "$PHP_BIN" "$COMPOSER_PHAR"
 else
-    sudo -u "$VHOST_USER" "$PHP_BIN" "$COMPOSER_BIN" install \
+    sudo -u "$VHOST_USER" "$PHP_BIN" "$COMPOSER_PHAR" install \
         --no-dev --no-interaction --prefer-dist --optimize-autoloader
 fi
 
