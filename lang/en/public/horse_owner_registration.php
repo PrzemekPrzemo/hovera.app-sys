@@ -38,10 +38,18 @@ return [
             'title' => 'Your horse documents',
             'body' => 'Passport, vaccinations, vet records — all in one place, always at hand.',
         ],
+        'stable_relation' => [
+            'title' => 'Your stable on Hovera.app',
+            'body' => 'If your stable uses Hovera — pay for boarding, oversee vet checks, farrier visits and feeding plans for your horse.',
+        ],
         'history' => [
             'title' => 'Transport & quote history',
             'body' => 'All previous orders, quotes and invoices visible in your panel.',
         ],
+    ],
+
+    'stable_hint' => [
+        'banner' => 'If your stable already uses Hovera.app, after creating an account you can link your horse to its boarding — pay for the stay, oversee vet checks, farrier visits and feeding plans directly from your panel.',
     ],
 
     'invite' => [

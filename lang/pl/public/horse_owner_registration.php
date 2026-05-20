@@ -38,10 +38,18 @@ return [
             'title' => 'Dokumenty Twoich koni',
             'body' => 'Paszport, szczepienia, badania weterynaryjne w jednym miejscu, zawsze pod ręką.',
         ],
+        'stable_relation' => [
+            'title' => 'Twoja stajnia w Hovera.app',
+            'body' => 'Jeśli stajnia korzysta z Hovera — opłacaj pensjonat, nadzoruj badania weterynaryjne, wizyty kowala, plany karmienia konia.',
+        ],
         'history' => [
             'title' => 'Historia transportów i ofert',
             'body' => 'Wszystkie poprzednie zlecenia, oferty i faktury widoczne w panelu.',
         ],
+    ],
+
+    'stable_hint' => [
+        'banner' => 'Jeśli Twoja stajnia korzysta już z Hovera.app, po założeniu konta będziesz mógł powiązać konia z pensjonatem — opłacać pobyt, nadzorować badania, wizyty kowala i plany karmienia bezpośrednio z panelu.',
     ],
 
     'invite' => [
