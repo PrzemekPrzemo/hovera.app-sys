@@ -6,17 +6,6 @@
             'verified' => 'success',
             'rejected' => 'danger',
         ];
-
-        // Sekcje renderowane przez wspólny "card" — wynika z PR PWL.
-        $renderCard = function ($type, $doc, $isRequired, $hasExpiry) use ($statusColors) {
-            return view('filament.transport.pages._document-card', [
-                'type' => $type,
-                'doc' => $doc,
-                'isRequired' => $isRequired,
-                'hasExpiry' => $hasExpiry,
-                'statusColors' => $statusColors,
-            ])->render();
-        };
     @endphp
 
     <div class="rounded-lg p-4 border {{ $verificationStatus->value === 'verified' ? 'border-green-300 bg-green-50 dark:bg-green-900/30' : ($verificationStatus->value === 'rejected' ? 'border-rose-400 bg-rose-50 dark:bg-rose-900/30' : 'border-amber-300 bg-amber-50 dark:bg-amber-900/30') }}">
@@ -82,8 +71,13 @@
         <h3 class="font-semibold text-base mt-6 mb-2">{{ __('transport/documents.section.pwl_required') }}</h3>
         <div class="space-y-4">
             @foreach ($pwlRequiredTypes as $type)
-                @php $doc = $docs[$type->value] ?? null; @endphp
-                {!! $renderCard($type, $doc, true, $type->expiresByLaw()) !!}
+                @include('filament.transport.pages._document-card', [
+                    'type' => $type,
+                    'doc' => $docs[$type->value] ?? null,
+                    'isRequired' => true,
+                    'hasExpiry' => $type->expiresByLaw(),
+                    'statusColors' => $statusColors,
+                ])
             @endforeach
         </div>
     @endif
@@ -92,8 +86,13 @@
         <h3 class="font-semibold text-base mt-6 mb-2">{{ __('transport/documents.section.pwl_optional') }}</h3>
         <div class="space-y-4">
             @foreach ($optionalTypes as $type)
-                @php $doc = $docs[$type->value] ?? null; @endphp
-                {!! $renderCard($type, $doc, false, $type->expiresByLaw()) !!}
+                @include('filament.transport.pages._document-card', [
+                    'type' => $type,
+                    'doc' => $docs[$type->value] ?? null,
+                    'isRequired' => false,
+                    'hasExpiry' => $type->expiresByLaw(),
+                    'statusColors' => $statusColors,
+                ])
             @endforeach
         </div>
     @endif
@@ -102,8 +101,13 @@
         <h3 class="font-semibold text-base mt-6 mb-2 text-gray-500">{{ __('transport/documents.section.legacy') }}</h3>
         <div class="space-y-4 opacity-80">
             @foreach ($legacyTypes as $type)
-                @php $doc = $docs[$type->value] ?? null; @endphp
-                {!! $renderCard($type, $doc, false, $type->expiresByLaw()) !!}
+                @include('filament.transport.pages._document-card', [
+                    'type' => $type,
+                    'doc' => $docs[$type->value] ?? null,
+                    'isRequired' => false,
+                    'hasExpiry' => $type->expiresByLaw(),
+                    'statusColors' => $statusColors,
+                ])
             @endforeach
         </div>
     @endif
