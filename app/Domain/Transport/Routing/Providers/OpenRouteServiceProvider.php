@@ -12,6 +12,8 @@ use App\Domain\Transport\Routing\Exceptions\RoutingException;
 use App\Models\Central\SystemSetting;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Log;
 
 /**
  * OpenRouteService — darmowy tier 2000 req/dzień. Endpoint:
@@ -64,8 +66,6 @@ class OpenRouteServiceProvider implements RoutingProvider
             throw RoutingException::missingCredentials($this->id());
         }
 
-        $profile = $options->profile === 'truck' ? 'driving-hgv' : 'driving-car';
-
         $body = [
             'coordinates' => [
                 [$from->lng, $from->lat],
@@ -85,7 +85,23 @@ class OpenRouteServiceProvider implements RoutingProvider
             $body['options'] = ['avoid_features' => $avoid];
         }
 
-        $response = $this->client()->post(self::BASE_URL.'/'.$profile.'/json', $body);
+        $primaryProfile = $options->profile === 'truck' ? 'driving-hgv' : 'driving-car';
+        $response = $this->client()->post(self::BASE_URL.'/'.$primaryProfile.'/json', $body);
+
+        // ORS HGV profile aggressively filters drogi z restrykcjami tonażowymi —
+        // dla tras PL→PL na DK/DW potrafi zwrócić 404 "Route could not be found"
+        // (code 2009) gdy primary profile to HGV. Fallback na driving-car nie jest
+        // idealny (samochód osobowy ignoruje truck restrictions), ale zwraca
+        // sensowny estimate odległości/czasu zamiast wywalać cały quote flow.
+        // Patrz: https://github.com/GIScience/openrouteservice/issues/802
+        if ($primaryProfile === 'driving-hgv' && $this->isNoRouteFound($response)) {
+            Log::info('ORS driving-hgv returned no route; falling back to driving-car', [
+                'from' => [$from->lng, $from->lat],
+                'to' => [$to->lng, $to->lat],
+                'http_status' => $response->status(),
+            ]);
+            $response = $this->client()->post(self::BASE_URL.'/driving-car/json', $body);
+        }
 
         if (! $response->successful()) {
             throw RoutingException::apiError($this->id(), $response->status(), (string) $response->body());
@@ -105,6 +121,20 @@ class OpenRouteServiceProvider implements RoutingProvider
             polyline: $route['geometry'] ?? null,
             providerId: $this->id(),
         );
+    }
+
+    /**
+     * ORS zwraca 404 + `error.code = 2009` gdy nie znajdzie trasy dla danego
+     * profile'u. Inne 404 (np. zły endpoint) mają inne kody — sprawdzamy
+     * konkretnie 2009 żeby nie schować bug'ów konfiguracyjnych.
+     */
+    private function isNoRouteFound(Response $response): bool
+    {
+        if ($response->status() !== 404) {
+            return false;
+        }
+
+        return (int) $response->json('error.code') === 2009;
     }
 
     private function client(): PendingRequest
