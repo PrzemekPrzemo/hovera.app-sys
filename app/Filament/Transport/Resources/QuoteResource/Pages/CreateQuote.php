@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace App\Filament\Transport\Resources\QuoteResource\Pages;
 
+use App\Domain\Transport\Calculator\CalculatorService;
+use App\Domain\Transport\Calculator\Data\CalculationOptions;
+use App\Domain\Transport\Geocoding\Exceptions\GeocodingException;
+use App\Domain\Transport\Geocoding\MapboxGeocoder;
 use App\Domain\Transport\Payments\PaymentUrlTemplate;
 use App\Domain\Transport\Payments\PayU\TransporterPayUQuoteService;
 use App\Domain\Transport\Payments\Przelewy24\TransporterP24QuoteService;
 use App\Domain\Transport\Payments\Stripe\TransporterStripeConnectService;
 use App\Domain\Transport\Quotes\QuoteNumberGenerator;
+use App\Domain\Transport\Routing\Data\Coords;
+use App\Enums\CalculationMode;
 use App\Filament\Transport\Resources\QuoteResource;
 use App\Models\Tenant\Quote;
 use App\Models\Tenant\TransportSettings;
@@ -17,6 +23,7 @@ use App\Tenancy\TenantManager;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class CreateQuote extends CreateRecord
 {
@@ -56,6 +63,12 @@ class CreateQuote extends CreateRecord
         $this->pendingResponseId = isset($pending['response_id']) ? (string) $pending['response_id'] : null;
         unset($pending['lead_id'], $pending['response_id']);
 
+        // Pre-fill z Calculator'a (Save as quote) zawiera już pełną wycenę —
+        // wyłączamy auto-routing toggle, żeby mutate hook NIE wywołał drugi
+        // raz CalculatorService'u (waste call + ryzyko że rate się
+        // rozjedzie z tym co user widział na Calculator'ze).
+        $pending['auto_routing'] = false;
+
         $this->form->fill($pending);
     }
 
@@ -75,6 +88,121 @@ class CreateQuote extends CreateRecord
         if ($this->pendingResponseId) {
             $data['response_id'] = $this->pendingResponseId;
         }
+
+        // Auto-routing toggle — domyślnie ON. Gdy włączony, geocodujemy
+        // pickup/dropoff i przepuszczamy przez CalculatorService — wszystkie
+        // pola finansowe (base_cost, fuel_surcharge, extra_horse_fee, VAT,
+        // gross) lecą wprost ze świeżej kalkulacji. User widzi tylko stawkę
+        // i totals read-only, reszta jest Hidden.
+        //
+        // Toggle nie jest kolumną w `quotes` — usuwamy z $data przed insertem
+        // (niezależnie od auto-routing path).
+        $autoRouting = (bool) ($data['auto_routing'] ?? true);
+        unset($data['auto_routing']);
+
+        if ($autoRouting) {
+            $data = $this->autoCalculatePricing($data);
+        }
+
+        // Currency snapshot z TransportSettings — UI nie pokazuje pola
+        // (Hidden), ale wartość musi być spójna z konfiguracją tenant'a
+        // żeby PDF i payment_url'e używały tej samej waluty.
+        if (empty($data['currency'])) {
+            $data['currency'] = (string) TransportSettings::current()->currency;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Geocode adresów + przelot przez CalculatorService → pełna wycena
+     * z snapshot'em wszystkich komponentów. Wynik nadpisuje wszystkie
+     * finansowe pola w $data; UI form ma je jako Hidden więc to jest
+     * jedyne źródło prawdy dla auto-routing path.
+     *
+     * Soft-fail: jeśli geocoding albo routing padnie, logujemy +
+     * notification, ale create nie crashuje — quote zostaje stworzony
+     * z wartościami z form state (user mógł wpisać net_total/gross_total
+     * po wyłączeniu toggle'a).
+     *
+     * @param  array<string,mixed>  $data
+     * @return array<string,mixed>
+     */
+    private function autoCalculatePricing(array $data): array
+    {
+        $tenant = app(TenantManager::class)->current();
+        if ($tenant === null) {
+            return $data;
+        }
+
+        try {
+            $geocoder = app(MapboxGeocoder::class);
+            $from = $geocoder->geocode((string) ($data['pickup_address'] ?? ''));
+            $to = $geocoder->geocode((string) ($data['dropoff_address'] ?? ''));
+        } catch (GeocodingException $e) {
+            Notification::make()
+                ->warning()
+                ->title(__('transport/quote.notify.geocoding_failed_title'))
+                ->body($e->getMessage())
+                ->send();
+
+            return $data;
+        }
+
+        $mode = CalculationMode::tryFrom((string) ($data['calculation_mode'] ?? ''))
+            ?? CalculationMode::OneWay;
+
+        try {
+            $quotation = app(CalculatorService::class)->calculate(
+                $tenant,
+                new Coords($from->coords->lat, $from->coords->lng),
+                new Coords($to->coords->lat, $to->coords->lng),
+                new CalculationOptions(
+                    loaded: (bool) ($data['loaded'] ?? true),
+                    mode: $mode,
+                    horsesCount: max(1, (int) ($data['horses_count'] ?? 1)),
+                ),
+            );
+        } catch (Throwable $e) {
+            report($e);
+            Notification::make()
+                ->warning()
+                ->title(__('transport/quote.notify.calculation_failed_title'))
+                ->body($e->getMessage())
+                ->send();
+
+            return $data;
+        }
+
+        // Override pól z lat/lng + snapshot wyceny. Zachowuje
+        // user-edited rate_per_km (jeśli zmienił domyślną stawkę z
+        // settings), bo CalculatorService używa stawki z settings na
+        // input, a user może chcieć ad-hoc wycenę z inną stawką.
+        $data['pickup_lat'] = $from->coords->lat;
+        $data['pickup_lng'] = $from->coords->lng;
+        $data['dropoff_lat'] = $to->coords->lat;
+        $data['dropoff_lng'] = $to->coords->lng;
+        $data['distance_km'] = $quotation->distanceKm;
+        $data['duration_seconds'] = $quotation->durationSeconds;
+        $data['routing_provider'] = $quotation->routingProvider;
+
+        // Pricing — jeśli user nie nadpisał `rate_per_km` (puste lub 0),
+        // bierzemy ze świeżej kalkulacji. W innym wypadku zachowujemy
+        // wartość użytkownika; oznacza to też że całe komponenty
+        // (base_cost, fuel_surcharge, ...) wyliczone CalculatorService'em
+        // używają DOMYŚLNYCH stawek tenant'a — nie ad-hoc rate_per_km.
+        // To akceptowalny kompromis dla MVP; pełen live-recalc przyjdzie
+        // w roadmapie (PR "Calculator live UX").
+        $data['rate_per_km'] = $data['rate_per_km'] ?? $quotation->rateUsed;
+        $data['base_cost'] = $quotation->baseCost;
+        $data['fuel_surcharge'] = $quotation->fuelSurcharge;
+        $data['extra_horse_fee_snapshot'] = $quotation->extraHorseFeePerHead;
+        $data['minimum_adjustment'] = $quotation->minimumAdjustment;
+        $data['net_total'] = $quotation->netTotal;
+        $data['vat_rate'] = $data['vat_rate'] ?? $quotation->vatRate;
+        $data['vat_amount'] = $quotation->vatAmount;
+        $data['gross_total'] = $quotation->grossTotal;
+        $data['currency'] = $quotation->currency;
 
         return $data;
     }
@@ -150,7 +278,7 @@ class CreateQuote extends CreateRecord
                 'payment_url' => $url,
                 'payment_method_label' => $quote->payment_method_label ?: 'Przelewy24',
             ])->save();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Soft-fail — quote zostaje stworzona bez payment_url, fallback
             // do template'a (applyDefaultPaymentUrlIfBlank) ewentualnie
             // zadziała. Logujemy + notification dla user'a.
@@ -215,7 +343,7 @@ class CreateQuote extends CreateRecord
                 'payment_url' => $url,
                 'payment_method_label' => $quote->payment_method_label ?: 'PayU',
             ])->save();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::warning('PayU quote autopay failed', [
                 'quote_id' => $quote->id,
                 'tenant' => $tenant->slug,
@@ -307,7 +435,7 @@ class CreateQuote extends CreateRecord
             ])->save();
 
             return true;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Nie blokujemy create — quote zostaje bez Stripe URL, transporter
             // zobaczy w UI że można wkleić linka ręcznie. Logujemy żeby ops
             // wiedział że konfiguracja Stripe transportera się rozjechała.
