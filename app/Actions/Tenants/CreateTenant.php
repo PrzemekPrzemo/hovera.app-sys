@@ -54,6 +54,8 @@ class CreateTenant
         $defaultPlanCode = match ($type) {
             TenantType::Stable => 'pro',
             TenantType::Transporter => 'transport_start',
+            // Owner = FREE forever, brak płatnego planu do wybrania.
+            TenantType::HorseOwner => 'owner_free',
         };
         $plan = ! empty($data['plan_code'])
             ? Plan::where('code', $data['plan_code'])->first()
@@ -113,6 +115,14 @@ class CreateTenant
                 'trial_ends_at' => $tenant->trial_ends_at ?? now()->addDays(30),
                 'trial_max_horses' => $tenant->trial_max_horses ?? 10,
                 'trial_max_clients' => $tenant->trial_max_clients ?? 5,
+            ];
+        } elseif ($type === TenantType::HorseOwner) {
+            // Owner = FREE forever, brak trial'a (od razu active). Status
+            // 'active' (a nie 'trialing') żeby billing middleware
+            // (RedirectIfTrialExpired itd.) wiedział że nie ma czego pilnować.
+            $postProvisionAttrs = [
+                'status' => 'active',
+                'trial_ends_at' => null,
             ];
         } else {
             // Transporter — czekamy na weryfikację. Status pozostaje
@@ -183,7 +193,7 @@ class CreateTenant
                 'regex:/^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/',
                 Rule::unique(Tenant::class, 'slug')],
             'name' => ['required', 'string', 'min:2', 'max:255'],
-            'type' => ['sometimes', 'string', Rule::in(['stable', 'transporter'])],
+            'type' => ['sometimes', 'string', Rule::in(['stable', 'transporter', 'horse_owner'])],
             'country' => ['sometimes', 'string', 'size:2'],
             'locale' => ['sometimes', 'string', 'max:10'],
             'timezone' => ['sometimes', 'string', 'max:64'],

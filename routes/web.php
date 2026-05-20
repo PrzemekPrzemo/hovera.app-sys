@@ -11,6 +11,7 @@ use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\ClientPortalController;
 use App\Http\Controllers\Public\DemoLoginController;
 use App\Http\Controllers\Public\HelpController;
+use App\Http\Controllers\Public\HorseOwnerRegistrationController;
 use App\Http\Controllers\Public\InstructorCalendarController;
 use App\Http\Controllers\Public\LegalController;
 use App\Http\Controllers\Public\PaymentWebhookController;
@@ -201,6 +202,26 @@ Route::middleware(['web'])
             ->middleware('throttle:3,60')
             ->name('submit');
         Route::get('/dziekujemy/{slug}', [SignupController::class, 'thanks'])
+            ->where('slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
+            ->name('thanks');
+    });
+
+/*
+ * Rejestracja Horse Owner'a — uproszczony flow vs stable/transporter signup
+ * (3 pola, brak slug'a, brak wyboru planu). Owner = FREE tier, brak
+ * trial'a, od razu active. Patrz `HorseOwnerRegistrationController`.
+ *
+ * Throttle 5/h z IP (vs 3/h dla stajni) bo consumer side ma większy ruch.
+ */
+Route::middleware(['web'])
+    ->prefix('register/horse-owner')
+    ->name('register.horse-owner.')
+    ->group(function () {
+        Route::get('/', [HorseOwnerRegistrationController::class, 'show'])->name('show');
+        Route::post('/', [HorseOwnerRegistrationController::class, 'submit'])
+            ->middleware('throttle:5,60')
+            ->name('submit');
+        Route::get('/dziekujemy/{slug}', [HorseOwnerRegistrationController::class, 'thanks'])
             ->where('slug', '[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?')
             ->name('thanks');
     });
