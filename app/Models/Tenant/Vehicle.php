@@ -16,7 +16,7 @@ class Vehicle extends TenantModel
 
     protected $fillable = [
         'name', 'vehicle_type', 'registration_plate', 'capacity_horses',
-        'gross_weight_kg', 'payload_kg', 'year_of_manufacture',
+        'gross_weight_kg', 'height_cm', 'payload_kg', 'year_of_manufacture',
         'photos',
         'has_air_suspension', 'has_camera', 'has_climate_control',
         'notes',
@@ -34,6 +34,7 @@ class Vehicle extends TenantModel
             'photos' => 'array',
             'capacity_horses' => 'integer',
             'gross_weight_kg' => 'integer',
+            'height_cm' => 'integer',
             'payload_kg' => 'integer',
             'year_of_manufacture' => 'integer',
             'has_air_suspension' => 'boolean',

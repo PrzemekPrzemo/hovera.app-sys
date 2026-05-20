@@ -40,6 +40,125 @@ class RoutingProvidersTest extends TestCase
         $this->assertSame('_p~iF~ps|U_ulLnnqC', $route->polyline);
     }
 
+    public function test_ors_sends_vehicle_restrictions_for_hgv_when_weight_and_height_set(): void
+    {
+        Http::fake([
+            'api.openrouteservice.org/v2/directions/driving-hgv/json' => Http::response([
+                'routes' => [[
+                    'summary' => ['distance' => 200.0, 'duration' => 9000],
+                    'geometry' => 'POLY',
+                ]],
+            ]),
+        ]);
+
+        $provider = new OpenRouteServiceProvider(app(HttpFactory::class), apiKey: 'test-key');
+        $provider->calculateRoute(
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new RouteOptions(
+                profile: 'truck',
+                weightTons: 7.5,
+                heightMeters: 3.8,
+            ),
+        );
+
+        Http::assertSent(function ($request) {
+            if (! str_contains($request->url(), 'driving-hgv')) {
+                return false;
+            }
+            $body = json_decode($request->body(), true);
+
+            return ($body['options']['vehicle_type'] ?? null) === 'hgv'
+                && ($body['options']['profile_params']['restrictions']['weight'] ?? null) === 7.5
+                && ($body['options']['profile_params']['restrictions']['height'] ?? null) === 3.8;
+        });
+    }
+
+    public function test_ors_omits_restrictions_when_weight_height_null(): void
+    {
+        Http::fake([
+            'api.openrouteservice.org/v2/directions/driving-hgv/json' => Http::response([
+                'routes' => [[
+                    'summary' => ['distance' => 200.0, 'duration' => 9000],
+                    'geometry' => 'POLY',
+                ]],
+            ]),
+        ]);
+
+        $provider = new OpenRouteServiceProvider(app(HttpFactory::class), apiKey: 'test-key');
+        $provider->calculateRoute(
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new RouteOptions(profile: 'truck'),
+        );
+
+        Http::assertSent(function ($request) {
+            $body = json_decode($request->body(), true);
+
+            // Brak weight/height → brak profile_params + vehicle_type w body.
+            return ! isset($body['options']['profile_params'])
+                && ! isset($body['options']['vehicle_type']);
+        });
+    }
+
+    public function test_ors_does_not_send_restrictions_for_car_profile(): void
+    {
+        // Restrykcje HGV nie mają sensu dla driving-car (osobowy).
+        // Profile params zachowujemy puste nawet gdy user przekaże weight.
+        Http::fake([
+            'api.openrouteservice.org/v2/directions/driving-car/json' => Http::response([
+                'routes' => [[
+                    'summary' => ['distance' => 200.0, 'duration' => 9000],
+                    'geometry' => 'POLY',
+                ]],
+            ]),
+        ]);
+
+        $provider = new OpenRouteServiceProvider(app(HttpFactory::class), apiKey: 'test-key');
+        $provider->calculateRoute(
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new RouteOptions(
+                profile: 'car',
+                weightTons: 7.5,
+                heightMeters: 3.8,
+            ),
+        );
+
+        Http::assertSent(function ($request) {
+            $body = json_decode($request->body(), true);
+
+            return str_contains($request->url(), 'driving-car')
+                && ! isset($body['options']['profile_params']);
+        });
+    }
+
+    public function test_ors_sends_only_weight_when_height_null(): void
+    {
+        Http::fake([
+            'api.openrouteservice.org/v2/directions/driving-hgv/json' => Http::response([
+                'routes' => [[
+                    'summary' => ['distance' => 200.0, 'duration' => 9000],
+                    'geometry' => 'POLY',
+                ]],
+            ]),
+        ]);
+
+        $provider = new OpenRouteServiceProvider(app(HttpFactory::class), apiKey: 'test-key');
+        $provider->calculateRoute(
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new RouteOptions(profile: 'truck', weightTons: 12.5),
+        );
+
+        Http::assertSent(function ($request) {
+            $body = json_decode($request->body(), true);
+
+            return ($body['options']['profile_params']['restrictions']['weight'] ?? null) === 12.5
+                && ! isset($body['options']['profile_params']['restrictions']['height']);
+        });
+    }
+
     public function test_ors_throws_without_credentials(): void
     {
         $provider = new OpenRouteServiceProvider(app(HttpFactory::class), apiKey: '');

@@ -14,6 +14,11 @@ namespace App\Domain\Transport\Routing\Data;
  *             'DRIVE'        → standardowy samochodowy
  *
  * RoutingProvider dokonuje własnego mapowania z generic 'truck' / 'car' / 'fast'.
+ *
+ * Restrykcje wagowe/wysokościowe (`weightTons`, `heightMeters`) używane
+ * tylko przez ORS HGV profile (profile_params.restrictions). Mapbox /
+ * Google ignorują — ich API nie ma analogicznego param. Patrz
+ * docs/MARKETPLACE-ROADMAP.md "ORS routing z weight/height pojazdu".
  */
 final readonly class RouteOptions
 {
@@ -21,5 +26,7 @@ final readonly class RouteOptions
         public string $profile = 'truck',
         public bool $avoidTolls = false,
         public bool $avoidFerries = false,
+        public ?float $weightTons = null,
+        public ?float $heightMeters = null,
     ) {}
 }
