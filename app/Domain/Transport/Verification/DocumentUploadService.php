@@ -138,10 +138,16 @@ class DocumentUploadService
      * Reguła auto-flip: wszystkie wymagane typy mają wgrany dokument w status
      * pending lub verified → flip Tenant.verification_status na under_review.
      * Master admin musi explicitly potwierdzić → verified.
+     *
+     * Działa też dla `Rejected` — gdy master admin odrzucił tenant'a, a
+     * user wgrał nowe wersje dokumentów, automatycznie przenosimy z powrotem
+     * do `UnderReview` (re-verification queue). Bez tego rejected tenant
+     * utykał w stanie końcowym mimo poprawienia braków.
      */
     public function maybePromoteToUnderReview(Tenant $tenant): bool
     {
-        if ($tenant->verification_status !== VerificationStatus::Pending) {
+        $promotable = [VerificationStatus::Pending, VerificationStatus::Rejected];
+        if (! in_array($tenant->verification_status, $promotable, true)) {
             return false;
         }
 

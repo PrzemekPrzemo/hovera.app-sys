@@ -74,8 +74,23 @@
         </div>
     @endif
 
-    @if (! $doc || $doc->status === 'rejected')
+    @php
+        // Upload form pokazujemy gdy:
+        //   - brak dokumentu (jeszcze nic nie wgrane)
+        //   - dokument odrzucony przez master admina (re-upload)
+        //   - dokument zweryfikowany ALE wygasły lub niedługo wygaśnie (replace expiring)
+        $allowReupload = ! $doc
+            || $doc->status === 'rejected'
+            || ($doc->status === 'verified' && ($doc->isExpired() || $doc->isExpiringSoon()));
+    @endphp
+
+    @if ($allowReupload)
         <form wire:submit.prevent="uploadDocument('{{ $type->value }}')" class="mt-3 grid gap-2 sm:grid-cols-3">
+            @if ($doc && $doc->status === 'verified')
+                <div class="sm:col-span-3 p-2 text-xs rounded bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200">
+                    {{ $doc->isExpired() ? __('transport/documents.helper.replace_expired') : __('transport/documents.helper.replace_expiring') }}
+                </div>
+            @endif
             <div class="sm:col-span-3">
                 <input type="file" wire:model="files.{{ $type->value }}" accept=".pdf,.jpg,.jpeg,.png"
                        class="block w-full text-sm border border-gray-300 dark:border-gray-700 rounded-md p-1.5 bg-white dark:bg-gray-900">
@@ -97,7 +112,7 @@
             @endif
             <div class="{{ $hasExpiry ? 'sm:col-span-1' : 'sm:col-span-3' }} flex items-end justify-end">
                 <x-filament::button type="submit" size="sm" icon="heroicon-o-arrow-up-tray">
-                    {{ __('transport/documents.action.upload') }}
+                    {{ $doc && $doc->status === 'verified' ? __('transport/documents.action.replace') : __('transport/documents.action.upload') }}
                 </x-filament::button>
             </div>
         </form>

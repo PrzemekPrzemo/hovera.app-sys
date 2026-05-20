@@ -11,8 +11,10 @@ return [
         'pending_body' => 'To activate your account, please upload :count missing documents. Without verification you cannot send quotes or invoices.',
         'under_review_body' => 'All required documents uploaded — Hovera team is reviewing (typically 1–2 business days).',
         'verified_body' => 'Account active. You can send quotes, issue invoices, receive marketplace inquiries.',
-        'rejected_body' => 'Account rejected. Check the notes on individual documents and re-upload corrected versions.',
+        'rejected_body' => 'Master admin rejected the account verification. Check the reasons on individual documents (red box) and re-upload new versions — after the full set the account returns automatically to the re-verification queue.',
+        'rejected_count' => '{1} :count document to fix.|[2,*] :count documents to fix.',
         'missing_badge' => ':count missing',
+        'rejected_badge' => 'Needs fixing',
     ],
 
     'label' => [
@@ -28,6 +30,7 @@ return [
 
     'action' => [
         'upload' => 'Upload',
+        'replace' => 'Replace with new',
         'delete' => 'Delete',
     ],
 
@@ -61,6 +64,8 @@ return [
         'pwl_authorization_choice' => 'Choose Type 1 OR Type 2 — depending on your transport profile. Type 2 (> 8h) also covers Type 1.',
         'pwl_vehicle_per_vehicle' => 'Issued per vehicle. If you operate a fleet, upload a merged PDF covering all vehicles.',
         'wash_log_period' => 'Keep up to date — entries older than 12 months are treated as outdated.',
+        'replace_expired' => 'This document has EXPIRED. Upload a new one to keep your account active — the old one is preserved in the audit log.',
+        'replace_expiring' => 'This document is expiring soon. You can upload a new version — the old one is preserved in the audit log.',
     ],
 
     'checklist' => [

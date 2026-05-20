@@ -16,6 +16,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class DocumentUploadServiceTest extends TestCase
@@ -156,7 +157,7 @@ class DocumentUploadServiceTest extends TestCase
     {
         $service = app(DocumentUploadService::class);
         $doc = TransporterDocument::create([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => (string) Str::ulid(),
             'document_type' => TransporterDocumentType::AnimalTransportCert,
             'status' => TransporterDocument::STATUS_VERIFIED,
             'file_path' => 'transporter-docs/test/cert.pdf',
@@ -188,6 +189,26 @@ class DocumentUploadServiceTest extends TestCase
     {
         $names = collect(app('router')->getRoutes())->map(fn ($r) => $r->getName())->filter()->values();
         $this->assertTrue($names->contains('filament.transport.pages.transporter-documents'));
+    }
+
+    public function test_reupload_after_rejection_promotes_tenant_back_to_under_review(): void
+    {
+        // Scenariusz: master admin odrzucił całe konto (Rejected). Transporter
+        // wgrał poprawione dokumenty. Reguła: tenant wraca do UnderReview żeby
+        // master admin zobaczył kolejkę re-weryfikacji. Bez tego rejected
+        // tenant utykał na koniec mimo poprawek.
+        $tenant = $this->tenant;
+        $tenant->forceFill(['verification_status' => VerificationStatus::Rejected])->save();
+
+        $service = app(DocumentUploadService::class);
+        foreach (TransporterDocumentType::requiredCases() as $type) {
+            $service->upload(
+                UploadedFile::fake()->create($type->value.'.pdf', 50, 'application/pdf'),
+                $type,
+            );
+        }
+
+        $this->assertSame(VerificationStatus::UnderReview, $tenant->fresh()->verification_status);
     }
 
     private function makeTenant(VerificationStatus $vs): Tenant
