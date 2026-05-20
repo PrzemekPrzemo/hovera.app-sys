@@ -102,6 +102,24 @@ Route::get('/forgot-password', fn () => redirect('/app/password-reset/request'))
 Route::get('/reset-password', fn () => redirect('/app/password-reset/request'));
 
 /*
+ * Laravel password broker (Password::sendResetLink) wymaga route name
+ * `password.reset` żeby zbudować URL linka w mailu. Bez tego rzuca
+ * RouteNotFoundException przy każdym wywołaniu sendResetLink (np. z
+ * master admin „Force password reset" action na TenantResource).
+ *
+ * Route przyjmuje `{token}` w path + `?email=` w query (standard
+ * Laravel email template), forwarduje do Filament app panel reset
+ * page (tu lądują tenant owners). Master admin zwykle resetuje
+ * tenanta — więc Filament's `app` panel jest właściwym targetem.
+ */
+Route::get('/password-reset/{token}', function (string $token) {
+    return redirect()->to(url('/app/password-reset/reset', [
+        'token' => $token,
+        'email' => request()->query('email'),
+    ]));
+})->name('password.reset');
+
+/*
  * Public demo — auto-login do tenant `demo` jako owner. Zero rejestracji,
  * dane resetowane co noc o 22:00 (hovera:demo:reset).
  *
