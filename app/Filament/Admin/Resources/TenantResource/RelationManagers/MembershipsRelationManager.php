@@ -7,6 +7,7 @@ namespace App\Filament\Admin\Resources\TenantResource\RelationManagers;
 use App\Actions\Impersonation\StartImpersonation;
 use App\Actions\Memberships\AttachOrInviteUser;
 use App\Actions\Memberships\RevokeMembership;
+use App\Enums\TenantType;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Services\MasterAuditLogger;
@@ -54,8 +55,8 @@ class MembershipsRelationManager extends RelationManager
 
             Forms\Components\Select::make('role')
                 ->label(__('admin/membership.form.label.role'))
-                ->options(self::roleOptions())
-                ->default('viewer')
+                ->options(fn () => self::roleOptions($this->getOwnerRecord()->type ?? null))
+                ->default(fn () => ($this->getOwnerRecord()->type ?? null) === TenantType::Transporter ? 'driver' : 'viewer')
                 ->required(),
         ]);
     }
@@ -105,8 +106,8 @@ class MembershipsRelationManager extends RelationManager
                             ->label(__('admin/membership.form.label.attach_name')),
                         Forms\Components\Select::make('role')
                             ->label(__('admin/membership.form.label.attach_role'))
-                            ->options(self::roleOptions())
-                            ->default('viewer')
+                            ->options(fn () => self::roleOptions($this->getOwnerRecord()->type ?? null))
+                            ->default(fn () => ($this->getOwnerRecord()->type ?? null) === TenantType::Transporter ? 'driver' : 'viewer')
                             ->required(),
                     ])
                     ->action(function (array $data, AttachOrInviteUser $attach, MasterAuditLogger $audit) {
@@ -225,10 +226,29 @@ class MembershipsRelationManager extends RelationManager
     }
 
     /**
+     * Role options dependent on tenant type. Stable tenants mają cały
+     * stable-flavored set (instructor/employee/vet itp.), transporter
+     * tenants mają węższy zestaw związany z business model'em
+     * (operator zamiast manager, driver zamiast instructor).
+     *
+     * Wywołanie bez argumentu zwraca pełny zestaw dla legacy callers
+     * (np. niefiltrowane filtry tabel).
+     *
      * @return array<string,string>
      */
-    public static function roleOptions(): array
+    public static function roleOptions(?TenantType $type = null): array
     {
+        if ($type === TenantType::Transporter) {
+            return [
+                'owner' => __('admin/membership.roles.owner'),
+                'admin' => __('admin/membership.roles.admin'),
+                'operator' => __('admin/membership.roles.operator'),
+                'driver' => __('admin/membership.roles.driver'),
+            ];
+        }
+
+        // Default = stable roles (włącznie z niefiltrowanym przypadkiem $type=null
+        // żeby istniejące filtry tabel master admina pokazywały wszystkie role).
         return [
             'owner' => __('admin/membership.roles.owner'),
             'admin' => __('admin/membership.roles.admin'),

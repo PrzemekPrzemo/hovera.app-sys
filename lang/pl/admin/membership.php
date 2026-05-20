@@ -11,6 +11,9 @@ return [
         'employee' => 'Pracownik',
         'vet' => 'Weterynarz',
         'viewer' => 'Tylko podgląd',
+        // Transport-specific:
+        'operator' => 'Operator (oferty / kalkulacja / FV / przypisanie kierowców)',
+        'driver' => 'Kierowca (swoje trasy / kalendarz / dokumenty)',
     ],
 
     'form' => [

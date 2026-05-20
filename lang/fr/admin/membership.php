@@ -11,6 +11,9 @@ return [
         'employee' => 'Employé',
         'vet' => 'Vétérinaire',
         'viewer' => 'Lecture seule',
+        // Transport-specific:
+        'operator' => 'Opérateur (devis / calculateur / factures / affectation des chauffeurs)',
+        'driver' => 'Chauffeur (ses trajets / calendrier / documents)',
     ],
 
     'form' => [
