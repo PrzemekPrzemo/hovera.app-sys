@@ -8,14 +8,38 @@ return [
 
     'hero' => [
         'title' => 'Horse transport — efficient, professional, fair-priced',
-        'subtitle' => 'Fill in the form and the best carriers in Poland will get back to you with quotes. Or pick a specific company from our ranking.',
-        'cta_form' => 'Fill the inquiry form below ↓',
-        'cta_browse' => 'Browse all carriers',
+        'subtitle' => 'Polish horse transport marketplace. Send an inquiry, find a carrier in the directory, or create a free owner account with full order history.',
+        'cta_form' => 'Send inquiry ↓',
+        'cta_browse' => 'Browse directory',
+        'cta_account' => 'Create free account',
     ],
 
     'inquiry_section' => [
         'title' => 'Send an inquiry',
         'subtitle' => 'One submission — replies from all matching carriers. No registration required.',
+    ],
+
+    'paths_section' => [
+        'title' => 'Three ways to transport your horse',
+        'subtitle' => 'Pick what fits your situation — all of them free for the customer.',
+        'path_broadcast' => [
+            'title' => 'Send an inquiry (broadcast)',
+            'body' => 'Fill the form above, your request reaches all matching carriers. Compare offers, pick the best.',
+            'cta' => 'Fill the form ↑',
+            'tag' => 'No signup',
+        ],
+        'path_account' => [
+            'title' => 'Create a free owner account',
+            'body' => 'Account + panel with order history, horse documents, invoices. Free forever. Enter data once — next orders in 30 seconds.',
+            'cta' => 'Create account (free)',
+            'tag' => 'Recommended',
+        ],
+        'path_directory' => [
+            'title' => 'Pick a specific carrier',
+            'body' => 'Browse the verified-carrier directory, check ratings and reviews, order directly. Direct booking, no middleman.',
+            'cta' => 'Browse directory',
+            'tag' => 'Direct booking',
+        ],
     ],
 
     'top_section' => [
