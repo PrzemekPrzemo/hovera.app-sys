@@ -8,6 +8,7 @@ use App\Domain\Transport\Geocoding\Exceptions\GeocodingException;
 use App\Domain\Transport\Geocoding\MapboxGeocoder;
 use App\Domain\Transport\Leads\LeadDispatcher;
 use App\Mail\Customer\TransportLeadAccessMail;
+use App\Models\Central\HorseBoardingAssignment;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Models\Central\TransportLead;
@@ -60,6 +61,14 @@ class TransportInquiryController extends Controller
         // tylko pierwszy load z /app dostaje hint'y.
         $defaults = $this->buildPrefillDefaults($originatorStable, $horseContext);
 
+        // Boarder picker — pokazujemy gdy stable jest originator'em. Lista
+        // aktywnych boardings z horse_boarding_assignments (PR 4/5 foundation).
+        // Stable może zaznaczyć "transport dla boarder'a X" → lead leci z
+        // client_type='owner', FV po acceptacji idzie do owner'a, nie stajni.
+        $boarders = $originatorStable !== null
+            ? $this->resolveActiveBoarders($originatorStable)
+            : [];
+
         return view('public.transport.inquiry', [
             'old' => [
                 'customer_name' => (string) old('customer_name', $defaults['customer_name']),
@@ -71,10 +80,40 @@ class TransportInquiryController extends Controller
                 'preferred_time' => (string) old('preferred_time'),
                 'horse_count' => (int) old('horse_count', $defaults['horse_count']),
                 'notes' => (string) old('notes', $defaults['notes']),
+                'client_for' => (string) old('client_for', 'stable'),
             ],
             'targetTransporter' => $targetTransporter,
             'originatorStable' => $originatorStable,
+            'boarders' => $boarders,
         ]);
+    }
+
+    /**
+     * Aktywne boarding assignments dla stajni — lista par
+     * (assignment_id, label) gotowa do dropdownu w formie.
+     * Label = "Imię konia — owner_name".
+     *
+     * @return list<array{id: string, label: string, owner_user_id: ?string}>
+     */
+    private function resolveActiveBoarders(Tenant $stable): array
+    {
+        $assignments = HorseBoardingAssignment::query()
+            ->with(['horse', 'owner'])
+            ->where('stable_tenant_id', $stable->id)
+            ->where('status', HorseBoardingAssignment::STATUS_ACTIVE)
+            ->orderBy('created_at')
+            ->get();
+
+        return $assignments->map(function (HorseBoardingAssignment $a) {
+            $horseName = (string) ($a->horse?->name ?? __('public/transport_inquiry.boarder.unknown_horse'));
+            $ownerName = (string) ($a->owner?->name ?? __('public/transport_inquiry.boarder.unknown_owner'));
+
+            return [
+                'id' => (string) $a->id,
+                'label' => $horseName.' — '.$ownerName,
+                'owner_user_id' => $a->owner_user_id !== null ? (string) $a->owner_user_id : null,
+            ];
+        })->all();
     }
 
     public function submit(Request $request, MapboxGeocoder $geocoder): RedirectResponse
@@ -102,6 +141,11 @@ class TransportInquiryController extends Controller
         $isDirect = $targetTransporter !== null;
         $originatorStable = $this->resolveOriginatorStable($request);
 
+        // Klient zlecenia — wybór "Stajnia (ja)" vs "Boarder: X". Default
+        // = anonymous (lead z publicznego formu bez stable context'a).
+        // Patrz docs/MARKETPLACE-ROADMAP.md PR 7.
+        $clientResolution = $this->resolveClient($request, $originatorStable);
+
         $lead = TransportLead::create([
             'id' => (string) Str::ulid(),
             'access_slug' => (string) Str::uuid(),
@@ -112,6 +156,9 @@ class TransportInquiryController extends Controller
             'originator_name' => $data['customer_name'],
             'originator_email' => $data['customer_email'],
             'originator_phone' => $data['customer_phone'] ?? null,
+            'client_type' => $clientResolution['type'],
+            'client_user_id' => $clientResolution['user_id'],
+            'created_by_tenant_id' => $originatorStable?->id,
             'pickup_address' => $from->displayName,
             'pickup_lat' => $from->coords->lat,
             'pickup_lng' => $from->coords->lng,
@@ -307,6 +354,59 @@ class TransportInquiryController extends Controller
     }
 
     /**
+     * Rozwiązuje klienta zlecenia z form input'u. Trzy ścieżki:
+     *
+     *   - Stable submituje + wybrał "Stajnia (ja)" / brak boarder'a →
+     *     client_type='stable', client_user_id=NULL (FV idzie do stajni)
+     *   - Stable submituje + wybrał konkretny boarder (`boarder:{id}`):
+     *     resolve'ujemy boarding_assignment, sprawdzamy że należy do tej
+     *     stajni i jest active → client_type='owner', client_user_id=
+     *     boarder.owner_user_id (FV idzie do owner'a)
+     *   - Brak stable context'u → client_type='anonymous' (publiczny lead)
+     *
+     * Defensive: jeśli boarder_assignment_id z input'a NIE pasuje do
+     * tej stajni lub nie jest active → graceful fallback do 'stable'
+     * (nie crash'ujemy formy z błędem; user może nie wiedzieć że
+     * boarding się zakończył w międzyczasie).
+     *
+     * @return array{type: string, user_id: ?string}
+     */
+    private function resolveClient(Request $request, ?Tenant $stable): array
+    {
+        if ($stable === null) {
+            return ['type' => TransportLead::CLIENT_TYPE_ANONYMOUS, 'user_id' => null];
+        }
+
+        $clientFor = (string) $request->input('client_for', 'stable');
+
+        if (! str_starts_with($clientFor, 'boarder:')) {
+            return ['type' => TransportLead::CLIENT_TYPE_STABLE, 'user_id' => null];
+        }
+
+        $assignmentId = substr($clientFor, strlen('boarder:'));
+        if (! preg_match('/^[0-9A-Za-z]{26}$/', $assignmentId)) {
+            return ['type' => TransportLead::CLIENT_TYPE_STABLE, 'user_id' => null];
+        }
+
+        $assignment = HorseBoardingAssignment::query()
+            ->where('id', $assignmentId)
+            ->where('stable_tenant_id', $stable->id)
+            ->where('status', HorseBoardingAssignment::STATUS_ACTIVE)
+            ->first();
+
+        if ($assignment === null || $assignment->owner_user_id === null) {
+            // Fallback — assignment skasowany / ended / nie pasuje do
+            // stajni. Zapisujemy lead jako stable (FV do stajni).
+            return ['type' => TransportLead::CLIENT_TYPE_STABLE, 'user_id' => null];
+        }
+
+        return [
+            'type' => TransportLead::CLIENT_TYPE_OWNER,
+            'user_id' => (string) $assignment->owner_user_id,
+        ];
+    }
+
+    /**
      * @return array{
      *   customer_name:string, customer_email:string, customer_phone:?string,
      *   pickup_address:string, dropoff_address:string,
@@ -327,6 +427,11 @@ class TransportInquiryController extends Controller
             'flexible_date' => ['nullable', 'boolean'],
             'horse_count' => ['required', 'integer', 'min:1', 'max:15'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            // PR 7: stable wybiera klienta zlecenia. Format:
+            //   'stable'                          → stable jest klientem (FV → stajnia)
+            //   'boarder:{boarding_assignment_id}' → boarder klientem (FV → owner)
+            // Walidacja w resolveClient — tu tylko sanity max length.
+            'client_for' => ['nullable', 'string', 'max:64'],
             'terms' => ['accepted'],
         ], [
             'terms.accepted' => __('public/transport_inquiry.error.terms'),
