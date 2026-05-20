@@ -57,8 +57,7 @@
 
     /**
      * Tailwind color tokens per `tone` — wspólne dla icon background,
-     * border accent i badge. Trzymamy mapowanie tu (centralnie) zamiast
-     * w klasach na CTA — łatwiej dodać nowy „tone" przyszłościowo.
+     * border accent i badge.
      */
     $toneClasses = [
         'primary' => [
@@ -94,12 +93,46 @@
             'count_bg' => 'bg-emerald-600',
         ],
     ];
+
+    // Wszystkie @php data definitions tu, na górze — wcześniej był @php
+    // INSIDE @unless co kolidowało z Livewire ExtendBlade wrappers
+    // (mismatched if/endif w compiled output).
+    $checklistSteps = [
+        [
+            'href' => route('filament.transport.pages.transporter-documents'),
+            'done' => $checklist['verified'],
+            'icon_todo' => 'heroicon-o-document-check',
+            'label_todo' => __('transport/dashboard.onboarding.step.verify'),
+            'label_done' => __('transport/dashboard.onboarding.step.verified'),
+        ],
+        [
+            'href' => route('filament.transport.resources.vehicles.index'),
+            'done' => $checklist['has_vehicles'],
+            'icon_todo' => 'heroicon-o-truck',
+            'label_todo' => __('transport/dashboard.onboarding.step.add_vehicle'),
+            'label_done' => __('transport/dashboard.onboarding.step.vehicles_done'),
+        ],
+        [
+            'href' => route('filament.transport.resources.drivers.index'),
+            'done' => $checklist['has_drivers'],
+            'icon_todo' => 'heroicon-o-user-plus',
+            'label_todo' => __('transport/dashboard.onboarding.step.add_driver'),
+            'label_done' => __('transport/dashboard.onboarding.step.drivers_done'),
+        ],
+        [
+            'href' => route('filament.transport.pages.service-areas'),
+            'done' => $checklist['has_service_areas'],
+            'icon_todo' => 'heroicon-o-map',
+            'label_todo' => __('transport/dashboard.onboarding.step.set_service_areas'),
+            'label_done' => __('transport/dashboard.onboarding.step.service_areas_done'),
+        ],
+    ];
+    $progressPercent = (int) round($checklist['completed_count'] / max(1, $checklist['total_count']) * 100);
 @endphp
 
 <x-filament-panels::page>
     {{-- Hero CTA grid — 4 karty z modular tone'em (primary / info / warning / success).
-         Subtelny gradient + soft shadow + smooth hover transition. Mobile-first
-         responsive: 1 col → 2 col @sm → 4 col @xl. --}}
+         Mobile-first responsive: 1 col → 2 col @sm → 4 col @xl. --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         @foreach ($heroCards as $card)
             @php($tone = $toneClasses[$card['tone']])
@@ -137,42 +170,10 @@
         @endforeach
     </div>
 
-    {{-- Onboarding checklist — tylko gdy niekompletna. Refined design:
-         subtelny gradient, progress bar, ikony state'u, cleaner spacing. --}}
-    @unless ($isChecklistComplete)
-        @php
-            $checklistSteps = [
-                [
-                    'href' => route('filament.transport.pages.transporter-documents'),
-                    'done' => $checklist['verified'],
-                    'icon_todo' => 'heroicon-o-document-check',
-                    'label_todo' => __('transport/dashboard.onboarding.step.verify'),
-                    'label_done' => __('transport/dashboard.onboarding.step.verified'),
-                ],
-                [
-                    'href' => route('filament.transport.resources.vehicles.index'),
-                    'done' => $checklist['has_vehicles'],
-                    'icon_todo' => 'heroicon-o-truck',
-                    'label_todo' => __('transport/dashboard.onboarding.step.add_vehicle'),
-                    'label_done' => __('transport/dashboard.onboarding.step.vehicles_done'),
-                ],
-                [
-                    'href' => route('filament.transport.resources.drivers.index'),
-                    'done' => $checklist['has_drivers'],
-                    'icon_todo' => 'heroicon-o-user-plus',
-                    'label_todo' => __('transport/dashboard.onboarding.step.add_driver'),
-                    'label_done' => __('transport/dashboard.onboarding.step.drivers_done'),
-                ],
-                [
-                    'href' => route('filament.transport.pages.service-areas'),
-                    'done' => $checklist['has_service_areas'],
-                    'icon_todo' => 'heroicon-o-map',
-                    'label_todo' => __('transport/dashboard.onboarding.step.set_service_areas'),
-                    'label_done' => __('transport/dashboard.onboarding.step.service_areas_done'),
-                ],
-            ];
-            $progressPercent = (int) round($checklist['completed_count'] / max(1, $checklist['total_count']) * 100);
-        @endphp
+    {{-- Onboarding checklist — tylko gdy niekompletna. Używamy `@if (! ...)`
+         zamiast `@unless` bo to lepiej współpracuje z Livewire ExtendBlade
+         w kontekście @foreach z Filament icon component'ami w środku. --}}
+    @if (! $isChecklistComplete)
         <div class="mt-6 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-gradient-to-br from-amber-50 to-orange-50/30 dark:from-amber-950/30 dark:to-orange-950/10 p-6 shadow-sm">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div class="flex items-center gap-3">
@@ -221,11 +222,10 @@
                 @endforeach
             </div>
         </div>
-    @endunless
+    @endif
 
     {{-- KPI/finance widgety. Filament 3 renderuje je przez `getVisibleWidgets()`
-         z Dashboard base class. Nasz custom view dorzuca dodatkową przerwę
-         + sekcyjny heading dla lepszej hierarchii wizualnej. --}}
+         z Dashboard base class. Sekcyjny heading dla lepszej hierarchii wizualnej. --}}
     <div class="mt-8">
         <div class="flex items-center gap-2 mb-4">
             <x-filament::icon icon="heroicon-o-chart-bar" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
