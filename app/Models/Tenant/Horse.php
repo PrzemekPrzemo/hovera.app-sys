@@ -16,6 +16,7 @@ class Horse extends TenantModel
     protected $table = 'horses';
 
     protected $fillable = [
+        'central_horse_id',
         'name', 'microchip', 'passport_number', 'ueln',
         'breed', 'sex', 'color', 'birth_date',
         'owner_client_id', 'box_id', 'cover_image_path',
