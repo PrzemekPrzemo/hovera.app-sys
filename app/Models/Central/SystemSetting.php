@@ -42,7 +42,15 @@ class SystemSetting extends Model
 
     public static function getValue(string $key, mixed $default = null): mixed
     {
-        $row = static::query()->find($key);
+        try {
+            $row = static::query()->find($key);
+        } catch (\Throwable) {
+            // DB nieosiągalna albo tabela `system_settings` nie istnieje
+            // (np. podczas route:list przed `migrate`, w container boot przy
+            // CLI commands, w fresh installu). Caller dostaje $default —
+            // providery powinny falbackować na config('...') / .env.
+            return $default;
+        }
 
         return $row?->value ?? $default;
     }
