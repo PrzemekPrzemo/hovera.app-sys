@@ -34,6 +34,7 @@ return [
     'card_voiv_more_tooltip' => 'Pokrywa więcej województw — szczegóły na profilu',
 
     'card_view_profile' => 'Zobacz profil',
+    'card_order_transport' => 'Zamów transport',
     'featured_badge' => 'Polecany',
     // Spójne z §12 docs/TRANSPORT.md — pokazujemy że za jakością odpowiada
     // transporter, Hovera weryfikuje dokumenty, ale nie wykonuje transportów.
