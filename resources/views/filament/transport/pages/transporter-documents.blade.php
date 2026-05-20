@@ -19,7 +19,7 @@
         };
     @endphp
 
-    <div class="rounded-lg p-4 border {{ $verificationStatus->value === 'verified' ? 'border-green-300 bg-green-50 dark:bg-green-900/30' : 'border-amber-300 bg-amber-50 dark:bg-amber-900/30' }}">
+    <div class="rounded-lg p-4 border {{ $verificationStatus->value === 'verified' ? 'border-green-300 bg-green-50 dark:bg-green-900/30' : ($verificationStatus->value === 'rejected' ? 'border-rose-400 bg-rose-50 dark:bg-rose-900/30' : 'border-amber-300 bg-amber-50 dark:bg-amber-900/30') }}">
         <div class="flex items-center justify-between gap-3">
             <div>
                 <div class="font-bold text-base">{{ __('transport/documents.status.heading') }}: {{ $verificationStatus->label() }}</div>
@@ -29,7 +29,13 @@
                     @elseif ($verificationStatus->value === 'under_review')
                         {{ __('transport/documents.status.under_review_body') }}
                     @elseif ($verificationStatus->value === 'rejected')
+                        @php($rejectedCount = collect($docs)->filter(fn ($d) => $d && $d->status === 'rejected')->count())
                         {{ __('transport/documents.status.rejected_body') }}
+                        @if ($rejectedCount > 0)
+                            <span class="font-semibold text-rose-700 dark:text-rose-300">
+                                {{ trans_choice('transport/documents.status.rejected_count', $rejectedCount, ['count' => $rejectedCount]) }}
+                            </span>
+                        @endif
                     @else
                         {{ __('transport/documents.status.pending_body', ['count' => max(0, $missingRequired)]) }}
                     @endif
@@ -38,6 +44,10 @@
             @if ($verificationStatus->value === 'pending' && $missingRequired > 0)
                 <div class="rounded-full bg-amber-500 text-white px-3 py-1 text-sm font-bold whitespace-nowrap">
                     {{ __('transport/documents.status.missing_badge', ['count' => $missingRequired]) }}
+                </div>
+            @elseif ($verificationStatus->value === 'rejected')
+                <div class="rounded-full bg-rose-600 text-white px-3 py-1 text-sm font-bold whitespace-nowrap">
+                    {{ __('transport/documents.status.rejected_badge') }}
                 </div>
             @endif
         </div>

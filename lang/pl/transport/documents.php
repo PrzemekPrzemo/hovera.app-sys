@@ -11,8 +11,10 @@ return [
         'pending_body' => 'Aby aktywować konto, musisz wgrać :count brakujących dokumentów. Bez weryfikacji nie wystawisz ofert ani faktur.',
         'under_review_body' => 'Wszystkie wymagane dokumenty wgrane — weryfikacja przez zespół hovera w toku (zwykle 1–2 dni robocze).',
         'verified_body' => 'Konto aktywne. Możesz wystawiać oferty, faktury, otrzymywać zapytania z marketplace\'u.',
-        'rejected_body' => 'Konto odrzucone. Sprawdź uwagi w poszczególnych dokumentach i prześlij poprawione wersje.',
+        'rejected_body' => 'Master admin odrzucił weryfikację konta. Sprawdź powody przy poszczególnych dokumentach (czerwone pole) i wgraj nowe wersje — po komplecie konto wróci automatycznie do kolejki re-weryfikacji.',
+        'rejected_count' => '{1} :count dokument do poprawy.|[2,4] :count dokumenty do poprawy.|[5,*] :count dokumentów do poprawy.',
         'missing_badge' => ':count brak',
+        'rejected_badge' => 'Wymaga poprawy',
     ],
 
     'label' => [
@@ -28,6 +30,7 @@ return [
 
     'action' => [
         'upload' => 'Wgraj',
+        'replace' => 'Zastąp nowym',
         'delete' => 'Usuń',
     ],
 
@@ -63,6 +66,8 @@ return [
         'pwl_authorization_choice' => 'Wybierz Typ 1 LUB Typ 2 — zależnie od profilu transportów. Typ 2 (> 8h) pokrywa również Typ 1.',
         'pwl_vehicle_per_vehicle' => 'Dokument wystawiany per pojazd. Jeśli masz flotę, wgraj scaloną wersję PDF dla wszystkich pojazdów.',
         'wash_log_period' => 'Wgrywaj na bieżąco — wpisy starsze niż 12 miesięcy są traktowane jako nieaktualne.',
+        'replace_expired' => 'Ten dokument WYGASŁ. Wgraj nowy żeby utrzymać aktywne konto — stary zostanie zachowany w audicie.',
+        'replace_expiring' => 'Ten dokument wygasa wkrótce. Możesz wgrać nową wersję — stary zostanie zachowany w audicie.',
     ],
 
     'checklist' => [
