@@ -12,6 +12,7 @@ use App\Domain\Transport\Geocoding\Exceptions\GeocodingException;
 use App\Domain\Transport\Geocoding\MapboxGeocoder;
 use App\Domain\Transport\Routing\Data\Coords;
 use App\Domain\Transport\Routing\Exceptions\RoutingException;
+use App\Enums\CalculationMode;
 use App\Enums\QuoteStatus;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Filament\Transport\Resources\QuoteResource;
@@ -186,12 +187,16 @@ class Calculator extends Page implements HasForms
                 Forms\Components\Section::make(__('transport/calculator.section.options'))
                     ->columns(3)
                     ->schema([
+                        Forms\Components\Select::make('mode')
+                            ->label(__('transport/calculator.form.label.mode'))
+                            ->helperText(__('transport/calculator.form.helper.mode'))
+                            ->options(CalculationMode::options())
+                            ->default(CalculationMode::OneWay->value)
+                            ->required()
+                            ->native(false),
                         Forms\Components\Toggle::make('loaded')
                             ->label(__('transport/calculator.form.label.loaded'))
                             ->default(true)
-                            ->inline(false),
-                        Forms\Components\Toggle::make('round_trip')
-                            ->label(__('transport/calculator.form.label.round_trip'))
                             ->inline(false),
                         Forms\Components\Select::make('profile')
                             ->label(__('transport/calculator.form.label.profile'))
@@ -247,15 +252,19 @@ class Calculator extends Page implements HasForms
         }
 
         try {
+            $mode = CalculationMode::tryFrom((string) ($form['mode'] ?? ''))
+                ?? CalculationMode::OneWay;
+
             $quotation = app(CalculatorService::class)->calculate(
                 $tenant,
                 $from->coords,
                 $to->coords,
                 new CalculationOptions(
                     loaded: (bool) ($form['loaded'] ?? true),
-                    roundTrip: (bool) ($form['round_trip'] ?? false),
+                    roundTrip: $mode === CalculationMode::RoundTrip,
                     avoidTolls: (bool) ($form['avoid_tolls'] ?? false),
                     avoidFerries: (bool) ($form['avoid_ferries'] ?? false),
+                    mode: $mode,
                     routingProfile: (string) ($form['profile'] ?? 'truck'),
                 ),
             );
@@ -314,6 +323,7 @@ class Calculator extends Page implements HasForms
             'dropoff_lng' => $dropoffLng,
             'preferred_date' => $existingPending['preferred_date'] ?? now()->addDays(7)->toDateString(),
             'round_trip' => (bool) ($form['round_trip'] ?? false),
+            'calculation_mode' => (string) ($form['mode'] ?? CalculationMode::OneWay->value),
             'loaded' => (bool) ($form['loaded'] ?? true),
             'distance_km' => $q->distanceKm,
             'duration_seconds' => $q->durationSeconds,

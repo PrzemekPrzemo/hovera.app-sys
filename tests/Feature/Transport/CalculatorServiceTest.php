@@ -8,6 +8,7 @@ use App\Domain\Transport\Calculator\CalculatorService;
 use App\Domain\Transport\Calculator\Data\CalculationOptions;
 use App\Domain\Transport\Calculator\Data\Quotation;
 use App\Domain\Transport\Routing\Data\Coords;
+use App\Enums\CalculationMode;
 use App\Enums\TenantType;
 use App\Models\Central\FuelPrice;
 use App\Models\Central\Plan;
@@ -156,6 +157,63 @@ class CalculatorServiceTest extends TestCase
         $this->assertSame(32.50, $q->fuelSurcharge);
     }
 
+    public function test_mode_one_way_does_not_double(): void
+    {
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(mode: CalculationMode::OneWay),
+        );
+
+        $this->assertSame(100.0, $q->distanceKm);
+    }
+
+    public function test_mode_round_trip_doubles_distance(): void
+    {
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(mode: CalculationMode::RoundTrip),
+        );
+
+        $this->assertSame(200.0, $q->distanceKm);
+    }
+
+    public function test_mode_return_home_adds_return_leg_distance(): void
+    {
+        TransportSettings::current()->forceFill([
+            'home_address' => 'Baza, Warszawa',
+            'home_lat' => 52.10,
+            'home_lng' => 20.95,
+        ])->save();
+
+        // Mock ORS dla obu wywołań — Http::fake() już zwraca distance=100 dla *,
+        // więc both A→B i B→base zwrócą 100 km. Suma = 200 km.
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(mode: CalculationMode::ReturnHome),
+        );
+
+        $this->assertSame(200.0, $q->distanceKm);
+    }
+
+    public function test_mode_return_home_falls_back_to_round_trip_without_home_coords(): void
+    {
+        // home_* są nullable; bez wartości return_home musi spaść do *2.
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(mode: CalculationMode::ReturnHome),
+        );
+
+        $this->assertSame(200.0, $q->distanceKm, 'falls back to *2 round_trip');
+    }
+
     public function test_fuel_surcharge_disabled_zeroes_out(): void
     {
         TransportSettings::current()->forceFill([
@@ -242,6 +300,9 @@ class CalculatorServiceTest extends TestCase
             $t->decimal('manual_fuel_price_pln', 5, 2)->nullable();
             $t->decimal('vat_rate', 4, 2)->default(23.00);
             $t->string('currency', 3)->default('PLN');
+            $t->string('home_address', 255)->nullable();
+            $t->decimal('home_lat', 10, 7)->nullable();
+            $t->decimal('home_lng', 10, 7)->nullable();
             $t->json('routing_provider')->nullable();
             $t->timestamp('created_at')->useCurrent();
             $t->timestamp('updated_at')->useCurrent();

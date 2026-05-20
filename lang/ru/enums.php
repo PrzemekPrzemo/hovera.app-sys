@@ -13,6 +13,12 @@ return [
         'trailer' => 'Прицеп',
     ],
 
+    'calculation_mode' => [
+        'one_way' => 'В одну сторону',
+        'round_trip' => 'В обе стороны',
+        'return_home' => 'Прямой возврат на базу',
+    ],
+
     'quote_status' => [
         'draft' => 'Черновик',
         'sent' => 'Отправлена',

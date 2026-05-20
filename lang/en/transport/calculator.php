@@ -17,9 +17,13 @@ return [
             'to_address' => 'Drop-off address',
             'loaded' => 'Loaded (with horse)',
             'round_trip' => 'Round trip',
+            'mode' => 'Calculation mode',
             'avoid_tolls' => 'Avoid toll roads',
             'avoid_ferries' => 'Avoid ferries',
             'profile' => 'Vehicle profile',
+        ],
+        'helper' => [
+            'mode' => '"Return to home base" adds km from drop-off back to the transporter base. Requires a base set in Transport Settings — otherwise falls back to round trip.',
         ],
         'placeholder' => [
             'from_address' => 'e.g. Marymoncka 1 Stable, Warsaw',
