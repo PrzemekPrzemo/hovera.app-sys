@@ -104,6 +104,16 @@ fi
 CURRENT_REV=$(git rev-parse --short HEAD)
 log "Rewizja: $CURRENT_REV"
 
+# ── 4b. Pre-flight chown ────────────────────────────────────────────
+# Composer install (jako vhost user) odpala post-autoload-dump scripts,
+# w tym `php artisan filament:upgrade` który kopiuje JS/CSS do public/js/
+# i public/css/. Jeśli te pliki istnieją z poprzedniego deployu jako root,
+# vhost user dostaje „Permission denied" przy copy. Chown public/ przed
+# composer install rozwiązuje to.
+log "→ Pre-flight chown: storage + bootstrap/cache + public (dla filament:upgrade)"
+run "chown -R ${VHOST_USER}:${VHOST_GROUP} storage bootstrap/cache public"
+run "chmod -R u+rwX,g+rwX,o+rX storage bootstrap/cache public"
+
 # ── 5. Composer install (jako vhost user — żeby vendor/ miał właściwy owner) ──
 # Resolve absolute path composer'a. Powód: `detect-php.sh` zwraca COMPOSER_BIN
 # jako "composer" gdy w PATH roota. Po sudo -u na vhost user PATH ten może NIE
@@ -171,9 +181,9 @@ fi
 # Chown WSZYSTKICH plików storage/+bootstrap/cache/ na vhost user.
 # Sticky bit 2775 na katalogach żeby NOWE pliki tworzone przez PHP-FPM
 # automatycznie dziedziczyły group ownership.
-log "→ Chown + chmod permissions"
-run "chown -R ${VHOST_USER}:${VHOST_GROUP} storage bootstrap/cache"
-run "chmod -R u+rwX,g+rwX,o+rX storage bootstrap/cache"
+log "→ Chown + chmod permissions (storage + bootstrap/cache + public)"
+run "chown -R ${VHOST_USER}:${VHOST_GROUP} storage bootstrap/cache public"
+run "chmod -R u+rwX,g+rwX,o+rX storage bootstrap/cache public"
 run "find storage bootstrap/cache -type d -exec chmod 2775 {} \\;"
 
 # Bonus: upewnij się że storage symlink istnieje (pierwszy install)
