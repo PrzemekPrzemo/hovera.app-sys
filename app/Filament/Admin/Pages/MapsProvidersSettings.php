@@ -68,6 +68,8 @@ class MapsProvidersSettings extends Page implements HasForms
             'mapbox_token' => SystemSetting::getSecret('transport.mapbox.token', '') ?? '',
             'ors_api_key' => SystemSetting::getSecret('transport.ors.api_key', '') ?? '',
             'google_api_key' => SystemSetting::getSecret('transport.google.api_key', '') ?? '',
+            'autocomplete_provider_panel' => SystemSetting::getValue('transport.autocomplete.provider_panel', 'mapbox'),
+            'autocomplete_provider_public' => SystemSetting::getValue('transport.autocomplete.provider_public', 'photon'),
         ]);
     }
 
@@ -112,6 +114,35 @@ class MapsProvidersSettings extends Page implements HasForms
                             ->helperText(__('admin/maps_providers.form.helper.google_api_key'))
                             ->placeholder('AIzaSy...'),
                     ]),
+
+                Forms\Components\Section::make(__('admin/maps_providers.form.section.autocomplete'))
+                    ->description(__('admin/maps_providers.form.section.autocomplete_description'))
+                    ->icon('heroicon-o-magnifying-glass')
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\Select::make('autocomplete_provider_panel')
+                            ->label(__('admin/maps_providers.form.label.autocomplete_provider_panel'))
+                            ->helperText(__('admin/maps_providers.form.helper.autocomplete_provider_panel'))
+                            ->options([
+                                'off' => __('admin/maps_providers.form.option.autocomplete.off'),
+                                'photon' => __('admin/maps_providers.form.option.autocomplete.photon'),
+                                'mapbox' => __('admin/maps_providers.form.option.autocomplete.mapbox'),
+                            ])
+                            ->default('mapbox')
+                            ->required()
+                            ->native(false),
+                        Forms\Components\Select::make('autocomplete_provider_public')
+                            ->label(__('admin/maps_providers.form.label.autocomplete_provider_public'))
+                            ->helperText(__('admin/maps_providers.form.helper.autocomplete_provider_public'))
+                            ->options([
+                                'off' => __('admin/maps_providers.form.option.autocomplete.off'),
+                                'photon' => __('admin/maps_providers.form.option.autocomplete.photon'),
+                                'mapbox' => __('admin/maps_providers.form.option.autocomplete.mapbox'),
+                            ])
+                            ->default('photon')
+                            ->required()
+                            ->native(false),
+                    ]),
             ]);
     }
 
@@ -134,6 +165,14 @@ class MapsProvidersSettings extends Page implements HasForms
         $google = trim((string) ($form['google_api_key'] ?? ''));
         if ($google !== '') {
             SystemSetting::setSecret('transport.google.api_key', $google);
+        }
+
+        foreach (['panel', 'public'] as $context) {
+            $key = "autocomplete_provider_{$context}";
+            $value = (string) ($form[$key] ?? '');
+            if (in_array($value, ['off', 'photon', 'mapbox'], true)) {
+                SystemSetting::setValue("transport.autocomplete.provider_{$context}", $value);
+            }
         }
 
         Notification::make()

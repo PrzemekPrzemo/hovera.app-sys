@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\PlacesAutocompleteController;
 use App\Http\Controllers\Api\TransportInquiryApiController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DeviceController;
@@ -34,6 +35,21 @@ Route::middleware([ResolveEmbedCors::class])
         Route::post('/inquiry', [TransportInquiryApiController::class, 'store'])
             ->middleware('throttle:10,60')
             ->name('inquiry');
+    });
+
+/*
+ * Places autocomplete proxy — używany przez Filament Calculator/Quote
+ * (kontext=panel) oraz publiczny `/transport/zapytanie` (kontext=public).
+ * Tokeny Mapbox czytane server-side, NIE eksponowane do przeglądarki.
+ *
+ * Throttle 60 req/min/IP — typeahead w UI bije częściej niż raz na sekundę.
+ */
+Route::middleware('throttle:60,1')
+    ->prefix('transport/places')
+    ->name('api.transport.places.')
+    ->group(function () {
+        Route::get('/suggest', [PlacesAutocompleteController::class, 'suggest'])
+            ->name('suggest');
     });
 
 // Public auth endpoints (no tenant context yet — user picks tenant after login).

@@ -175,7 +175,7 @@ class TransportPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn () => Blade::render('<x-pwa-register />'),
+                fn () => Blade::render('<x-pwa-register /><x-places-autocomplete-script />'),
             )
             ->renderHook(
                 PanelsRenderHook::TOPBAR_END,
