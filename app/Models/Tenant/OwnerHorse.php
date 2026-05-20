@@ -29,6 +29,7 @@ class OwnerHorse extends TenantModel
     protected $table = 'horses';
 
     protected $fillable = [
+        'central_horse_id',
         'name',
         'breed',
         'birth_date',
