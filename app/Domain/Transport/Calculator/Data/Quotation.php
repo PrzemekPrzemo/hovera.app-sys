@@ -45,6 +45,15 @@ final readonly class Quotation implements Wireable
         public float $extraHorseFeeTotal = 0.0,
         public float $extraHorseFeePerHead = 0.0,
         public int $horsesCount = 1,
+        // Stałe opłaty (autostrady, prom etc.) — snapshot list [{name, amount}]
+        // i ich suma. `fixedFees` może być pusta = brak doliczeń.
+        //
+        // @var list<array{name: string, amount: float}>
+        public array $fixedFees = [],
+        public float $fixedFeesTotal = 0.0,
+        // Marża procentowa + jej kwota (suma kosztów × percent/100).
+        public float $surchargePercent = 0.0,
+        public float $surchargeAmount = 0.0,
     ) {}
 
     /** @return array<string,mixed> */
@@ -59,6 +68,10 @@ final readonly class Quotation implements Wireable
             'extra_horse_fee_total' => $this->extraHorseFeeTotal,
             'extra_horse_fee_per_head' => $this->extraHorseFeePerHead,
             'horses_count' => $this->horsesCount,
+            'fixed_fees' => $this->fixedFees,
+            'fixed_fees_total' => $this->fixedFeesTotal,
+            'surcharge_percent' => $this->surchargePercent,
+            'surcharge_amount' => $this->surchargeAmount,
             'minimum_adjustment' => $this->minimumAdjustment,
             'net_total' => $this->netTotal,
             'vat_rate' => $this->vatRate,
@@ -82,6 +95,10 @@ final readonly class Quotation implements Wireable
             'extraHorseFeeTotal' => $this->extraHorseFeeTotal,
             'extraHorseFeePerHead' => $this->extraHorseFeePerHead,
             'horsesCount' => $this->horsesCount,
+            'fixedFees' => $this->fixedFees,
+            'fixedFeesTotal' => $this->fixedFeesTotal,
+            'surchargePercent' => $this->surchargePercent,
+            'surchargeAmount' => $this->surchargeAmount,
             'minimumAdjustment' => $this->minimumAdjustment,
             'netTotal' => $this->netTotal,
             'vatRate' => $this->vatRate,
@@ -113,6 +130,10 @@ final readonly class Quotation implements Wireable
             extraHorseFeeTotal: (float) ($value['extraHorseFeeTotal'] ?? 0),
             extraHorseFeePerHead: (float) ($value['extraHorseFeePerHead'] ?? 0),
             horsesCount: (int) ($value['horsesCount'] ?? 1),
+            fixedFees: is_array($value['fixedFees'] ?? null) ? $value['fixedFees'] : [],
+            fixedFeesTotal: (float) ($value['fixedFeesTotal'] ?? 0),
+            surchargePercent: (float) ($value['surchargePercent'] ?? 0),
+            surchargeAmount: (float) ($value['surchargeAmount'] ?? 0),
         );
     }
 }

@@ -9,6 +9,8 @@ return [
     'section' => [
         'route' => 'Trasa',
         'options' => 'Opcje',
+        'extra_costs' => 'Dodatkowe opłaty i marża',
+        'extra_costs_description' => 'Stałe opłaty (autostrady, prom etc.) + marża procentowa per wycena. Puste = wartości domyślne z Ustawień Transportu.',
     ],
 
     'form' => [
@@ -22,10 +24,19 @@ return [
             'avoid_ferries' => 'Omijaj promy',
             'profile' => 'Profil pojazdu',
             'horses_count' => 'Liczba koni',
+            'fixed_fees' => 'Stałe opłaty (autostrady, prom, etc.)',
+            'fixed_fees_name' => 'Nazwa',
+            'fixed_fees_amount' => 'Kwota',
+            'surcharge_percent' => 'Marża %',
         ],
         'helper' => [
             'mode' => '„Powrót do bazy" doliczy km z punktu docelowego do bazy transportera. Wymaga ustawionej bazy w Ustawieniach Transportu — bez tego spada do trybu „w dwie strony".',
             'horses_count' => 'Doliczenie naliczone od drugiego konia w górę, zgodnie ze stawką w Ustawieniach Transportu.',
+            'fixed_fees' => 'Każda pozycja zostanie doliczona do wyceny. Wartości domyślne — z Ustawień Transportu (jeśli pole zostawisz puste).',
+            'surcharge_percent' => 'Marża doliczana procentowo do sumy kosztów (po dopasowaniu do opłaty minimalnej, przed VAT). Pusto = wartość domyślna z Ustawień. 0 = brak marży.',
+        ],
+        'action' => [
+            'add_fixed_fee' => 'Dodaj opłatę',
         ],
         'placeholder' => [
             'from_address' => 'np. Stajnia Marymoncka 1, Warszawa',
@@ -61,6 +72,7 @@ return [
         'base_cost' => 'Koszt podstawowy',
         'fuel_surcharge' => 'Dopłata paliwowa',
         'extra_horse_fee' => 'Dodatkowe konie: :count × :rate :currency',
+        'surcharge' => 'Marża (:percent%)',
         'minimum_adjustment' => 'Dobór do opłaty minimalnej',
         'net_total' => 'Razem netto',
         'vat' => 'VAT (:rate%)',

@@ -270,6 +270,10 @@ class CalculatorServiceTest extends TestCase
             extraHorseFeeTotal: 300.00,
             extraHorseFeePerHead: 150.00,
             horsesCount: 3,
+            fixedFees: [['name' => 'Autostrada', 'amount' => 50.0]],
+            fixedFeesTotal: 50.00,
+            surchargePercent: 15.00,
+            surchargeAmount: 245.00,
         );
 
         $hydrated = Quotation::fromLivewire($q->toLivewire());
@@ -362,6 +366,152 @@ class CalculatorServiceTest extends TestCase
         $this->assertSame(1000.00, $q->netTotal);
     }
 
+    public function test_fixed_fees_from_settings_default_are_added_to_subtotal(): void
+    {
+        TransportSettings::current()->forceFill([
+            'rate_per_km' => 10.00,         // base = 1000
+            'fixed_fees_default' => [
+                ['name' => 'Autostrada A1', 'amount' => 150],
+                ['name' => 'Prom Świnoujście', 'amount' => 250],
+            ],
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+        );
+
+        $this->assertSame(400.0, $q->fixedFeesTotal);
+        $this->assertCount(2, $q->fixedFees);
+        $this->assertSame('Autostrada A1', $q->fixedFees[0]['name']);
+
+        // base=1000 + fuel=16.25 + fixed=400 = 1416.25 (over min 800)
+        // net = 1416.25 + 0 (no surcharge default) = 1416.25
+        $this->assertSame(0.0, $q->minimumAdjustment);
+        $this->assertSame(1416.25, $q->netTotal);
+    }
+
+    public function test_fixed_fees_override_from_options_skips_settings_default(): void
+    {
+        TransportSettings::current()->forceFill([
+            'fixed_fees_default' => [['name' => 'Default', 'amount' => 999]],
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(fixedFees: [['name' => 'Override', 'amount' => 100]]),
+        );
+
+        // Override z opcji wygrywa nad default'em z settings.
+        $this->assertCount(1, $q->fixedFees);
+        $this->assertSame('Override', $q->fixedFees[0]['name']);
+        $this->assertSame(100.0, $q->fixedFeesTotal);
+    }
+
+    public function test_fixed_fees_empty_array_override_disables_defaults(): void
+    {
+        TransportSettings::current()->forceFill([
+            'fixed_fees_default' => [['name' => 'Default', 'amount' => 999]],
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(fixedFees: []),
+        );
+
+        $this->assertSame(0.0, $q->fixedFeesTotal);
+        $this->assertSame([], $q->fixedFees);
+    }
+
+    public function test_fixed_fees_skip_invalid_entries(): void
+    {
+        TransportSettings::current()->forceFill([
+            'fixed_fees_default' => [
+                ['name' => 'Valid', 'amount' => 50],
+                ['name' => '', 'amount' => 100],         // empty name → skip
+                ['name' => 'Negative', 'amount' => -10], // negative → skip
+                'not-an-array',                          // garbage → skip
+            ],
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+        );
+
+        $this->assertCount(1, $q->fixedFees);
+        $this->assertSame(50.0, $q->fixedFeesTotal);
+    }
+
+    public function test_surcharge_percent_from_settings_applied_after_minimum_adjustment(): void
+    {
+        TransportSettings::current()->forceFill([
+            'rate_per_km' => 10.00,             // base = 1000
+            'minimum_charge' => 0,              // disable min adjustment
+            'surcharge_percent_default' => 20,  // +20% margin
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+        );
+
+        // costs = base 1000 + fuel 16.25 = 1016.25
+        // surcharge = 1016.25 × 0.20 = 203.25
+        // net = 1016.25 + 203.25 = 1219.50
+        $this->assertSame(20.0, $q->surchargePercent);
+        $this->assertSame(203.25, $q->surchargeAmount);
+        $this->assertSame(1219.50, $q->netTotal);
+    }
+
+    public function test_surcharge_includes_minimum_adjustment_in_base(): void
+    {
+        TransportSettings::current()->forceFill([
+            'rate_per_km' => 1.00,           // base = 100 (poniżej min 800)
+            'minimum_charge' => 800,
+            'surcharge_percent_default' => 10,
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+        );
+
+        // costs = base 100 + fuel 16.25 = 116.25
+        // min_adj = 800 - 116.25 = 683.75
+        // costs+min = 800
+        // surcharge = 800 × 0.10 = 80
+        // net = 800 + 80 = 880
+        $this->assertSame(683.75, $q->minimumAdjustment);
+        $this->assertSame(80.0, $q->surchargeAmount);
+        $this->assertSame(880.0, $q->netTotal);
+    }
+
+    public function test_surcharge_explicit_zero_overrides_settings_default(): void
+    {
+        TransportSettings::current()->forceFill([
+            'surcharge_percent_default' => 25,  // settings = 25%
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(surchargePercent: 0.0),  // opt-out
+        );
+
+        $this->assertSame(0.0, $q->surchargePercent);
+        $this->assertSame(0.0, $q->surchargeAmount);
+    }
+
     public function test_vehicle_weight_kg_and_height_cm_propagate_as_tons_and_meters_to_ors(): void
     {
         // Override ORS mock żeby przechwycić body i sprawdzić konwersję jednostek.
@@ -416,6 +566,8 @@ class CalculatorServiceTest extends TestCase
             $t->decimal('rate_per_km_loaded', 6, 2)->nullable();
             $t->decimal('minimum_charge', 8, 2)->default(800.00);
             $t->decimal('extra_horse_fee_default', 8, 2)->default(0);
+            $t->json('fixed_fees_default')->nullable();
+            $t->decimal('surcharge_percent_default', 5, 2)->nullable();
             $t->decimal('fuel_consumption_l_per_100km', 5, 2)->default(32.5);
             $t->boolean('fuel_surcharge_enabled')->default(true);
             $t->decimal('fuel_base_price_pln', 5, 2)->default(7.00);

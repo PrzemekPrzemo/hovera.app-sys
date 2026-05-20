@@ -197,6 +197,9 @@ class CreateQuote extends CreateRecord
         $data['base_cost'] = $quotation->baseCost;
         $data['fuel_surcharge'] = $quotation->fuelSurcharge;
         $data['extra_horse_fee_snapshot'] = $quotation->extraHorseFeePerHead;
+        $data['fixed_fees_snapshot'] = $quotation->fixedFees;
+        $data['surcharge_percent_snapshot'] = $quotation->surchargePercent;
+        $data['surcharge_amount_snapshot'] = $quotation->surchargeAmount;
         $data['minimum_adjustment'] = $quotation->minimumAdjustment;
         $data['net_total'] = $quotation->netTotal;
         $data['vat_rate'] = $data['vat_rate'] ?? $quotation->vatRate;

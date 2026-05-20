@@ -244,6 +244,8 @@ class QuoteAcceptanceTest extends TestCase
             $t->decimal('rate_per_km_loaded', 6, 2)->nullable();
             $t->decimal('minimum_charge', 8, 2)->default(800.00);
             $t->decimal('extra_horse_fee_default', 8, 2)->default(0);
+            $t->json('fixed_fees_default')->nullable();
+            $t->decimal('surcharge_percent_default', 5, 2)->nullable();
             $t->decimal('fuel_consumption_l_per_100km', 5, 2)->default(32.5);
             $t->boolean('fuel_surcharge_enabled')->default(true);
             $t->decimal('fuel_base_price_pln', 5, 2)->default(7.00);
@@ -292,6 +294,9 @@ class QuoteAcceptanceTest extends TestCase
             $t->decimal('base_cost', 10, 2);
             $t->decimal('fuel_surcharge', 10, 2)->default(0);
             $t->decimal('extra_horse_fee_snapshot', 10, 2)->default(0);
+            $t->json('fixed_fees_snapshot')->nullable();
+            $t->decimal('surcharge_percent_snapshot', 5, 2)->nullable();
+            $t->decimal('surcharge_amount_snapshot', 10, 2)->nullable();
             $t->decimal('minimum_adjustment', 10, 2)->default(0);
             $t->decimal('net_total', 10, 2);
             $t->decimal('vat_rate', 4, 2);

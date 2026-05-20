@@ -37,6 +37,7 @@ return [
         'base_cost' => 'Base cost',
         'fuel_surcharge' => 'Fuel surcharge',
         'extra_horse_fee' => 'Extra horses: :count × :rate :currency',
+        'surcharge' => 'Margin (:percent%)',
         'minimum_adjustment' => 'Minimum-charge adjustment',
         'net_total' => 'Net total',
         'vat' => 'VAT (:rate%)',

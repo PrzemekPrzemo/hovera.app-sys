@@ -118,11 +118,33 @@ class CalculatorService
         $extraHorseFeePerHead = (float) $settings->extra_horse_fee_default;
         $extraHorseFeeTotal = round($extraHorseFeePerHead * max(0, $horsesCount - 1), 2);
 
-        $subtotal = round($baseCost + $fuelSurcharge + $extraHorseFeeTotal, 2);
-        $minimumCharge = (float) $settings->minimum_charge;
-        $minimumAdjustment = max(0.0, round($minimumCharge - $subtotal, 2));
+        // Stałe opłaty (autostrady, prom etc.) — z opcji (override) lub
+        // z settings.fixed_fees_default. Każda pozycja {name, amount} —
+        // pomijamy non-numeric / ujemne wartości (defensive parse).
+        $fixedFees = $this->normaliseFixedFees(
+            $options->fixedFees ?? $settings->fixed_fees_default ?? [],
+        );
+        $fixedFeesTotal = array_sum(array_column($fixedFees, 'amount'));
+        $fixedFeesTotal = round($fixedFeesTotal, 2);
 
-        $netTotal = round($subtotal + $minimumAdjustment, 2);
+        // Subtotal kosztów PRZED minimum_adjustment + surcharge.
+        $costsSubtotal = round($baseCost + $fuelSurcharge + $extraHorseFeeTotal + $fixedFeesTotal, 2);
+        $minimumCharge = (float) $settings->minimum_charge;
+        $minimumAdjustment = max(0.0, round($minimumCharge - $costsSubtotal, 2));
+
+        // Marża procentowa — liczona PO minimum_adjustment, żeby zysk skalował
+        // się proporcjonalnie do faktycznej kwoty quote'a (a nie tylko kosztów
+        // bazowych poniżej minimum). Specifically passed 0 = brak marży nawet
+        // gdy settings ustawione (user opt-out).
+        $surchargePercent = $options->surchargePercent
+            ?? ($settings->surcharge_percent_default !== null
+                ? (float) $settings->surcharge_percent_default
+                : 0.0);
+        $surchargePercent = max(0.0, $surchargePercent);
+        $costsWithMinimum = round($costsSubtotal + $minimumAdjustment, 2);
+        $surchargeAmount = round($costsWithMinimum * ($surchargePercent / 100), 2);
+
+        $netTotal = round($costsWithMinimum + $surchargeAmount, 2);
         $vatRate = (float) $settings->vat_rate;
         $vatAmount = round($netTotal * ($vatRate / 100), 2);
         $grossTotal = round($netTotal + $vatAmount, 2);
@@ -144,7 +166,36 @@ class CalculatorService
             extraHorseFeeTotal: $extraHorseFeeTotal,
             extraHorseFeePerHead: $extraHorseFeePerHead,
             horsesCount: $horsesCount,
+            fixedFees: $fixedFees,
+            fixedFeesTotal: $fixedFeesTotal,
+            surchargePercent: $surchargePercent,
+            surchargeAmount: $surchargeAmount,
         );
+    }
+
+    /**
+     * Defensive parse — gdy user wpisze garbage w settings JSON albo
+     * frontend prześle nie-array. Zwracamy listę poprawnych pozycji.
+     *
+     * @param  array<mixed>  $raw
+     * @return list<array{name: string, amount: float}>
+     */
+    private function normaliseFixedFees(array $raw): array
+    {
+        $out = [];
+        foreach ($raw as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $name = trim((string) ($item['name'] ?? ''));
+            $amount = isset($item['amount']) ? (float) $item['amount'] : 0.0;
+            if ($name === '' || $amount <= 0) {
+                continue;
+            }
+            $out[] = ['name' => $name, 'amount' => round($amount, 2)];
+        }
+
+        return $out;
     }
 
     /**
