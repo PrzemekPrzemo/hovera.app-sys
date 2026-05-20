@@ -19,6 +19,7 @@ return [
             'number' => 'Number',
             'status' => 'Status',
             'valid_until' => 'Valid until',
+            'customer_picker' => 'Customer (pick from database)',
             'customer_name' => 'Full name',
             'customer_email' => 'Email',
             'customer_phone' => 'Phone',
@@ -55,6 +56,7 @@ return [
             'mark_as_paid_reason' => 'Reason / transaction reference (optional)',
         ],
         'helper' => [
+            'customer_picker' => 'Pick an existing customer from the database (search by name / company / NIP) or leave empty and fill the fields manually below. Picking copies their data as a snapshot onto this quote.',
             'vehicle' => 'Powered vehicle only — trucks. Fuel consumption is calculated from this one.',
             'trailer' => 'Optional trailer (no engine) attached to the leading vehicle.',
             'terms' => 'Visible to the customer on the quote / PDF.',
