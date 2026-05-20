@@ -20,6 +20,11 @@ return [
         'return_home' => 'Bezpośredni powrót do bazy',
     ],
 
+    'fuel_calculation_mode' => [
+        'surcharge' => 'Dopłata (różnica nad cenę bazową)',
+        'full_cost' => 'Pełen koszt paliwa',
+    ],
+
     'quote_status' => [
         'draft' => 'Szkic',
         'sent' => 'Wysłana',

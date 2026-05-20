@@ -7,6 +7,7 @@ namespace App\Filament\Transport\Pages;
 use App\Domain\Transport\Ksef\TransporterKsefService;
 use App\Domain\Transport\Payments\Stripe\TransporterStripeConnectService;
 use App\Domain\Transport\Routing\RoutingProviderProbe;
+use App\Enums\FuelCalculationMode;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\TransportSettings as TransportSettingsModel;
 use App\Services\Tenancy\TenantRoleGate;
@@ -81,6 +82,7 @@ class TransportSettings extends Page implements HasForms
             'surcharge_percent_default' => $settings->surcharge_percent_default,
             'fuel_consumption_l_per_100km' => $settings->fuel_consumption_l_per_100km,
             'fuel_surcharge_enabled' => $settings->fuel_surcharge_enabled,
+            'fuel_calculation_mode' => $settings->fuel_calculation_mode ?? 'surcharge',
             'fuel_base_price_pln' => $settings->fuel_base_price_pln,
             'vat_rate' => $settings->vat_rate,
             'currency' => $settings->currency,
@@ -180,14 +182,26 @@ class TransportSettings extends Page implements HasForms
                         Forms\Components\Toggle::make('fuel_surcharge_enabled')
                             ->label(__('transport/settings.form.label.fuel_surcharge_enabled'))
                             ->helperText(__('transport/settings.form.helper.fuel_surcharge_enabled'))
-                            ->inline(false),
+                            ->inline(false)
+                            ->live(),
+                        Forms\Components\Select::make('fuel_calculation_mode')
+                            ->label(__('transport/settings.form.label.fuel_calculation_mode'))
+                            ->helperText(__('transport/settings.form.helper.fuel_calculation_mode'))
+                            ->options(FuelCalculationMode::options())
+                            ->default(FuelCalculationMode::Surcharge->value)
+                            ->native(false)
+                            ->required()
+                            ->live()
+                            ->visible(fn (Forms\Get $get) => (bool) $get('fuel_surcharge_enabled')),
                         Forms\Components\TextInput::make('fuel_base_price_pln')
                             ->label(__('transport/settings.form.label.fuel_base_price_pln'))
+                            ->helperText(__('transport/settings.form.helper.fuel_base_price_pln'))
                             ->numeric()
                             ->minValue(0)
                             ->step(0.01)
                             ->suffix('PLN/L')
-                            ->visible(fn (Forms\Get $get) => (bool) $get('fuel_surcharge_enabled')),
+                            ->visible(fn (Forms\Get $get) => (bool) $get('fuel_surcharge_enabled')
+                                && $get('fuel_calculation_mode') === FuelCalculationMode::Surcharge->value),
                     ]),
 
                 Forms\Components\Section::make(__('transport/settings.section.tax_currency'))
@@ -507,6 +521,9 @@ class TransportSettings extends Page implements HasForms
                 : null,
             'fuel_consumption_l_per_100km' => (float) $form['fuel_consumption_l_per_100km'],
             'fuel_surcharge_enabled' => (bool) $form['fuel_surcharge_enabled'],
+            'fuel_calculation_mode' => in_array(($form['fuel_calculation_mode'] ?? 'surcharge'), ['surcharge', 'full_cost'], true)
+                ? $form['fuel_calculation_mode']
+                : 'surcharge',
             'fuel_base_price_pln' => (float) ($form['fuel_base_price_pln'] ?? 7.00),
             'vat_rate' => (float) $form['vat_rate'],
             'currency' => (string) $form['currency'],

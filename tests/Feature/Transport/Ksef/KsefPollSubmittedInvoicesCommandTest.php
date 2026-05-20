@@ -316,6 +316,7 @@ class KsefPollSubmittedInvoicesCommandTest extends TestCase
             $t->decimal('surcharge_percent_default', 5, 2)->nullable();
             $t->decimal('fuel_consumption_l_per_100km', 5, 2)->default(32.5);
             $t->boolean('fuel_surcharge_enabled')->default(true);
+            $t->string('fuel_calculation_mode', 16)->default('surcharge');
             $t->decimal('fuel_base_price_pln', 5, 2)->default(7.00);
             $t->decimal('manual_fuel_price_pln', 5, 2)->nullable();
             $t->decimal('vat_rate', 4, 2)->default(23.00);

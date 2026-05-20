@@ -80,4 +80,30 @@ class FuelPriceService
 
         return round($litres * $diff, 2);
     }
+
+    /**
+     * Pełny koszt paliwa: current_price × spalanie/100 × dystans.
+     * Używane gdy TransportSettings.fuel_calculation_mode = 'full_cost' —
+     * rate_per_km wtedy NIE wlicza paliwa, klient płaci 1:1 wg aktualnej
+     * ceny rynkowej. Patrz docs/MARKETPLACE-ROADMAP.md "Fuel mode toggle".
+     *
+     * Spodziewane jednostki:
+     *   $consumptionLPer100km — L/100km
+     *   $distanceKm           — km
+     *   wynik                 — PLN
+     */
+    public function calculateFullCost(
+        float $consumptionLPer100km,
+        float $distanceKm,
+        string $fuelType = FuelPrice::TYPE_DIESEL,
+    ): float {
+        $current = $this->current($fuelType);
+        if ($current <= 0 || $consumptionLPer100km <= 0 || $distanceKm <= 0) {
+            return 0.0;
+        }
+
+        $litres = ($consumptionLPer100km / 100) * $distanceKm;
+
+        return round($litres * $current, 2);
+    }
 }
