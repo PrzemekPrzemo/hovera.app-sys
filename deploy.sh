@@ -74,6 +74,17 @@ log "Composer: $COMPOSER"
 
 command -v git >/dev/null || fail "Brak git w PATH (eskaluj do hostingu — apt install git)."
 
+# ── Detect environment EARLY ────────────────────────────────────────
+# WAŻNE: detect-env.sh musi być wywołane PRZED permissions step (~line 112),
+# inaczej HOVERA_VHOST_USER jest pusty → fallback `www-data` → chown failuje
+# cicho na Plesku gdzie user vhostu to coś jak `app.hovera.app_cvpjl9sbri7`.
+# Bez tego deploy „udawał sukces", PHP-FPM nie mógł pisać do storage/.
+if [[ -f scripts/detect-env.sh ]]; then
+    # shellcheck source=scripts/detect-env.sh
+    . scripts/detect-env.sh
+    hovera_detect_environment 2>/dev/null || true
+fi
+
 # ── Maintenance mode ────────────────────────────────────────────────
 log "→ Maintenance mode ON"
 run "$PHP_BIN artisan down --render='errors::503' --retry=15 || true"
