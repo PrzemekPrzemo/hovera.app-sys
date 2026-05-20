@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Transport\Calculator\Data;
 
+use Livewire\Wireable;
+
 /**
  * Pełna wycena transportu — rozbita na komponenty żeby ofertę PDF można
  * było wyrenderować z pełną transparentnością. Wartości w bazowej walucie
@@ -15,8 +17,13 @@ namespace App\Domain\Transport\Calculator\Data;
  * netTotal          : baseCost + fuelSurcharge + minimumAdjustment
  * vatAmount         : netTotal × (vatRate/100)
  * grossTotal        : netTotal + vatAmount
+ *
+ * Implementuje `Wireable` żeby Livewire/Filament mógł trzymać tę DTO w
+ * `public ?Quotation $quotation` na Calculator page — bez tego Livewire 3
+ * rzuca "Property type not supported in Livewire for property: [{...}]"
+ * przy hydracji.
  */
-final readonly class Quotation
+final readonly class Quotation implements Wireable
 {
     public function __construct(
         public float $distanceKm,
@@ -52,5 +59,45 @@ final readonly class Quotation
             'routing_provider' => $this->routingProvider,
             'polyline' => $this->polyline,
         ];
+    }
+
+    /** @return array<string,mixed> */
+    public function toLivewire(): array
+    {
+        return [
+            'distanceKm' => $this->distanceKm,
+            'durationSeconds' => $this->durationSeconds,
+            'rateUsed' => $this->rateUsed,
+            'baseCost' => $this->baseCost,
+            'fuelSurcharge' => $this->fuelSurcharge,
+            'minimumAdjustment' => $this->minimumAdjustment,
+            'netTotal' => $this->netTotal,
+            'vatRate' => $this->vatRate,
+            'vatAmount' => $this->vatAmount,
+            'grossTotal' => $this->grossTotal,
+            'currency' => $this->currency,
+            'routingProvider' => $this->routingProvider,
+            'polyline' => $this->polyline,
+        ];
+    }
+
+    /** @param array<string,mixed> $value */
+    public static function fromLivewire($value): self
+    {
+        return new self(
+            distanceKm: (float) ($value['distanceKm'] ?? 0),
+            durationSeconds: (int) ($value['durationSeconds'] ?? 0),
+            rateUsed: (float) ($value['rateUsed'] ?? 0),
+            baseCost: (float) ($value['baseCost'] ?? 0),
+            fuelSurcharge: (float) ($value['fuelSurcharge'] ?? 0),
+            minimumAdjustment: (float) ($value['minimumAdjustment'] ?? 0),
+            netTotal: (float) ($value['netTotal'] ?? 0),
+            vatRate: (float) ($value['vatRate'] ?? 0),
+            vatAmount: (float) ($value['vatAmount'] ?? 0),
+            grossTotal: (float) ($value['grossTotal'] ?? 0),
+            currency: (string) ($value['currency'] ?? 'PLN'),
+            routingProvider: (string) ($value['routingProvider'] ?? ''),
+            polyline: isset($value['polyline']) ? (string) $value['polyline'] : null,
+        );
     }
 }

@@ -6,6 +6,7 @@ namespace Tests\Feature\Transport;
 
 use App\Domain\Transport\Calculator\CalculatorService;
 use App\Domain\Transport\Calculator\Data\CalculationOptions;
+use App\Domain\Transport\Calculator\Data\Quotation;
 use App\Domain\Transport\Routing\Data\Coords;
 use App\Enums\TenantType;
 use App\Models\Central\FuelPrice;
@@ -187,6 +188,32 @@ class CalculatorServiceTest extends TestCase
         $this->assertSame(0.0, $q->minimumAdjustment);
         // net = 2000 + 16.25 = 2016.25
         $this->assertSame(2016.25, $q->netTotal);
+    }
+
+    public function test_quotation_implements_wireable_round_trip(): void
+    {
+        // Bez Wireable Livewire 3 wywala "Property type not supported" gdy
+        // Calculator page trzyma `public ?Quotation $quotation`. Round-trip
+        // check chroni nas przed regresją.
+        $q = new Quotation(
+            distanceKm: 349.58,
+            durationSeconds: 14005,
+            rateUsed: 4.5,
+            baseCost: 1573.1,
+            fuelSurcharge: 0,
+            minimumAdjustment: 0,
+            netTotal: 1573.1,
+            vatRate: 23,
+            vatAmount: 361.81,
+            grossTotal: 1934.91,
+            currency: 'PLN',
+            routingProvider: 'ors',
+            polyline: 'abc_def',
+        );
+
+        $hydrated = Quotation::fromLivewire($q->toLivewire());
+
+        $this->assertEquals($q, $hydrated);
     }
 
     public function test_currency_passes_through_from_settings(): void
