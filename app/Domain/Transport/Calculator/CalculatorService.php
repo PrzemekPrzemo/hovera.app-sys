@@ -104,13 +104,22 @@ class CalculatorService
         $rateUsed = $this->resolveRate($settings, $options->loaded);
         $baseCost = round($rateUsed * $distanceKm, 2);
 
+        // Fuel cost: tryb 'surcharge' (default) dolicza tylko różnicę nad
+        // cenę bazową; 'full_cost' dolicza pełen koszt paliwa. Patrz
+        // docs/MARKETPLACE-ROADMAP.md "Fuel mode toggle".
         $fuelSurcharge = 0.0;
         if ($settings->fuel_surcharge_enabled) {
-            $fuelSurcharge = $this->fuel->calculateSurcharge(
-                consumptionLPer100km: (float) $settings->fuel_consumption_l_per_100km,
-                distanceKm: $distanceKm,
-                basePricePln: (float) $settings->fuel_base_price_pln,
-            );
+            $fuelMode = (string) ($settings->fuel_calculation_mode ?? 'surcharge');
+            $fuelSurcharge = $fuelMode === 'full_cost'
+                ? $this->fuel->calculateFullCost(
+                    consumptionLPer100km: (float) $settings->fuel_consumption_l_per_100km,
+                    distanceKm: $distanceKm,
+                )
+                : $this->fuel->calculateSurcharge(
+                    consumptionLPer100km: (float) $settings->fuel_consumption_l_per_100km,
+                    distanceKm: $distanceKm,
+                    basePricePln: (float) $settings->fuel_base_price_pln,
+                );
         }
 
         // Doliczenie za dodatkowe konie: tylko konie POWYŻEJ pierwszego — ten

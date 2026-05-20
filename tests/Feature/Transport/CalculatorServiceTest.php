@@ -566,6 +566,57 @@ class CalculatorServiceTest extends TestCase
         $this->assertSame(450.0, $q->baseCost);  // bez konwersji
     }
 
+    public function test_fuel_full_cost_mode_uses_current_price_times_consumption_times_distance(): void
+    {
+        TransportSettings::current()->forceFill([
+            'fuel_calculation_mode' => 'full_cost',
+            'fuel_consumption_l_per_100km' => 32.5,
+            // fuel_base_price_pln nieistotne w trybie full_cost — sprawdzamy
+            // że jest IGNOROWANE.
+            'fuel_base_price_pln' => 100.00,
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+        );
+
+        // current price = 7.50 (z FuelPrice w setUp), spalanie 32.5 L/100,
+        // dystans 100 km → litres = 32.5, full_cost = 32.5 × 7.50 = 243.75
+        $this->assertSame(243.75, $q->fuelSurcharge);
+    }
+
+    public function test_fuel_surcharge_mode_is_default_and_uses_diff(): void
+    {
+        // Default mode bez ustawiania — powinien być 'surcharge', diff
+        // (7.50 − 7.00) × 32.5 = 16.25.
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+        );
+
+        $this->assertSame(16.25, $q->fuelSurcharge);
+    }
+
+    public function test_fuel_enabled_false_overrides_mode(): void
+    {
+        // Mode = full_cost ale flag disabled → fuel = 0.
+        TransportSettings::current()->forceFill([
+            'fuel_surcharge_enabled' => false,
+            'fuel_calculation_mode' => 'full_cost',
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+        );
+
+        $this->assertSame(0.0, $q->fuelSurcharge);
+    }
+
     public function test_vehicle_weight_kg_and_height_cm_propagate_as_tons_and_meters_to_ors(): void
     {
         // Override ORS mock żeby przechwycić body i sprawdzić konwersję jednostek.
@@ -624,6 +675,7 @@ class CalculatorServiceTest extends TestCase
             $t->decimal('surcharge_percent_default', 5, 2)->nullable();
             $t->decimal('fuel_consumption_l_per_100km', 5, 2)->default(32.5);
             $t->boolean('fuel_surcharge_enabled')->default(true);
+            $t->string('fuel_calculation_mode', 16)->default('surcharge');
             $t->decimal('fuel_base_price_pln', 5, 2)->default(7.00);
             $t->decimal('manual_fuel_price_pln', 5, 2)->nullable();
             $t->decimal('vat_rate', 4, 2)->default(23.00);

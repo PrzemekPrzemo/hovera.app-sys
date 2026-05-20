@@ -20,6 +20,11 @@ return [
         'return_home' => 'Direct return to base',
     ],
 
+    'fuel_calculation_mode' => [
+        'surcharge' => 'Surcharge (only difference over base)',
+        'full_cost' => 'Full fuel cost',
+    ],
+
     'quote_status' => [
         'draft' => 'Draft',
         'sent' => 'Sent',
