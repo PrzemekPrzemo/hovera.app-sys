@@ -617,6 +617,72 @@ class CalculatorServiceTest extends TestCase
         $this->assertSame(0.0, $q->fuelSurcharge);
     }
 
+    public function test_waypoints_calculate_multi_leg_route_summing_segments(): void
+    {
+        // Każdy ORS call zwraca distance=100, duration=3600 (z setUp).
+        // 1 waypoint = 2 segmenty = 200 km, 7200 s.
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(waypoints: [
+                ['lat' => 51.5, 'lng' => 20.0, 'address' => 'Pośrednia'],
+            ]),
+        );
+
+        $this->assertSame(200.0, $q->distanceKm);
+        $this->assertSame(7200, $q->durationSeconds);
+    }
+
+    public function test_waypoints_skip_invalid_zero_coords(): void
+    {
+        // Defensive: waypoint z lat=0, lng=0 pomijamy (no-op).
+        // Pozostałe są poprawne — tylko 1 waypoint efektywny = 2 segmenty = 200 km.
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(waypoints: [
+                ['lat' => 0, 'lng' => 0, 'address' => 'invalid'],
+                ['lat' => 51.5, 'lng' => 20.0, 'address' => 'Valid'],
+            ]),
+        );
+
+        $this->assertSame(200.0, $q->distanceKm);
+    }
+
+    public function test_no_waypoints_is_direct_route(): void
+    {
+        // Default behaviour (empty waypoints) = single segment A → B.
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(waypoints: []),
+        );
+
+        $this->assertSame(100.0, $q->distanceKm);
+        $this->assertSame(3600, $q->durationSeconds);
+    }
+
+    public function test_multi_waypoint_route_sums_all_segments(): void
+    {
+        // 3 waypointy = 4 segmenty = 400 km, 14400 s.
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(waypoints: [
+                ['lat' => 51.7, 'lng' => 20.5],
+                ['lat' => 51.4, 'lng' => 20.2],
+                ['lat' => 50.5, 'lng' => 19.5],
+            ]),
+        );
+
+        $this->assertSame(400.0, $q->distanceKm);
+        $this->assertSame(14400, $q->durationSeconds);
+    }
+
     public function test_vehicle_weight_kg_and_height_cm_propagate_as_tons_and_meters_to_ors(): void
     {
         // Override ORS mock żeby przechwycić body i sprawdzić konwersję jednostek.

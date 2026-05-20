@@ -9,6 +9,7 @@ use App\Domain\Transport\Calculator\Data\Quotation;
 use App\Domain\Transport\Currency\NbpExchangeRateService;
 use App\Domain\Transport\Fuel\FuelPriceService;
 use App\Domain\Transport\Routing\Data\Coords;
+use App\Domain\Transport\Routing\Data\Route;
 use App\Domain\Transport\Routing\Data\RouteOptions;
 use App\Domain\Transport\Routing\RoutingService;
 use App\Enums\CalculationMode;
@@ -68,7 +69,19 @@ class CalculatorService
             heightMeters: $heightMeters,
         );
 
-        $route = $this->routing->calculate($tenant, $from, $to, $routeOptions);
+        // Multi-leg routing — gdy są waypointy między pickup i dropoff,
+        // sumujemy segmenty (pickup → wp1 → wp2 → ... → dropoff).
+        // Patrz docs/MARKETPLACE-ROADMAP.md "Waypoints + reorder + POI".
+        //
+        // Każdy segment to osobne wywołanie routing'u. Dla N waypoint'ów:
+        // (N+1) routing calls. Polyline pierwszego segmentu zachowujemy
+        // jako reprezentatywny dla mapy (full multi-leg polyline composer
+        // przyjdzie z calculator live UX PR).
+        if ($options->waypoints !== []) {
+            $route = $this->calculateMultiLegRoute($tenant, $from, $to, $options->waypoints, $routeOptions);
+        } else {
+            $route = $this->routing->calculate($tenant, $from, $to, $routeOptions);
+        }
 
         // Tryb kalkulacji (user feedback: "jazda w jedną stronę / w dwie strony /
         // bezpośredni powrót do domu").
@@ -244,6 +257,64 @@ class CalculatorService
         }
 
         return $out;
+    }
+
+    /**
+     * Multi-leg routing — pickup → wp1 → wp2 → ... → dropoff. Sumuje
+     * distance i duration wszystkich segmentów, zachowuje polyline z
+     * pierwszego (reprezentatywny dla mapy; pełen polyline composer
+     * przyjdzie z calculator live UX PR).
+     *
+     * Defensive: pomijamy waypointy bez lat/lng (no-op zamiast crash'a),
+     * filtrujemy duplikaty tych samych coords (no-op segment).
+     *
+     * @param  list<array{lat: float, lng: float}>  $waypoints
+     */
+    private function calculateMultiLegRoute(
+        Tenant $tenant,
+        Coords $from,
+        Coords $to,
+        array $waypoints,
+        RouteOptions $options,
+    ): Route {
+        // Składamy listę punktów: from, wp1, wp2, ..., to.
+        $points = [$from];
+        foreach ($waypoints as $wp) {
+            $lat = (float) ($wp['lat'] ?? 0);
+            $lng = (float) ($wp['lng'] ?? 0);
+            if ($lat === 0.0 && $lng === 0.0) {
+                continue; // defensive: niepoprawne coords
+            }
+            $points[] = new Coords($lat, $lng);
+        }
+        $points[] = $to;
+
+        $totalDistanceKm = 0.0;
+        $totalDurationSeconds = 0;
+        $firstPolyline = null;
+        $providerId = '';
+
+        for ($i = 0; $i < count($points) - 1; $i++) {
+            $segment = $this->routing->calculate(
+                $tenant,
+                $points[$i],
+                $points[$i + 1],
+                $options,
+            );
+            $totalDistanceKm += $segment->distanceKm;
+            $totalDurationSeconds += $segment->durationSeconds;
+            $providerId = $segment->providerId;
+            if ($firstPolyline === null) {
+                $firstPolyline = $segment->polyline;
+            }
+        }
+
+        return new Route(
+            distanceKm: round($totalDistanceKm, 2),
+            durationSeconds: $totalDurationSeconds,
+            polyline: $firstPolyline,
+            providerId: $providerId,
+        );
     }
 
     /**
