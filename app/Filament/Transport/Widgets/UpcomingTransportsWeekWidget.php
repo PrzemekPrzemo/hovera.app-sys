@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Filament\Transport\Widgets;
 
-use App\Domain\Transport\Dashboard\TransportDashboardService;
+use App\Enums\QuoteStatus;
 use App\Filament\Transport\Resources\QuoteResource;
 use App\Models\Tenant\Quote;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
 /**
@@ -28,8 +29,7 @@ class UpcomingTransportsWeekWidget extends BaseWidget
         return $table
             ->heading(__('transport/dashboard.upcoming_week.heading'))
             ->description(__('transport/dashboard.upcoming_week.description'))
-            ->query(fn () => Quote::query()->whereRaw('1=0'))
-            ->records(fn () => app(TransportDashboardService::class)->upcomingTransportsWeek(7, 10))
+            ->query(fn () => $this->upcomingTransportsQuery())
             ->columns([
                 Tables\Columns\TextColumn::make('preferred_date')
                     ->label(__('transport/dashboard.upcoming_week.date'))
@@ -75,6 +75,31 @@ class UpcomingTransportsWeekWidget extends BaseWidget
                     ->url(url('/transport/calculator')),
             ])
             ->paginated(false);
+    }
+
+    /**
+     * Inline query — wcześniej widget używał `->records(...)` z `Collection`
+     * z `TransportDashboardService::upcomingTransportsWeek()`, ale Filament 3
+     * `Tables\Table` nie ma metody `->records()`. Buduujemy proper Eloquent
+     * query (taki sam jak service). Patrz docs/TRANSPORT.md (krok F).
+     */
+    private function upcomingTransportsQuery(): Builder
+    {
+        $today = Carbon::today();
+        $end = $today->copy()->addDays(7);
+
+        $statuses = [QuoteStatus::Accepted->value];
+        if (defined(QuoteStatus::class.'::Invoiced')) {
+            $statuses[] = QuoteStatus::Invoiced->value;
+        }
+
+        return Quote::query()
+            ->whereIn('status', $statuses)
+            ->whereDate('preferred_date', '>=', $today)
+            ->whereDate('preferred_date', '<=', $end)
+            ->orderBy('preferred_date')
+            ->orderBy('preferred_time')
+            ->limit(10);
     }
 
     private function dateColor(mixed $date): string

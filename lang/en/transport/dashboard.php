@@ -6,8 +6,11 @@ return [
     'navigation' => 'Home',
     'title' => 'Transport panel',
 
+    'widgets_section' => 'Stats and metrics',
+
     'hero' => [
         'primary_badge' => 'Main',
+        'cta_open' => 'Open',
         'calculator' => [
             'title' => 'Quote a route',
             'body' => 'Calculator: addresses → distance → fuel cost → full quote ready to send to the customer.',

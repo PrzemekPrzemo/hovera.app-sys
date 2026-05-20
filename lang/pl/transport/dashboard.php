@@ -6,8 +6,11 @@ return [
     'navigation' => 'Panel główny',
     'title' => 'Panel transportu',
 
+    'widgets_section' => 'Statystyki i wskaźniki',
+
     'hero' => [
         'primary_badge' => 'Najważniejsze',
+        'cta_open' => 'Otwórz',
         'calculator' => [
             'title' => 'Wyceń trasę',
             'body' => 'Kalkulator: adresy → odległość → koszt paliwa → pełna wycena gotowa do wysłania klientowi.',
