@@ -84,6 +84,29 @@
         <input type="number" name="horse_count" id="{{ $formId }}-horse_count" required min="1" max="15" value="{{ $old['horse_count'] }}">
     </div>
 
+    {{-- "Klient zlecenia" picker — pokazywany tylko gdy stable jest
+         originator'em I MA aktywnych boarder'ów. Wybranie konkretnego
+         boarder'a przekierowuje FV po acceptacji oferty z stajni na
+         owner'a (PR 7). Defaultowo: "Stajnia (ja)". --}}
+    @if (! empty($boarders ?? []))
+        <div class="form-row">
+            <label for="{{ $formId }}-client_for">{{ __('public/transport_inquiry.label.client_for') }}</label>
+            <select name="client_for" id="{{ $formId }}-client_for">
+                <option value="stable" @selected(($old['client_for'] ?? 'stable') === 'stable')>
+                    {{ __('public/transport_inquiry.client_for.stable') }}
+                </option>
+                @foreach ($boarders as $boarder)
+                    <option value="boarder:{{ $boarder['id'] }}" @selected(($old['client_for'] ?? '') === 'boarder:'.$boarder['id'])>
+                        {{ __('public/transport_inquiry.client_for.boarder_prefix') }}{{ $boarder['label'] }}
+                    </option>
+                @endforeach
+            </select>
+            <small style="color:var(--muted);font-size:.78rem;display:block;margin-top:.25rem;">
+                {{ __('public/transport_inquiry.client_for.helper') }}
+            </small>
+        </div>
+    @endif
+
     <div class="form-row">
         <label for="{{ $formId }}-notes">{{ __('public/transport_inquiry.label.notes') }}</label>
         <textarea name="notes" id="{{ $formId }}-notes" maxlength="2000" placeholder="{{ __('public/transport_inquiry.placeholder.notes') }}">{{ $old['notes'] }}</textarea>

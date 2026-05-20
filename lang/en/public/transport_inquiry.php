@@ -31,7 +31,19 @@ return [
         'flexible_date' => 'Date is flexible (±2 days OK)',
         'horse_count' => 'Number of horses',
         'notes' => 'Additional notes',
+        'client_for' => 'Quote client',
         'terms' => 'I consent to share my data with verified carriers for offer preparation. <a href="/polityka-prywatnosci" target="_blank">Privacy policy</a>.',
+    ],
+
+    'client_for' => [
+        'stable' => 'Stable (me)',
+        'boarder_prefix' => 'Boarder: ',
+        'helper' => 'Pick a boarder if this transport is organised for a boarder — the invoice for the accepted offer will go to the horse owner, not the stable.',
+    ],
+
+    'boarder' => [
+        'unknown_horse' => '(unknown horse)',
+        'unknown_owner' => '(unknown owner)',
     ],
 
     'placeholder' => [

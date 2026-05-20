@@ -31,7 +31,19 @@ return [
         'flexible_date' => 'Data jest elastyczna (±2 dni OK)',
         'horse_count' => 'Liczba koni',
         'notes' => 'Dodatkowe informacje',
+        'client_for' => 'Klient zlecenia',
         'terms' => 'Wyrażam zgodę na przekazanie moich danych zweryfikowanym przewoźnikom w celu przygotowania ofert. <a href="/polityka-prywatnosci" target="_blank">Polityka prywatności</a>.',
+    ],
+
+    'client_for' => [
+        'stable' => 'Stajnia (ja)',
+        'boarder_prefix' => 'Boarder: ',
+        'helper' => 'Wybierz boarder\'a, jeśli to transport organizowany dla pensjonariusza — faktura po akceptacji oferty trafi do właściciela konia, nie do stajni.',
+    ],
+
+    'boarder' => [
+        'unknown_horse' => '(koń nieznany)',
+        'unknown_owner' => '(właściciel nieznany)',
     ],
 
     'placeholder' => [

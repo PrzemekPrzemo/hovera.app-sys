@@ -16,10 +16,19 @@ class TransportLead extends Model
 
     protected $table = 'transport_leads';
 
+    public const CLIENT_TYPE_ANONYMOUS = 'anonymous';
+
+    public const CLIENT_TYPE_STABLE = 'stable';
+
+    public const CLIENT_TYPE_OWNER = 'owner';
+
+    public const CLIENT_TYPE_TRANSPORTER = 'transporter';
+
     protected $fillable = [
         'access_slug', 'access_revoked_at',
         'originator_tenant_id', 'originator_user_id',
         'originator_email', 'originator_phone', 'originator_name',
+        'client_type', 'client_user_id', 'created_by_tenant_id',
         'mode', 'targeted_transporter_ids',
         'pickup_address', 'pickup_lat', 'pickup_lng', 'pickup_voivodeship',
         'dropoff_address', 'dropoff_lat', 'dropoff_lng', 'dropoff_voivodeship',
