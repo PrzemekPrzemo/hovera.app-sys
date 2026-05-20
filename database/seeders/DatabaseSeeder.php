@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             PlanSeeder::class,
             TransportPlansSeeder::class,
             TransportAddonsSeeder::class,
+            HorseOwnerPlansSeeder::class,
             MasterAdminSeeder::class,
         ]);
     }

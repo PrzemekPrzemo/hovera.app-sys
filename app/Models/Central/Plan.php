@@ -98,6 +98,11 @@ class Plan extends Model
         return $query->where('audience', TenantType::Transporter->value);
     }
 
+    public function scopeForHorseOwners(Builder $query): Builder
+    {
+        return $query->where('audience', TenantType::HorseOwner->value);
+    }
+
     public function tenants(): HasMany
     {
         return $this->hasMany(Tenant::class);

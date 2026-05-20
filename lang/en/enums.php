@@ -6,6 +6,7 @@ return [
     'tenant_type' => [
         'stable' => 'Stable',
         'transporter' => 'Transport company',
+        'horse_owner' => 'Horse owner',
     ],
 
     'vehicle_type' => [

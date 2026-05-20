@@ -9,12 +9,23 @@ namespace App\Enums;
  * stajnię i firmę transportową, ma dwa osobne tenanty (multi-tenancy tego nie
  * komplikuje, istniejący tenant-switcher to natywnie obsługuje).
  *
+ * Typy:
+ *   - Stable      — pełen pakiet stable management (pensjonariusze, konie, vet,
+ *                   kalendarz, faktury). Subscription paid plan.
+ *   - Transporter — firma przewozowa: leady, oferty, faktury KSeF, fleet.
+ *                   Subscription paid plan.
+ *   - HorseOwner  — właściciel konia (bez stajni / firmy). Może składać
+ *                   zamówienia na transport, widzi historię, ma swoje konie.
+ *                   FREE forever — Hovera traktuje owner'ów jako consumer-side
+ *                   marketplace participant, monetyzacja po stronie stable/transporter.
+ *
  * Patrz docs/TRANSPORT.md §3.1.
  */
 enum TenantType: string
 {
     case Stable = 'stable';
     case Transporter = 'transporter';
+    case HorseOwner = 'horse_owner';
 
     public function label(): string
     {
@@ -34,6 +45,16 @@ enum TenantType: string
         return match ($this) {
             self::Stable => 'app',
             self::Transporter => 'transport',
+            self::HorseOwner => 'owner',
         };
+    }
+
+    /**
+     * Czy tenant tego typu jest free (no subscription required).
+     * Wykorzystywane przez billing gates i provisioning.
+     */
+    public function isFreeTier(): bool
+    {
+        return $this === self::HorseOwner;
     }
 }

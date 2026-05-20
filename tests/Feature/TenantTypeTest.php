@@ -50,14 +50,34 @@ class TenantTypeTest extends TestCase
         $this->makeTenant(['slug' => 'stable-a']);
         $this->makeTenant(['slug' => 'stable-b']);
         $this->makeTenant(['slug' => 'transporter-a', 'type' => TenantType::Transporter]);
+        $this->makeTenant(['slug' => 'owner-a', 'type' => TenantType::HorseOwner]);
+        $this->makeTenant(['slug' => 'owner-b', 'type' => TenantType::HorseOwner]);
 
         $this->assertSame(2, Tenant::stables()->count());
         $this->assertSame(1, Tenant::transporters()->count());
+        $this->assertSame(2, Tenant::horseOwners()->count());
+    }
+
+    public function test_horse_owner_tenant_predicates(): void
+    {
+        $tenant = $this->makeTenant(['type' => TenantType::HorseOwner])->fresh();
+
+        $this->assertTrue($tenant->isHorseOwner());
+        $this->assertFalse($tenant->isStable());
+        $this->assertFalse($tenant->isTransporter());
     }
 
     public function test_enum_panel_id_mapping(): void
     {
         $this->assertSame('app', TenantType::Stable->panelId());
         $this->assertSame('transport', TenantType::Transporter->panelId());
+        $this->assertSame('owner', TenantType::HorseOwner->panelId());
+    }
+
+    public function test_horse_owner_is_free_tier_others_are_not(): void
+    {
+        $this->assertTrue(TenantType::HorseOwner->isFreeTier());
+        $this->assertFalse(TenantType::Stable->isFreeTier());
+        $this->assertFalse(TenantType::Transporter->isFreeTier());
     }
 }

@@ -6,6 +6,7 @@ return [
     'tenant_type' => [
         'stable' => 'Конюшня',
         'transporter' => 'Транспортная компания',
+        'horse_owner' => 'Владелец лошади',
     ],
 
     'vehicle_type' => [
