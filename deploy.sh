@@ -116,6 +116,12 @@ run "$PHP_BIN artisan route:cache"
 run "$PHP_BIN artisan view:cache"
 run "$PHP_BIN artisan event:cache || true"
 
+# Filament 3 cachuje component map (Resource / Page / Widget classes) —
+# bez tego po deploy nowych Resource klas Livewire mówi „Unable to find
+# component" + brakuje ich w sidebar nav master admina. `|| true` bo
+# w starszych wersjach Filament command może nie istnieć.
+run "$PHP_BIN artisan filament:cache-components || true"
+
 # ── Migracje ───────────────────────────────────────────────────────
 log "→ Migracje central"
 run "$PHP_BIN artisan migrate --force"

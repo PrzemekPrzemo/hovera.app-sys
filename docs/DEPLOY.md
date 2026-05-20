@@ -22,6 +22,9 @@ Po sukcesie sprawdź zdrowie: `./bin/php artisan hovera:doctor` — wyłapie wsz
 
 | Problem | Co zrobić |
 |---|---|
+| `Composer dependencies require PHP >= 8.4, you run 7.4` | Plesk domyślnie linkuje `php` → 7.4. NIE uruchamiaj `composer install` bezpośrednio — używaj `./update.sh` (auto-detekcja PHP 8.4 przez `scripts/detect-php.sh`). Jeśli musisz manualnie: `/opt/plesk/php/8.4/bin/php composer install --no-dev`. `composer.json` ma `config.platform.php=8.4` więc composer wybucha loud zamiast cicho psuć lock. |
+| `Unable to find component: [...resources...relation-manager]` | Filament 3 component cache nie został odbudowany po deploy nowych klas. Odpal `./update.sh` (zawiera `php artisan filament:cache-components`). Manualnie: `/opt/plesk/php/8.4/bin/php artisan filament:cache-components`. |
+| Brak zakładki/grupy w sidebar `/admin` mimo że Resource istnieje w repo | To samo co wyżej — stale Filament cache. `./update.sh` rebuilduje component map. |
 | `Access denied for user ''@'localhost'` | Brakujące `WITH GRANT OPTION` na `hovera_t_%` LUB tenant connection nie zhydratowane przed query. `hovera:doctor` wykryje. |
 | `Table already exists` przy `migrate:fresh` | Half-baked tenant z poprzedniej awarii. `php artisan hovera:tenant:cleanup-orphans`. |
 | `BindingResolutionException ... [$q] was unresolvable` | Filament 3 closure resolver — używaj `$query`, `$record`, `$state`. Single-letter `$q/$s/$r` nie są rozpoznawane. |
