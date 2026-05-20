@@ -17,7 +17,7 @@
 #
 # Co script robi krok-po-krok:
 #   1. Wykrywa PHP 8.4 z `scripts/detect-php.sh` (NIE systemowe Plesk 7.4)
-#   2. Wykrywa vhost user (z ownership index.php — np. app.hovera.app_cvpjl9sbri7)
+#   2. Wykrywa vhost user (z ownership artisan — np. app.hovera.app_cvpjl9sbri7)
 #   3. Sprawdza czy uruchomione jako root/sudo (chown wymaga)
 #   4. git pull --ff-only origin main (chyba że --no-pull)
 #   5. composer install --no-dev --optimize-autoloader z PHP 8.4
@@ -71,12 +71,17 @@ log "PHP: $PHP_BIN ($("$PHP_BIN" -v | head -1))"
 hovera_detect_composer || fail "Brak composera (PATH ani /opt/plesk/composer/composer.phar)."
 log "Composer: $COMPOSER_BIN"
 
-# ── 2. Detect vhost user (właściciel index.php = vhost user na Plesku) ──
-[[ -f index.php ]] || fail "Brak index.php — sprawdź czy jesteś w katalogu Hovera repo."
-VHOST_USER="$(stat -c '%U' index.php)"
-VHOST_GROUP="$(stat -c '%G' index.php)"
+# ── 2. Detect vhost user (właściciel artisan = vhost user na Plesku) ──
+# Laravel ma index.php w public/ (Plesk doc root), nie w repo root. `artisan`
+# jest stabilnym markerem — zawsze obecny, owned by deploy user (vhost user
+# na Plesku).
+[[ -f artisan ]] || fail "Brak artisan — sprawdź czy jesteś w katalogu Hovera repo."
+VHOST_USER="$(stat -c '%U' artisan)"
+VHOST_GROUP="$(stat -c '%G' artisan)"
 if [[ -z "$VHOST_USER" || "$VHOST_USER" == "root" ]]; then
-    warn "Vhost user nie wykryty (index.php należy do root). Fallback: www-data."
+    warn "Vhost user nie wykryty (artisan należy do root). Fallback: www-data."
+    warn "Na Plesku może to oznaczać że git pull był zrobiony jako root — zalecane:"
+    warn "  chown -R \$(stat -c '%U' .git) artisan composer.json"
     VHOST_USER="www-data"
     VHOST_GROUP="www-data"
 fi
