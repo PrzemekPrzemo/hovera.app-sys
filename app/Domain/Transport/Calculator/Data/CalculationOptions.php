@@ -19,6 +19,12 @@ final readonly class CalculationOptions
         // ustawione `extra_horse_fee_default` > 0 w TransportSettings.
         // 1 = brak doliczenia. Walidacja UI: 1–30.
         public int $horsesCount = 1,
+        // Parametry pojazdu używane przez routing HGV (ORS profile_params.
+        // restrictions). Gdy null — routing fallback na default HGV bez
+        // restrykcji. Konwersje: kg → tons, cm → metry robi CalculatorService
+        // przy przekazywaniu do RouteOptions.
+        public ?int $vehicleGrossWeightKg = null,
+        public ?int $vehicleHeightCm = null,
     ) {}
 
     public function resolveMode(): CalculationMode

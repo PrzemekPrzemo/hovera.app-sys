@@ -362,6 +362,39 @@ class CalculatorServiceTest extends TestCase
         $this->assertSame(1000.00, $q->netTotal);
     }
 
+    public function test_vehicle_weight_kg_and_height_cm_propagate_as_tons_and_meters_to_ors(): void
+    {
+        // Override ORS mock żeby przechwycić body i sprawdzić konwersję jednostek.
+        Http::fake([
+            'api.openrouteservice.org/*' => Http::response([
+                'routes' => [[
+                    'summary' => ['distance' => 100.0, 'duration' => 3600],
+                    'geometry' => 'POLY',
+                ]],
+            ]),
+        ]);
+
+        app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+            new CalculationOptions(
+                vehicleGrossWeightKg: 7500,  // → 7.5 t
+                vehicleHeightCm: 380,         // → 3.8 m
+            ),
+        );
+
+        Http::assertSent(function ($request) {
+            if (! str_contains($request->url(), 'driving-hgv')) {
+                return false;
+            }
+            $body = json_decode($request->body(), true);
+
+            return ($body['options']['profile_params']['restrictions']['weight'] ?? null) === 7.5
+                && ($body['options']['profile_params']['restrictions']['height'] ?? null) === 3.8;
+        });
+    }
+
     public function test_currency_passes_through_from_settings(): void
     {
         TransportSettings::current()->forceFill(['currency' => 'EUR'])->save();

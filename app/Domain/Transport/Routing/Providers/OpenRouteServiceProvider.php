@@ -74,6 +74,7 @@ class OpenRouteServiceProvider implements RoutingProvider
             'units' => 'km',
         ];
 
+        $optionsPayload = [];
         if ($options->avoidTolls || $options->avoidFerries) {
             $avoid = [];
             if ($options->avoidTolls) {
@@ -82,10 +83,34 @@ class OpenRouteServiceProvider implements RoutingProvider
             if ($options->avoidFerries) {
                 $avoid[] = 'ferries';
             }
-            $body['options'] = ['avoid_features' => $avoid];
+            $optionsPayload['avoid_features'] = $avoid;
         }
 
         $primaryProfile = $options->profile === 'truck' ? 'driving-hgv' : 'driving-car';
+
+        // Restrykcje wagi/wysokości — tylko dla HGV profile. Mapowanie do
+        // profile_params.restrictions wg https://openrouteservice.org/dev/#/api-docs/v2/directions
+        //   - weight: tony (np. 7.5)
+        //   - height: metry (np. 4.0)
+        // Pomijamy null'e — ORS używa wtedy default HGV bez restrykcji.
+        if ($primaryProfile === 'driving-hgv') {
+            $restrictions = [];
+            if ($options->weightTons !== null && $options->weightTons > 0) {
+                $restrictions['weight'] = $options->weightTons;
+            }
+            if ($options->heightMeters !== null && $options->heightMeters > 0) {
+                $restrictions['height'] = $options->heightMeters;
+            }
+            if ($restrictions !== []) {
+                $optionsPayload['vehicle_type'] = 'hgv';
+                $optionsPayload['profile_params'] = ['restrictions' => $restrictions];
+            }
+        }
+
+        if ($optionsPayload !== []) {
+            $body['options'] = $optionsPayload;
+        }
+
         $response = $this->client()->post(self::BASE_URL.'/'.$primaryProfile.'/json', $body);
 
         // ORS HGV profile aggressively filters drogi z restrykcjami tonażowymi —

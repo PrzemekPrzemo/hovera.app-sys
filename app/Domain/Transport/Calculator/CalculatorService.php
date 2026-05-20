@@ -46,10 +46,24 @@ class CalculatorService
         $options ??= new CalculationOptions;
         $settings = TransportSettings::current();
 
+        // Konwersje pojazdowych parametrów dla ORS HGV profile_params:
+        //   - kg → tons (ORS wymaga ton, np. 7.5)
+        //   - cm → meters (ORS wymaga metrów, np. 3.8)
+        // null gdy user nie podał — routing fallbackuje na default HGV
+        // bez restrykcji.
+        $weightTons = $options->vehicleGrossWeightKg !== null
+            ? round($options->vehicleGrossWeightKg / 1000, 2)
+            : null;
+        $heightMeters = $options->vehicleHeightCm !== null
+            ? round($options->vehicleHeightCm / 100, 2)
+            : null;
+
         $routeOptions = new RouteOptions(
             profile: $options->routingProfile,
             avoidTolls: $options->avoidTolls,
             avoidFerries: $options->avoidFerries,
+            weightTons: $weightTons,
+            heightMeters: $heightMeters,
         );
 
         $route = $this->routing->calculate($tenant, $from, $to, $routeOptions);
