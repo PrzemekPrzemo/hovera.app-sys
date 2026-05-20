@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Filament\Owner\Widgets\UpcomingTransportWidget;
 use App\Http\Middleware\EnforceImpersonationExpiry;
 use App\Http\Middleware\InitialiseTenantFromSession;
 use App\Http\Middleware\RedirectIfTenantSuspended;
@@ -89,6 +90,7 @@ class OwnerPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Owner/Widgets'), for: 'App\\Filament\\Owner\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
+                UpcomingTransportWidget::class,
             ])
             ->navigationGroups([
                 NavigationGroup::make(fn () => __('navigation.group.owner_horses'))->collapsible(),
