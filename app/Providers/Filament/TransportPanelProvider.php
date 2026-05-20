@@ -61,6 +61,12 @@ class TransportPanelProvider extends PanelProvider
         return $panel
             ->id('transport')
             ->path('transport')
+            // Explicit home URL — bez tego po loginie Filament redirectuje na
+            // panel root `/transport` (default homeUrl), gdzie publiczny
+            // `TransportLandingController` przejmuje (routes/web.php) i pokazuje
+            // SEO landing zamiast panelu. TransportDashboard ma `routePath='/dashboard'`,
+            // więc homeUrl musi być explicit. Patrz docs/TRANSPORT.md §3.1.
+            ->homeUrl('/transport/dashboard')
             ->brandName(function () {
                 // Tenant name w topbar — fallback do "hovera · transport"
                 // gdy tenant nieustawiony (np. /transport/login przed auth).
