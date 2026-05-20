@@ -18,6 +18,48 @@ Skrypt sam:
 
 Po sukcesie sprawdź zdrowie: `./bin/php artisan hovera:doctor` — wyłapie wszystkie typowe pułapki (PHP version, provisioner grants, orphan tenants, Filament closure params, code smells).
 
+## Aktualizacja po deploy: `./scripts/hu`
+
+Po każdym `git pull` (lub merge'u PR-ów) uruchom **`./scripts/hu`** — wrapper który:
+
+1. **Wymusza PHP 8.4** (auto-detect z `scripts/detect-php.sh`, NIE systemowy Plesk 7.4)
+2. **Wykrywa vhost user** (z ownership `index.php` — np. `app.hovera.app_cvpjl9sbri7:psaserv`)
+3. `git pull --ff-only origin main`
+4. `composer install --no-dev --optimize-autoloader` (jako vhost user, nie root)
+5. **Usuwa stale compiled views/cache** (`storage/framework/views/*.php`, `bootstrap/cache/*.php`)
+6. `artisan optimize:clear` + cache rebuild + `filament:cache-components` (jako vhost user)
+7. `migrate --force` (central + tenants)
+8. **`chown -R vhost_user:group storage bootstrap/cache`** + `chmod 775` + sticky bit `2775`
+9. `kill -USR2 FPM_master_PID` (OPcache flush bez downtime)
+
+### Setup alias (jednorazowo)
+
+W `~/.bashrc` (lub `/root/.bashrc`):
+
+```bash
+alias hu='cd /var/www/vhosts/app.hovera.app/httpdocs && sudo ./scripts/hu'
+```
+
+Reload: `source ~/.bashrc` lub re-SSH.
+
+### Użycie
+
+```bash
+hu                    # pełen update z origin/main
+hu --no-pull          # pomiń git pull (np. po manualnym checkout)
+hu --skip-tenants     # pomiń migracje tenantów
+hu --dry-run          # tylko pokaż co by się stało
+```
+
+### Wymaga roota lub sudo
+
+Script wymaga uprawnień do `chown` żeby ustawić właściwy owner storage'u. Jeśli odpalisz jako zwykły user bez sudo NOPASSWD, wybucha loud z instrukcją:
+
+```
+[hu fail] Skrypt musi być uruchomiony jako root (lub przez sudo NOPASSWD).
+          Spróbuj: sudo ./scripts/hu
+```
+
 ## Częste pułapki — lessons learned
 
 | Problem | Co zrobić |

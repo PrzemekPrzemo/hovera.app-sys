@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+# Hovera Update — wrapper który: pull → composer → migrate → cache rebuild →
+# permissions fix → FPM restart, wszystko z explicit PHP 8.4 (NIE systemowe
+# Plesk PHP 7.4) + chown na vhost user żeby PHP-FPM mógł pisać do storage/.
+#
+# Użycie (zakładając że jesteś jako root na serwerze w Hovera repo dir):
+#   ./scripts/hu                 # pełen update z origin/main
+#   ./scripts/hu --no-pull       # pomiń git pull (np. po manualnym checkout)
+#   ./scripts/hu --skip-tenants  # pomiń tenant migrations
+#   ./scripts/hu --dry-run       # tylko pokaż co by się stało
+#
+# Alias setup (jednorazowo, w ~/.bashrc lub /root/.bashrc):
+#
+#   alias hu='cd /var/www/vhosts/app.hovera.app/httpdocs && sudo ./scripts/hu'
+#
+# Wtedy z dowolnego miejsca: `hu` → pełen safe update.
+#
+# Co script robi krok-po-krok:
+#   1. Wykrywa PHP 8.4 z `scripts/detect-php.sh` (NIE systemowe Plesk 7.4)
+#   2. Wykrywa vhost user (z ownership index.php — np. app.hovera.app_cvpjl9sbri7)
+#   3. Sprawdza czy uruchomione jako root/sudo (chown wymaga)
+#   4. git pull --ff-only origin main (chyba że --no-pull)
+#   5. composer install --no-dev --optimize-autoloader z PHP 8.4
+#   6. Fizyczne usunięcie compiled views/cache (te z złym ownerem)
+#   7. php artisan optimize:clear + cache:* + filament:cache-components
+#   8. Migracje central + tenants (chyba że --skip-tenants)
+#   9. Chown storage + bootstrap/cache na vhost user
+#  10. Chmod 775 + sticky bit (2755) — PHP-FPM dziedziczy group
+#  11. Restart FPM master (kill -USR2 PID)
+
+set -euo pipefail
+
+# ── Konfiguracja ────────────────────────────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
+NO_PULL=false
+SKIP_TENANTS=false
+DRY_RUN=false
+
+for arg in "$@"; do
+    case "$arg" in
+        --no-pull) NO_PULL=true ;;
+        --skip-tenants) SKIP_TENANTS=true ;;
+        --dry-run) DRY_RUN=true ;;
+    esac
+done
+
+# ── Helpery (kolorowanie + dry-run friendly) ────────────────────────
+log()  { printf '\033[36m[hu]\033[0m %s\n' "$*"; }
+ok()   { printf '\033[32m[hu OK]\033[0m %s\n' "$*"; }
+warn() { printf '\033[33m[hu warn]\033[0m %s\n' "$*"; }
+fail() { printf '\033[31m[hu fail]\033[0m %s\n' "$*" >&2; exit 1; }
+run()  {
+    if $DRY_RUN; then
+        printf '\033[35m[dry]\033[0m %s\n' "$*"
+    else
+        eval "$@"
+    fi
+}
+
+log "Hovera update startuje w $SCRIPT_DIR"
+
+# ── 1. Detect PHP 8.4 ───────────────────────────────────────────────
+[[ -f scripts/detect-php.sh ]] || fail "Brak scripts/detect-php.sh — sklonuj repo na nowo."
+# shellcheck source=scripts/detect-php.sh
+. scripts/detect-php.sh
+HOVERA_MIN_PHP=8.4 hovera_setup_php || fail "Wymagany PHP 8.4+ — sprawdź /opt/plesk/php/8.X/bin/php."
+log "PHP: $PHP_BIN ($("$PHP_BIN" -v | head -1))"
+
+hovera_detect_composer || fail "Brak composera (PATH ani /opt/plesk/composer/composer.phar)."
+log "Composer: $COMPOSER_BIN"
+
+# ── 2. Detect vhost user (właściciel index.php = vhost user na Plesku) ──
+[[ -f index.php ]] || fail "Brak index.php — sprawdź czy jesteś w katalogu Hovera repo."
+VHOST_USER="$(stat -c '%U' index.php)"
+VHOST_GROUP="$(stat -c '%G' index.php)"
+if [[ -z "$VHOST_USER" || "$VHOST_USER" == "root" ]]; then
+    warn "Vhost user nie wykryty (index.php należy do root). Fallback: www-data."
+    VHOST_USER="www-data"
+    VHOST_GROUP="www-data"
+fi
+log "Vhost user: ${VHOST_USER}:${VHOST_GROUP}"
+
+# ── 3. Sprawdź czy mamy uprawnienia do chown ────────────────────────
+if [[ "$EUID" -ne 0 ]] && ! sudo -n true 2>/dev/null; then
+    fail "Skrypt musi być uruchomiony jako root (lub przez sudo NOPASSWD). \
+Spróbuj: sudo ./scripts/hu"
+fi
+
+# ── 4. Git pull ─────────────────────────────────────────────────────
+if ! $NO_PULL; then
+    log "→ git fetch + pull origin main"
+    run "git fetch --tags --prune"
+    run "git checkout main"
+    run "git pull --ff-only origin main"
+fi
+
+CURRENT_REV=$(git rev-parse --short HEAD)
+log "Rewizja: $CURRENT_REV"
+
+# ── 5. Composer install (jako vhost user — żeby vendor/ miał właściwy owner) ──
+log "→ composer install z PHP 8.4 (jako ${VHOST_USER})"
+if $DRY_RUN; then
+    printf '\033[35m[dry]\033[0m sudo -u %s %s %s install --no-dev --no-interaction --prefer-dist --optimize-autoloader\n' "$VHOST_USER" "$PHP_BIN" "$COMPOSER_BIN"
+else
+    sudo -u "$VHOST_USER" "$PHP_BIN" "$COMPOSER_BIN" install \
+        --no-dev --no-interaction --prefer-dist --optimize-autoloader
+fi
+
+# ── 6. Wyczyść stale compiled views/cache (głównie z ROOT-owned plików) ──
+log "→ Usuwam stare compiled views + cache"
+run "rm -rf storage/framework/views/*.php"
+run "rm -rf storage/framework/cache/data/*"
+run "rm -rf bootstrap/cache/*.php"
+
+# ── 7. Cache rebuild (jako vhost user, NIE root) ────────────────────
+# WAŻNE: artisan musi być uruchomiony jako vhost user, inaczej pliki cache
+# powstają z owner=root i PHP-FPM nie może ich nadpisywać.
+run_as_vhost() {
+    if $DRY_RUN; then
+        printf '\033[35m[dry]\033[0m sudo -u %s %s artisan %s\n' "$VHOST_USER" "$PHP_BIN" "$*"
+    else
+        sudo -u "$VHOST_USER" "$PHP_BIN" artisan "$@"
+    fi
+}
+
+log "→ artisan optimize:clear + cache rebuild (jako ${VHOST_USER})"
+run_as_vhost optimize:clear
+run_as_vhost config:cache
+run_as_vhost route:cache
+run_as_vhost view:cache
+run_as_vhost event:cache || true
+run_as_vhost filament:cache-components || true
+run_as_vhost icons:cache || true
+
+# ── 8. Migracje ─────────────────────────────────────────────────────
+log "→ Migracje central"
+run_as_vhost migrate --force
+
+if ! $SKIP_TENANTS; then
+    log "→ Migracje tenantów"
+    run_as_vhost tenants:migrate || warn "tenant migrate failed (sprawdź logi)"
+fi
+
+# ── 9. Permissions ──────────────────────────────────────────────────
+# Chown WSZYSTKICH plików storage/+bootstrap/cache/ na vhost user.
+# Sticky bit 2775 na katalogach żeby NOWE pliki tworzone przez PHP-FPM
+# automatycznie dziedziczyły group ownership.
+log "→ Chown + chmod permissions"
+run "chown -R ${VHOST_USER}:${VHOST_GROUP} storage bootstrap/cache"
+run "chmod -R u+rwX,g+rwX,o+rX storage bootstrap/cache"
+run "find storage bootstrap/cache -type d -exec chmod 2775 {} \\;"
+
+# Bonus: upewnij się że storage symlink istnieje (pierwszy install)
+if [[ ! -L public/storage ]]; then
+    log "→ storage:link (pierwszy raz)"
+    run_as_vhost storage:link || true
+fi
+
+# ── 10. Restart FPM master (OPcache flush) ──────────────────────────
+log "→ Restart FPM pool (OPcache flush)"
+# Znajdź FPM master dla tego vhostu — szukamy procesu z config'iem z
+# /var/www/vhosts/system/<DOMAIN>/etc/php-fpm.conf
+DOMAIN="$(basename "$SCRIPT_DIR" | sed 's/_httpdocs$//')"
+if [[ ! "$DOMAIN" =~ \. ]]; then
+    # SCRIPT_DIR to httpdocs, parent dir = domain
+    DOMAIN="$(basename "$(dirname "$SCRIPT_DIR")")"
+fi
+FPM_PID="$(pgrep -f "php-fpm: master process.*vhosts/system/${DOMAIN}/etc/php-fpm.conf" | head -1 || true)"
+
+if [[ -n "$FPM_PID" ]]; then
+    log "  → kill -USR2 $FPM_PID (FPM master dla ${DOMAIN})"
+    if ! $DRY_RUN; then
+        kill -USR2 "$FPM_PID" || warn "kill -USR2 failed (PID może być nieaktualny)"
+    fi
+else
+    warn "Nie znaleziono FPM master dla ${DOMAIN}. OPcache może trzymać stary kod."
+    warn "Manual: pgrep -f 'php-fpm.*${DOMAIN}' + kill -USR2 <PID>"
+fi
+
+ok "Update zakończony pomyślnie (rev: $CURRENT_REV)"
+ok "Sprawdź https://$DOMAIN — powinno działać."
