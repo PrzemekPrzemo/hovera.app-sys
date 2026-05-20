@@ -31,6 +31,22 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Idempotent na wypadek partial CREATE z poprzedniego failed run'a.
+        //
+        // MySQL DDL nie zawsze jest transakcyjny — pierwsza próba migracji
+        // (z auto-generowaną unique constraint name 73 znaków) crashowała
+        // na "Identifier too long" PO utworzeniu tabeli ale PRZED dodaniem
+        // constraint'u. Tabela zostawała w prod, ale migration row nie była
+        // recorded (failed). Retry trafiał na "Table already exists".
+        //
+        // Fix: dropIfExists przed create gwarantuje czystą tabelę. Bezpieczne
+        // bo feature dopiero shipped — żadne row'y boarding'owe jeszcze nie
+        // istniały w prod gdy ten migration shipped.
+        //
+        // Patrz commit fix(hotfix): MySQL identifier limit (#310) — to jego
+        // kontynuacja po feedback'u że poprzedni fix nie obsłużył partial-create.
+        Schema::connection('central')->dropIfExists('horse_boarding_assignments');
+
         Schema::connection('central')->create('horse_boarding_assignments', function (Blueprint $table) {
             $table->ulid('id')->primary();
 
