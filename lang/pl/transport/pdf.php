@@ -49,6 +49,8 @@ return [
 
     'payment_disclaimer' => 'Płatność realizowana BEZPOŚREDNIO do :transporter. Hovera jest pośrednikiem marketplace i NIE przyjmuje płatności.',
 
+    'exchange_rate_footnote' => 'Kwoty w :currency. Kurs przeliczeniowy NBP (tabela A): 1 :currency = :rate PLN, kurs z :date.',
+
     'value' => [
         'yes' => 'Tak',
         'no' => 'Nie',

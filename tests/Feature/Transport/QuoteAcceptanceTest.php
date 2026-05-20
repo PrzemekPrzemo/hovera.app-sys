@@ -252,6 +252,8 @@ class QuoteAcceptanceTest extends TestCase
             $t->decimal('manual_fuel_price_pln', 5, 2)->nullable();
             $t->decimal('vat_rate', 4, 2)->default(23.00);
             $t->string('currency', 3)->default('PLN');
+            $t->decimal('exchange_rate_to_pln', 10, 4)->nullable();
+            $t->date('exchange_rate_date')->nullable();
             $t->json('routing_provider')->nullable();
             $t->string('default_payment_url_template', 2048)->nullable();
             $t->string('default_payment_method_label', 80)->nullable();

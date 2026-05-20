@@ -49,6 +49,8 @@ return [
 
     'payment_disclaimer' => 'Payment is processed DIRECTLY to :transporter. Hovera is a marketplace intermediary and does NOT accept payments.',
 
+    'exchange_rate_footnote' => 'Amounts in :currency. NBP reference rate (table A): 1 :currency = :rate PLN, as of :date.',
+
     'value' => [
         'yes' => 'Yes',
         'no' => 'No',

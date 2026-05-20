@@ -11,6 +11,7 @@ use App\Domain\Transport\Routing\Data\Coords;
 use App\Enums\CalculationMode;
 use App\Enums\TenantType;
 use App\Models\Central\FuelPrice;
+use App\Models\Central\NbpExchangeRate;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\TransportSettings;
@@ -274,6 +275,8 @@ class CalculatorServiceTest extends TestCase
             fixedFeesTotal: 50.00,
             surchargePercent: 15.00,
             surchargeAmount: 245.00,
+            exchangeRateToPln: 4.3245,
+            exchangeRateDate: '2026-05-20',
         );
 
         $hydrated = Quotation::fromLivewire($q->toLivewire());
@@ -510,6 +513,57 @@ class CalculatorServiceTest extends TestCase
 
         $this->assertSame(0.0, $q->surchargePercent);
         $this->assertSame(0.0, $q->surchargeAmount);
+    }
+
+    public function test_quote_in_eur_converts_all_amounts_via_nbp_rate(): void
+    {
+        // EUR cache + Http::fake nie powinien być potrzebny (cache hit).
+        NbpExchangeRate::create([
+            'currency_code' => 'EUR',
+            'effective_date' => now()->toDateString(),
+            'rate_to_pln' => 4.0000,
+        ]);
+
+        TransportSettings::current()->forceFill([
+            'rate_per_km' => 4.00,   // base = 400 PLN przy 100 km
+            'currency' => 'EUR',
+        ])->save();
+
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+        );
+
+        // Wszystkie kwoty powinny być w EUR (dzielone przez 4).
+        // base 400 PLN / 4 = 100 EUR
+        // fuel 16.25 PLN / 4 = 4.06 EUR
+        // sub = 104.06 EUR
+        // min_adj = 800 PLN / 4 - 104.06 = 200 - 104.06 = 95.94 EUR
+        // net = 200 EUR
+        // vat = 46 EUR
+        // gross = 246 EUR
+        $this->assertSame('EUR', $q->currency);
+        $this->assertSame(4.0, $q->exchangeRateToPln);
+        $this->assertSame(100.0, $q->baseCost);
+        $this->assertSame(4.06, $q->fuelSurcharge);
+        $this->assertSame(200.0, $q->netTotal);
+        $this->assertSame(246.0, $q->grossTotal);
+    }
+
+    public function test_quote_in_pln_keeps_amounts_untouched(): void
+    {
+        // Defaultowa waluta = PLN — żaden NBP call, exchange_rate=1.0.
+        $q = app(CalculatorService::class)->calculate(
+            $this->tenant,
+            new Coords(52.0, 21.0),
+            new Coords(50.0, 19.0),
+        );
+
+        $this->assertSame('PLN', $q->currency);
+        $this->assertSame(1.0, $q->exchangeRateToPln);
+        $this->assertNull($q->exchangeRateDate);
+        $this->assertSame(450.0, $q->baseCost);  // bez konwersji
     }
 
     public function test_vehicle_weight_kg_and_height_cm_propagate_as_tons_and_meters_to_ors(): void

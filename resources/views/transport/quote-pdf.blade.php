@@ -169,6 +169,16 @@
                 </tr>
             </tbody>
         </table>
+
+        @if ($quote->exchange_rate_to_pln && $quote->currency !== 'PLN')
+            <div style="margin-top: .75rem; font-size: .82rem; color: #6b7280; font-style: italic;">
+                {{ __('transport/pdf.exchange_rate_footnote', [
+                    'currency' => $quote->currency,
+                    'rate' => number_format((float) $quote->exchange_rate_to_pln, 4, ',', ' '),
+                    'date' => optional($quote->exchange_rate_date)->format('Y-m-d') ?? '',
+                ]) }}
+            </div>
+        @endif
     </div>
 
     @if ($quote->terms)

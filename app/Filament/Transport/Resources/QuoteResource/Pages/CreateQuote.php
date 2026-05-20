@@ -200,6 +200,8 @@ class CreateQuote extends CreateRecord
         $data['fixed_fees_snapshot'] = $quotation->fixedFees;
         $data['surcharge_percent_snapshot'] = $quotation->surchargePercent;
         $data['surcharge_amount_snapshot'] = $quotation->surchargeAmount;
+        $data['exchange_rate_to_pln'] = $quotation->exchangeRateToPln !== 1.0 ? $quotation->exchangeRateToPln : null;
+        $data['exchange_rate_date'] = $quotation->exchangeRateDate;
         $data['minimum_adjustment'] = $quotation->minimumAdjustment;
         $data['net_total'] = $quotation->netTotal;
         $data['vat_rate'] = $data['vat_rate'] ?? $quotation->vatRate;
