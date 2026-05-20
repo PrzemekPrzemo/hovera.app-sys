@@ -93,6 +93,11 @@ class Tenant extends Model
         return $query->where('type', TenantType::Transporter);
     }
 
+    public function scopeHorseOwners(Builder $query): Builder
+    {
+        return $query->where('type', TenantType::HorseOwner);
+    }
+
     /**
      * Boost rankingowania publicznego — tenant pokazany na top'cie Top 10
      * landing'i `/transport` oraz katalogu `/przewoznicy`. Manualny toggle
@@ -226,6 +231,11 @@ class Tenant extends Model
     public function isTransporter(): bool
     {
         return $this->type === TenantType::Transporter;
+    }
+
+    public function isHorseOwner(): bool
+    {
+        return $this->type === TenantType::HorseOwner;
     }
 
     /**

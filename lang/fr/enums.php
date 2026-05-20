@@ -6,6 +6,7 @@ return [
     'tenant_type' => [
         'stable' => 'Écurie',
         'transporter' => 'Société de transport',
+        'horse_owner' => 'Propriétaire de cheval',
     ],
 
     'vehicle_type' => [
