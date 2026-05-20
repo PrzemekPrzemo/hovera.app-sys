@@ -114,5 +114,65 @@ class AppServiceProvider extends ServiceProvider
         // Horse observer: synchronizuje historię BoxAssignment gdy
         // Filament resource zmienia horses.box_id przez form save.
         Horse::observe(HorseObserver::class);
+
+        // SMTP config override z SystemSetting (zarządzane przez master admina
+        // w /admin/smtp-settings). Pierwszeństwo nad .env. Pozwala rotować
+        // creds bez SSH. Bezpiecznie pomijane gdy DB nie zhydratowane (np.
+        // route:list w boot — SystemSetting::getValue ma try/catch w środku).
+        $this->overrideMailConfigFromSystemSettings();
+    }
+
+    /**
+     * Hydruje config('mail.mailers.{smtp,transport}.*') + config('mail.from')
+     * z SystemSetting jeśli master admin ustawił. Bez zmian gdy SystemSetting
+     * pusty — config zostaje z .env (legacy fallback).
+     */
+    private function overrideMailConfigFromSystemSettings(): void
+    {
+        // Default mailer (smtp) — master admin / password reset / system notifs
+        $host = SystemSetting::getSecret('mail.default.host');
+        if ($host !== null && $host !== '') {
+            config([
+                'mail.mailers.smtp.host' => $host,
+                'mail.mailers.smtp.port' => (int) SystemSetting::getValue('mail.default.port', 587),
+                'mail.mailers.smtp.username' => SystemSetting::getSecret('mail.default.username'),
+                'mail.mailers.smtp.password' => SystemSetting::getSecret('mail.default.password'),
+                'mail.mailers.smtp.encryption' => SystemSetting::getValue('mail.default.encryption', 'tls') === 'null'
+                    ? null
+                    : SystemSetting::getValue('mail.default.encryption', 'tls'),
+            ]);
+            $fromAddress = SystemSetting::getValue('mail.default.from_address');
+            $fromName = SystemSetting::getValue('mail.default.from_name');
+            if ($fromAddress) {
+                config(['mail.from.address' => $fromAddress]);
+            }
+            if ($fromName) {
+                config(['mail.from.name' => $fromName]);
+            }
+        }
+
+        // Transport mailer (dedicated dla emaili wychodzących z modułu transport
+        // — oferty, dispatcher, recenzje). Osobna konfig żeby separacja
+        // reputacji domeny.
+        $transportHost = SystemSetting::getSecret('mail.transport.host');
+        if ($transportHost !== null && $transportHost !== '') {
+            config([
+                'mail.mailers.transport.host' => $transportHost,
+                'mail.mailers.transport.port' => (int) SystemSetting::getValue('mail.transport.port', 587),
+                'mail.mailers.transport.username' => SystemSetting::getSecret('mail.transport.username'),
+                'mail.mailers.transport.password' => SystemSetting::getSecret('mail.transport.password'),
+                'mail.mailers.transport.encryption' => SystemSetting::getValue('mail.transport.encryption', 'tls') === 'null'
+                    ? null
+                    : SystemSetting::getValue('mail.transport.encryption', 'tls'),
+            ]);
+            $transportFromAddress = SystemSetting::getValue('mail.transport.from_address');
+            $transportFromName = SystemSetting::getValue('mail.transport.from_name');
+            if ($transportFromAddress) {
+                config(['mail.mailers.transport.from.address' => $transportFromAddress]);
+            }
+            if ($transportFromName) {
+                config(['mail.mailers.transport.from.name' => $transportFromName]);
+            }
+        }
     }
 }
