@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Domain\Transport\Public\TransporterRankingService;
 use App\Enums\TenantType;
+use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,7 +42,7 @@ class TransportLandingController extends Controller
         // landing nie ma dla niego value. Anonimowi i out-of-context dostają
         // pełną stronę.
         if (Auth::check()) {
-            $redirect = $this->redirectForAuthenticated();
+            $redirect = $this->redirectForAuthenticated($request);
             if ($redirect !== null) {
                 return $redirect;
             }
@@ -74,16 +75,38 @@ class TransportLandingController extends Controller
      * Zwraca redirect dla zalogowanego usera lub `null` jeśli landing powinien
      * być renderowany normalnie.
      *
-     * - Master admin → bez redirectu (mogą chcieć zobaczyć landing publiczny).
-     * - Transporter (single membership) → panel `/transport`.
-     * - Stable (single membership) → `/transport/zapytanie?stable={ulid}` z pre-fillem.
-     * - Multi-tenant user lub niezdecydowany kontekst → bez redirectu, normalna landing.
+     * Priorytety:
+     *   1. **Session `current_tenant_id`** — jeśli user już wybrał kontekst
+     *      tenant'a, redirectujemy do panelu tego tenant'a, nawet gdy user
+     *      ma > 1 memberships. Bez tego multi-tenant user (np. ten sam user
+     *      ma stajnię + firmę transportową) zawsze widziałby landing.
+     *   2. **Single membership** — auto-redirect na podstawie tenant.type.
+     *   3. **Master admin** (0 memberships, is_master_admin=true) — landing
+     *      publiczny (master admin może chcieć zobaczyć stronę z perspektywy
+     *      klienta).
+     *   4. **Multi-tenant bez session current_tenant_id** — landing (user
+     *      musi wybrać kontekst przez tenant.select).
      */
-    private function redirectForAuthenticated(): ?RedirectResponse
+    private function redirectForAuthenticated(Request $request): ?RedirectResponse
     {
         $user = Auth::user();
         if ($user === null) {
             return null;
+        }
+
+        // PIORYTET 1: session ma `current_tenant_id` — user już wybrał kontekst.
+        // Honor tego niezależnie od liczby memberships (multi-tenant user
+        // może pracować na konkretnej firmie i nie chce wracać do landingu).
+        $sessionTenantId = $request->session()->get('current_tenant_id');
+        if (is_string($sessionTenantId) && $sessionTenantId !== '') {
+            $tenant = Tenant::query()
+                ->where('id', $sessionTenantId)
+                ->whereHas('memberships', fn ($q) => $q->where('user_id', $user->id)->whereNull('revoked_at'))
+                ->first();
+
+            if ($tenant) {
+                return $this->redirectForTenant($tenant);
+            }
         }
 
         $memberships = TenantMembership::query()
@@ -97,31 +120,36 @@ class TransportLandingController extends Controller
             return null;
         }
 
-        // Tylko jeden tenant — możemy bezpiecznie przekierować w jego kontekst.
+        // PIORYTET 2: tylko jeden tenant — możemy bezpiecznie przekierować.
         if ($memberships->count() === 1) {
             $tenant = $memberships->first()?->tenant;
-            if ($tenant === null) {
-                return null;
-            }
-
-            if ($tenant->type === TenantType::Transporter) {
-                // Panel home transportera — custom TransportDashboard mountowany
-                // pod `/transport/dashboard` (slug). Hero CTA grid z Calculator
-                // / Leads / Quotes / Invoices + onboarding checklist + widgety
-                // KPI. Patrz PR #267.
-                //
-                // NIE redirectuj na samo `/transport` — to publiczny landing
-                // (TransportLandingController), wpadlibyśmy z powrotem tutaj.
-                return redirect('/transport/dashboard');
-            }
-
-            if ($tenant->type === TenantType::Stable) {
-                return redirect()->to('/transport/zapytanie?stable='.$tenant->id);
+            if ($tenant !== null) {
+                return $this->redirectForTenant($tenant);
             }
         }
 
-        // Wielu tenantów → user musi wybrać kontekst (tenant switcher). Landing
-        // jest neutralny, renderujemy bez redirectu.
+        // PRIORYTET 3: > 1 memberships bez current_tenant_id w sesji →
+        // landing publiczny. User wybierze kontekst przez `/tenant/select`.
+        return null;
+    }
+
+    /**
+     * Redirect target zależny od typu tenant'a.
+     *
+     * - Transporter → panel home `/transport/dashboard` (PR #272 custom slug).
+     *   NIE redirectuj na `/transport` bo to publiczny landing (ten controller).
+     * - Stable → `/transport/zapytanie?stable={ulid}` z pre-fill kontekstu stajni.
+     */
+    private function redirectForTenant(Tenant $tenant): ?RedirectResponse
+    {
+        if ($tenant->type === TenantType::Transporter) {
+            return redirect('/transport/dashboard');
+        }
+
+        if ($tenant->type === TenantType::Stable) {
+            return redirect()->to('/transport/zapytanie?stable='.$tenant->id);
+        }
+
         return null;
     }
 }
