@@ -436,6 +436,20 @@ class SmokeTest5x5x5 extends TestCase
             $t->timestamp('updated_at')->useCurrent();
             $t->timestamp('deleted_at')->nullable();
         });
+
+        Schema::connection('tenant')->create('quote_waypoints', function ($t) {
+            $t->string('id', 26)->primary();
+            $t->string('quote_id', 26)->index();
+            $t->unsignedTinyInteger('sort_order')->default(0);
+            $t->string('kind', 16)->default('stop');
+            $t->string('address');
+            $t->decimal('lat', 10, 7);
+            $t->decimal('lng', 10, 7);
+            $t->string('poi_id', 26)->nullable();
+            $t->text('notes')->nullable();
+            $t->timestamp('created_at')->useCurrent();
+            $t->timestamp('updated_at')->useCurrent();
+        });
     }
 
     private function setUpTransportSettingsTable(): void

@@ -95,6 +95,9 @@
         <h2>{{ __('transport/pdf.section.route') }}</h2>
         <table class="grid">
             <tr><td class="label">{{ __('transport/pdf.label.from') }}</td><td>{{ $quote->pickup_address }}</td></tr>
+            @foreach ($quote->waypoints as $wp)
+                <tr><td class="label">{{ __('transport/pdf.label.waypoint', ['index' => $loop->iteration]) }}</td><td>{{ $wp->address }}</td></tr>
+            @endforeach
             <tr><td class="label">{{ __('transport/pdf.label.to') }}</td><td>{{ $quote->dropoff_address }}</td></tr>
             <tr><td class="label">{{ __('transport/pdf.label.date') }}</td><td>{{ $quote->preferred_date->format('Y-m-d') }}@if ($quote->preferred_time) {{ $quote->preferred_time }} @endif</td></tr>
             <tr><td class="label">{{ __('transport/pdf.label.distance') }}</td><td>{{ number_format((float) $quote->distance_km, 2, ',', ' ') }} km</td></tr>

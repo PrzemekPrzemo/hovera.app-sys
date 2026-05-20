@@ -27,6 +27,7 @@ return [
         'phone' => 'Phone',
         'address' => 'Address',
         'from' => 'From',
+        'waypoint' => 'Stop :index',
         'to' => 'To',
         'date' => 'Date',
         'distance' => 'Distance',
