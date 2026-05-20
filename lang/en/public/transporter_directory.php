@@ -33,6 +33,7 @@ return [
     'card_voiv_more_tooltip' => 'Covers more voivodeships — see profile',
 
     'card_view_profile' => 'View profile',
+    'card_order_transport' => 'Order transport',
     'featured_badge' => 'Featured',
     'card_disclaimer_verified' => 'Verified by Hovera. Hovera = marketplace intermediary.',
     'card_disclaimer_link_label' => 'terms',

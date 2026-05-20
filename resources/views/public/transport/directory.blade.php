@@ -60,8 +60,11 @@
         .card .rating-empty { color: var(--muted); font-size: .82rem; font-style: italic; margin-bottom: .35rem; }
         .card .disclaimer { color: var(--muted); font-size: .72rem; margin-top: .35rem; line-height: 1.4; }
         .card .disclaimer a { color: var(--muted); }
-        .card .view-link { display: inline-block; margin-top: .75rem; color: var(--primary); text-decoration: none; font-weight: 700; font-size: .92rem; }
-        .card .view-link:hover { text-decoration: underline; }
+        .card .view-link { display: inline-block; color: var(--primary); text-decoration: none; font-weight: 600; font-size: .88rem; padding: .55rem .9rem; border: 1px solid color-mix(in srgb, var(--primary) 50%, transparent); border-radius: 8px; }
+        .card .view-link:hover { background: color-mix(in srgb, var(--primary) 10%, transparent); }
+        .card .order-cta { display: inline-block; padding: .55rem 1rem; background: var(--primary); color: #fff; border-radius: 8px; font-weight: 700; font-size: .9rem; text-decoration: none; }
+        .card .order-cta:hover { filter: brightness(0.95); }
+        .card .card-ctas { display: flex; gap: .5rem; margin-top: .85rem; flex-wrap: wrap; }
         .empty { background: var(--card); border-radius: 14px; padding: 3rem 1.5rem; text-align: center; color: var(--muted); }
         .empty h2 { color: #3D2E22; font-size: 1.2rem; margin: 0 0 .75rem; }
         .empty a { display: inline-block; margin-top: .5rem; padding: .6rem 1.1rem; background: var(--primary); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 700; }
@@ -229,9 +232,14 @@
                                 <div class="rating-empty">{{ __('public/transporter_directory.card_reviews_count_zero') }}</div>
                             @endif
 
-                            <a href="{{ route('public.transporter', ['slug' => $tenant->slug]) }}" class="view-link">
-                                {{ __('public/transporter_directory.card_view_profile') }} →
-                            </a>
+                            <div class="card-ctas">
+                                <a href="{{ route('public.transport.inquiry', ['transporter' => $tenant->slug]) }}" class="order-cta">
+                                    {{ __('public/transporter_directory.card_order_transport') }} →
+                                </a>
+                                <a href="{{ route('public.transporter', ['slug' => $tenant->slug]) }}" class="view-link">
+                                    {{ __('public/transporter_directory.card_view_profile') }}
+                                </a>
+                            </div>
 
                             <div class="disclaimer">
                                 {{ __('public/transporter_directory.card_disclaimer_verified') }}
