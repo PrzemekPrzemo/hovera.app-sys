@@ -52,7 +52,20 @@
         .errors { background: #fef2f2; color: #991b1b; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .88rem; }
         .errors ul { margin: .25rem 0 0; padding-left: 1.25rem; }
 
-        .top-section { background: #fff; }
+        /* 3 paths section — pomiędzy inquiry form a top carriers. */
+        .paths-section { background: #fff; padding: 3rem 1.25rem 2.5rem; }
+        .paths-grid { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); max-width: 1080px; margin: 1.5rem auto 0; }
+        .path-card { background: var(--bg); border-radius: 14px; padding: 1.5rem 1.4rem; display: flex; flex-direction: column; border: 1px solid transparent; transition: border-color .15s, transform .15s; position: relative; }
+        .path-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .path-card .tag { position: absolute; top: 1rem; right: 1rem; font-size: .7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: .15rem .55rem; border-radius: 999px; background: color-mix(in srgb, var(--primary) 15%, transparent); color: color-mix(in srgb, var(--primary) 75%, #000); }
+        .path-card.recommended .tag { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; }
+        .path-card .icon { width: 44px; height: 44px; border-radius: 10px; background: color-mix(in srgb, var(--primary) 18%, #fff); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1rem; }
+        .path-card h3 { margin: 0 0 .5rem; font-size: 1.1rem; color: #3D2E22; }
+        .path-card p { margin: 0 0 1.25rem; color: var(--muted); font-size: .92rem; flex-grow: 1; }
+        .path-card .path-cta { display: inline-block; padding: .6rem 1.1rem; background: var(--primary); color: #fff; border-radius: 8px; font-weight: 700; font-size: .92rem; text-decoration: none; text-align: center; }
+        .path-card .path-cta:hover { filter: brightness(0.95); }
+
+        .top-section { background: var(--bg); }
         .top-grid { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
         .card { background: var(--card); border-radius: 14px; padding: 1.2rem 1.25rem; box-shadow: 0 3px 14px rgba(0,0,0,.05); display: flex; flex-direction: column; min-height: 220px; border: 1px solid transparent; transition: border-color .15s, transform .15s; text-decoration: none; color: inherit; }
         .card:hover { border-color: var(--primary); transform: translateY(-2px); }
@@ -81,11 +94,13 @@
 
         @media (prefers-color-scheme: dark) {
             html, body { background: #1F1A17; color: #F7F4EF; }
-            .inquiry-card, .card, .top-section { background: #2a221c; color: #E9E2D3; }
-            .inquiry-card h2, .card h3, .section-title { color: #E9E2D3; }
+            .inquiry-card, .card, .top-section, .paths-section { background: #2a221c; color: #E9E2D3; }
+            .inquiry-card h2, .card h3, .path-card h3, .section-title { color: #E9E2D3; }
             label { color: #E9E2D3; }
             input, textarea { background: #1F1A17; border-color: #4a3d31; color: #F7F4EF; }
-            .footer-disclaimer, .inquiry-section, .empty-state { background: #1F1A17; }
+            .footer-disclaimer, .inquiry-section, .empty-state, .top-section { background: #1F1A17; }
+            .path-card { background: #1F1A17; }
+            .path-card p { color: #C8B8A4; }
         }
 
         @media (max-width: 600px) {
@@ -115,6 +130,7 @@
             <p class="subtitle">{{ __('public/transport_landing.hero.subtitle') }}</p>
             <div class="hero-ctas">
                 <a href="#inquiry" class="cta-primary">{{ __('public/transport_landing.hero.cta_form') }}</a>
+                <a href="{{ route('register.horse-owner.show') }}" class="cta-secondary">{{ __('public/transport_landing.hero.cta_account') }}</a>
                 <a href="{{ url('/przewoznicy') }}" class="cta-secondary">{{ __('public/transport_landing.hero.cta_browse') }}</a>
             </div>
         </div>
@@ -130,6 +146,39 @@
                 'targetTransporter' => $targetTransporter,
                 'formId' => 'landing-inquiry',
             ])
+        </div>
+    </section>
+
+    <section class="paths-section">
+        <div class="section-inner">
+            <h2 class="section-title">{{ __('public/transport_landing.paths_section.title') }}</h2>
+            <p class="section-subtitle">{{ __('public/transport_landing.paths_section.subtitle') }}</p>
+
+            <div class="paths-grid">
+                <div class="path-card">
+                    <span class="tag">{{ __('public/transport_landing.paths_section.path_broadcast.tag') }}</span>
+                    <div class="icon" aria-hidden="true">📢</div>
+                    <h3>{{ __('public/transport_landing.paths_section.path_broadcast.title') }}</h3>
+                    <p>{{ __('public/transport_landing.paths_section.path_broadcast.body') }}</p>
+                    <a href="#inquiry" class="path-cta">{{ __('public/transport_landing.paths_section.path_broadcast.cta') }}</a>
+                </div>
+
+                <div class="path-card recommended">
+                    <span class="tag">{{ __('public/transport_landing.paths_section.path_account.tag') }}</span>
+                    <div class="icon" aria-hidden="true">👤</div>
+                    <h3>{{ __('public/transport_landing.paths_section.path_account.title') }}</h3>
+                    <p>{{ __('public/transport_landing.paths_section.path_account.body') }}</p>
+                    <a href="{{ route('register.horse-owner.show') }}" class="path-cta">{{ __('public/transport_landing.paths_section.path_account.cta') }}</a>
+                </div>
+
+                <div class="path-card">
+                    <span class="tag">{{ __('public/transport_landing.paths_section.path_directory.tag') }}</span>
+                    <div class="icon" aria-hidden="true">🔍</div>
+                    <h3>{{ __('public/transport_landing.paths_section.path_directory.title') }}</h3>
+                    <p>{{ __('public/transport_landing.paths_section.path_directory.body') }}</p>
+                    <a href="{{ url('/przewoznicy') }}" class="path-cta">{{ __('public/transport_landing.paths_section.path_directory.cta') }}</a>
+                </div>
+            </div>
         </div>
     </section>
 
