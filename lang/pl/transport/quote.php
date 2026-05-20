@@ -31,6 +31,9 @@ return [
             'preferred_date' => 'Data',
             'preferred_time' => 'Godzina',
             'round_trip' => 'Trasa z powrotem',
+            'calculation_mode' => 'Tryb przewozu',
+            'auto_routing' => 'Auto-routing z adresów',
+            'customer_picked' => 'Wybrany klient',
             'loaded' => 'Z koniem',
             'horses_count' => 'Liczba koni',
             'extra_horse_fee_snapshot' => 'Dopłata za każdego dodatkowego konia',
@@ -58,6 +61,10 @@ return [
             'mark_as_paid_reason' => 'Powód / numer transakcji (opcjonalnie)',
         ],
         'helper' => [
+            'auto_routing' => 'Geokodujemy adresy i liczymy wycenę przez kalkulator (distance, paliwo, VAT). Wyłącz aby wpisać dystans i kwoty ręcznie (np. wycena ze stałą ceną).',
+            'calculation_mode' => 'Jedna strona / w obie strony / powrót przewoźnika do bazy. Wpływa na doliczany dystans.',
+            'net_total_auto' => 'Wyliczone automatycznie po zapisie.',
+            'gross_total_auto' => 'Wyliczone automatycznie po zapisie.',
             'horses_count' => 'Liczba koni w transporcie. Doliczenie nalicza się od drugiego konia w górę zgodnie ze stawką w Ustawieniach Transportu.',
             'extra_horse_fee_snapshot' => 'Zamrożona stawka per dodatkowy koń (PLN/koń). Snapshot z momentu wystawienia oferty — zmiany w Ustawieniach Transportu nie modyfikują historycznych ofert.',
             'customer_picker' => 'Wybierz istniejącego klienta z bazy (search po imieniu/firmie/NIP) albo zostaw puste i wypełnij dane ręcznie poniżej. Po wybraniu — dane zostaną skopiowane jako snapshot na ofercie.',
@@ -117,5 +124,7 @@ return [
         'invoice_failed' => 'Nie udało się wystawić faktury',
         'marked_as_paid' => 'Oferta oznaczona jako opłacona',
         'marked_as_paid_body' => 'Oferta :number — potwierdzenie wpływu zapisane.',
+        'geocoding_failed_title' => 'Nie rozpoznaliśmy adresu',
+        'calculation_failed_title' => 'Auto-kalkulacja nie powiodła się',
     ],
 ];

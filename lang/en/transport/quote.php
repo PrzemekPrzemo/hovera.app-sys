@@ -31,6 +31,9 @@ return [
             'preferred_date' => 'Date',
             'preferred_time' => 'Time',
             'round_trip' => 'Round trip',
+            'calculation_mode' => 'Trip mode',
+            'auto_routing' => 'Auto-routing from addresses',
+            'customer_picked' => 'Selected customer',
             'loaded' => 'Loaded (with horse)',
             'horses_count' => 'Number of horses',
             'extra_horse_fee_snapshot' => 'Surcharge per extra horse',
@@ -58,6 +61,10 @@ return [
             'mark_as_paid_reason' => 'Reason / transaction reference (optional)',
         ],
         'helper' => [
+            'auto_routing' => 'We geocode the addresses and run the calculator (distance, fuel, VAT). Disable to enter distance and totals manually (e.g. fixed-price quote).',
+            'calculation_mode' => 'One way / round trip / carrier returns to base. Affects how distance is added up.',
+            'net_total_auto' => 'Will be computed automatically on save.',
+            'gross_total_auto' => 'Will be computed automatically on save.',
             'horses_count' => 'Number of horses in the transport. The surcharge applies from the second horse onwards, per the rate in Transport Settings.',
             'extra_horse_fee_snapshot' => 'Frozen per-extra-horse rate (PLN/horse). Snapshot from the moment the quote was issued — later changes to Transport Settings do not modify historic quotes.',
             'customer_picker' => 'Pick an existing customer from the database (search by name / company / NIP) or leave empty and fill the fields manually below. Picking copies their data as a snapshot onto this quote.',
@@ -117,5 +124,7 @@ return [
         'invoice_failed' => 'Could not issue invoice',
         'marked_as_paid' => 'Quote marked as paid',
         'marked_as_paid_body' => 'Quote :number — payment receipt confirmed.',
+        'geocoding_failed_title' => 'We could not recognise the address',
+        'calculation_failed_title' => 'Auto-calculation failed',
     ],
 ];

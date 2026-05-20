@@ -8,6 +8,7 @@ use App\Domain\Transport\Invoices\IssueTransportInvoiceFromQuote;
 use App\Domain\Transport\Notifications\QuoteSentNotification;
 use App\Domain\Transport\Quotes\QuoteNumberGenerator;
 use App\Domain\Transport\Quotes\QuotePdfGenerator;
+use App\Enums\CalculationMode;
 use App\Enums\QuoteStatus;
 use App\Enums\VehicleType;
 use App\Filament\Concerns\RestrictedByTenantRole;
@@ -131,33 +132,66 @@ class QuoteResource extends Resource
                             $set('customer_address', $c->address);
                         })
                         ->live(),
+                    // Gdy klient wybrany z bazy — pola customer_* są nadal w
+                    // form state (snapshot z afterStateUpdated wyżej), ale UI
+                    // ich nie pokazuje. Dane lecą do quote'a bez confusing
+                    // dwóch źródeł prawdy w widoku.
+                    Forms\Components\Placeholder::make('customer_picked')
+                        ->label(__('transport/quote.form.label.customer_picked'))
+                        ->content(fn (Forms\Get $get) => (string) ($get('customer_name') ?? '').
+                            (($get('customer_company') ?? '') ? ' · '.$get('customer_company') : ''))
+                        ->visible(fn (Forms\Get $get) => (bool) $get('customer_id'))
+                        ->columnSpanFull(),
                     Forms\Components\TextInput::make('customer_name')
                         ->label(__('transport/quote.form.label.customer_name'))
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->visible(fn (Forms\Get $get) => ! $get('customer_id')),
                     Forms\Components\TextInput::make('customer_email')
                         ->label(__('transport/quote.form.label.customer_email'))
                         ->email()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->visible(fn (Forms\Get $get) => ! $get('customer_id')),
                     Forms\Components\TextInput::make('customer_phone')
                         ->label(__('transport/quote.form.label.customer_phone'))
                         ->tel()
-                        ->maxLength(40),
+                        ->maxLength(40)
+                        ->visible(fn (Forms\Get $get) => ! $get('customer_id')),
                     Forms\Components\TextInput::make('customer_company')
                         ->label(__('transport/quote.form.label.customer_company'))
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->visible(fn (Forms\Get $get) => ! $get('customer_id')),
                     Forms\Components\TextInput::make('customer_tax_id')
                         ->label(__('transport/quote.form.label.customer_tax_id'))
-                        ->maxLength(32),
+                        ->maxLength(32)
+                        ->visible(fn (Forms\Get $get) => ! $get('customer_id')),
                     Forms\Components\Textarea::make('customer_address')
                         ->label(__('transport/quote.form.label.customer_address'))
                         ->rows(2)
-                        ->columnSpanFull(),
+                        ->columnSpanFull()
+                        ->visible(fn (Forms\Get $get) => ! $get('customer_id')),
                 ]),
 
             Forms\Components\Section::make(__('transport/quote.section.route'))
                 ->columns(2)
                 ->schema([
+                    // Master toggle "Auto-routing z adresów". Domyślnie ON —
+                    // geocoder + CalculatorService liczą distance/duration/
+                    // pricing przy create. OFF wymaga ręcznych wartości
+                    // distance_km / net_total / gross_total (edge case dla
+                    // niestandardowych wycen ze stałą ceną).
+                    //
+                    // Toggle jest dehydrated (idzie do $data) — CreateQuote
+                    // hooks decydują na jego podstawie czy uruchomić
+                    // auto-recalc; przed insertem usuwamy z $data, bo to
+                    // pole formularzowe, nie kolumna w quotes.
+                    Forms\Components\Toggle::make('auto_routing')
+                        ->label(__('transport/quote.form.label.auto_routing'))
+                        ->helperText(__('transport/quote.form.helper.auto_routing'))
+                        ->default(true)
+                        ->inline(false)
+                        ->columnSpanFull()
+                        ->live(),
                     Forms\Components\TextInput::make('pickup_address')
                         ->label(__('transport/quote.form.label.pickup_address'))
                         ->required()
@@ -168,22 +202,13 @@ class QuoteResource extends Resource
                         ->required()
                         ->maxLength(255)
                         ->extraInputAttributes(['data-places-autocomplete' => 'panel', 'autocomplete' => 'off']),
-                    Forms\Components\TextInput::make('pickup_lat')
-                        ->label('Pickup lat')
-                        ->numeric()
-                        ->required(),
-                    Forms\Components\TextInput::make('pickup_lng')
-                        ->label('Pickup lng')
-                        ->numeric()
-                        ->required(),
-                    Forms\Components\TextInput::make('dropoff_lat')
-                        ->label('Dropoff lat')
-                        ->numeric()
-                        ->required(),
-                    Forms\Components\TextInput::make('dropoff_lng')
-                        ->label('Dropoff lng')
-                        ->numeric()
-                        ->required(),
+                    // Lat/lng — Hidden. Wypełnione przez geocoder w
+                    // CreateQuote::mutateFormDataBeforeCreate (auto_routing=ON)
+                    // albo przez session pending z Calculator'a.
+                    Forms\Components\Hidden::make('pickup_lat')->default(0),
+                    Forms\Components\Hidden::make('pickup_lng')->default(0),
+                    Forms\Components\Hidden::make('dropoff_lat')->default(0),
+                    Forms\Components\Hidden::make('dropoff_lng')->default(0),
                     Forms\Components\DatePicker::make('preferred_date')
                         ->label(__('transport/quote.form.label.preferred_date'))
                         ->native(false)
@@ -191,9 +216,13 @@ class QuoteResource extends Resource
                     Forms\Components\TimePicker::make('preferred_time')
                         ->label(__('transport/quote.form.label.preferred_time'))
                         ->seconds(false),
-                    Forms\Components\Toggle::make('round_trip')
-                        ->label(__('transport/quote.form.label.round_trip'))
-                        ->inline(false),
+                    Forms\Components\Select::make('calculation_mode')
+                        ->label(__('transport/quote.form.label.calculation_mode'))
+                        ->helperText(__('transport/quote.form.helper.calculation_mode'))
+                        ->options(CalculationMode::options())
+                        ->default(CalculationMode::OneWay->value)
+                        ->required()
+                        ->native(false),
                     Forms\Components\Toggle::make('loaded')
                         ->label(__('transport/quote.form.label.loaded'))
                         ->default(true)
@@ -207,6 +236,9 @@ class QuoteResource extends Resource
                         ->maxValue(30)
                         ->default(1)
                         ->required(),
+                    // Legacy `round_trip` boolean usunięty z UI — zastąpiony
+                    // przez `calculation_mode` (PR #294). Kolumna w DB
+                    // zostaje (default=false) dla wstecznej zgodności.
                 ]),
 
             Forms\Components\Section::make(__('transport/quote.section.resources'))
@@ -240,72 +272,66 @@ class QuoteResource extends Resource
                         ->native(false),
                 ]),
 
+            // Pricing — domyślnie cała sekcja na auto. User widzi tylko
+            // input'y które realnie kontroluje (rate_per_km, vat_rate) +
+            // computed totals (net_total, gross_total) read-only. Reszta
+            // (base_cost, fuel_surcharge, extra_horse_fee, minimum_adjustment,
+            // vat_amount, duration_seconds, currency, routing_provider)
+            // jest Hidden — populowana przez CalculatorService w
+            // CreateQuote::mutateFormDataBeforeCreate.
+            //
+            // Gdy `auto_routing=false` user wpisuje distance_km, net_total,
+            // gross_total ręcznie (edge case: fixed-price quote bez kalkulacji).
             Forms\Components\Section::make(__('transport/quote.section.pricing'))
                 ->columns(3)
                 ->schema([
                     Forms\Components\TextInput::make('distance_km')
                         ->label(__('transport/quote.form.label.distance_km'))
-                        ->required()
                         ->numeric()
-                        ->suffix('km'),
+                        ->suffix('km')
+                        ->disabled(fn (Forms\Get $get) => (bool) $get('auto_routing'))
+                        ->dehydrated()
+                        ->required(fn (Forms\Get $get) => ! (bool) $get('auto_routing')),
                     Forms\Components\TextInput::make('rate_per_km')
                         ->label(__('transport/quote.form.label.rate_per_km'))
                         ->required()
                         ->numeric()
                         ->suffix(fn (Forms\Get $get) => (string) ($get('currency') ?? 'PLN').'/km'),
-                    Forms\Components\TextInput::make('duration_seconds')
-                        ->label(__('transport/quote.form.label.duration_seconds'))
-                        ->required()
-                        ->numeric()
-                        ->suffix('s'),
-                    Forms\Components\TextInput::make('base_cost')
-                        ->label(__('transport/quote.form.label.base_cost'))
-                        ->required()
-                        ->numeric(),
-                    Forms\Components\TextInput::make('fuel_surcharge')
-                        ->label(__('transport/quote.form.label.fuel_surcharge'))
-                        ->numeric()
-                        ->default(0),
-                    Forms\Components\TextInput::make('extra_horse_fee_snapshot')
-                        ->label(__('transport/quote.form.label.extra_horse_fee_snapshot'))
-                        ->helperText(__('transport/quote.form.helper.extra_horse_fee_snapshot'))
-                        ->numeric()
-                        ->default(0)
-                        ->suffix(fn (Forms\Get $get) => (string) ($get('currency') ?? 'PLN')),
-                    Forms\Components\TextInput::make('minimum_adjustment')
-                        ->label(__('transport/quote.form.label.minimum_adjustment'))
-                        ->numeric()
-                        ->default(0),
-                    Forms\Components\TextInput::make('net_total')
-                        ->label(__('transport/quote.form.label.net_total'))
-                        ->required()
-                        ->numeric(),
                     Forms\Components\TextInput::make('vat_rate')
                         ->label(__('transport/quote.form.label.vat_rate'))
                         ->required()
                         ->numeric()
-                        ->suffix('%'),
-                    Forms\Components\TextInput::make('vat_amount')
-                        ->label(__('transport/quote.form.label.vat_amount'))
-                        ->required()
-                        ->numeric(),
+                        ->suffix('%')
+                        ->default(23),
+                    Forms\Components\TextInput::make('net_total')
+                        ->label(__('transport/quote.form.label.net_total'))
+                        ->numeric()
+                        ->disabled(fn (Forms\Get $get) => (bool) $get('auto_routing'))
+                        ->dehydrated()
+                        ->required(fn (Forms\Get $get) => ! (bool) $get('auto_routing'))
+                        ->helperText(fn (Forms\Get $get) => (bool) $get('auto_routing')
+                            ? __('transport/quote.form.helper.net_total_auto')
+                            : null),
                     Forms\Components\TextInput::make('gross_total')
                         ->label(__('transport/quote.form.label.gross_total'))
-                        ->required()
                         ->numeric()
-                        ->columnSpan(2),
-                    Forms\Components\Select::make('currency')
-                        ->label(__('transport/quote.form.label.currency'))
-                        ->options(['PLN' => 'PLN', 'EUR' => 'EUR', 'CZK' => 'CZK'])
-                        ->default('PLN')
-                        ->required()
-                        ->native(false),
-                    Forms\Components\TextInput::make('routing_provider')
-                        ->label(__('transport/quote.form.label.routing_provider'))
-                        ->default('manual')
-                        ->required()
-                        ->maxLength(16)
-                        ->columnSpan(2),
+                        ->disabled(fn (Forms\Get $get) => (bool) $get('auto_routing'))
+                        ->dehydrated()
+                        ->required(fn (Forms\Get $get) => ! (bool) $get('auto_routing'))
+                        ->columnSpan(2)
+                        ->helperText(fn (Forms\Get $get) => (bool) $get('auto_routing')
+                            ? __('transport/quote.form.helper.gross_total_auto')
+                            : null),
+                    // Hidden internals — wyliczane przez CalculatorService albo
+                    // pre-fillowane z Calculator session pending.
+                    Forms\Components\Hidden::make('base_cost')->default(0),
+                    Forms\Components\Hidden::make('fuel_surcharge')->default(0),
+                    Forms\Components\Hidden::make('extra_horse_fee_snapshot')->default(0),
+                    Forms\Components\Hidden::make('minimum_adjustment')->default(0),
+                    Forms\Components\Hidden::make('vat_amount')->default(0),
+                    Forms\Components\Hidden::make('duration_seconds')->default(0),
+                    Forms\Components\Hidden::make('currency')->default('PLN'),
+                    Forms\Components\Hidden::make('routing_provider')->default('manual'),
                 ]),
 
             Forms\Components\Section::make(__('transport/quote.section.terms'))
