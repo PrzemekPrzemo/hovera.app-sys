@@ -125,11 +125,13 @@ class QuoteResource extends Resource
                     Forms\Components\TextInput::make('pickup_address')
                         ->label(__('transport/quote.form.label.pickup_address'))
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->extraInputAttributes(['data-places-autocomplete' => 'panel', 'autocomplete' => 'off']),
                     Forms\Components\TextInput::make('dropoff_address')
                         ->label(__('transport/quote.form.label.dropoff_address'))
                         ->required()
-                        ->maxLength(255),
+                        ->maxLength(255)
+                        ->extraInputAttributes(['data-places-autocomplete' => 'panel', 'autocomplete' => 'off']),
                     Forms\Components\TextInput::make('pickup_lat')
                         ->label('Pickup lat')
                         ->numeric()

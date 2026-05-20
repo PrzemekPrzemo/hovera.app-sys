@@ -53,13 +53,15 @@
 
     <div class="form-row">
         <label for="{{ $formId }}-pickup_address">{{ __('public/transport_inquiry.label.pickup_address') }}</label>
-        <input type="text" name="pickup_address" id="{{ $formId }}-pickup_address" required maxlength="255" value="{{ $old['pickup_address'] }}" placeholder="{{ __('public/transport_inquiry.placeholder.pickup_address') }}">
+        <input type="text" name="pickup_address" id="{{ $formId }}-pickup_address" required maxlength="255" value="{{ $old['pickup_address'] }}" placeholder="{{ __('public/transport_inquiry.placeholder.pickup_address') }}" data-places-autocomplete="public" autocomplete="off">
     </div>
 
     <div class="form-row">
         <label for="{{ $formId }}-dropoff_address">{{ __('public/transport_inquiry.label.dropoff_address') }}</label>
-        <input type="text" name="dropoff_address" id="{{ $formId }}-dropoff_address" required maxlength="255" value="{{ $old['dropoff_address'] }}" placeholder="{{ __('public/transport_inquiry.placeholder.dropoff_address') }}">
+        <input type="text" name="dropoff_address" id="{{ $formId }}-dropoff_address" required maxlength="255" value="{{ $old['dropoff_address'] }}" placeholder="{{ __('public/transport_inquiry.placeholder.dropoff_address') }}" data-places-autocomplete="public" autocomplete="off">
     </div>
+
+    <x-places-autocomplete-script />
 
     <div class="row-two">
         <div class="form-row">

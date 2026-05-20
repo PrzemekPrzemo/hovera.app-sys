@@ -175,10 +175,12 @@ class Calculator extends Page implements HasForms
                         Forms\Components\TextInput::make('from_address')
                             ->label(__('transport/calculator.form.label.from_address'))
                             ->required()
+                            ->extraInputAttributes(['data-places-autocomplete' => 'panel', 'autocomplete' => 'off'])
                             ->placeholder(__('transport/calculator.form.placeholder.from_address')),
                         Forms\Components\TextInput::make('to_address')
                             ->label(__('transport/calculator.form.label.to_address'))
                             ->required()
+                            ->extraInputAttributes(['data-places-autocomplete' => 'panel', 'autocomplete' => 'off'])
                             ->placeholder(__('transport/calculator.form.placeholder.to_address')),
                     ]),
                 Forms\Components\Section::make(__('transport/calculator.section.options'))
