@@ -124,4 +124,13 @@ return [
             'cta' => 'Zamów transport',
         ],
     ],
+
+    'notifications' => [
+        'new_offers' => 'Nowe oferty',
+        'new_offers_description' => 'Łącznie odpowiedzi przewoźników na Twoje zlecenia',
+        'accepted' => 'Zaakceptowane',
+        'accepted_description' => 'Z ostatnich 14 dni',
+        'upcoming' => 'W ciągu 3 dni',
+        'upcoming_description' => 'Transport zaplanowany na najbliższe dni',
+    ],
 ];

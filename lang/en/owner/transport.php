@@ -124,4 +124,13 @@ return [
             'cta' => 'Order transport',
         ],
     ],
+
+    'notifications' => [
+        'new_offers' => 'New offers',
+        'new_offers_description' => 'Total carrier responses on your orders',
+        'accepted' => 'Accepted',
+        'accepted_description' => 'In the last 14 days',
+        'upcoming' => 'Within 3 days',
+        'upcoming_description' => 'Transport scheduled for the next few days',
+    ],
 ];
