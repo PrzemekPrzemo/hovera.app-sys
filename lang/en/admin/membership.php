@@ -11,6 +11,9 @@ return [
         'employee' => 'Employee',
         'vet' => 'Vet',
         'viewer' => 'View only',
+        // Transport-specific:
+        'operator' => 'Operator (quotes / calculator / invoices / driver assignment)',
+        'driver' => 'Driver (own trips / calendar / documents)',
     ],
 
     'form' => [

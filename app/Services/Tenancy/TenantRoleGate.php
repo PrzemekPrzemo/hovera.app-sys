@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Auth;
  * gate `canAccess()` without rewriting the same TenantMembership lookup
  * everywhere.
  *
- * Roles (matching TeamMemberResource::roleOptions()):
+ * Roles per tenant type:
+ *
+ *   STABLE tenants (matching `TeamMemberResource::roleOptions()` dla stables):
  *   - owner      — full access, only the owner can delete the tenant
  *   - admin      — full access except tenant deletion
  *   - manager    — operations + finance, no tenant settings, no team
@@ -22,6 +24,19 @@ use Illuminate\Support\Facades\Auth;
  *   - employee   — activity log, calendar read-only, horses read-only
  *   - vet        — health records, horses, calendar (own visits), specialists
  *   - viewer     — read-only across operations
+ *
+ *   TRANSPORTER tenants:
+ *   - owner      — full access, only the owner can delete the tenant
+ *   - admin      — full access except tenant deletion
+ *   - operator   — oferty + kalkulacje + faktury + przypisywanie kierowców
+ *                  (bez administracji firmy — billing, settings, team mgmt
+ *                  zarezerwowane dla owner/admin)
+ *   - driver     — TYLKO swoje trasy + kalendarz + swoje dokumenty
+ *                  (kierowca nie widzi cudzych ofert, leadów, faktur)
+ *
+ *   Legacy: niektóre stare transporter tenants mogą mieć `manager` role
+ *   (zanim wprowadziliśmy `operator`). TRANSPORT_OPERATORS zawiera
+ *   `manager` dla backward compat — w UI nie pokazujemy go już jako opcji.
  *
  * Returns null when there's no active tenant or no auth user — callers
  * use that to deny access defensively.
@@ -47,6 +62,23 @@ class TenantRoleGate
 
     /** Invoices, passes, monthly reports — viewer sees read-only. */
     public const FINANCE_STAFF = ['owner', 'admin', 'manager', 'viewer'];
+
+    /**
+     * Transport panel: kalkulacja / oferty / leady / faktury / pojazdy / przypisanie kierowców.
+     * `manager` w środku dla backward compat (old transporter tenants stworzone
+     * przed wprowadzeniem `operator` mogą wciąż mieć ten role).
+     */
+    public const TRANSPORT_OPERATORS = ['owner', 'admin', 'operator', 'manager'];
+
+    /**
+     * Wszyscy członkowie team'u transportera włącznie z kierowcami — używane dla
+     * widoków typu „company directory" gdzie kierowca też powinien widzieć
+     * np. listę kolegów.
+     */
+    public const TRANSPORT_TEAM = ['owner', 'admin', 'operator', 'manager', 'driver'];
+
+    /** Tylko kierowcy — driver-only views (moje trasy, mój kalendarz). */
+    public const DRIVERS_ONLY = ['driver'];
 
     public function __construct(private readonly TenantManager $tenants) {}
 

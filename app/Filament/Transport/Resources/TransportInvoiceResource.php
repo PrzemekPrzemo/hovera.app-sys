@@ -43,7 +43,7 @@ class TransportInvoiceResource extends Resource
     /** @return list<string> */
     protected static function allowedRoles(): array
     {
-        return TenantRoleGate::FULL_ADMINS_AND_MANAGERS;
+        return TenantRoleGate::TRANSPORT_OPERATORS;
     }
 
     protected static ?string $model = TransportInvoice::class;

@@ -11,6 +11,9 @@ return [
         'employee' => 'Mitarbeiter',
         'vet' => 'Tierarzt',
         'viewer' => 'Nur Ansicht',
+        // Transport-specific:
+        'operator' => 'Operator (Angebote / Kalkulator / Rechnungen / Fahrerzuweisung)',
+        'driver' => 'Fahrer (eigene Touren / Kalender / Dokumente)',
     ],
 
     'form' => [
