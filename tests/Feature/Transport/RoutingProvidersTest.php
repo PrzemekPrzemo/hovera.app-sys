@@ -50,7 +50,7 @@ class RoutingProvidersTest extends TestCase
         $provider->calculateRoute(
             new Coords(0, 0),
             new Coords(1, 1),
-            new RouteOptions(),
+            new RouteOptions,
         );
     }
 
@@ -62,7 +62,55 @@ class RoutingProvidersTest extends TestCase
         $provider = new OpenRouteServiceProvider(app(HttpFactory::class), apiKey: 'k');
 
         $this->expectException(RoutingException::class);
-        $provider->calculateRoute(new Coords(0, 0), new Coords(1, 1), new RouteOptions());
+        $provider->calculateRoute(new Coords(0, 0), new Coords(1, 1), new RouteOptions);
+    }
+
+    public function test_ors_falls_back_to_driving_car_when_hgv_returns_2009(): void
+    {
+        Http::fake([
+            'api.openrouteservice.org/v2/directions/driving-hgv/json' => Http::response([
+                'error' => [
+                    'code' => 2009,
+                    'message' => 'Route could not be found between points',
+                ],
+            ], 404),
+            'api.openrouteservice.org/v2/directions/driving-car/json' => Http::response([
+                'routes' => [[
+                    'summary' => ['distance' => 350.10, 'duration' => 15_000],
+                    'geometry' => 'fallback_poly',
+                ]],
+            ]),
+        ]);
+
+        $provider = new OpenRouteServiceProvider(app(HttpFactory::class), apiKey: 'k');
+        $route = $provider->calculateRoute(
+            new Coords(52.2307, 21.0163),  // Warsaw
+            new Coords(54.4451, 18.5691),  // Gdynia area
+            new RouteOptions(profile: 'truck'),
+        );
+
+        $this->assertSame(350.10, $route->distanceKm);
+        $this->assertSame(15_000, $route->durationSeconds);
+        $this->assertSame('fallback_poly', $route->polyline);
+    }
+
+    public function test_ors_does_not_fallback_on_404_with_non_2009_code(): void
+    {
+        // 404 z innym kodem (np. zły endpoint, błąd konfiguracji) — nie chowamy.
+        Http::fake([
+            'api.openrouteservice.org/v2/directions/driving-hgv/json' => Http::response([
+                'error' => ['code' => 9999, 'message' => 'unknown error'],
+            ], 404),
+        ]);
+
+        $provider = new OpenRouteServiceProvider(app(HttpFactory::class), apiKey: 'k');
+
+        $this->expectException(RoutingException::class);
+        $provider->calculateRoute(
+            new Coords(0, 0),
+            new Coords(1, 1),
+            new RouteOptions(profile: 'truck'),
+        );
     }
 
     public function test_mapbox_uses_driving_traffic_for_truck_profile(): void
@@ -147,7 +195,7 @@ class RoutingProvidersTest extends TestCase
         $provider = new GoogleMapsProvider(app(HttpFactory::class), apiKey: '');
 
         $this->expectException(RoutingException::class);
-        $provider->calculateRoute(new Coords(0, 0), new Coords(1, 1), new RouteOptions());
+        $provider->calculateRoute(new Coords(0, 0), new Coords(1, 1), new RouteOptions);
     }
 
     public function test_provider_ids_match_documented_values(): void
