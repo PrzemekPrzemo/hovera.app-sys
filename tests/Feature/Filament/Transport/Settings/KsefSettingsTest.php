@@ -50,6 +50,7 @@ class KsefSettingsTest extends TestCase
             $t->decimal('rate_per_km', 6, 2)->default(4.50);
             $t->decimal('rate_per_km_loaded', 6, 2)->nullable();
             $t->decimal('minimum_charge', 8, 2)->default(800.00);
+            $t->decimal('extra_horse_fee_default', 8, 2)->default(0);
             $t->decimal('fuel_consumption_l_per_100km', 5, 2)->default(32.5);
             $t->boolean('fuel_surcharge_enabled')->default(true);
             $t->decimal('fuel_base_price_pln', 5, 2)->default(7.00);

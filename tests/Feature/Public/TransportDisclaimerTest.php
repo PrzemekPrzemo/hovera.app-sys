@@ -9,6 +9,7 @@ use App\Enums\TenantType;
 use App\Enums\VerificationStatus;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\Quote;
+use App\Tenancy\TenantManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Schema;
@@ -53,7 +54,7 @@ class TransportDisclaimerTest extends TestCase
         // Mock TenantManager identyczny jak w QuoteAcceptanceTest — bez tego
         // controller próbuje przepiąć connection na MySQL i wysadza testy.
         $heldTenant = null;
-        $this->mock(\App\Tenancy\TenantManager::class, function ($m) use (&$heldTenant) {
+        $this->mock(TenantManager::class, function ($m) use (&$heldTenant) {
             $m->shouldReceive('setCurrent')->andReturnUsing(function ($t) use (&$heldTenant) {
                 $heldTenant = $t;
             });
@@ -196,6 +197,7 @@ class TransportDisclaimerTest extends TestCase
             $t->time('preferred_time')->nullable();
             $t->boolean('round_trip')->default(false);
             $t->boolean('loaded')->default(true);
+            $t->unsignedTinyInteger('horses_count')->default(1);
             $t->string('vehicle_id', 26)->nullable();
             $t->string('driver_id', 26)->nullable();
             $t->decimal('distance_km', 8, 2);
@@ -205,6 +207,7 @@ class TransportDisclaimerTest extends TestCase
             $t->decimal('rate_per_km', 6, 2);
             $t->decimal('base_cost', 10, 2);
             $t->decimal('fuel_surcharge', 10, 2)->default(0);
+            $t->decimal('extra_horse_fee_snapshot', 10, 2)->default(0);
             $t->decimal('minimum_adjustment', 10, 2)->default(0);
             $t->decimal('net_total', 10, 2);
             $t->decimal('vat_rate', 4, 2);

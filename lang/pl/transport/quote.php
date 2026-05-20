@@ -32,6 +32,8 @@ return [
             'preferred_time' => 'Godzina',
             'round_trip' => 'Trasa z powrotem',
             'loaded' => 'Z koniem',
+            'horses_count' => 'Liczba koni',
+            'extra_horse_fee_snapshot' => 'Dopłata za każdego dodatkowego konia',
             'vehicle' => 'Pojazd (prowadzący)',
             'trailer' => 'Przyczepa (opcjonalna)',
             'driver' => 'Kierowca',
@@ -56,6 +58,8 @@ return [
             'mark_as_paid_reason' => 'Powód / numer transakcji (opcjonalnie)',
         ],
         'helper' => [
+            'horses_count' => 'Liczba koni w transporcie. Doliczenie nalicza się od drugiego konia w górę zgodnie ze stawką w Ustawieniach Transportu.',
+            'extra_horse_fee_snapshot' => 'Zamrożona stawka per dodatkowy koń (PLN/koń). Snapshot z momentu wystawienia oferty — zmiany w Ustawieniach Transportu nie modyfikują historycznych ofert.',
             'customer_picker' => 'Wybierz istniejącego klienta z bazy (search po imieniu/firmie/NIP) albo zostaw puste i wypełnij dane ręcznie poniżej. Po wybraniu — dane zostaną skopiowane jako snapshot na ofercie.',
             'vehicle' => 'Pojazd z silnikiem — tylko trucks. Ten pojazd liczy spalanie.',
             'trailer' => 'Opcjonalna przyczepa (bez silnika) doczepiana do pojazdu prowadzącego.',

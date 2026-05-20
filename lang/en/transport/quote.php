@@ -32,6 +32,8 @@ return [
             'preferred_time' => 'Time',
             'round_trip' => 'Round trip',
             'loaded' => 'Loaded (with horse)',
+            'horses_count' => 'Number of horses',
+            'extra_horse_fee_snapshot' => 'Surcharge per extra horse',
             'vehicle' => 'Vehicle (powered)',
             'trailer' => 'Trailer (optional)',
             'driver' => 'Driver',
@@ -56,6 +58,8 @@ return [
             'mark_as_paid_reason' => 'Reason / transaction reference (optional)',
         ],
         'helper' => [
+            'horses_count' => 'Number of horses in the transport. The surcharge applies from the second horse onwards, per the rate in Transport Settings.',
+            'extra_horse_fee_snapshot' => 'Frozen per-extra-horse rate (PLN/horse). Snapshot from the moment the quote was issued — later changes to Transport Settings do not modify historic quotes.',
             'customer_picker' => 'Pick an existing customer from the database (search by name / company / NIP) or leave empty and fill the fields manually below. Picking copies their data as a snapshot onto this quote.',
             'vehicle' => 'Powered vehicle only — trucks. Fuel consumption is calculated from this one.',
             'trailer' => 'Optional trailer (no engine) attached to the leading vehicle.',

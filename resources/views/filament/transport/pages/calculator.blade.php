@@ -47,6 +47,12 @@
                             <td class="px-4 py-2 text-gray-500">{{ __('transport/calculator.result.fuel_surcharge') }}</td>
                             <td class="px-4 py-2 text-right">{{ number_format($quotation->fuelSurcharge, 2, ',', ' ') }} {{ $quotation->currency }}</td>
                         </tr>
+                        @if ($quotation->extraHorseFeeTotal > 0)
+                            <tr>
+                                <td class="px-4 py-2 text-gray-500">{{ __('transport/calculator.result.extra_horse_fee', ['count' => $quotation->horsesCount - 1, 'rate' => number_format($quotation->extraHorseFeePerHead, 2, ',', ' '), 'currency' => $quotation->currency]) }}</td>
+                                <td class="px-4 py-2 text-right">{{ number_format($quotation->extraHorseFeeTotal, 2, ',', ' ') }} {{ $quotation->currency }}</td>
+                            </tr>
+                        @endif
                         @if ($quotation->minimumAdjustment > 0)
                             <tr>
                                 <td class="px-4 py-2 text-gray-500">{{ __('transport/calculator.result.minimum_adjustment') }}</td>

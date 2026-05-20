@@ -424,6 +424,7 @@ class TransporterP24QuoteServiceTest extends TestCase
             $t->time('preferred_time')->nullable();
             $t->boolean('round_trip')->default(false);
             $t->boolean('loaded')->default(false);
+            $t->unsignedTinyInteger('horses_count')->default(1);
             $t->string('vehicle_id', 26)->nullable();
             $t->string('driver_id', 26)->nullable();
             $t->decimal('distance_km', 10, 2)->nullable();
@@ -433,6 +434,7 @@ class TransporterP24QuoteServiceTest extends TestCase
             $t->decimal('rate_per_km', 10, 2);
             $t->decimal('base_cost', 10, 2);
             $t->decimal('fuel_surcharge', 10, 2);
+            $t->decimal('extra_horse_fee_snapshot', 10, 2)->default(0);
             $t->decimal('minimum_adjustment', 10, 2);
             $t->decimal('net_total', 10, 2);
             $t->decimal('vat_rate', 5, 2);

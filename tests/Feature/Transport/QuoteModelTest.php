@@ -6,6 +6,7 @@ namespace Tests\Feature\Transport;
 
 use App\Enums\QuoteStatus;
 use App\Models\Tenant\Quote;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -125,7 +126,7 @@ class QuoteModelTest extends TestCase
             'vat_rate' => 23, 'vat_amount' => 0, 'gross_total' => 0,
         ]);
 
-        $this->expectException(\Illuminate\Database\UniqueConstraintViolationException::class);
+        $this->expectException(UniqueConstraintViolationException::class);
 
         Quote::create([
             'id' => (string) Str::ulid(),
@@ -185,6 +186,7 @@ class QuoteModelTest extends TestCase
             $t->time('preferred_time')->nullable();
             $t->boolean('round_trip')->default(false);
             $t->boolean('loaded')->default(true);
+            $t->unsignedTinyInteger('horses_count')->default(1);
             $t->string('vehicle_id', 26)->nullable();
             $t->string('driver_id', 26)->nullable();
             $t->decimal('distance_km', 8, 2);
@@ -194,6 +196,7 @@ class QuoteModelTest extends TestCase
             $t->decimal('rate_per_km', 6, 2);
             $t->decimal('base_cost', 10, 2);
             $t->decimal('fuel_surcharge', 10, 2)->default(0);
+            $t->decimal('extra_horse_fee_snapshot', 10, 2)->default(0);
             $t->decimal('minimum_adjustment', 10, 2)->default(0);
             $t->decimal('net_total', 10, 2);
             $t->decimal('vat_rate', 4, 2);

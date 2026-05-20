@@ -24,6 +24,7 @@ return [
             'rate_per_km' => 'Stawka za km',
             'rate_per_km_loaded' => 'Stawka za km z koniem',
             'minimum_charge' => 'Minimalna opłata zlecenia',
+            'extra_horse_fee_default' => 'Dopłata za dodatkowego konia',
             'fuel_consumption_l_per_100km' => 'Spalanie (L/100 km)',
             'fuel_surcharge_enabled' => 'Włącz dopłatę paliwową',
             'fuel_base_price_pln' => 'Cena bazowa ON',
@@ -37,6 +38,7 @@ return [
         ],
         'helper' => [
             'rate_per_km_loaded' => 'Pozostaw puste jeśli taka sama jak bez koni.',
+            'extra_horse_fee_default' => 'Nalicza się od drugiego konia w górę. 0 = brak doliczenia (kalkulator nie różnicuje cen).',
             'fuel_surcharge_enabled' => 'Doliczamy różnicę pomiędzy ceną aktualną a bazową.',
             'routing_api_key' => 'Klucz API dla wybranego dostawcy. Przechowujemy bezpiecznie w bazie.',
             'default_payment_url_template' => 'Twój link do bramki — wspierane placeholdery: {quote_number}, {gross_total_pln}, {customer_name}. Auto-wstawiany do nowej oferty (możesz nadpisać per oferta).',

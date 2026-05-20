@@ -85,6 +85,7 @@ class Calculator extends Page implements HasForms
         'avoid_tolls' => false,
         'avoid_ferries' => false,
         'profile' => 'truck',
+        'horses_count' => 1,
     ];
 
     public ?Quotation $quotation = null;
@@ -199,6 +200,15 @@ class Calculator extends Page implements HasForms
                             ->label(__('transport/calculator.form.label.loaded'))
                             ->default(true)
                             ->inline(false),
+                        Forms\Components\TextInput::make('horses_count')
+                            ->label(__('transport/calculator.form.label.horses_count'))
+                            ->helperText(__('transport/calculator.form.helper.horses_count'))
+                            ->numeric()
+                            ->integer()
+                            ->minValue(1)
+                            ->maxValue(30)
+                            ->default(1)
+                            ->required(),
                         Forms\Components\Select::make('profile')
                             ->label(__('transport/calculator.form.label.profile'))
                             ->options([
@@ -267,6 +277,7 @@ class Calculator extends Page implements HasForms
                     avoidFerries: (bool) ($form['avoid_ferries'] ?? false),
                     mode: $mode,
                     routingProfile: (string) ($form['profile'] ?? 'truck'),
+                    horsesCount: max(1, (int) ($form['horses_count'] ?? 1)),
                 ),
             );
         } catch (RoutingException $e) {
@@ -326,6 +337,7 @@ class Calculator extends Page implements HasForms
             'round_trip' => (bool) ($form['round_trip'] ?? false),
             'calculation_mode' => (string) ($form['mode'] ?? CalculationMode::OneWay->value),
             'loaded' => (bool) ($form['loaded'] ?? true),
+            'horses_count' => max(1, (int) ($form['horses_count'] ?? 1)),
             'distance_km' => $q->distanceKm,
             'duration_seconds' => $q->durationSeconds,
             'routing_provider' => $q->routingProvider,
@@ -333,6 +345,7 @@ class Calculator extends Page implements HasForms
             'rate_per_km' => $q->rateUsed,
             'base_cost' => $q->baseCost,
             'fuel_surcharge' => $q->fuelSurcharge,
+            'extra_horse_fee_snapshot' => $q->extraHorseFeePerHead,
             'minimum_adjustment' => $q->minimumAdjustment,
             'net_total' => $q->netTotal,
             'vat_rate' => $q->vatRate,
