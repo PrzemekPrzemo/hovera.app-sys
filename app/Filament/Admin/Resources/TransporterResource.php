@@ -17,6 +17,7 @@ use App\Filament\Admin\Resources\TenantResource\RelationManagers\InvitationsRela
 use App\Filament\Admin\Resources\TenantResource\RelationManagers\MembershipsRelationManager;
 use App\Filament\Admin\Resources\TransporterResource\Pages;
 use App\Filament\Admin\Resources\TransporterResource\RelationManagers\TransporterDocumentsRelationManager;
+use App\Filament\Components\GusLookupAction;
 use App\Models\Central\Plan;
 use App\Models\Central\Tenant;
 use App\Services\MasterAuditLogger;
@@ -102,7 +103,10 @@ class TransporterResource extends Resource
                     Forms\Components\TextInput::make('legal_name')->maxLength(255),
                     Forms\Components\TextInput::make('tax_id')
                         ->label(__('admin/transporter.form.label.tax_id'))
-                        ->maxLength(32),
+                        ->maxLength(32)
+                        ->suffixAction(GusLookupAction::make([
+                            'name' => 'legal_name',
+                        ])),
                 ]),
 
             Forms\Components\Section::make(__('admin/transporter.form.section.verification'))

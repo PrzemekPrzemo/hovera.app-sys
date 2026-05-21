@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\App\Pages;
 
+use App\Filament\Components\GusLookupAction;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Central\Tenant;
 use App\Services\Tenancy\TenantRoleGate;
@@ -138,7 +139,13 @@ class TenantSettings extends Page implements HasForms
                         Forms\Components\TextInput::make('legal_name')
                             ->label(__('app/tenant_settings.form.label.legal_name'))->maxLength(255),
                         Forms\Components\TextInput::make('tax_id')
-                            ->label(__('app/tenant_settings.form.label.tax_id'))->maxLength(32),
+                            ->label(__('app/tenant_settings.form.label.tax_id'))->maxLength(32)
+                            ->suffixAction(GusLookupAction::make([
+                                'name' => 'legal_name',
+                                'street' => 'address_line1',
+                                'city' => 'city',
+                                'postal_code' => 'postal_code',
+                            ])),
                     ]),
 
                 Forms\Components\Section::make(__('app/tenant_settings.form.section.location'))
