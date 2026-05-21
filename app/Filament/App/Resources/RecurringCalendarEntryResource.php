@@ -33,7 +33,7 @@ class RecurringCalendarEntryResource extends Resource
     /** @return list<string> */
     protected static function allowedRoles(): array
     {
-        return TenantRoleGate::STABLE_OPS_STAFF;
+        return TenantRoleGate::RECURRING_CALENDAR_STAFF;
     }
 
     protected static ?string $model = RecurringCalendarEntry::class;
