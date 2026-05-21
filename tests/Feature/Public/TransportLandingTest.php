@@ -126,7 +126,7 @@ class TransportLandingTest extends TestCase
 
         $this->actingAs($user)
             ->get('/transport')
-            ->assertRedirect('/transport/leads');
+            ->assertRedirect('/transport/dashboard');
     }
 
     public function test_auth_stable_owner_redirected_to_inquiry_with_prefill(): void

@@ -64,6 +64,18 @@ class Invoice extends TenantModel
     }
 
     /**
+     * Alias dla `corrects()` używany przez `KsefInvoiceXmlBuilder`
+     * (FA(3) XML wymaga referencji do oryginalnej faktury w korekcie).
+     * Trzymamy oba żeby nie łamać pre-existing callers — `corrects`
+     * jest naturalną nazwą w kontekście "co koryguje", `correctsInvoice`
+     * trzyma się Ksef konwencji nazewniczej (`correctsInvoiceId`).
+     */
+    public function correctsInvoice(): BelongsTo
+    {
+        return $this->corrects();
+    }
+
+    /**
      * Korekty wystawione do tej faktury.
      */
     public function corrections(): HasMany
