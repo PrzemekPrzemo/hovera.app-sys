@@ -66,4 +66,27 @@ return [
             'created_at' => 'Dodany',
         ],
     ],
+
+    'action' => [
+        'import_from_registry' => [
+            'label' => 'Importuj z rejestru',
+            'modal_heading' => 'Dodaj konia z rejestru właścicieli',
+            'modal_description' => 'Wpisz email właściciela — system pokaże listę jego koni w centralnym rejestrze. Po wyborze wysyłamy request boardingu, właściciel zatwierdza w swoim panelu.',
+            'owner_email' => 'Email właściciela',
+            'owner_email_helper' => 'Email z którego właściciel zarejestrował się w Hovera.',
+            'horse' => 'Koń',
+            'horse_helper' => 'Lista koni należących do tego właściciela w centralnym rejestrze.',
+            'no_passport' => 'brak paszportu',
+            'submit' => 'Wyślij request boardingu',
+            'no_tenant' => 'Brak aktywnego kontekstu stajni — spróbuj ponownie.',
+            'horse_missing' => 'Wybrany koń nie istnieje w rejestrze (usunięty?).',
+            'success_title' => 'Request boardingu wysłany',
+            'success_body' => 'Konia „:name" oczekuje akceptacji właściciela. Status: :status.',
+            'lookup' => [
+                'user_not_found' => 'Brak właściciela z tym emailem w systemie. Sprawdź pisownię lub poproś go o rejestrację na /register/horse-owner.',
+                'no_horses' => 'Właściciel :email istnieje, ale nie ma jeszcze koni w centralnym rejestrze.',
+                'found' => 'Znaleziono :count konia/koni — wybierz z listy poniżej.',
+            ],
+        ],
+    ],
 ];

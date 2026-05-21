@@ -66,4 +66,27 @@ return [
             'created_at' => 'Added',
         ],
     ],
+
+    'action' => [
+        'import_from_registry' => [
+            'label' => 'Import from registry',
+            'modal_heading' => 'Add a horse from the owners registry',
+            'modal_description' => 'Enter the owner email — the system will list their horses from the central registry. After picking one we send a boarding request, which the owner accepts in their panel.',
+            'owner_email' => 'Owner email',
+            'owner_email_helper' => 'Email the owner used to register on Hovera.',
+            'horse' => 'Horse',
+            'horse_helper' => 'List of horses owned by this account in the central registry.',
+            'no_passport' => 'no passport',
+            'submit' => 'Send boarding request',
+            'no_tenant' => 'No active stable context — try again.',
+            'horse_missing' => 'The selected horse no longer exists in the registry.',
+            'success_title' => 'Boarding request sent',
+            'success_body' => 'Horse ":name" is waiting for the owner to accept. Status: :status.',
+            'lookup' => [
+                'user_not_found' => 'No owner with this email. Check spelling or ask them to register at /register/horse-owner.',
+                'no_horses' => 'Owner :email exists but has no horses in the central registry yet.',
+                'found' => 'Found :count horse(s) — pick from the list below.',
+            ],
+        ],
+    ],
 ];
