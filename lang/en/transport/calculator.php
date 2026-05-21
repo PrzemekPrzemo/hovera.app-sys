@@ -83,4 +83,13 @@ return [
         'no_tenant' => 'No active tenant — please log in again.',
         'unknown' => 'Unexpected error. Please try again.',
     ],
+
+    'live' => [
+        'title' => 'Live preview',
+        'hint' => 'Updates automatically as you edit',
+        'loading' => 'Calculating…',
+        'missing' => 'Enter addresses to see live price preview',
+        'error' => 'Could not refresh the preview.',
+        'currency_fallback' => 'PLN',
+    ],
 ];

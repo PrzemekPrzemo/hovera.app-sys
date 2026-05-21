@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\PlacesAutocompleteController;
+use App\Http\Controllers\Api\Transport\CalculatorPreviewController;
 use App\Http\Controllers\Api\TransportInquiryApiController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DeviceController;
@@ -50,6 +51,28 @@ Route::middleware('throttle:60,1')
     ->group(function () {
         Route::get('/suggest', [PlacesAutocompleteController::class, 'suggest'])
             ->name('suggest');
+    });
+
+/*
+ * Live preview kalkulatora wyceny — JS w Filament Calculator page bije
+ * tutaj z debounce 500ms po każdej zmianie pola, żeby sticky summary
+ * card mogła pokazywać aktualną cenę bez submit'u formy. Patrz
+ * docs/MARKETPLACE-ROADMAP.md "Calculator live UX".
+ *
+ * Auth: Sanctum SPA mode (session cookie z `/app` panel login).
+ * EnsureFrontendRequestsAreStateful (middleware api) wstrzykuje web
+ * middleware dla stateful requestów — HydrateTenantConnectionFromSession
+ * ustawi tenant DB z `current_tenant_id` w session.
+ *
+ * Throttle: 60 req/min/user — debounce 500ms po stronie JS realnie
+ * trzyma to w okolicach 5–10/min/user.
+ */
+Route::middleware(['auth:sanctum', 'throttle:60,1'])
+    ->prefix('transport/calculator')
+    ->name('api.transport.calculator.')
+    ->group(function () {
+        Route::post('/preview', CalculatorPreviewController::class)
+            ->name('preview');
     });
 
 // Public auth endpoints (no tenant context yet — user picks tenant after login).
