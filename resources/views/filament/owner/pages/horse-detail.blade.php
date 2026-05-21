@@ -188,8 +188,8 @@
         </section>
     @endif
 
-    {{-- Linki do sub-sekcji. Fazy 2-4 + galeria z Fazy 5 gotowe. --}}
-    <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {{-- Linki do sub-sekcji — wszystkie 5 z Faz 2-5 gotowe. --}}
+    <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <a
             href="{{ \App\Filament\Owner\Pages\HorseTimeline::getUrl(['centralHorseId' => $snapshot->centralHorseId]) }}"
             class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 transition hover:border-primary-300 hover:bg-primary-50 dark:border-gray-800 dark:bg-gray-900/40 dark:hover:bg-primary-900/20"
@@ -218,6 +218,16 @@
             <div>
                 <div class="font-medium">{{ __('owner/photos.page.title') }}</div>
                 <div class="text-xs text-gray-500">{{ __('owner/horse_detail.upcoming.files') }}</div>
+            </div>
+        </a>
+        <a
+            href="{{ \App\Filament\Owner\Pages\HorseDocuments::getUrl(['centralHorseId' => $snapshot->centralHorseId]) }}"
+            class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 transition hover:border-primary-300 hover:bg-primary-50 dark:border-gray-800 dark:bg-gray-900/40 dark:hover:bg-primary-900/20"
+        >
+            <x-filament::icon icon="heroicon-o-folder" class="h-6 w-6 text-primary-600 dark:text-primary-400" />
+            <div>
+                <div class="font-medium">{{ __('owner/documents.page.title') }}</div>
+                <div class="text-xs text-gray-500">{{ __('owner/documents.page.empty_description') }}</div>
             </div>
         </a>
         <a
