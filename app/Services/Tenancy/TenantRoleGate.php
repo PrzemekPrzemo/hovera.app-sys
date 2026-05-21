@@ -51,8 +51,17 @@ class TenantRoleGate
     /** Horses, health, calendar — vet sees these to review patients. */
     public const HORSE_AND_CARE_STAFF = ['owner', 'admin', 'manager', 'instructor', 'employee', 'vet', 'viewer'];
 
-    /** Boxes, buildings, arenas, recurring sessions — no vet, no isolated employee. */
+    /** Boxes, buildings, arenas — no vet, no isolated employee. */
     public const STABLE_OPS_STAFF = ['owner', 'admin', 'manager', 'instructor', 'viewer'];
+
+    /**
+     * Recurring calendar entries — STABLE_OPS_STAFF + `vet`.
+     * Wet musi móc planować długoterminowe sesje rehabilitacyjne post-injury
+     * (np. 6 tygodni codziennej longy w określonej arenie) bez konieczności
+     * proszenia managera o utworzenie cyklu. Single-use entries pozostają
+     * dostępne dla wszystkich z HORSE_AND_CARE_STAFF.
+     */
+    public const RECURRING_CALENDAR_STAFF = ['owner', 'admin', 'manager', 'instructor', 'vet', 'viewer'];
 
     /** Specialist directory + treatment templates — vet uses both. */
     public const SPECIALIST_STAFF = ['owner', 'admin', 'manager', 'vet', 'viewer'];
