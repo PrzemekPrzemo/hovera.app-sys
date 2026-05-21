@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\Owner\InvoicesController as OwnerInvoicesController;
+use App\Http\Controllers\Api\Owner\MessagesController as OwnerMessagesController;
 use App\Http\Controllers\Api\PlacesAutocompleteController;
 use App\Http\Controllers\Api\Transport\CalculatorPreviewController;
 use App\Http\Controllers\Api\TransportInquiryApiController;
@@ -103,6 +104,18 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])
             ->name('invoices.pdf');
         Route::post('/invoices/{stableTenantId}/{invoiceId}/pay', [OwnerInvoicesController::class, 'pay'])
             ->name('invoices.pay');
+
+        // Wiadomości Owner ↔ Stable (Faza 4). Threading per koń + read
+        // receipts. Attachments JSON na razie placeholder (storage layer
+        // przyjdzie w PR 4.2). Patrz docs/OWNER-STABLE-ROADMAP.md.
+        Route::get('/horses/{centralHorseId}/messages', [OwnerMessagesController::class, 'indexForHorse'])
+            ->name('horses.messages.index');
+        Route::post('/horses/{centralHorseId}/messages', [OwnerMessagesController::class, 'send'])
+            ->name('horses.messages.send');
+        Route::post('/messages/{stableTenantId}/{messageId}/read', [OwnerMessagesController::class, 'markRead'])
+            ->name('messages.read');
+        Route::get('/messages/unread-count', [OwnerMessagesController::class, 'unreadCount'])
+            ->name('messages.unread_count');
     });
 
 // Public auth endpoints (no tenant context yet — user picks tenant after login).
