@@ -69,5 +69,7 @@ return [
         'step_transport' => 'Wystaw pierwsze zlecenie transportu',
         'step_documents' => 'Wgraj dokumenty (paszporty, szczepienia)',
         'open_login' => 'Otwórz logowanie',
+        'invite_origin_heading' => 'Stajnia :stable czeka',
+        'invite_origin_body' => 'Zostałeś zaproszony przez stajnię „:stable" do uruchomienia pensjonatu. Po zalogowaniu dodaj swojego konia — wtedy stajnia będzie mogła wysłać Ci request o boarding (lub Ty wyślesz pierwszy z panelu).',
     ],
 ];
