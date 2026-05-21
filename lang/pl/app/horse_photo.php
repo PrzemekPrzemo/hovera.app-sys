@@ -16,8 +16,13 @@ return [
             'caption' => 'Podpis',
             'sort_order' => 'Kolejność',
             'size' => 'Rozmiar',
+            'uploaded_by' => 'Dodał',
             'created_at' => 'Dodano',
         ],
+    ],
+    'uploaded_by' => [
+        'stable' => 'Stajnia',
+        'client' => 'Właściciel',
     ],
     'action' => [
         'upload' => 'Dodaj zdjęcie',

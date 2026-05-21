@@ -16,8 +16,13 @@ return [
             'caption' => 'Caption',
             'sort_order' => 'Order',
             'size' => 'Size',
+            'uploaded_by' => 'Uploaded by',
             'created_at' => 'Added',
         ],
+    ],
+    'uploaded_by' => [
+        'stable' => 'Stable',
+        'client' => 'Owner',
     ],
     'action' => [
         'upload' => 'Upload photo',
