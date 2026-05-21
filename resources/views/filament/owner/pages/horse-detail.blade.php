@@ -201,6 +201,16 @@
             </div>
         </a>
         <a
+            href="{{ \App\Filament\Owner\Pages\HorseCare::getUrl(['centralHorseId' => $snapshot->centralHorseId]) }}"
+            class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 transition hover:border-primary-300 hover:bg-primary-50 dark:border-gray-800 dark:bg-gray-900/40 dark:hover:bg-primary-900/20"
+        >
+            <x-filament::icon icon="heroicon-o-scale" class="h-6 w-6 text-primary-600 dark:text-primary-400" />
+            <div>
+                <div class="font-medium">{{ __('owner/horse_care.page.title') }}</div>
+                <div class="text-xs text-gray-500">{{ __('owner/horse_care.feeding.note') }}</div>
+            </div>
+        </a>
+        <a
             href="{{ \App\Filament\Owner\Pages\HorseMessages::getUrl(['centralHorseId' => $snapshot->centralHorseId]) }}"
             class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 transition hover:border-primary-300 hover:bg-primary-50 dark:border-gray-800 dark:bg-gray-900/40 dark:hover:bg-primary-900/20"
         >
