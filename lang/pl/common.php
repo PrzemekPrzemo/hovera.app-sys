@@ -66,4 +66,12 @@ return [
     'all' => 'Wszystkie',
     'or' => 'lub',
     'dismiss' => 'Ukryj',
+
+    'gus_lookup' => [
+        'label' => 'Pobierz z GUS',
+        'invalid_nip' => 'NIP jest niepoprawny (10 cyfr + suma kontrolna).',
+        'not_found' => 'Nie znaleziono firmy o tym NIP. Sprawdź pisownię lub uzupełnij ręcznie.',
+        'success' => 'Dane pobrane',
+        'success_body' => 'Źródło: :sources. Sprawdź adres i zaktualizuj jeśli potrzeba.',
+    ],
 ];

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\App\Pages;
 
 use App\Enums\InvoiceKind;
+use App\Filament\Components\GusLookupAction;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Services\Invoicing\InvoiceNumberGenerator;
 use App\Services\Tenancy\TenantRoleGate;
@@ -132,7 +133,13 @@ class InvoicingSettings extends Page implements HasForms
                         Forms\Components\TextInput::make('seller_name')
                             ->label(__('app/invoicing_settings.form.label.seller_name'))->required(),
                         Forms\Components\TextInput::make('seller_nip')
-                            ->label(__('app/invoicing_settings.form.label.seller_nip'))->maxLength(16),
+                            ->label(__('app/invoicing_settings.form.label.seller_nip'))->maxLength(16)
+                            ->suffixAction(GusLookupAction::make([
+                                'name' => 'seller_name',
+                                'street' => 'seller_address',
+                                'city' => 'seller_city',
+                                'postal_code' => 'seller_postal_code',
+                            ], sourceField: 'seller_nip')),
                         Forms\Components\TextInput::make('seller_address')
                             ->label(__('app/invoicing_settings.form.label.seller_address'))->maxLength(255),
                         Forms\Components\TextInput::make('seller_postal_code')

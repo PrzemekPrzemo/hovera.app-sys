@@ -66,4 +66,12 @@ return [
     'all' => 'All',
     'or' => 'or',
     'dismiss' => 'Dismiss',
+
+    'gus_lookup' => [
+        'label' => 'Fetch from GUS',
+        'invalid_nip' => 'NIP is invalid (10 digits + checksum).',
+        'not_found' => 'No company found for this NIP. Check the spelling or fill in manually.',
+        'success' => 'Data fetched',
+        'success_body' => 'Source: :sources. Verify the address and adjust if needed.',
+    ],
 ];

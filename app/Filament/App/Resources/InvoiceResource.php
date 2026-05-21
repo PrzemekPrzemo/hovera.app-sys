@@ -9,6 +9,7 @@ use App\Actions\Invoicing\IssueInvoice;
 use App\Enums\InvoiceKind;
 use App\Enums\InvoiceStatus;
 use App\Filament\App\Resources\InvoiceResource\Pages;
+use App\Filament\Components\GusLookupAction;
 use App\Filament\Components\PriceInput;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Client;
@@ -118,7 +119,14 @@ class InvoiceResource extends Resource
                     Forms\Components\TextInput::make('buyer_name')
                         ->label(__('app/invoice.form.label.buyer_name'))->required(),
                     Forms\Components\TextInput::make('buyer_nip')
-                        ->label(__('app/invoice.form.label.buyer_nip')),
+                        ->label(__('app/invoice.form.label.buyer_nip'))
+                        ->suffixAction(GusLookupAction::make([
+                            'name' => 'buyer_name',
+                            'street' => 'buyer_address',
+                            'city' => 'buyer_city',
+                            'postal_code' => 'buyer_postal_code',
+                            'country' => 'buyer_country',
+                        ], sourceField: 'buyer_nip')),
                     Forms\Components\TextInput::make('buyer_address')
                         ->label(__('app/invoice.form.label.buyer_address')),
                     Forms\Components\TextInput::make('buyer_postal_code')

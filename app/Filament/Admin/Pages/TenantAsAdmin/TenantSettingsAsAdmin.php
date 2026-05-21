@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Admin\Pages\TenantAsAdmin;
 
+use App\Filament\Components\GusLookupAction;
 use App\Models\Central\Tenant;
 use App\Services\MasterAuditLogger;
 use App\Tenancy\TenantManager;
@@ -110,7 +111,8 @@ class TenantSettingsAsAdmin extends Page implements HasForms
                             ->maxLength(255),
                         Forms\Components\TextInput::make('tax_id')
                             ->label(__('admin/back-office.settings.label.tax_id'))
-                            ->maxLength(32),
+                            ->maxLength(32)
+                            ->suffixAction(GusLookupAction::make(['name' => 'legal_name'])),
                     ]),
 
                 Forms\Components\Section::make(__('admin/back-office.settings.section.branding'))

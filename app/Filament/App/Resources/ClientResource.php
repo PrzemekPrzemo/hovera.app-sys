@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\ClientResource\Pages;
+use App\Filament\Components\GusLookupAction;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\Client;
 use App\Notifications\ClientPortalMagicLinkNotification;
-use App\Services\CompanyLookup\CompanyLookupService;
-use App\Services\CompanyLookup\GusApiService;
+use App\Services\Integrations\LiveJumping\LiveJumpingClient;
+use App\Services\Integrations\LiveJumping\LiveJumpingFeatureGate;
 use App\Services\Portal\ClientPortalAuth;
 use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -23,6 +25,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\HtmlString;
 
 class ClientResource extends Resource
 {
@@ -106,44 +109,10 @@ class ClientResource extends Resource
                     Forms\Components\TextInput::make('tax_id')
                         ->label(__('app/client.form.label.tax_id'))
                         ->maxLength(32)
-                        ->suffixAction(
-                            Forms\Components\Actions\Action::make('lookupGus')
-                                ->label(__('app/client.form.gus.lookup_label'))
-                                ->icon('heroicon-m-magnifying-glass')
-                                ->visible(fn () => app(GusApiService::class)->isConfigured())
-                                ->action(function (Forms\Get $get, Forms\Set $set) {
-                                    $nip = (string) $get('tax_id');
-                                    if (! CompanyLookupService::isValidNip($nip)) {
-                                        Notification::make()
-                                            ->title(__('app/client.form.gus.invalid_nip'))
-                                            ->danger()->send();
-
-                                        return;
-                                    }
-
-                                    $data = app(CompanyLookupService::class)->lookupByNip($nip);
-                                    if ($data === null) {
-                                        Notification::make()
-                                            ->title(__('app/client.form.gus.not_found'))
-                                            ->warning()->send();
-
-                                        return;
-                                    }
-
-                                    $set('name', (string) ($data['name'] ?? ''));
-                                    $set('street', trim(($data['street'] ?? '').' '
-                                        .($data['building'] ?? '')
-                                        .($data['apartment'] ? '/'.$data['apartment'] : '')));
-                                    $set('city', (string) ($data['city'] ?? ''));
-                                    $set('postal_code', (string) ($data['postal_code'] ?? ''));
-                                    $set('country', 'PL');
-                                    $set('type', 'organisation');
-
-                                    Notification::make()
-                                        ->title(__('app/client.form.gus.success'))
-                                        ->success()->send();
-                                }),
-                        ),
+                        ->suffixAction(GusLookupAction::make()),
+                    // Po pobraniu GUS klient jest organizacją — observer w
+                    // CreateClient mógłby ustawić type='organisation' automatycznie,
+                    // ale na razie user może to zrobić ręcznie poniżej.
                 ]),
 
             Forms\Components\Section::make(__('app/client.form.section.armir'))
@@ -200,7 +169,7 @@ class ClientResource extends Resource
                 ->description(__('app/client.form.section.sport_help'))
                 ->collapsed()
                 ->icon('heroicon-o-trophy')
-                ->visible(fn () => app(\App\Services\Integrations\LiveJumping\LiveJumpingFeatureGate::class)->enabled())
+                ->visible(fn () => app(LiveJumpingFeatureGate::class)->enabled())
                 ->schema([
                     Forms\Components\TextInput::make('livejumping_profile_url')
                         ->label(__('app/client.form.label.livejumping_profile_url'))
@@ -210,17 +179,17 @@ class ClientResource extends Resource
                         ->placeholder('https://livejumping.com/rider/...'),
                     Forms\Components\Placeholder::make('livejumping_palmares')
                         ->label(__('app/client.form.label.livejumping_palmares'))
-                        ->content(function (\Filament\Forms\Get $get): \Illuminate\Support\HtmlString {
+                        ->content(function (Get $get): HtmlString {
                             $url = (string) $get('livejumping_profile_url');
                             if ($url === '') {
-                                return new \Illuminate\Support\HtmlString(
+                                return new HtmlString(
                                     '<span class="text-gray-500 text-sm">'.e(__('app/client.form.helper.livejumping_no_profile')).'</span>'
                                 );
                             }
-                            $profile = app(\App\Services\Integrations\LiveJumping\LiveJumpingClient::class)
+                            $profile = app(LiveJumpingClient::class)
                                 ->getRiderProfile($url);
                             if ($profile === null) {
-                                return new \Illuminate\Support\HtmlString(
+                                return new HtmlString(
                                     '<span class="text-amber-600 text-sm">'.e(__('app/client.form.helper.livejumping_fetch_failed')).'</span>'
                                 );
                             }
@@ -234,7 +203,7 @@ class ClientResource extends Resource
     /**
      * @param  array<string,mixed>  $profile
      */
-    private static function renderRiderPalmares(array $profile): \Illuminate\Support\HtmlString
+    private static function renderRiderPalmares(array $profile): HtmlString
     {
         $stats = (array) ($profile['stats'] ?? []);
         $recent = (array) ($profile['recent_results'] ?? []);
@@ -277,7 +246,7 @@ class ClientResource extends Resource
         }
         $html .= '</div>';
 
-        return new \Illuminate\Support\HtmlString($html);
+        return new HtmlString($html);
     }
 
     public static function table(Table $table): Table
