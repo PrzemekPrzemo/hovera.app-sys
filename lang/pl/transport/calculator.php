@@ -55,6 +55,10 @@ return [
         'calculated' => 'Wycena obliczona.',
         'failed' => 'Nie udało się obliczyć wyceny',
         'save_as_quote' => 'Zapisz jako ofertę',
+        'save_as_quote_inline' => 'Zapisz i przejdź do edycji',
+        'saved_as_quote_inline_title' => 'Oferta utworzona',
+        'saved_as_quote_inline_body' => 'Oferta :number została zapisana. Uzupełnij klienta i dane kontraktu, aby ją wysłać.',
+        'saved_as_quote_inline_placeholder_customer' => '(do uzupełnienia)',
     ],
 
     'notify' => [
