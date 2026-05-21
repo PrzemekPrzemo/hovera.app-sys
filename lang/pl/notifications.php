@@ -84,6 +84,14 @@ return [
         'action' => 'Otwórz wiadomość',
     ],
 
+    'owner_message_to_stable' => [
+        'subject_default' => 'Nowa wiadomość od właściciela — :horse',
+        'subject_with_subject' => ':subject (:horse)',
+        'line_intro' => 'Właściciel **:owner** wysłał wiadomość dotyczącą konia **:horse**.',
+        'attachment_count' => '📎 Załączników: :count',
+        'action' => 'Zobacz konia w panelu',
+    ],
+
     'invoice_issued' => [
         'subject' => ':kind :number — :tenant',
         'line_intro' => 'Wystawiliśmy :kind **:number** ze stajni **:tenant**.',

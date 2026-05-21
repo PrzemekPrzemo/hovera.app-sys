@@ -83,6 +83,14 @@ return [
         'action' => 'Open message',
     ],
 
+    'owner_message_to_stable' => [
+        'subject_default' => 'New message from horse owner — :horse',
+        'subject_with_subject' => ':subject (:horse)',
+        'line_intro' => 'Owner **:owner** sent a message about horse **:horse**.',
+        'attachment_count' => '📎 Attachments: :count',
+        'action' => 'Open horse in panel',
+    ],
+
     'invoice_issued' => [
         'subject' => ':kind :number — :tenant',
         'line_intro' => 'We issued :kind **:number** from **:tenant**.',

@@ -8,13 +8,16 @@ use App\Domain\Messages\Owner\Snapshots\HorseMessageSnapshot;
 use App\Models\Central\CentralHorseRegistry;
 use App\Models\Central\HorseBoardingAssignment;
 use App\Models\Central\Tenant;
+use App\Models\Central\TenantMembership;
 use App\Models\Central\User;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\HorseMessage;
+use App\Notifications\OwnerSentMessageToStableNotification;
 use App\Tenancy\TenantManager;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -111,7 +114,9 @@ class OwnerMessagesService
             throw new RuntimeException("Stable tenant {$assignment->stable_tenant_id} not found");
         }
 
-        return $this->tenants->execute($stableTenant, function () use ($owner, $centralHorseId, $subject, $body, $attachments, $stableTenant): HorseMessageSnapshot {
+        // Wewnątrz execute: tworzymy message + zbieramy horse name dla
+        // notification payload. snapshot + horse name zwracamy razem.
+        $result = $this->tenants->execute($stableTenant, function () use ($owner, $centralHorseId, $subject, $body, $attachments, $stableTenant): array {
             $horse = Horse::query()->where('central_horse_id', $centralHorseId)->first();
             if ($horse === null) {
                 throw new RuntimeException("Horse central_id={$centralHorseId} not found in stable DB");
@@ -139,8 +144,96 @@ class OwnerMessagesService
                 'sent_at' => now(),
             ]);
 
-            return $this->mapToSnapshot($message, $stableTenant);
+            return [
+                'snapshot' => $this->mapToSnapshot($message, $stableTenant),
+                'horse_id' => (string) $horse->id,
+                'horse_name' => (string) $horse->name,
+            ];
         });
+
+        // Po execute connection wraca na central (lub null) — dispatch
+        // notifications (database + mail) do team members stajni.
+        // Database notifications zapisują do `notifications` table w
+        // central DB, dlatego MUSI być poza execute. Patrz Faza 4 PR 4.4.
+        $this->notifyStableTeam(
+            $stableTenant,
+            $owner,
+            $result['horse_id'],
+            $result['horse_name'],
+            $subject,
+            $body,
+            $attachments,
+        );
+
+        return $result['snapshot'];
+    }
+
+    /**
+     * Dispatchuje OwnerSentMessageToStableNotification do wszystkich
+     * tenant team members z rolami operator/owner/admin/manager. Idzie
+     * po central DB (TenantMembership + User), więc MUSI być wywołane
+     * poza TenantManager::execute (gdy connection już wrócił).
+     *
+     * Soft fail — gdy notification dispatch padnie (np. mail config error),
+     * logujemy ale send() już zakończony, message zapisany. Nie chcemy
+     * cofać tylko dlatego że SMTP padło.
+     *
+     * @param  array<int, array<string,mixed>>  $attachments
+     */
+    private function notifyStableTeam(
+        Tenant $stable,
+        User $owner,
+        string $stableHorseId,
+        string $horseName,
+        ?string $subject,
+        string $body,
+        array $attachments,
+    ): void {
+        try {
+            $teamUserIds = TenantMembership::query()
+                ->where('tenant_id', $stable->id)
+                ->whereIn('role', ['owner', 'admin', 'operator', 'manager'])
+                ->whereNull('revoked_at')
+                ->pluck('user_id')
+                ->all();
+
+            if ($teamUserIds === []) {
+                return;
+            }
+
+            $teamUsers = User::query()->whereIn('id', $teamUserIds)->get();
+            if ($teamUsers->isEmpty()) {
+                return;
+            }
+
+            $notification = new OwnerSentMessageToStableNotification(
+                ownerName: (string) ($owner->name ?? $owner->email),
+                horseName: $horseName,
+                stableHorseId: $stableHorseId,
+                subject: $subject,
+                bodyPreview: $this->truncate($body, 280),
+                attachmentCount: count($attachments),
+                stableHorseUrl: $this->stableHorseUrl($stable, $stableHorseId),
+            );
+
+            NotificationFacade::send($teamUsers, $notification);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    private function truncate(string $text, int $limit): string
+    {
+        $text = trim(preg_replace('/\s+/', ' ', $text) ?? '');
+
+        return mb_strlen($text) <= $limit ? $text : mb_substr($text, 0, $limit - 1).'…';
+    }
+
+    private function stableHorseUrl(Tenant $stable, string $stableHorseId): string
+    {
+        // /app/horses/{id} — stable panel route. Slug stable panel'u to
+        // domyślnie 'app' (patrz AppPanelProvider).
+        return url(sprintf('/app/horses/%s', $stableHorseId));
     }
 
     /**
