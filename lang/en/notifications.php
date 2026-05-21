@@ -156,4 +156,24 @@ return [
         ],
         'action' => 'Open timeline',
     ],
+
+    'boarding_requested' => [
+        'subject' => 'Stable :stable invites :horse to boarding',
+        'line_intro' => 'Stable **:stable** would like to start boarding for horse **:horse**. It is waiting for your approval.',
+        'line_action' => 'Open the owner panel, review the request and accept or decline.',
+        'action' => 'View invitations',
+    ],
+
+    'boarding_accepted' => [
+        'subject' => ':horse boarding accepted',
+        'line_intro' => 'Owner **:owner** accepted boarding for horse **:horse** at your stable.',
+        'line_next_step' => 'The horse now appears in your list — you can assign a box and set up service pricing.',
+        'action' => 'View horse',
+    ],
+
+    'boarding_rejected' => [
+        'subject' => ':horse — boarding declined',
+        'line_intro' => 'Owner **:owner** declined the boarding request for horse **:horse** with the reason:',
+        'line_contact' => 'Contact the owner directly (:email) if clarification is needed.',
+    ],
 ];

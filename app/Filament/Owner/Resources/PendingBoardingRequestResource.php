@@ -8,7 +8,11 @@ use App\Domain\Horses\HorseRegistrySyncService;
 use App\Filament\Owner\Resources\PendingBoardingRequestResource\Pages;
 use App\Models\Central\HorseBoardingAssignment;
 use App\Models\Central\Tenant;
+use App\Models\Central\TenantMembership;
+use App\Models\Central\User;
 use App\Models\Tenant\Horse;
+use App\Notifications\Boarding\HorseBoardingAcceptedNotification;
+use App\Notifications\Boarding\HorseBoardingRejectedNotification;
 use App\Tenancy\TenantManager;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -187,6 +191,20 @@ class PendingBoardingRequestResource extends Resource
             ]);
         }
 
+        // PR 5 — dispatch HorseBoardingAcceptedNotification do team
+        // members stajni (owner/admin/manager). Soft-fail.
+        self::dispatchStableTeamNotification(
+            $stable,
+            new HorseBoardingAcceptedNotification(
+                assignmentId: (string) $assignment->id,
+                ownerName: (string) (Auth::user()?->name ?? Auth::user()?->email ?? '—'),
+                ownerEmail: (string) (Auth::user()?->email ?? '—'),
+                centralHorseId: (string) $assignment->central_horse_id,
+                horseName: (string) ($registry?->name ?? '—'),
+                stableHorseUrl: url('/app/horses'),
+            ),
+        );
+
         Notification::make()->success()
             ->title(__('owner/pending_boarding.action.accept.success'))
             ->body(__('owner/pending_boarding.action.accept.success_body', [
@@ -208,9 +226,60 @@ class PendingBoardingRequestResource extends Resource
             'reason' => $reason,
         ]);
 
+        // PR 5 — dispatch HorseBoardingRejectedNotification do team members
+        // stajni. Soft-fail.
+        $stable = Tenant::query()->find($assignment->stable_tenant_id);
+        if ($stable !== null) {
+            self::dispatchStableTeamNotification(
+                $stable,
+                new HorseBoardingRejectedNotification(
+                    assignmentId: (string) $assignment->id,
+                    ownerName: (string) (Auth::user()?->name ?? Auth::user()?->email ?? '—'),
+                    ownerEmail: (string) (Auth::user()?->email ?? '—'),
+                    centralHorseId: (string) $assignment->central_horse_id,
+                    horseName: (string) ($assignment->horse?->name ?? '—'),
+                    reason: $reason,
+                ),
+            );
+        }
+
         Notification::make()->success()
             ->title(__('owner/pending_boarding.action.reject.success'))
             ->send();
+    }
+
+    /**
+     * Dispatch notification do team members stajni (role: owner/admin/
+     * manager). Soft-fail: SMTP padu nie blokuje owner UI.
+     */
+    private static function dispatchStableTeamNotification(Tenant $stable, \Illuminate\Notifications\Notification $notification): void
+    {
+        try {
+            $teamUserIds = TenantMembership::query()
+                ->where('tenant_id', $stable->id)
+                ->whereIn('role', ['owner', 'admin', 'manager'])
+                ->whereNull('revoked_at')
+                ->pluck('user_id')
+                ->all();
+
+            if ($teamUserIds === []) {
+                return;
+            }
+
+            $users = User::query()->whereIn('id', $teamUserIds)->get();
+            if ($users->isEmpty()) {
+                return;
+            }
+
+            \Illuminate\Support\Facades\Notification::send($users, $notification);
+        } catch (\Throwable $e) {
+            report($e);
+            Log::warning('Boarding stable team notification dispatch failed (soft-fail)', [
+                'stable_tenant_id' => $stable->id,
+                'notification' => $notification::class,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public static function canCreate(): bool
