@@ -30,6 +30,7 @@ return [
             'type' => [
                 'stable' => 'Equestrian stable',
                 'transporter' => 'Transport company',
+                'horse_owner' => 'Horse owner',
             ],
         ],
         'helper' => [
