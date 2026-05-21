@@ -13,6 +13,11 @@ return [
         'unsupported_mime' => 'Niewspierany typ pliku ":mime" (":name"). Dozwolone: zdjęcia, PDF, wideo MP4/MOV.',
     ],
 
+    'receipt' => [
+        'sent_pending_read' => 'Wysłano',
+        'read_by_stable_at' => 'Przeczytane przez stajnię · :time',
+    ],
+
     'page' => [
         'title' => 'Wiadomości ze stajnią',
         'breadcrumb' => 'Wiadomości',

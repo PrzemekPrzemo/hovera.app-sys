@@ -13,6 +13,11 @@ return [
         'unsupported_mime' => 'Unsupported file type ":mime" (":name"). Allowed: images, PDF, MP4/MOV video.',
     ],
 
+    'receipt' => [
+        'sent_pending_read' => 'Sent',
+        'read_by_stable_at' => 'Read by stable · :time',
+    ],
+
     'page' => [
         'title' => 'Messages with stable',
         'breadcrumb' => 'Messages',
