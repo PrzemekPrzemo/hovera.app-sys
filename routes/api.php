@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\Owner\DocumentsController as OwnerDocumentsController;
 use App\Http\Controllers\Api\Owner\InvoicesController as OwnerInvoicesController;
 use App\Http\Controllers\Api\Owner\MessagesController as OwnerMessagesController;
 use App\Http\Controllers\Api\Owner\PhotosController as OwnerPhotosController;
@@ -136,6 +137,19 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])
             ->name('photos.download');
         Route::delete('/photos/{stableTenantId}/{photoId}', [OwnerPhotosController::class, 'destroy'])
             ->name('photos.destroy');
+
+        // Faza 5 — dokumenty konia (paszport, kontrakt, ubezpieczenie, etc.).
+        // Analogiczny pattern do photos: list (oba kierunki), upload owner-only
+        // z multipart + kind enum + valid_from/until, stream download, soft
+        // delete swoich. Większe limity (25 MB) i Office MIME types.
+        Route::get('/horses/{centralHorseId}/documents', [OwnerDocumentsController::class, 'index'])
+            ->name('horses.documents.index');
+        Route::post('/horses/{centralHorseId}/documents', [OwnerDocumentsController::class, 'upload'])
+            ->name('horses.documents.upload');
+        Route::get('/documents/{stableTenantId}/{documentId}/download', [OwnerDocumentsController::class, 'download'])
+            ->name('documents.download');
+        Route::delete('/documents/{stableTenantId}/{documentId}', [OwnerDocumentsController::class, 'destroy'])
+            ->name('documents.destroy');
     });
 
 // Public auth endpoints (no tenant context yet — user picks tenant after login).
