@@ -13,6 +13,7 @@ use App\Models\Tenant\Payment;
 use App\Observers\HorseObserver;
 use App\Observers\PaymentObserver;
 use App\Observers\Tenant\HealthRecordObserver;
+use App\Observers\Tenant\HorseFieldChangeObserver;
 use App\Observers\Tenant\InvoiceObserver;
 use App\Services\Billing\PayUService;
 use App\Services\Billing\Przelewy24Service;
@@ -118,6 +119,11 @@ class AppServiceProvider extends ServiceProvider
         // Horse observer: synchronizuje historię BoxAssignment gdy
         // Filament resource zmienia horses.box_id przez form save.
         Horse::observe(HorseObserver::class);
+
+        // Faza 6 PR 6.3 — approval flow dla zmian kluczowych pól konia
+        // (name / passport_number / microchip). Stable updated → tworzy
+        // pending request, owner accept/reject w panel'u.
+        Horse::observe(HorseFieldChangeObserver::class);
 
         // Faza 6 PR 6.1 — Owner notifications hub:
         //   * Invoice issued → NewInvoiceForOwner (database + mail)
