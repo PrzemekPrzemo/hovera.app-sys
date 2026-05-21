@@ -8,6 +8,7 @@ use App\Filament\App\Resources\HorseResource\Pages;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\BoardingService;
 use App\Models\Tenant\Box;
+use App\Models\Tenant\BoxAssignment;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
 use App\Services\Integrations\LiveJumping\LiveJumpingClient;
@@ -17,6 +18,7 @@ use App\Services\TenantAuditLogger;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -270,10 +272,71 @@ class HorseResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                self::assignBoxAction(),
                 Tables\Actions\EditAction::make()->after(self::auditCallback('horse.update')),
                 Tables\Actions\DeleteAction::make()->after(self::auditCallback('horse.delete')),
                 Tables\Actions\RestoreAction::make()->after(self::auditCallback('horse.restore')),
             ]);
+    }
+
+    /**
+     * PR 6 z TODO.md — guided box assignment dla koni bez przypisanego
+     * boxa. Visible TYLKO gdy `horse.box_id === null` (typowo świeżo
+     * zmaterializowane konie po owner accept boarding'u w PR 2).
+     *
+     * Modal form: box picker (active boxy) + optional notes. Submit
+     * ustawia `horse.box_id` — HorseObserver::updated() automatycznie
+     * tworzy BoxAssignment row w historii (assigned_at=now).
+     *
+     * Nie używamy BoxAssignmentService bezpośrednio bo observer już to
+     * obsługuje + UI form pattern jest spójny z innymi resource actions.
+     */
+    private static function assignBoxAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('assign_box')
+            ->label(__('app/horse.action.assign_box.label'))
+            ->icon('heroicon-o-home-modern')
+            ->color('warning')
+            ->visible(fn (Horse $horse) => $horse->box_id === null)
+            ->modalHeading(fn (Horse $horse) => __('app/horse.action.assign_box.modal_heading', ['name' => $horse->name]))
+            ->modalDescription(__('app/horse.action.assign_box.modal_description'))
+            ->form([
+                Forms\Components\Select::make('box_id')
+                    ->label(__('app/horse.form.label.box'))
+                    ->options(fn () => Box::query()
+                        ->where('is_active', true)
+                        ->orderBy('sort_order')
+                        ->pluck('name', 'id'))
+                    ->required()
+                    ->searchable(),
+                Forms\Components\TextInput::make('reason')
+                    ->label(__('app/horse.action.assign_box.reason'))
+                    ->maxLength(120)
+                    ->placeholder(__('app/horse.action.assign_box.reason_placeholder')),
+            ])
+            ->action(function (Horse $horse, array $data) {
+                $horse->update(['box_id' => $data['box_id']]);
+                // HorseObserver::updated() automatycznie utworzy
+                // BoxAssignment row z assigned_at=now (idempotent).
+                if (! empty($data['reason'])) {
+                    // Reason idzie w nowy BoxAssignment row (już istnieje
+                    // po updated observerze).
+                    BoxAssignment::query()
+                        ->where('horse_id', $horse->id)
+                        ->where('box_id', $data['box_id'])
+                        ->whereNull('vacated_at')
+                        ->latest('id')
+                        ->first()
+                        ?->forceFill(['reason' => $data['reason']])
+                        ->save();
+                }
+
+                Notification::make()
+                    ->title(__('app/horse.action.assign_box.success'))
+                    ->success()
+                    ->send();
+            })
+            ->after(self::auditCallback('horse.box_assigned'));
     }
 
     public static function getEloquentQuery(): Builder
