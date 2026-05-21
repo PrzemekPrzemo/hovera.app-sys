@@ -25,6 +25,10 @@ return [
             'label' => 'Filter by horse:',
             'all' => 'All',
         ],
+        'total_year' => 'Total for :year',
+        'total_all' => 'Total (all years)',
+        'year_all' => 'All years',
+        'export_csv' => 'Export CSV',
     ],
 
     'show' => [

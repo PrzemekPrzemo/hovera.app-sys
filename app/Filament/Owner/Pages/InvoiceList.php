@@ -45,6 +45,18 @@ class InvoiceList extends Page
     /** Aktualny filtr — null = wszystkie konie. */
     public ?string $horseFilter = null;
 
+    /** Aktualny year filter — null = wszystkie lata. */
+    public ?int $yearFilter = null;
+
+    /**
+     * Yearly totals — [year => totalCents]. Banner na liście pokazuje
+     * sumę dla aktualnie wybranego year filter'a (lub aggregate all
+     * years dla "All").
+     *
+     * @var array<int,int>
+     */
+    public array $yearlyTotals = [];
+
     public static function getNavigationGroup(): ?string
     {
         return __('navigation.group.owner_finance');
@@ -77,9 +89,27 @@ class InvoiceList extends Page
         }
 
         $service = app(OwnerInvoiceFeedService::class);
-        $this->invoices = $this->horseFilter !== null
-            ? $service->forHorse($user, $this->horseFilter)
-            : $service->forOwner($user);
+
+        // Year filter — przyjmuje tylko reasonable values (2020-2100).
+        $yearRaw = request()->query('year');
+        if (is_numeric($yearRaw) && (int) $yearRaw >= 2020 && (int) $yearRaw <= 2100) {
+            $this->yearFilter = (int) $yearRaw;
+        }
+
+        // Yearly totals (zawsze ładujemy — banner pokazuje sumy w
+        // chipach roku, niezależnie od aktywnego filtra).
+        $this->yearlyTotals = $service->yearlyTotalsForOwner($user);
+
+        // Decyzja źródła listy — priority order: horse + year nie
+        // łączymy (jeśli ktoś użyje obu, year wygrywa bo to grubsze
+        // filtrowanie historyczne). Można rozszerzyć w przyszłości.
+        if ($this->yearFilter !== null) {
+            $this->invoices = $service->forOwnerYear($user, $this->yearFilter);
+        } elseif ($this->horseFilter !== null) {
+            $this->invoices = $service->forHorse($user, $this->horseFilter);
+        } else {
+            $this->invoices = $service->forOwner($user);
+        }
     }
 
     /**
@@ -114,5 +144,37 @@ class InvoiceList extends Page
     public function activeHorseName(): ?string
     {
         return $this->horseFilter !== null ? ($this->horseOptions[$this->horseFilter] ?? null) : null;
+    }
+
+    /**
+     * URL do tej samej listy z innym year filter (null = wszystkie lata).
+     */
+    public function yearFilterUrl(?int $year): string
+    {
+        return $year === null
+            ? static::getUrl()
+            : static::getUrl().'?year='.$year;
+    }
+
+    /**
+     * Łączna suma faktur w aktualnie aktywnym year filter, lub
+     * suma wszystkich lat gdy filter = null.
+     */
+    public function currentYearTotal(): int
+    {
+        if ($this->yearFilter !== null) {
+            return $this->yearlyTotals[$this->yearFilter] ?? 0;
+        }
+
+        return array_sum($this->yearlyTotals);
+    }
+
+    public function csvExportUrl(): string
+    {
+        $base = route('owner.invoices.export-csv');
+
+        return $this->yearFilter !== null
+            ? $base.'?year='.$this->yearFilter
+            : $base;
     }
 }

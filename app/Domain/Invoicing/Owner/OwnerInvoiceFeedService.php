@@ -161,12 +161,91 @@ class OwnerInvoiceFeedService
     }
 
     /**
+     * Yearly totals — `[year => totalCents]` agregowane przez wszystkie
+     * stables ownera. Używane przez C.7 historia rozliczeń (banner +
+     * dropdown wyboru roku do filtrowania).
+     *
+     * @return array<int, int>  klucz = rok (np. 2026), value = suma total_cents
+     */
+    public function yearlyTotalsForOwner(User $owner): array
+    {
+        $tenantIds = $this->ownerStableTenantIds($owner);
+        $totals = [];
+
+        foreach ($tenantIds as $tenantId) {
+            $stable = Tenant::query()->find($tenantId);
+            if ($stable === null) {
+                continue;
+            }
+            // PHP-side aggregation żeby uniknąć driver-specific funkcji
+            // SQL (strftime na sqlite, YEAR() na MySQL). Liczba faktur
+            // per owner jest small (~100/rok) więc OK żeby się przejść.
+            $perStable = $this->tenants->execute($stable, function () use ($owner): array {
+                $client = Client::query()->where('central_user_id', $owner->id)->first();
+                if ($client === null) {
+                    return [];
+                }
+
+                $rows = Invoice::query()
+                    ->where('client_id', $client->id)
+                    ->where('status', '!=', InvoiceStatus::Draft->value)
+                    ->whereNotNull('issued_at')
+                    ->get(['issued_at', 'total_cents']);
+
+                $totals = [];
+                foreach ($rows as $row) {
+                    $year = (int) $row->issued_at->format('Y');
+                    $totals[$year] = ($totals[$year] ?? 0) + (int) $row->total_cents;
+                }
+
+                return $totals;
+            });
+
+            foreach ($perStable as $year => $total) {
+                $year = (int) $year;
+                $totals[$year] = ($totals[$year] ?? 0) + (int) $total;
+            }
+        }
+
+        krsort($totals);
+
+        return $totals;
+    }
+
+    /**
+     * Lista faktur ownera filtrowana do konkretnego roku — używana
+     * przez C.7 (year filter chip + CSV export).
+     *
+     * @return Collection<int, InvoiceSummarySnapshot>
+     */
+    public function forOwnerYear(User $owner, int $year): Collection
+    {
+        $tenantIds = $this->ownerStableTenantIds($owner);
+        $all = collect();
+
+        foreach ($tenantIds as $tenantId) {
+            $stable = Tenant::query()->find($tenantId);
+            if ($stable === null) {
+                continue;
+            }
+
+            $items = $this->tenants->execute($stable, function () use ($stable, $owner, $year): array {
+                return $this->listIssuedForOwnerInStable($stable, $owner, null, $year);
+            });
+            $all = $all->concat($items);
+        }
+
+        return $all->sortByDesc(fn (InvoiceSummarySnapshot $i) => $i->issuedAt?->getTimestamp() ?? 0)->values();
+    }
+
+    /**
      * Wewnątrz execute() — czyta issued invoices ze stable scoped per
-     * Client.central_user_id, opcjonalnie filtrowane do central_horse_id.
+     * Client.central_user_id, opcjonalnie filtrowane do central_horse_id
+     * i/lub do konkretnego roku (issued_at YEAR matching).
      *
      * @return list<InvoiceSummarySnapshot>
      */
-    private function listIssuedForOwnerInStable(Tenant $stable, User $owner, ?string $centralHorseId): array
+    private function listIssuedForOwnerInStable(Tenant $stable, User $owner, ?string $centralHorseId, ?int $year = null): array
     {
         $client = Client::query()->where('central_user_id', $owner->id)->first();
         if ($client === null) {
@@ -186,6 +265,13 @@ class OwnerInvoiceFeedService
                     ->whereColumn('invoice_items.invoice_id', 'invoices.id')
                     ->where('invoice_items.horse_id', $centralHorseId);
             });
+        }
+
+        if ($year !== null) {
+            $query->whereBetween('issued_at', [
+                sprintf('%d-01-01 00:00:00', $year),
+                sprintf('%d-12-31 23:59:59', $year),
+            ]);
         }
 
         $invoices = $query->orderByDesc('issued_at')->get();
