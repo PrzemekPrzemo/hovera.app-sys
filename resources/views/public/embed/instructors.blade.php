@@ -24,6 +24,7 @@
             li { background: #0f172a; color: #f3f4f6; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="wrap">

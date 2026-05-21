@@ -39,6 +39,7 @@
             .card ul { color: #F7F4EF; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="container">

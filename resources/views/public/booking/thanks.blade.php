@@ -23,6 +23,7 @@
             .when { background: #0f172a; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="card">

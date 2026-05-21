@@ -34,6 +34,7 @@
         .signup-cta .signup-disabled { font-style: italic; color: var(--muted); font-size: .82rem; }
         .footer { text-align: center; color: var(--muted); font-size: .78rem; margin-top: 1.5rem; line-height: 1.5; }
     </style>
+    <x-google-analytics />
 </head>
 <body>
 <div class="container">

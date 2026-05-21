@@ -27,6 +27,7 @@
             p { color: #cbd5e1; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="card">

@@ -45,6 +45,7 @@
             .pay-cta { background: #1e293b; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="container">

@@ -43,6 +43,7 @@
             html:not(.is-demo) .day-pill { background: #2a2017; border-color: #5a4d44; color: #f7f4ef; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <x-demo-light-mode />

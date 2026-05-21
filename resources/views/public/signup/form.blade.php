@@ -47,6 +47,7 @@
             .perks { background: #1F1A17; color: #E9E2D3; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="container">

@@ -21,6 +21,7 @@
             html:not(.is-demo) p { color: #e9e2d3; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <x-demo-light-mode />

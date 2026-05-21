@@ -22,6 +22,7 @@
             .icon { background: #78350f; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="card">

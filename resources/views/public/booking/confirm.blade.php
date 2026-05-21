@@ -32,6 +32,7 @@
             .summary dt { color: #94a3b8; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <header class="hero">

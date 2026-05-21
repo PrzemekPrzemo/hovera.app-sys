@@ -83,6 +83,7 @@
             html:not(.is-demo) .booking .actions a:hover { background: #3a2f25; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <x-demo-light-mode />

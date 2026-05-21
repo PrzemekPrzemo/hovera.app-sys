@@ -37,6 +37,7 @@
             html:not(.is-demo) .pagination a, .pagination span { background: #2a2017; border-color: #5a4d44; color: #e9e2d3; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <x-demo-light-mode />

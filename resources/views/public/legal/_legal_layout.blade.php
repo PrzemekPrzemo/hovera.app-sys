@@ -76,6 +76,7 @@
             footer.site { padding: 1.25rem 1rem; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <header class="site">

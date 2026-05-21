@@ -79,6 +79,7 @@
             .differentiator { background: #2a221c; color: #E9E2D3; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="container">

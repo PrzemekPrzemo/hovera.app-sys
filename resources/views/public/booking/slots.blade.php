@@ -32,6 +32,7 @@
             .day-strip a, .slot { background: #1e293b; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <header class="hero">

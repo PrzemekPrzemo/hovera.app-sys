@@ -30,6 +30,7 @@
             .card .avatar { background: #334155; color: #cbd5e1; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <header class="hero">
