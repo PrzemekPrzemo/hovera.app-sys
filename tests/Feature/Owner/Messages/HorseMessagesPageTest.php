@@ -191,6 +191,34 @@ class HorseMessagesPageTest extends TestCase
             ->where('id', $messageId)->value('read_by_client_at'));
     }
 
+    public function test_thread_snapshots_carry_read_receipt_fields_for_owner_messages(): void
+    {
+        // D.4 — Blade renderuje ✓✓ na własnych wiadomościach ownera bazując
+        // na snapshot.readByStableAt. Test sprawdza że to pole jest
+        // przepuszczone z DB do DTO (mapToSnapshot).
+        $this->makeActiveBoarding();
+        $pendingId = $this->seedMessage('from_client', 'Pending read', '2026-05-01 09:00');
+        $readId = $this->seedMessage('from_client', 'Already read', '2026-05-01 10:00');
+        DB::connection('tenant')->table('horse_messages')
+            ->where('id', $readId)
+            ->update(['read_by_stable_at' => '2026-05-01 12:00:00']);
+
+        $this->actingAs($this->owner);
+        $page = new HorseMessages;
+        $page->mount($this->centralHorseId);
+
+        $byId = [];
+        foreach ($page->thread as $m) {
+            $byId[$m->id] = $m;
+        }
+
+        $this->assertArrayHasKey($pendingId, $byId);
+        $this->assertArrayHasKey($readId, $byId);
+        $this->assertNull($byId[$pendingId]->readByStableAt);
+        $this->assertNotNull($byId[$readId]->readByStableAt);
+        $this->assertSame('2026-05-01 12:00', $byId[$readId]->readByStableAt->format('Y-m-d H:i'));
+    }
+
     public function test_is_image_attachment_helper_works(): void
     {
         $page = new HorseMessages;
