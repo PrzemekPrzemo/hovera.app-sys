@@ -79,6 +79,19 @@ class PhotosRelationManager extends RelationManager
                     ->label(__('app/horse_photo.table.column.caption'))
                     ->placeholder('—')
                     ->limit(60),
+                // Faza 5 PR 5.4 — badge "kto wgrał" żeby operator stajni od
+                // razu widział że zdjęcie przyszło od właściciela (przez
+                // Hovera owner panel lub portal klienta — w obu case'ach
+                // uploaded_by_role='client').
+                Tables\Columns\BadgeColumn::make('uploaded_by_role')
+                    ->label(__('app/horse_photo.table.column.uploaded_by'))
+                    ->formatStateUsing(fn (?string $state) => $state === 'stable'
+                        ? __('app/horse_photo.uploaded_by.stable')
+                        : __('app/horse_photo.uploaded_by.client'))
+                    ->colors([
+                        'primary' => 'stable',
+                        'warning' => 'client',
+                    ]),
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label(__('app/horse_photo.table.column.sort_order'))
                     ->sortable(),
@@ -92,6 +105,17 @@ class PhotosRelationManager extends RelationManager
                     ->toggleable(),
             ])
             ->defaultSort('sort_order')
+            ->filters([
+                // Filter: pokaż tylko stable uploads / tylko client uploads
+                // (gdy operator chce np. zobaczyć "co właściciel wgrał w
+                // ostatnim miesiącu" zamiast scrollować przez wszystko).
+                Tables\Filters\SelectFilter::make('uploaded_by_role')
+                    ->label(__('app/horse_photo.table.column.uploaded_by'))
+                    ->options([
+                        'stable' => __('app/horse_photo.uploaded_by.stable'),
+                        'client' => __('app/horse_photo.uploaded_by.client'),
+                    ]),
+            ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label(__('app/horse_photo.action.upload'))
