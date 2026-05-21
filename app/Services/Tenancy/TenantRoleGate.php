@@ -66,6 +66,16 @@ class TenantRoleGate
     /** Specialist directory + treatment templates — vet uses both. */
     public const SPECIALIST_STAFF = ['owner', 'admin', 'manager', 'vet', 'viewer'];
 
+    /**
+     * Tworzenie/edycja klinicznych wpisów (HealthRecord) — tylko medyczna
+     * autoryzacja. Instructor/employee NIE mogą tworzyć diagnoz, leczeń,
+     * szczepień — to data quality risk (instruktor wpisuje "szczepiono"
+     * z pamięci zamiast vet'a faktycznie podpisanego). Read access dla
+     * całego HORSE_AND_CARE_STAFF pozostaje przez allowedRoles() — chcemy
+     * żeby instruktor widział historię zdrowotną przed lekcją.
+     */
+    public const CLINICAL_WRITE_STAFF = ['owner', 'admin', 'manager', 'vet'];
+
     /** Feed inventory — employees record daily issuance. */
     public const FEED_STAFF = ['owner', 'admin', 'manager', 'employee', 'viewer'];
 
