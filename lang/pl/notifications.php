@@ -158,4 +158,24 @@ return [
         ],
         'action' => 'Zobacz oś czasu',
     ],
+
+    'boarding_requested' => [
+        'subject' => 'Stajnia :stable zaprasza :horse do pensjonatu',
+        'line_intro' => 'Stajnia **:stable** chce zacząć pensjonat dla konia **:horse**. Czeka na Twoją zgodę.',
+        'line_action' => 'Otwórz panel właściciela, sprawdź szczegóły i zaakceptuj lub odrzuć zaproszenie.',
+        'action' => 'Zobacz zaproszenia',
+    ],
+
+    'boarding_accepted' => [
+        'subject' => ':horse zaakceptowany do pensjonatu',
+        'line_intro' => 'Właściciel **:owner** zaakceptował pensjonat dla konia **:horse** w Twojej stajni.',
+        'line_next_step' => 'Koń pojawił się w liście — możesz teraz przypisać go do boksu i ustawić cennik usług.',
+        'action' => 'Zobacz konia',
+    ],
+
+    'boarding_rejected' => [
+        'subject' => ':horse — pensjonat odrzucony',
+        'line_intro' => 'Właściciel **:owner** odrzucił prośbę o pensjonat dla konia **:horse** z powodem:',
+        'line_contact' => 'Skontaktuj się bezpośrednio z właścicielem (:email) jeśli sytuacja wymaga wyjaśnienia.',
+    ],
 ];

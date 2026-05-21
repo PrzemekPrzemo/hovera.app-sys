@@ -9,6 +9,7 @@ use App\Filament\App\Resources\HorseResource;
 use App\Models\Central\CentralHorseRegistry;
 use App\Models\Central\Tenant;
 use App\Models\Central\User;
+use App\Notifications\Boarding\HorseBoardingRequestedNotification;
 use App\Tenancy\TenantManager;
 use Filament\Actions;
 use Filament\Forms;
@@ -90,16 +91,30 @@ class ListHorses extends ListRecords
 
                 $assignment = app(HorseRegistrySyncService::class)->requestBoarding($horse, $stable);
 
-                // PR 5 doda HorseBoardingRequestedNotification dispatched do
-                // primary_owner_user_id. Na razie logujemy żeby ops mógł
-                // ręcznie poinformować właściciela.
-                Log::info('Stable requested boarding for horse (pending notif system)', [
-                    'stable_tenant_id' => $stable->id,
-                    'central_horse_id' => $horse->id,
-                    'owner_user_id' => $horse->primary_owner_user_id,
-                    'assignment_id' => $assignment->id,
-                    'assignment_status' => $assignment->status,
-                ]);
+                // PR 5 — dispatch HorseBoardingRequestedNotification do
+                // primary_owner_user_id (database + mail). Soft-fail żeby
+                // SMTP padu nie blokował UI confirmation.
+                try {
+                    $ownerUser = $horse->primary_owner_user_id !== null
+                        ? User::query()->find($horse->primary_owner_user_id)
+                        : null;
+                    if ($ownerUser !== null) {
+                        $ownerUser->notify(new HorseBoardingRequestedNotification(
+                            assignmentId: (string) $assignment->id,
+                            stableTenantId: (string) $stable->id,
+                            stableName: (string) $stable->name,
+                            centralHorseId: (string) $horse->id,
+                            horseName: (string) $horse->name,
+                            ownerPanelUrl: url('/owner/pending-boarding-requests'),
+                        ));
+                    }
+                } catch (\Throwable $e) {
+                    report($e);
+                    Log::warning('Boarding request notification dispatch failed (soft-fail)', [
+                        'assignment_id' => $assignment->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
 
                 Notification::make()->success()
                     ->title(__('app/horse.action.import_from_registry.success_title'))
