@@ -180,6 +180,13 @@ class AppServiceProvider extends ServiceProvider
         $host = SystemSetting::getSecret('mail.default.host');
         if ($host !== null && $host !== '') {
             config([
+                // Critical: switch default mailer to 'smtp' żeby `Mail::raw()` /
+                // notify() faktycznie wysyłały przez SMTP. Bez tego override'a
+                // `config('mail.default') = env('MAIL_MAILER', 'log')` mógł
+                // zostać 'log' i wszystkie maile lądowały w storage/logs/laravel.log
+                // mimo że master admin skonfigurował SMTP w /admin/smtp-settings.
+                // Patrz docs/SMTP-SETTINGS.md (jeśli istnieje) i PR #354.
+                'mail.default' => 'smtp',
                 'mail.mailers.smtp.host' => $host,
                 'mail.mailers.smtp.port' => (int) SystemSetting::getValue('mail.default.port', 587),
                 'mail.mailers.smtp.username' => SystemSetting::getSecret('mail.default.username'),

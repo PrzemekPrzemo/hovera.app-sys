@@ -8,6 +8,8 @@ return [
 
     'form' => [
         'section' => [
+            'diagnostics' => '🔬 Diagnostyka — aktywny mailer',
+            'diagnostics_description' => 'Sprawdź czy konfiguracja SMTP faktycznie obowiązuje. Jeśli „aktywny mailer" pokazuje log/array — maile lądują w storage/logs/laravel.log zamiast wychodzić przez SMTP, mimo zapisanego konfigu.',
             'default' => 'Mailer domyślny (master admin, password reset, notyfikacje)',
             'default_description' => 'Używany do: password reset linkow, notyfikacji do master adminów, alertów systemowych, emaili do tenantów (np. weryfikacja firmy transportowej).',
             'transport' => 'Mailer transport (oferty + dispatcher do kierowców)',
@@ -25,6 +27,7 @@ return [
             'from_name' => 'From nazwa',
             'status' => 'Status',
             'test_email' => 'Wyślij testowy email do',
+            'effective_mailer' => 'Stan konfiguracji',
         ],
         'helper' => [
             'host' => 'Np. smtp.gmail.com, smtp.sendgrid.net, smtp-relay.brevo.com',
@@ -46,8 +49,23 @@ return [
         'saved_body' => 'Override .env aktywny. Następny request użyje nowych ustawień.',
         'send_test_button' => 'Wyślij test',
         'test_sent' => 'Test wysłany do :email — sprawdź inbox.',
+        'test_sent_body' => 'Mailer użyty: :mailer. Jeśli email nie dotarł w ciągu 2 min — sprawdź spam, potem logi (storage/logs/laravel.log) pod kątem błędu SMTP.',
         'test_failed' => 'Test wysyłki failuje — sprawdź konfig',
         'test_invalid_email' => 'Podaj poprawny adres email do testu',
+    ],
+
+    'diagnostics' => [
+        'effective_mailer' => 'Aktywny mailer',
+        'env_mailer' => 'MAIL_MAILER (.env)',
+        'override_active' => 'Override z UI',
+        'override_yes' => 'aktywny — UI nadpisuje .env',
+        'override_no' => 'nieaktywny — używamy .env',
+        'from' => 'From',
+        'from_missing' => 'brak adresu nadawcy',
+        'not_sending' => 'NIE wysyła emaili!',
+        'no_host' => 'brak SMTP host',
+        'log_mailer_warning' => 'Aktywny mailer to „:mailer" — to znaczy że emaile NIE wychodzą przez SMTP tylko lądują w logu (storage/logs/laravel.log) lub pamięci. Aby naprawić: zapisz konfigurację SMTP poniżej (Save), wtedy AppServiceProvider automatycznie przełączy mailer na „smtp" przy następnym requestzie.',
+        'log_mailer_explanation' => 'Konfiguracja SMTP zapisana w UI NIE wystarczy jeśli aktywny mailer to log/array. W tej sytuacji: 1) Wypełnij host/port/username/password/from poniżej, 2) Kliknij „Zapisz konfigurację SMTP", 3) Odśwież tę stronę — diagnostyka powinna pokazać „smtp → <host>". 4) Potem kliknij „Wyślij test".',
     ],
 
     'test_email' => [

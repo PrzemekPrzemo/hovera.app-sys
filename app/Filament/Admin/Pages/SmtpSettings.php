@@ -14,6 +14,7 @@ use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\HtmlString;
 
 /**
  * Master-admin: SMTP configuration UI dla 2 mailerów:
@@ -104,6 +105,15 @@ class SmtpSettings extends Page implements HasForms
         return $form
             ->statePath('data')
             ->schema([
+                Forms\Components\Section::make(__('admin/smtp.form.section.diagnostics'))
+                    ->description(__('admin/smtp.form.section.diagnostics_description'))
+                    ->icon('heroicon-o-magnifying-glass')
+                    ->schema([
+                        Forms\Components\Placeholder::make('effective_mailer')
+                            ->label(__('admin/smtp.form.label.effective_mailer'))
+                            ->content(fn () => $this->renderEffectiveMailerDiagnostic()),
+                    ]),
+
                 Forms\Components\Section::make(__('admin/smtp.form.section.default'))
                     ->description(__('admin/smtp.form.section.default_description'))
                     ->icon('heroicon-o-cog-6-tooth')
@@ -239,6 +249,20 @@ class SmtpSettings extends Page implements HasForms
             return;
         }
 
+        // Preflight: jeśli config('mail.default') = log/array, ostrzegamy
+        // od razu — Mail::raw zwróci OK ale email faktycznie nie wyjdzie.
+        $effectiveMailer = (string) config('mail.default');
+        if (in_array($effectiveMailer, ['log', 'array'], true)) {
+            Notification::make()
+                ->title(__('admin/smtp.action.test_failed'))
+                ->body(__('admin/smtp.diagnostics.log_mailer_warning', ['mailer' => $effectiveMailer]))
+                ->danger()
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
         try {
             Mail::raw(__('admin/smtp.test_email.body'), function ($m) use ($email) {
                 $m->to($email)->subject(__('admin/smtp.test_email.subject'));
@@ -246,6 +270,7 @@ class SmtpSettings extends Page implements HasForms
 
             Notification::make()
                 ->title(__('admin/smtp.action.test_sent', ['email' => $email]))
+                ->body(__('admin/smtp.action.test_sent_body', ['mailer' => $effectiveMailer]))
                 ->success()
                 ->send();
         } catch (\Throwable $e) {
@@ -256,5 +281,57 @@ class SmtpSettings extends Page implements HasForms
                 ->persistent()
                 ->send();
         }
+    }
+
+    /**
+     * Diagnostic banner — pokazuje master admin'owi jaki mailer jest
+     * aktywny i czy SystemSetting override zadziałał. Wcześniej user
+     * zapisywał SMTP config ale `mail.default = env('MAIL_MAILER', 'log')`
+     * pozostawał 'log' → maile szły do logu. AppServiceProvider teraz
+     * override'uje też `mail.default = 'smtp'` gdy SystemSetting ma host —
+     * ten banner pomaga zweryfikować że to działa.
+     */
+    private function renderEffectiveMailerDiagnostic(): HtmlString
+    {
+        $effectiveMailer = (string) config('mail.default');
+        $envMailer = (string) env('MAIL_MAILER', 'log');
+        $effectiveHost = (string) (config('mail.mailers.smtp.host') ?? '');
+        $hasSystemSettingHost = SystemSetting::getSecret('mail.default.host') !== null;
+        $effectiveFromAddress = (string) (config('mail.from.address') ?? '');
+        $effectiveFromName = (string) (config('mail.from.name') ?? '');
+
+        $statusBadge = match (true) {
+            in_array($effectiveMailer, ['log', 'array'], true) => '<span class="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-800">'.e($effectiveMailer).' — '.e(__('admin/smtp.diagnostics.not_sending')).'</span>',
+            $effectiveMailer === 'smtp' && $effectiveHost !== '' => '<span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">smtp → '.e($effectiveHost).'</span>',
+            default => '<span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">'.e($effectiveMailer).' — '.e(__('admin/smtp.diagnostics.no_host')).'</span>',
+        };
+
+        $rows = [
+            [__('admin/smtp.diagnostics.effective_mailer'), $statusBadge],
+            [__('admin/smtp.diagnostics.env_mailer'), '<code class="text-xs">'.e($envMailer).'</code>'],
+            [__('admin/smtp.diagnostics.override_active'), $hasSystemSettingHost
+                ? '<span class="text-emerald-700">✓ '.e(__('admin/smtp.diagnostics.override_yes')).'</span>'
+                : '<span class="text-gray-500">'.e(__('admin/smtp.diagnostics.override_no')).'</span>'],
+            [__('admin/smtp.diagnostics.from'), $effectiveFromAddress !== ''
+                ? '<code class="text-xs">'.e($effectiveFromName !== '' ? "{$effectiveFromName} <{$effectiveFromAddress}>" : $effectiveFromAddress).'</code>'
+                : '<span class="text-rose-600">— '.e(__('admin/smtp.diagnostics.from_missing')).'</span>'],
+        ];
+
+        $html = '<dl class="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">';
+        foreach ($rows as [$label, $value]) {
+            $html .= '<div class="flex items-start gap-2">';
+            $html .= '<dt class="font-medium text-gray-700 dark:text-gray-300">'.e($label).':</dt>';
+            $html .= '<dd>'.$value.'</dd>';
+            $html .= '</div>';
+        }
+        $html .= '</dl>';
+
+        if (in_array($effectiveMailer, ['log', 'array'], true)) {
+            $html .= '<div class="mt-3 rounded-md bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-900/30 dark:text-rose-200">'
+                .e(__('admin/smtp.diagnostics.log_mailer_explanation'))
+                .'</div>';
+        }
+
+        return new HtmlString($html);
     }
 }
