@@ -75,5 +75,7 @@ return [
             'filename' => 'Plik',
             'uploaded_at' => 'Wgrany',
         ],
+        'missing_table_title' => 'Baza tenanta wymaga migracji',
+        'missing_table_body' => 'Tabela "transporter_documents" nie istnieje w bazie :db. To znaczy że ten tenant został sprovisionowany przed wprowadzeniem dokumentów weryfikacyjnych. Aby naprawić uruchom: `php artisan migrate --path=database/migrations/tenant --database=tenant` w kontekście tego tenant\'a. Tymczasowo pokazujemy pustą listę dokumentów.',
     ],
 ];

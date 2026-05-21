@@ -11,8 +11,11 @@ use App\Models\Tenant\TransporterDocument;
 use App\Tenancy\TenantManager;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class EditTransporter extends EditRecord
@@ -90,6 +93,13 @@ class EditTransporter extends EditRecord
     /**
      * Ładuje dokumenty z bazy tenant'a — przepinamy connection do jego DB
      * a po odczycie wracamy do central. Każdy dokument dostaje signed download URL.
+     *
+     * Defensywnie obsługujemy "table doesn't exist" (kod SQLSTATE 42S02 /
+     * 1146) — to znaczy że tenant DB ma stałą lukę migracji (np. tenant
+     * sprovisionowany PRZED wprowadzeniem `transporter_documents`). Wtedy
+     * pokazujemy pustą listę + flash notification dla master admina żeby
+     * mógł odpalić migrations:tenant na tej konkretnej bazie. Lepiej niż
+     * 500 — admin może wciąż edytować podstawowe pola tenanta.
      */
     private function loadDocuments(): void
     {
@@ -120,6 +130,26 @@ class EditTransporter extends EditRecord
                     'created_at' => $doc->created_at?->format('Y-m-d H:i'),
                 ])
                 ->all();
+        } catch (QueryException $e) {
+            // SQLSTATE 42S02 = "base table or view not found" (MySQL 1146,
+            // PostgreSQL 42P01, SQLite "no such table"). Tenant DB nie ma
+            // tej tabeli — luka migracji. Pokazujemy admin'owi pustą listę
+            // + ostrzeżenie zamiast 500.
+            if ($this->isMissingTableError($e)) {
+                $this->documents = [];
+                Log::warning(
+                    'Tenant DB missing transporter_documents table (migration gap)',
+                    ['tenant_id' => $tenant->id, 'db_name' => $tenant->db_name, 'error' => $e->getMessage()],
+                );
+                Notification::make()
+                    ->title(__('admin/transporter.documents.missing_table_title'))
+                    ->body(__('admin/transporter.documents.missing_table_body', ['db' => $tenant->db_name]))
+                    ->warning()
+                    ->persistent()
+                    ->send();
+            } else {
+                throw $e;
+            }
         } finally {
             // Wracamy do poprzedniego tenant'a (lub czyścimy)
             if ($previous) {
@@ -128,6 +158,27 @@ class EditTransporter extends EditRecord
                 $tenants->forget();
             }
         }
+    }
+
+    /**
+     * Detekcja "tabela nie istnieje" agnostyczna względem driver'a DB.
+     * Sprawdzamy oba: SQLSTATE class 42 (syntax / access rules) i fragmenty
+     * komunikatów per driver.
+     */
+    private function isMissingTableError(QueryException $e): bool
+    {
+        $code = $e->getCode();
+        $message = $e->getMessage();
+
+        // SQLSTATE codes
+        if (in_array($code, ['42S02', '42P01'], true)) {
+            return true;
+        }
+
+        // Driver-specific message fragments (gdy SQLSTATE jest 'HY000' lub puste)
+        return str_contains($message, "doesn't exist")
+            || str_contains($message, 'no such table')
+            || str_contains($message, 'does not exist');
     }
 
     private function buildDownloadUrl(TransporterDocument $doc): ?string
