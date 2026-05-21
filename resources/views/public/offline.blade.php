@@ -30,6 +30,7 @@
             .icon { background: #1F1A17; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="container">

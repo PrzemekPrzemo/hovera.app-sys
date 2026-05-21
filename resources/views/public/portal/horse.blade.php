@@ -121,6 +121,7 @@
             html:not(.is-demo) .record .meta, .record .head .date { color: #8f8576; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <x-demo-light-mode />

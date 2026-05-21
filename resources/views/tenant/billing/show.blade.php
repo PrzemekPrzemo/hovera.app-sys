@@ -67,6 +67,7 @@
         .alert { background: #fee2e2; color: #991b1b; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
         .manage-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 1rem 1.25rem; background: white; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 1.5rem; }
     </style>
+    <x-google-analytics />
 </head>
 <body>
 <div class="container">

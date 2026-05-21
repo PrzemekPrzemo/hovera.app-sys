@@ -68,6 +68,7 @@
             .addons-table th, .addons-table td { padding: .65rem .75rem; font-size: .85rem; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="container">

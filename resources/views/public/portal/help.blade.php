@@ -38,6 +38,7 @@
             html:not(.is-demo) .back { color: #c8b8a4; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <x-demo-light-mode />

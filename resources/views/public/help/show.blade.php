@@ -122,6 +122,7 @@
             main.help { padding: 0 1rem; margin: 1rem auto 3rem; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <header class="site">

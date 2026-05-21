@@ -35,6 +35,7 @@
             .body span { color: #94a3b8; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="wrap">

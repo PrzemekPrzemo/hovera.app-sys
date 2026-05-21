@@ -57,6 +57,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Analytics
+    |--------------------------------------------------------------------------
+    | Google Analytics 4 measurement ID — używane przez <x-google-analytics />
+    | component dodawany do <head> wszystkich Filament paneli (via render
+    | hook HEAD_END) oraz publicznych Blade layoutów (auth-layout, public/*).
+    |
+    | Pusty string = wyłączamy snippet (np. w local/testing env). Override
+    | per environment via GOOGLE_ANALYTICS_ID env var.
+    */
+
+    'analytics' => [
+        'google_id' => env('GOOGLE_ANALYTICS_ID', 'G-XJXWTSLE2P'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Tenant provisioning
     |--------------------------------------------------------------------------
     | Naming conventions for the per-tenant MySQL database and user. The slug

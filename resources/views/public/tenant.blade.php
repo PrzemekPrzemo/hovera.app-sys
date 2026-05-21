@@ -195,6 +195,7 @@
             footer.site-footer a { color: #c8b8a4; }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <header class="hero @if ($hero_image_url ?? null) with-image @endif"

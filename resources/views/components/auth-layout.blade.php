@@ -33,6 +33,7 @@
         .codes { font-family: ui-monospace, SFMono-Regular, monospace; background: #0f172a; padding: 1rem; border-radius: 8px; line-height: 2; }
         .codes span { display: inline-block; margin-right: 1rem; }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="card">

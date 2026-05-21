@@ -171,7 +171,7 @@ class TransportPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
-                fn () => Blade::render('<x-pwa-head />'),
+                fn () => Blade::render('<x-pwa-head /><x-google-analytics />'),
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,

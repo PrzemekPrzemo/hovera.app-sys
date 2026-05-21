@@ -21,6 +21,7 @@
             /* Light mode only — wymog user spec. Brak prefers-color-scheme:dark override. */
         html { color-scheme: light; }
     </style>
+    <x-google-analytics />
 </head>
 <body>
 <div class="container">

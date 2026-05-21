@@ -76,6 +76,7 @@
             .filters select { font-size: 16px; /* anty-zoom iOS */ }
         }
     </style>
+    <x-google-analytics />
 </head>
 <body>
     <div class="info-banner">

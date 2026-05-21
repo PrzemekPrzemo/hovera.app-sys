@@ -58,6 +58,7 @@
         .field-hint { font-size: .75rem; color: #9ca3af; margin-top: .25rem; }
         .honeypot { position: absolute; left: -9999px; }
     </style>
+    <x-google-analytics />
 </head>
 <body>
 <div class="container">

@@ -12,6 +12,7 @@
         .icon { font-size: 3rem; }
         a.primary { display: inline-block; margin-top: 1.25rem; background: #A8956B; color: white; padding: .75rem 1.5rem; border-radius: 8px; font-weight: 600; text-decoration: none; }
     </style>
+    <x-google-analytics />
 </head>
 <body>
 <div class="box">
