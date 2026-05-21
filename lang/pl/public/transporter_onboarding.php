@@ -111,6 +111,8 @@ return [
         'step_3' => 'Wtedy uruchomi się 1 miesiąc trial — będziesz mógł dodać pojazdy, kierowców i przyjmować zamówienia.',
         'contact_hint' => 'Masz pytanie? Napisz na :email.',
         'cta_directory' => 'Zobacz katalog przewoźników',
+        'upload_warning_heading' => 'Część dokumentów się nie zapisała',
+        'upload_warning_body' => 'Zapisaliśmy :uploaded z :required wymaganych dokumentów. Pozostałe nie dotarły do nas — odpowiedz na ten email lub napisz na :email z brakującymi plikami. Weryfikacja zacznie się dopiero gdy mamy komplet.',
     ],
 
     'rate_limited' => [

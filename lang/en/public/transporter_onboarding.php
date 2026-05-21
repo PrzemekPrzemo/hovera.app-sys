@@ -111,6 +111,8 @@ return [
         'step_3' => 'A 1-month trial then starts — you can add vehicles, drivers and accept orders.',
         'contact_hint' => 'Have a question? Email :email.',
         'cta_directory' => 'Browse the carriers directory',
+        'upload_warning_heading' => 'Some documents did not save',
+        'upload_warning_body' => 'We saved :uploaded of :required required documents. The rest did not reach us — reply to this email or write to :email with the missing files. Verification starts once we have the complete set.',
     ],
 
     'rate_limited' => [
