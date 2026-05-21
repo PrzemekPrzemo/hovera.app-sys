@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Tenant;
 
 use App\Enums\TenantType;
+use App\Models\Central\Tenant;
 use App\Models\Central\TenantMembership;
 use App\Models\Central\User;
 use Illuminate\Http\RedirectResponse;
@@ -29,11 +30,11 @@ use Illuminate\View\View;
 class TenantSelectorController extends Controller
 {
     /**
-     * Statusy tenant'a w których user może wejść do panelu. `provisioning`
-     * dotyczy transporterów czekających na verification — bez tego owner
-     * po signupie utykał na "Brak dostępnych firm" mimo że ma membership.
+     * Statusy tenant'a w których user może wejść do panelu — alias do
+     * `Tenant::PANEL_ACCESSIBLE_STATUSES` (single source of truth).
+     * `provisioning` dotyczy transporterów czekających na verification.
      */
-    private const SELECTABLE_TENANT_STATUSES = ['provisioning', 'trialing', 'active', 'past_due'];
+    private const SELECTABLE_TENANT_STATUSES = Tenant::PANEL_ACCESSIBLE_STATUSES;
 
     public function show(Request $request): View|RedirectResponse
     {

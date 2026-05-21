@@ -329,9 +329,24 @@ class Tenant extends Model
         ];
     }
 
+    /**
+     * Statusy tenanta w których user MOŻE wejść do panelu. Identyczna
+     * lista jak `TenantSelectorController::SELECTABLE_TENANT_STATUSES` —
+     * trzymamy tylko w jednym miejscu źeby uniknąć redirect loop'ów
+     * (InitialiseTenantFromSession ↔ TenantSelectorController).
+     *
+     * `provisioning` jest WAŻNY dla transporter tenants: tuż po signup
+     * w `/przewoznicy/dolacz` tenant ma status='provisioning' (czeka
+     * na master admin verification). Bez `provisioning` w tej liście
+     * impersonacja "Login as transporter" wpadała w infinite redirect:
+     * /transport/dashboard → !isUsable → /tenant/select → set → /transport
+     * → /transport/dashboard ...
+     */
+    public const PANEL_ACCESSIBLE_STATUSES = ['provisioning', 'trialing', 'active', 'past_due'];
+
     public function isUsable(): bool
     {
-        return in_array($this->status, ['trialing', 'active', 'past_due'], true);
+        return in_array($this->status, self::PANEL_ACCESSIBLE_STATUSES, true);
     }
 
     /**
