@@ -93,4 +93,15 @@ return [
         'pdf_not_implemented' => 'PDF generation będzie dostępne w kolejnej iteracji.',
         'pay_not_implemented' => 'Płatność online będzie dostępna w kolejnej iteracji.',
     ],
+
+    'pay' => [
+        'button' => 'Zapłać online',
+        'helper' => 'Bezpieczna płatność przez bramkę stajni (P24 / PayU). Po zapłaceniu wracasz tu, status faktury aktualizuje się automatycznie.',
+        'stable_missing' => 'Stajnia nie istnieje — odśwież stronę.',
+        'provider_not_configured' => 'Stajnia jeszcze nie skonfigurowała bramki płatniczej. Skontaktuj się z nią bezpośrednio.',
+        'not_your_invoice' => 'Nie masz dostępu do tej faktury.',
+        'already_paid' => 'Ta faktura jest już opłacona.',
+        'not_payable' => 'Faktura w statusie „:status" nie może być opłacona online (np. draft / void).',
+        'no_checkout_url' => 'Bramka płatnicza nie zwróciła linku do płatności — spróbuj ponownie za chwilę.',
+    ],
 ];
