@@ -194,6 +194,28 @@ class QuoteResource extends Resource
                         ->inline(false)
                         ->columnSpanFull()
                         ->live(),
+                    // Mapa Leaflet z trasą — pokazywana tylko gdy quote ma
+                    // już geokodowane pickup/dropoff (po Create lub na Edit).
+                    // Patrz docs/MARKETPLACE-ROADMAP.md "Calculator live UX (Leaflet)".
+                    Forms\Components\View::make('components.route-map')
+                        ->columnSpanFull()
+                        ->visible(fn (?Quote $record) => $record !== null
+                            && ((float) $record->pickup_lat) !== 0.0
+                            && ((float) $record->dropoff_lat) !== 0.0)
+                        ->viewData(fn (?Quote $record) => $record === null ? [] : [
+                            'polyline' => $record->polyline,
+                            'fromLat' => (float) $record->pickup_lat,
+                            'fromLng' => (float) $record->pickup_lng,
+                            'toLat' => (float) $record->dropoff_lat,
+                            'toLng' => (float) $record->dropoff_lng,
+                            'waypoints' => $record->waypoints->map(fn (QuoteWaypoint $w) => [
+                                'lat' => (float) $w->lat,
+                                'lng' => (float) $w->lng,
+                                'label' => $w->address,
+                            ])->all(),
+                            'height' => '320px',
+                            'mapId' => 'quote-map-'.$record->id,
+                        ]),
                     Forms\Components\TextInput::make('pickup_address')
                         ->label(__('transport/quote.form.label.pickup_address'))
                         ->required()

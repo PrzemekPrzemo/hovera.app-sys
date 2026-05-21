@@ -87,6 +87,17 @@
                 </table>
             </div>
 
+            {{-- Mapa Leaflet z trasą (decode polyline'a + markery start/end).
+                 Patrz docs/MARKETPLACE-ROADMAP.md "Calculator live UX (Leaflet)". --}}
+            <x-route-map
+                :polyline="$quotation->polyline"
+                :fromLat="$pendingPickupLat"
+                :fromLng="$pendingPickupLng"
+                :toLat="$pendingDropoffLat"
+                :toLng="$pendingDropoffLng"
+                height="360px"
+            />
+
             <div class="flex items-center justify-between">
                 <div class="text-xs text-gray-500">
                     {{ __('transport/calculator.result.routing_via', ['provider' => $quotation->routingProvider]) }}
