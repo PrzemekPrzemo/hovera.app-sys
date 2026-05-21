@@ -200,6 +200,40 @@ class HealthRecordResource extends Resource
         return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
+    /**
+     * Write gate dla klinicznych wpisów (G4 z audytu ról). Tylko vet,
+     * admin, manager mogą tworzyć/edytować/kasować HealthRecord — to
+     * dane medyczne i ich integralność wymaga medycznej autoryzacji.
+     *
+     * Read access (`allowedRoles() = HORSE_AND_CARE_STAFF`) pozostaje
+     * dla całej care staffy — instruktor musi widzieć historię zdrowotną
+     * konia przed lekcją (czy nie był ostatnio chory).
+     *
+     * Master admin override przez Filament canCreate default → poprzez
+     * isAnyOf w gate. Dodajemy explicit master-admin branch dla parity
+     * z `RestrictedByTenantRole::canAccess()`.
+     */
+    public static function canCreate(): bool
+    {
+        return self::canWriteClinical();
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return self::canWriteClinical();
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return self::canWriteClinical();
+    }
+
+    /** Public dla testów — single source of truth dla 3 powyższych. */
+    public static function canWriteClinical(): bool
+    {
+        return app(TenantRoleGate::class)->allows(TenantRoleGate::CLINICAL_WRITE_STAFF);
+    }
+
     public static function getPages(): array
     {
         return [
