@@ -1,8 +1,42 @@
 <x-filament-panels::page>
     <div class="space-y-4">
         <div class="text-sm text-gray-600 dark:text-gray-400">
-            {{ __('owner/invoices.list.description') }}
+            @if ($this->activeHorseName())
+                {{ __('owner/invoices.list.description_filtered', ['horse' => $this->activeHorseName()]) }}
+            @else
+                {{ __('owner/invoices.list.description') }}
+            @endif
         </div>
+
+        @if (! empty($this->horseOptions))
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs uppercase tracking-wide text-gray-500">
+                    {{ __('owner/invoices.list.filter.label') }}
+                </span>
+                <a
+                    href="{{ $this->filterUrl(null) }}"
+                    @class([
+                        'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition',
+                        'bg-primary-600 text-white' => $this->horseFilter === null,
+                        'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700' => $this->horseFilter !== null,
+                    ])
+                >
+                    {{ __('owner/invoices.list.filter.all') }}
+                </a>
+                @foreach ($this->horseOptions as $id => $name)
+                    <a
+                        href="{{ $this->filterUrl($id) }}"
+                        @class([
+                            'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition',
+                            'bg-primary-600 text-white' => $this->horseFilter === $id,
+                            'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700' => $this->horseFilter !== $id,
+                        ])
+                    >
+                        {{ $name }}
+                    </a>
+                @endforeach
+            </div>
+        @endif
 
         @if ($this->invoices->isEmpty())
             <div class="rounded-lg border border-dashed border-gray-200 p-8 text-center dark:border-gray-800">

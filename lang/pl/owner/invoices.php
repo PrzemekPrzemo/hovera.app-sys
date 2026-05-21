@@ -18,8 +18,13 @@ return [
     'list' => [
         'title' => 'Faktury od stajni',
         'description' => 'Faktury wystawione przez stajnie goszczące Twoje konie. Drafty są ukryte do czasu wystawienia.',
+        'description_filtered' => 'Faktury związane z koniem :horse (pozycja faktury z horse_id matching).',
         'empty_heading' => 'Brak faktur',
         'empty_description' => 'Gdy stajnia wystawi pierwszą fakturę za pensjonat, pojawi się tutaj.',
+        'filter' => [
+            'label' => 'Filtruj wg konia:',
+            'all' => 'Wszystkie',
+        ],
     ],
 
     'show' => [
