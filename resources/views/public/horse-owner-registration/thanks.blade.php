@@ -38,6 +38,15 @@
             <h1>{{ __('public/horse_owner_registration.thanks.heading') }}</h1>
             <p>{{ __('public/horse_owner_registration.thanks.body') }}</p>
 
+            @if (! empty($invite_origin) && is_array($invite_origin) && ! empty($invite_origin['stable_name']))
+                <div style="margin: 1rem 0; padding: .9rem 1.1rem; background: #ECFDF5; border: 1px solid #86EFAC; border-radius: 10px; font-size: .9rem; color: #166534; text-align: left;">
+                    <strong>🐴 {{ __('public/horse_owner_registration.thanks.invite_origin_heading') }}</strong>
+                    <p style="margin: .35rem 0 0; line-height: 1.5;">
+                        {{ __('public/horse_owner_registration.thanks.invite_origin_body', ['stable' => $invite_origin['stable_name']]) }}
+                    </p>
+                </div>
+            @endif
+
             <div class="steps">
                 <h3>{{ __('public/horse_owner_registration.thanks.next_steps') }}</h3>
                 <ol>

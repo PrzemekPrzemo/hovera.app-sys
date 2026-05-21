@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Actions\Tenants\CreateTenant;
 use App\Enums\TenantType;
+use App\Models\Central\Tenant;
 use App\Services\MasterAuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,6 +49,12 @@ class HorseOwnerRegistrationController extends Controller
     {
         $data = $this->validate($request);
 
+        // PR 4 — invitation link completion: jeśli registration jest z `?stable=X`,
+        // sprawdzamy że stable istnieje, jest active i type=stable. Niewłaściwe
+        // value silently ignored (anti-injection — user nie może wymyślić ulid'a
+        // który prowadzi gdzie indziej).
+        $inviteStable = $this->resolveInviteStable($request->input('invite_stable_id'));
+
         // Slug auto-generujemy z emaila (np. jan.kowalski@example.com →
         // jan-kowalski + losowe suffix dla uniqueness). Owner nie podaje
         // slug'a — to nie firma, nie szuka go nikt po nazwie.
@@ -81,9 +88,22 @@ class HorseOwnerRegistrationController extends Controller
         // mniej legal surface, ale w razie sporu sąd potrzebuje dowodu
         // zgody).
         $termsVersion = (string) config('hovera.legal.terms_version', '2026-05');
+        $patchSettings = (array) $tenant->settings;
+        if ($inviteStable !== null) {
+            // Zapisujemy invite_origin w tenant settings żeby owner panel
+            // mógł później pokazać "dodaj konia żeby zacząć boarding w
+            // stajni X" (post-PR 4 — np. card na dashboard'zie ownera).
+            $patchSettings['invite_origin'] = [
+                'stable_tenant_id' => (string) $inviteStable->id,
+                'stable_name' => (string) $inviteStable->name,
+                'stable_slug' => (string) $inviteStable->slug,
+                'received_at' => now()->toIso8601String(),
+            ];
+        }
         $tenant->forceFill([
             'terms_accepted_at' => now(),
             'terms_version' => $termsVersion,
+            'settings' => $patchSettings,
         ])->save();
 
         $audit->record(
@@ -96,7 +116,7 @@ class HorseOwnerRegistrationController extends Controller
                 'tenant_type' => TenantType::HorseOwner->value,
                 'owner_email' => $data['owner_email'],
                 'owner_phone' => $data['owner_phone'] ?? null,
-                'invite_stable_id' => $request->input('invite_stable_id'),
+                'invite_stable_id' => $inviteStable?->id,
             ],
         );
 
@@ -105,9 +125,38 @@ class HorseOwnerRegistrationController extends Controller
 
     public function thanks(string $slug): View
     {
+        $tenant = Tenant::query()->where('slug', $slug)->first();
+        $inviteOrigin = is_array($tenant?->settings ?? null)
+            ? ($tenant->settings['invite_origin'] ?? null)
+            : null;
+
         return view('public.horse-owner-registration.thanks', [
             'slug' => $slug,
+            'invite_origin' => $inviteOrigin,
         ]);
+    }
+
+    /**
+     * Walidacja invite_stable_id — sprawdza że istnieje, jest active i
+     * jest typu stable. Zwraca null gdy invalid / missing (silent skip
+     * zamiast 400/422 — niewłaściwy link nie powinien blokować rejestracji,
+     * tylko skipować invitation behavior).
+     */
+    private function resolveInviteStable(mixed $rawId): ?Tenant
+    {
+        if (! is_string($rawId) || $rawId === '') {
+            return null;
+        }
+        // Defensive: ULID format check (26 chars, alphanumeric).
+        if (! preg_match('/^[0-9A-Za-z]{26}$/', $rawId)) {
+            return null;
+        }
+
+        return Tenant::query()
+            ->where('id', $rawId)
+            ->where('type', TenantType::Stable->value)
+            ->whereIn('status', ['active', 'trialing', 'past_due'])
+            ->first();
     }
 
     /** @return array{owner_name:string, owner_email:string, owner_phone:?string} */

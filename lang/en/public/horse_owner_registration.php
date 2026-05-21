@@ -69,5 +69,7 @@ return [
         'step_transport' => 'Post your first transport request',
         'step_documents' => 'Upload documents (passports, vaccinations)',
         'open_login' => 'Open login',
+        'invite_origin_heading' => 'Stable :stable is waiting',
+        'invite_origin_body' => 'You were invited by stable ":stable" to start boarding. After logging in add your horse — the stable will then be able to send you a boarding request (or you can send the first one from your panel).',
     ],
 ];
