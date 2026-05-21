@@ -10,64 +10,148 @@
                 missing: @js(__('transport/calculator.live.missing')),
                 error: @js(__('transport/calculator.live.error')),
                 distance: @js(__('transport/calculator.result.distance')),
+                duration: @js(__('transport/calculator.result.duration')),
+                rateUsed: @js(__('transport/calculator.result.rate_used')),
                 base: @js(__('transport/calculator.result.base_cost')),
                 fuel: @js(__('transport/calculator.result.fuel_surcharge')),
+                minimumAdjustment: @js(__('transport/calculator.result.minimum_adjustment')),
+                extraHorses: @js(__('transport/calculator.live.extra_horses')),
+                surcharge: @js(__('transport/calculator.live.surcharge')),
                 netTotal: @js(__('transport/calculator.result.net_total')),
+                vat: @js(__('transport/calculator.live.vat')),
                 grossTotal: @js(__('transport/calculator.result.gross_total')),
+                expand: @js(__('transport/calculator.live.expand')),
+                collapse: @js(__('transport/calculator.live.collapse')),
             },
         })"
         x-init="init()"
+        class="lg:grid lg:grid-cols-3 lg:gap-6"
     >
-        <form wire:submit="calculate" class="space-y-6">
-            {{ $this->form }}
+        {{-- Lewa kolumna na lg+: form + przycisk submit. Na mobilu: stack
+             pełnej szerokości; sticky karta zsuwa się jako bottom drawer
+             niżej, dlatego dodajemy padding-bottom żeby drawer nie
+             zasłonił przycisku submit. --}}
+        <div class="space-y-6 pb-32 lg:col-span-2 lg:pb-0">
+            <form wire:submit="calculate" class="space-y-6">
+                {{ $this->form }}
 
-            <div class="flex items-center justify-end gap-3">
-                <span
-                    class="text-xs text-gray-500"
-                    x-show="status !== 'idle'"
-                    x-text="statusLabel()"
-                ></span>
-                <x-filament::button type="submit">
-                    {{ __('transport/calculator.action.submit') }}
-                </x-filament::button>
-            </div>
-        </form>
-
-        {{-- Live podgląd ceny — fetchowany przez Alpine z debounce 500ms.
-             Pokazuje się tylko gdy mamy preview data; pełna canonical
-             wycena (server-rendered) jest poniżej po submit'cie formy. --}}
-        <template x-if="preview !== null">
-            <div class="mt-6 rounded-lg border border-primary-200 bg-primary-50 p-4 dark:border-primary-800 dark:bg-primary-900/20">
-                <div class="mb-2 flex items-center justify-between">
-                    <div class="text-sm font-semibold text-primary-700 dark:text-primary-300" x-text="labels.title"></div>
-                    <div class="text-xs text-gray-500" x-text="labels.hint"></div>
+                <div class="flex items-center justify-end gap-3">
+                    <span
+                        class="text-xs text-gray-500"
+                        x-show="status !== 'idle'"
+                        x-text="statusLabel()"
+                    ></span>
+                    <x-filament::button type="submit">
+                        {{ __('transport/calculator.action.submit') }}
+                    </x-filament::button>
                 </div>
-                <dl class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-                    <div>
-                        <dt class="text-xs uppercase text-gray-500" x-text="labels.distance"></dt>
-                        <dd class="font-medium" x-text="formatDistance(preview.distance_km)"></dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase text-gray-500" x-text="labels.base"></dt>
-                        <dd class="font-medium" x-text="formatMoney(preview.base_cost, preview.currency)"></dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase text-gray-500" x-text="labels.netTotal"></dt>
-                        <dd class="font-medium" x-text="formatMoney(preview.net_total, preview.currency)"></dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs uppercase text-gray-500" x-text="labels.grossTotal"></dt>
-                        <dd class="text-lg font-bold text-primary-700 dark:text-primary-300" x-text="formatMoney(preview.gross_total, preview.currency)"></dd>
-                    </div>
-                </dl>
-            </div>
-        </template>
+            </form>
 
-        <template x-if="error !== null">
-            <div class="mt-4 rounded-lg border border-warning-300 bg-warning-50 p-3 text-sm text-warning-800 dark:border-warning-700 dark:bg-warning-900/20 dark:text-warning-300">
-                <span x-text="error"></span>
+            <template x-if="error !== null">
+                <div class="rounded-lg border border-warning-300 bg-warning-50 p-3 text-sm text-warning-800 dark:border-warning-700 dark:bg-warning-900/20 dark:text-warning-300">
+                    <span x-text="error"></span>
+                </div>
+            </template>
+        </div>
+
+        {{-- Sticky summary card — na lg+ przyklejona po prawej (top-24
+             pasuje pod sticky topbar Filament'a). Na mobile: fixed bottom
+             drawer z collapsible details. Zawsze pokazuje gross_total
+             żeby user widział aktualną cenę podczas typowania. --}}
+        <aside
+            class="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900 lg:static lg:col-span-1 lg:rounded-lg lg:border lg:shadow-none lg:dark:bg-gray-900/40"
+            :class="{ 'lg:sticky': true }"
+            style="--tw-translate-y: 0"
+        >
+            <div class="lg:sticky lg:top-24">
+                <button
+                    type="button"
+                    class="flex w-full items-center justify-between gap-4 px-4 py-3 lg:cursor-default"
+                    @click="mobileExpanded = !mobileExpanded"
+                    :aria-expanded="mobileExpanded.toString()"
+                >
+                    <div class="flex flex-col items-start">
+                        <span class="text-xs uppercase tracking-wide text-gray-500" x-text="labels.title"></span>
+                        <span
+                            class="text-xl font-bold text-primary-700 dark:text-primary-300"
+                            x-text="preview ? formatMoney(preview.gross_total, preview.currency) : '—'"
+                        ></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="hidden text-xs text-gray-500 sm:inline" x-text="labels.hint" x-show="status !== 'missing'"></span>
+                        <span class="text-xs text-gray-500" x-show="status === 'missing'" x-text="labels.missing"></span>
+                        {{-- Chevron tylko na mobile — na lg+ details widoczne zawsze. --}}
+                        <svg
+                            class="h-5 w-5 text-gray-400 transition-transform lg:hidden"
+                            :class="{ 'rotate-180': mobileExpanded }"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                        </svg>
+                    </div>
+                </button>
+
+                {{-- Breakdown details. Na lg+ zawsze widoczne; na mobile
+                     toggle'owane mobileExpanded. --}}
+                <div
+                    class="border-t border-gray-100 px-4 pb-4 pt-3 dark:border-gray-800 lg:block"
+                    :class="{ 'hidden': !mobileExpanded, 'block': mobileExpanded }"
+                    x-show="preview !== null"
+                    style="display: none;"
+                >
+                    <dl class="space-y-2 text-sm">
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-gray-500" x-text="labels.distance"></dt>
+                            <dd class="font-medium" x-text="formatDistance(preview?.distance_km)"></dd>
+                        </div>
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-gray-500" x-text="labels.duration"></dt>
+                            <dd class="font-medium" x-text="formatDuration(preview?.duration_seconds)"></dd>
+                        </div>
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-gray-500" x-text="labels.rateUsed"></dt>
+                            <dd class="font-medium" x-text="formatRate(preview?.rate_used, preview?.currency)"></dd>
+                        </div>
+                        <hr class="my-2 border-gray-100 dark:border-gray-800" />
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-gray-500" x-text="labels.base"></dt>
+                            <dd x-text="formatMoney(preview?.base_cost, preview?.currency)"></dd>
+                        </div>
+                        <div class="flex justify-between gap-2" x-show="(preview?.fuel_surcharge ?? 0) > 0">
+                            <dt class="text-gray-500" x-text="labels.fuel"></dt>
+                            <dd x-text="formatMoney(preview?.fuel_surcharge, preview?.currency)"></dd>
+                        </div>
+                        <div class="flex justify-between gap-2" x-show="(preview?.extra_horse_fee_total ?? 0) > 0">
+                            <dt class="text-gray-500" x-text="formatExtraHorses()"></dt>
+                            <dd x-text="formatMoney(preview?.extra_horse_fee_total, preview?.currency)"></dd>
+                        </div>
+                        <template x-for="fee in (preview?.fixed_fees ?? [])" :key="fee.name">
+                            <div class="flex justify-between gap-2">
+                                <dt class="text-gray-500" x-text="fee.name"></dt>
+                                <dd x-text="formatMoney(fee.amount, preview?.currency)"></dd>
+                            </div>
+                        </template>
+                        <div class="flex justify-between gap-2" x-show="(preview?.minimum_adjustment ?? 0) > 0">
+                            <dt class="text-gray-500" x-text="labels.minimumAdjustment"></dt>
+                            <dd x-text="formatMoney(preview?.minimum_adjustment, preview?.currency)"></dd>
+                        </div>
+                        <div class="flex justify-between gap-2" x-show="(preview?.surcharge_amount ?? 0) > 0">
+                            <dt class="text-gray-500" x-text="formatSurcharge()"></dt>
+                            <dd x-text="formatMoney(preview?.surcharge_amount, preview?.currency)"></dd>
+                        </div>
+                        <hr class="my-2 border-gray-100 dark:border-gray-800" />
+                        <div class="flex justify-between gap-2 font-semibold">
+                            <dt x-text="labels.netTotal"></dt>
+                            <dd x-text="formatMoney(preview?.net_total, preview?.currency)"></dd>
+                        </div>
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-gray-500" x-text="formatVat()"></dt>
+                            <dd x-text="formatMoney(preview?.vat_amount, preview?.currency)"></dd>
+                        </div>
+                    </dl>
+                </div>
             </div>
-        </template>
+        </aside>
     </div>
 
     @if ($quotation)
@@ -191,6 +275,10 @@
                     preview: null,
                     status: 'idle', // idle | loading | ok | missing | error
                     error: null,
+                    // Mobile drawer: collapsed by default żeby nie zasłaniać
+                    // pól formy. Na lg+ ten flag nie ma znaczenia (details
+                    // zawsze widoczne dzięki lg:block).
+                    mobileExpanded: false,
                     _timer: null,
                     _abort: null,
                     _lastPayload: null,
@@ -335,6 +423,49 @@
                         const n = parseFloat(value ?? 0) || 0;
 
                         return `${n.toLocaleString('pl-PL', { maximumFractionDigits: 2 })} km`;
+                    },
+
+                    formatDuration(seconds) {
+                        const s = parseInt(seconds ?? 0, 10) || 0;
+                        const h = Math.floor(s / 3600);
+                        const m = Math.floor((s % 3600) / 60);
+
+                        return `${h}h ${m}min`;
+                    },
+
+                    formatRate(value, currency) {
+                        const n = parseFloat(value ?? 0) || 0;
+                        const formatted = n.toLocaleString('pl-PL', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                        });
+
+                        return `${formatted} ${currency ?? this.currency}/km`;
+                    },
+
+                    formatExtraHorses() {
+                        // `extra_horses` label ma placeholder :count w PL/EN —
+                        // robimy ręczną interpolację bo nie używamy Laravel
+                        // helper'a po stronie JS.
+                        const count = ((this.preview?.horses_count ?? 1) - 1);
+
+                        return (this.labels.extraHorses ?? '').replace(':count', count.toString());
+                    },
+
+                    formatSurcharge() {
+                        const pct = parseFloat(this.preview?.surcharge_percent ?? 0) || 0;
+                        const trimmed = pct.toLocaleString('pl-PL', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 2,
+                        });
+
+                        return (this.labels.surcharge ?? '').replace(':percent', trimmed);
+                    },
+
+                    formatVat() {
+                        const rate = parseFloat(this.preview?.vat_rate ?? 0) || 0;
+
+                        return (this.labels.vat ?? '').replace(':rate', rate.toString());
                     },
                 };
             };
