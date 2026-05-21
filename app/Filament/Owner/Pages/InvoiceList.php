@@ -6,6 +6,7 @@ namespace App\Filament\Owner\Pages;
 
 use App\Domain\Invoicing\Owner\OwnerInvoiceFeedService;
 use App\Domain\Invoicing\Owner\Snapshots\InvoiceSummarySnapshot;
+use App\Models\Central\CentralHorseRegistry;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Collection;
@@ -16,7 +17,10 @@ use Illuminate\Support\Facades\Auth;
  * tenant'ów). Lista snapshot'ów z OwnerInvoiceFeedService, sortowana
  * DESC po issued_at. Pomijamy draft'y.
  *
- * Patrz docs/OWNER-STABLE-ROADMAP.md "Faza 3 PR 3.4".
+ * Filter `?horse={centralHorseId}` przełącza na forHorse() — wyniki
+ * ograniczone do faktur z invoice_items.horse_id matching koń.
+ *
+ * Patrz docs/OWNER-STABLE-ROADMAP.md "Faza 3 PR 3.4" + C.4.
  */
 class InvoiceList extends Page
 {
@@ -30,6 +34,16 @@ class InvoiceList extends Page
 
     /** @var Collection<int, InvoiceSummarySnapshot>|null */
     public ?Collection $invoices = null;
+
+    /**
+     * Lista koni ownera dla filter dropdownu — [centralHorseId => name].
+     *
+     * @var array<string, string>
+     */
+    public array $horseOptions = [];
+
+    /** Aktualny filtr — null = wszystkie konie. */
+    public ?string $horseFilter = null;
 
     public static function getNavigationGroup(): ?string
     {
@@ -51,7 +65,21 @@ class InvoiceList extends Page
         $user = Auth::user();
         abort_unless($user !== null, 401);
 
-        $this->invoices = app(OwnerInvoiceFeedService::class)->forOwner($user);
+        $this->horseOptions = CentralHorseRegistry::query()
+            ->where('primary_owner_user_id', $user->id)
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+
+        $requested = request()->query('horse');
+        if (is_string($requested) && isset($this->horseOptions[$requested])) {
+            $this->horseFilter = $requested;
+        }
+
+        $service = app(OwnerInvoiceFeedService::class);
+        $this->invoices = $this->horseFilter !== null
+            ? $service->forHorse($user, $this->horseFilter)
+            : $service->forOwner($user);
     }
 
     /**
@@ -71,5 +99,20 @@ class InvoiceList extends Page
             'stableTenantId' => $invoice->stableTenantId,
             'invoiceId' => $invoice->id,
         ]);
+    }
+
+    /**
+     * URL do tej samej listy z innym filtr'em (null = wszystkie).
+     */
+    public function filterUrl(?string $centralHorseId): string
+    {
+        return $centralHorseId === null
+            ? static::getUrl()
+            : static::getUrl().'?horse='.$centralHorseId;
+    }
+
+    public function activeHorseName(): ?string
+    {
+        return $this->horseFilter !== null ? ($this->horseOptions[$this->horseFilter] ?? null) : null;
     }
 }

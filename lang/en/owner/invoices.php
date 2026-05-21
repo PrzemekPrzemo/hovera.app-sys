@@ -18,8 +18,13 @@ return [
     'list' => [
         'title' => 'Invoices from your stables',
         'description' => 'Invoices issued by the stables boarding your horses. Drafts are hidden until issued.',
+        'description_filtered' => 'Invoices related to :horse (line items with matching horse_id).',
         'empty_heading' => 'No invoices yet',
         'empty_description' => 'When your stable issues the first invoice for boarding, it will appear here.',
+        'filter' => [
+            'label' => 'Filter by horse:',
+            'all' => 'All',
+        ],
     ],
 
     'show' => [
