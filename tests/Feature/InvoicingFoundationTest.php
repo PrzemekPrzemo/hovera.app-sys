@@ -502,6 +502,7 @@ class InvoicingFoundationTest extends TestCase
         Schema::connection('tenant')->create('invoice_items', function ($t) {
             $t->string('id', 26)->primary();
             $t->string('invoice_id', 26);
+            $t->string('horse_id', 26)->nullable()->index();
             $t->unsignedSmallInteger('position')->default(1);
             $t->string('name');
             $t->string('description')->nullable();

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Tenant;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InvoiceItem extends TenantModel
@@ -11,7 +12,7 @@ class InvoiceItem extends TenantModel
     protected $table = 'invoice_items';
 
     protected $fillable = [
-        'invoice_id', 'position', 'name', 'description',
+        'invoice_id', 'horse_id', 'position', 'name', 'description',
         'quantity', 'unit', 'vat_rate',
         'unit_price_cents', 'net_cents', 'vat_cents', 'total_cents',
     ];
@@ -24,12 +25,23 @@ class InvoiceItem extends TenantModel
             'net_cents' => 'integer',
             'vat_cents' => 'integer',
             'total_cents' => 'integer',
+            'horse_id' => 'string',
         ];
     }
 
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    /**
+     * Scope: tylko items związane z konkretnym koniem (per
+     * central_horse_id). Używane przez Owner panel filtrowanie
+     * "Faktury za Iskrę". Patrz docs/OWNER-STABLE-ROADMAP.md Faza 3.
+     */
+    public function scopeForHorse(Builder $query, string $centralHorseId): Builder
+    {
+        return $query->where('horse_id', $centralHorseId);
     }
 
     /**
