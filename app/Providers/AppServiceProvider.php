@@ -25,8 +25,12 @@ use App\Services\Ksef\CentralKsefService;
 use App\Services\TenantAuditLogger;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\Mailer\Transport\Dsn;
+use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransportFactory;
+use Symfony\Component\Mailer\Transport\Smtp\Stream\SocketStream;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -147,6 +151,12 @@ class AppServiceProvider extends ServiceProvider
         // creds bez SSH. Bezpiecznie pomijane gdy DB nie zhydratowane (np.
         // route:list w boot — SystemSetting::getValue ma try/catch w środku).
         $this->overrideMailConfigFromSystemSettings();
+
+        // Hook do Mail::extend('smtp') żeby zastosować stream_options gdy
+        // `skip_tls_verify=true` (shared hosting z wildcard cert na innej
+        // domenie — np. lh.pl serwuje *.lh.pl na smtp.galoptrans.pl).
+        // Bez tego TLS handshake failuje z "peer cert CN mismatch".
+        $this->registerSmtpStreamOptionsExtension();
     }
 
     /**
@@ -209,6 +219,10 @@ class AppServiceProvider extends ServiceProvider
                 'mail.mailers.smtp.encryption' => SystemSetting::getValue('mail.default.encryption', 'tls') === 'null'
                     ? null
                     : SystemSetting::getValue('mail.default.encryption', 'tls'),
+                // skip_tls_verify — używane przez SmtpTransportFactory hook
+                // (Mail::extend) gdy hosting shared'owany serwuje wildcard
+                // cert na innej domenie (np. *.lh.pl dla smtp.galoptrans.pl).
+                'mail.mailers.smtp.skip_tls_verify' => (bool) SystemSetting::getValue('mail.default.skip_tls_verify', false),
             ]);
             $fromAddress = SystemSetting::getValue('mail.default.from_address');
             $fromName = SystemSetting::getValue('mail.default.from_name');
@@ -233,6 +247,7 @@ class AppServiceProvider extends ServiceProvider
                 'mail.mailers.transport.encryption' => SystemSetting::getValue('mail.transport.encryption', 'tls') === 'null'
                     ? null
                     : SystemSetting::getValue('mail.transport.encryption', 'tls'),
+                'mail.mailers.transport.skip_tls_verify' => (bool) SystemSetting::getValue('mail.transport.skip_tls_verify', false),
             ]);
             $transportFromAddress = SystemSetting::getValue('mail.transport.from_address');
             $transportFromName = SystemSetting::getValue('mail.transport.from_name');
@@ -243,5 +258,64 @@ class AppServiceProvider extends ServiceProvider
                 config(['mail.mailers.transport.from.name' => $transportFromName]);
             }
         }
+    }
+
+    /**
+     * Hook do Mail::extend('smtp') wstrzykujący `stream_options` gdy
+     * config zawiera `skip_tls_verify=true`. Replikuje default factory
+     * Laravel'a + dorzuca `verify_peer=false` / `verify_peer_name=false`
+     * / `allow_self_signed=true` na SocketStream PRZED nawiązaniem połączenia.
+     *
+     * Kiedy używać: hosting shared serwuje wildcard cert na innej domenie
+     * niż SMTP host (np. `*.lh.pl` dla `smtp.galoptrans.pl`). Domyślny TLS
+     * handshake failuje "peer cert CN mismatch".
+     *
+     * Trade-off security: skip_tls_verify DOWNGRADE'uje ochronę MITM. Akceptowalne
+     * dla maili transactional gdy hosting fizycznie kontrolowany; nie używać
+     * dla mailerów publicznych.
+     */
+    private function registerSmtpStreamOptionsExtension(): void
+    {
+        Mail::extend('smtp', function (array $config) {
+            // Replicate Laravel default smtp factory (MailManager::createSmtpTransport).
+            $scheme = $config['scheme'] ?? null;
+            if (! $scheme) {
+                $scheme = ! empty($config['encryption']) && $config['encryption'] === 'tls'
+                    ? (((int) ($config['port'] ?? 587) === 465) ? 'smtps' : 'smtp')
+                    : '';
+            }
+
+            $factory = new EsmtpTransportFactory;
+            $transport = $factory->create(new Dsn(
+                $scheme ?: '',
+                $config['host'] ?? 'localhost',
+                $config['username'] ?? null,
+                $config['password'] ?? null,
+                $config['port'] ?? null,
+                $config,
+            ));
+
+            // Konfiguracja jak Laravel'a (timeout, local_domain) — kopia z
+            // MailManager::configureSmtpTransport żeby zachować feature parity.
+            $stream = $transport->getStream();
+            $stream->setTimeout($config['timeout'] ?? 60);
+            if (! empty($config['local_domain'])) {
+                $transport->setLocalDomain($config['local_domain']);
+            }
+
+            // OUR ADDITION: stream_options gdy skip_tls_verify=true.
+            if (! empty($config['skip_tls_verify'])
+                && $stream instanceof SocketStream) {
+                $stream->setStreamOptions([
+                    'ssl' => [
+                        'verify_peer' => false,
+                        'verify_peer_name' => false,
+                        'allow_self_signed' => true,
+                    ],
+                ]);
+            }
+
+            return $transport;
+        });
     }
 }

@@ -23,6 +23,7 @@ return [
             'username' => 'Username (login)',
             'password' => 'Password',
             'encryption' => 'Encryption',
+            'skip_tls_verify' => 'Skip TLS certificate verification (cert hostname mismatch)',
             'from_address' => 'From email',
             'from_name' => 'From name',
             'status' => 'Status',
@@ -33,6 +34,7 @@ return [
             'host' => 'E.g. smtp.gmail.com, smtp.sendgrid.net, smtp-relay.brevo.com',
             'password_leave_blank' => 'Leave empty to keep current password. Entering a new one overrides the previous.',
             'test_email' => 'Defaults to your master admin email. Verifies SMTP actually sends.',
+            'skip_tls_verify' => 'Enable ONLY if you see "peer certificate CN did not match expected CN" — typical when shared hosting (lh.pl, home.pl, nazwa.pl) serves a wildcard cert on a different domain. Disables TLS cert verification — downgrades MITM protection. Acceptable for transactional mail, do NOT use for public mailers.',
         ],
         'encryption' => [
             'none' => 'No encryption (not recommended)',

@@ -81,6 +81,7 @@ class SmtpSettings extends Page implements HasForms
             'default_username' => SystemSetting::getSecret('mail.default.username', '') ?? '',
             'default_password' => '',  // intentionally empty — security UX, leave blank to keep
             'default_encryption' => SystemSetting::getValue('mail.default.encryption', 'tls'),
+            'default_skip_tls_verify' => (bool) SystemSetting::getValue('mail.default.skip_tls_verify', false),
             'default_from_address' => SystemSetting::getValue('mail.default.from_address', config('mail.from.address')),
             'default_from_name' => SystemSetting::getValue('mail.default.from_name', config('mail.from.name')),
             // Transport mailer
@@ -89,6 +90,7 @@ class SmtpSettings extends Page implements HasForms
             'transport_username' => SystemSetting::getSecret('mail.transport.username', '') ?? '',
             'transport_password' => '',
             'transport_encryption' => SystemSetting::getValue('mail.transport.encryption', 'tls'),
+            'transport_skip_tls_verify' => (bool) SystemSetting::getValue('mail.transport.skip_tls_verify', false),
             'transport_from_address' => SystemSetting::getValue('mail.transport.from_address', config('mail.mailers.transport.from.address')),
             'transport_from_name' => SystemSetting::getValue('mail.transport.from_name', config('mail.mailers.transport.from.name')),
         ]);
@@ -144,6 +146,10 @@ class SmtpSettings extends Page implements HasForms
                             ->content(fn () => SystemSetting::getSecret('mail.default.host')
                                 ? __('admin/smtp.form.status.configured')
                                 : __('admin/smtp.form.status.using_env')),
+                        Forms\Components\Toggle::make('default_skip_tls_verify')
+                            ->label(__('admin/smtp.form.label.skip_tls_verify'))
+                            ->helperText(__('admin/smtp.form.helper.skip_tls_verify'))
+                            ->columnSpanFull(),
                         Forms\Components\TextInput::make('default_from_address')
                             ->label(__('admin/smtp.form.label.from_address'))
                             ->email()
@@ -181,6 +187,10 @@ class SmtpSettings extends Page implements HasForms
                             ->content(fn () => SystemSetting::getSecret('mail.transport.host')
                                 ? __('admin/smtp.form.status.configured')
                                 : __('admin/smtp.form.status.using_env')),
+                        Forms\Components\Toggle::make('transport_skip_tls_verify')
+                            ->label(__('admin/smtp.form.label.skip_tls_verify'))
+                            ->helperText(__('admin/smtp.form.helper.skip_tls_verify'))
+                            ->columnSpanFull(),
                         Forms\Components\TextInput::make('transport_from_address')
                             ->label(__('admin/smtp.form.label.from_address'))
                             ->email()
@@ -228,6 +238,11 @@ class SmtpSettings extends Page implements HasForms
                     SystemSetting::setValue("mail.{$mailer}.{$plain}", $value);
                 }
             }
+            // Boolean toggles — zapisujemy zawsze (false też ma znaczenie, w przeciwieństwie do empty stringa).
+            SystemSetting::setValue(
+                "mail.{$mailer}.skip_tls_verify",
+                (bool) ($form["{$mailer}_skip_tls_verify"] ?? false),
+            );
         }
 
         Notification::make()

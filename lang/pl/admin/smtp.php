@@ -23,6 +23,7 @@ return [
             'username' => 'Username (login)',
             'password' => 'Password',
             'encryption' => 'Szyfrowanie',
+            'skip_tls_verify' => 'Pomiń weryfikację certyfikatu TLS (cert hostname mismatch)',
             'from_address' => 'From email',
             'from_name' => 'From nazwa',
             'status' => 'Status',
@@ -33,6 +34,7 @@ return [
             'host' => 'Np. smtp.gmail.com, smtp.sendgrid.net, smtp-relay.brevo.com',
             'password_leave_blank' => 'Pozostaw puste żeby NIE zmieniać. Wpisanie nowego hasła nadpisze poprzednie.',
             'test_email' => 'Domyślnie Twój email master admina. Sprawdzi czy SMTP faktycznie wysyła.',
+            'skip_tls_verify' => 'Włącz TYLKO jeśli widzisz "peer certificate CN did not match expected CN" — typowo gdy shared hosting (lh.pl, home.pl, nazwa.pl) serwuje wildcard cert na innej domenie. Wyłącza weryfikację certyfikatu TLS — downgrade ochrony MITM. Akceptowalne dla maili transactional, NIE używaj dla mailerów publicznych.',
         ],
         'encryption' => [
             'none' => 'Bez szyfrowania (niezalecane)',
