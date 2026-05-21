@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\Owner\InvoicesController as OwnerInvoicesController;
 use App\Http\Controllers\Api\PlacesAutocompleteController;
 use App\Http\Controllers\Api\Transport\CalculatorPreviewController;
 use App\Http\Controllers\Api\TransportInquiryApiController;
@@ -73,6 +74,35 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])
     ->group(function () {
         Route::post('/preview', CalculatorPreviewController::class)
             ->name('preview');
+    });
+
+/*
+ * Owner panel API — cross-tenant read access do faktur wystawionych
+ * przez stajnie goszczące konie ownera. Wszystkie endpointy wymagają
+ * Sanctum SPA session (cookie z `/owner` panel login) + ownership
+ * weryfikacji w controller'ach (gate przez CentralHorseRegistry +
+ * Client.central_user_id matching).
+ *
+ * Patrz docs/OWNER-STABLE-ROADMAP.md "Faza 3 PR 3.3".
+ */
+Route::middleware(['auth:sanctum', 'throttle:60,1'])
+    ->prefix('owner')
+    ->name('api.owner.')
+    ->group(function () {
+        // Globalna lista wszystkich faktur ownera
+        Route::get('/invoices', [OwnerInvoicesController::class, 'index'])
+            ->name('invoices.index');
+        // Per-koń lista
+        Route::get('/horses/{centralHorseId}/invoices', [OwnerInvoicesController::class, 'indexForHorse'])
+            ->name('horses.invoices');
+        // Szczegóły pojedynczej faktury — composite (stableTenantId, invoiceId)
+        Route::get('/invoices/{stableTenantId}/{invoiceId}', [OwnerInvoicesController::class, 'show'])
+            ->name('invoices.show');
+        // Placeholdery — pełna implementacja w przyszłej iteracji
+        Route::get('/invoices/{stableTenantId}/{invoiceId}/pdf', [OwnerInvoicesController::class, 'pdf'])
+            ->name('invoices.pdf');
+        Route::post('/invoices/{stableTenantId}/{invoiceId}/pay', [OwnerInvoicesController::class, 'pay'])
+            ->name('invoices.pay');
     });
 
 // Public auth endpoints (no tenant context yet — user picks tenant after login).
