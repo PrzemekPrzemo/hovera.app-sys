@@ -68,6 +68,15 @@ return [
     ],
 
     'action' => [
+        'assign_box' => [
+            'label' => 'Assign box',
+            'modal_heading' => 'Assign a box for horse :name',
+            'modal_description' => 'Pick a box for this horse. The system will record the assignment date and add a row to the box history. You can change the box later on the horse profile.',
+            'reason' => 'Reason (optional)',
+            'reason_placeholder' => 'e.g. "new boarder" or "moved after box B-3 renovation"',
+            'success' => 'Box assigned — history updated.',
+        ],
+
         'import_from_registry' => [
             'label' => 'Import from registry',
             'modal_heading' => 'Add a horse from the owners registry',

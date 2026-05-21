@@ -68,6 +68,15 @@ return [
     ],
 
     'action' => [
+        'assign_box' => [
+            'label' => 'Przypisz boks',
+            'modal_heading' => 'Przypisz boks dla konia :name',
+            'modal_description' => 'Wybierz boks dla tego konia. System automatycznie zapisze datę przypisania i utworzy wpis w historii boksów. Możesz później zmienić boks w karcie konia.',
+            'reason' => 'Powód (opcjonalnie)',
+            'reason_placeholder' => 'np. „nowy pensjonariusz" lub „przesunięcie po remoncie boksu B-3"',
+            'success' => 'Boks przypisany — historia zaktualizowana.',
+        ],
+
         'import_from_registry' => [
             'label' => 'Importuj z rejestru',
             'modal_heading' => 'Dodaj konia z rejestru właścicieli',
