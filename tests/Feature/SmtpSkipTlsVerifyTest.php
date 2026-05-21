@@ -135,4 +135,56 @@ class SmtpSkipTlsVerifyTest extends TestCase
         // Brak naszej ssl override gdy skip_tls_verify=false.
         $this->assertArrayNotHasKey('ssl', $options);
     }
+
+    public function test_mail_extend_does_not_crash_on_empty_encryption(): void
+    {
+        // Regresja: encryption!='tls' (np. 'null', null, '') powodowało
+        // scheme='' → EsmtpTransportFactory rzucało "The \"\" scheme is not
+        // supported". Teraz fallback to 'smtp' (Symfony STARTTLS na podstawie
+        // portu i tak działa).
+        config([
+            'mail.mailers.smtp' => [
+                'transport' => 'smtp',
+                'host' => 'smtp.example.com',
+                'port' => 587,
+                'encryption' => null,    // tu był crash trigger
+                'username' => 'user',
+                'password' => 'pass',
+                'skip_tls_verify' => false,
+                'timeout' => 60,
+            ],
+        ]);
+
+        $method = new ReflectionMethod(AppServiceProvider::class, 'registerSmtpStreamOptionsExtension');
+        $method->setAccessible(true);
+        $method->invoke($this->app->make(AppServiceProvider::class, ['app' => $this->app]));
+
+        // Powinno się resolve bez crashu — wcześniej fata error.
+        $transport = Mail::mailer('smtp')->getSymfonyTransport();
+        $this->assertInstanceOf(EsmtpTransport::class, $transport);
+    }
+
+    public function test_mail_extend_uses_smtps_for_port_465_with_tls(): void
+    {
+        config([
+            'mail.mailers.smtp' => [
+                'transport' => 'smtp',
+                'host' => 'smtp.galoptrans.pl',
+                'port' => 465,
+                'encryption' => 'tls',
+                'username' => 'user',
+                'password' => 'pass',
+                'skip_tls_verify' => true,
+                'timeout' => 60,
+            ],
+        ]);
+
+        $method = new ReflectionMethod(AppServiceProvider::class, 'registerSmtpStreamOptionsExtension');
+        $method->setAccessible(true);
+        $method->invoke($this->app->make(AppServiceProvider::class, ['app' => $this->app]));
+
+        // Port 465 + tls → smtps scheme → SocketStream + TLS handshake.
+        $transport = Mail::mailer('smtp')->getSymfonyTransport();
+        $this->assertInstanceOf(EsmtpTransport::class, $transport);
+    }
 }
