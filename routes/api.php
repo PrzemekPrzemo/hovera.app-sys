@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\Owner\InvoicesController as OwnerInvoicesController;
 use App\Http\Controllers\Api\Owner\MessagesController as OwnerMessagesController;
+use App\Http\Controllers\Api\Owner\PhotosController as OwnerPhotosController;
 use App\Http\Controllers\Api\PlacesAutocompleteController;
 use App\Http\Controllers\Api\Transport\CalculatorPreviewController;
 use App\Http\Controllers\Api\TransportInquiryApiController;
@@ -124,6 +125,17 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])
         Route::get('/messages/{stableTenantId}/{messageId}/attachments/{attachmentIndex}/download', [OwnerMessagesController::class, 'downloadAttachment'])
             ->where('attachmentIndex', '[0-9]+')
             ->name('messages.attachments.download');
+
+        // Faza 5 — zdjęcia konia (galeria) — list (stable + owner uploads),
+        // upload owner side z multipart, download stream, soft delete swoich.
+        Route::get('/horses/{centralHorseId}/photos', [OwnerPhotosController::class, 'index'])
+            ->name('horses.photos.index');
+        Route::post('/horses/{centralHorseId}/photos', [OwnerPhotosController::class, 'upload'])
+            ->name('horses.photos.upload');
+        Route::get('/photos/{stableTenantId}/{photoId}/download', [OwnerPhotosController::class, 'download'])
+            ->name('photos.download');
+        Route::delete('/photos/{stableTenantId}/{photoId}', [OwnerPhotosController::class, 'destroy'])
+            ->name('photos.destroy');
     });
 
 // Public auth endpoints (no tenant context yet — user picks tenant after login).
