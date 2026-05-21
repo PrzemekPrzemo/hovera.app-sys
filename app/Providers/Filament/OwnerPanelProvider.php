@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Filament\Owner\Widgets\LastOwnerActivityWidget;
 use App\Filament\Owner\Widgets\NotificationsStatsWidget;
 use App\Filament\Owner\Widgets\UpcomingTransportWidget;
 use App\Http\Middleware\EnforceImpersonationExpiry;
@@ -91,6 +92,10 @@ class OwnerPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Owner/Widgets'), for: 'App\\Filament\\Owner\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
+                // Faza 6 PR 6.2 — ostatnie unread notifications (database) z
+                // ownersi pipeline'u (PR 6.1): wiadomości, faktury, wizyty.
+                // Sort -10 — pierwsze widget pod AccountWidget'em.
+                LastOwnerActivityWidget::class,
                 NotificationsStatsWidget::class,
                 UpcomingTransportWidget::class,
             ])
