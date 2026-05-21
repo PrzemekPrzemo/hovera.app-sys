@@ -6,10 +6,14 @@ namespace App\Providers;
 
 use App\Domain\Transport\Payments\Stripe\TransporterStripeConnectService;
 use App\Models\Central\SystemSetting;
+use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
+use App\Models\Tenant\Invoice;
 use App\Models\Tenant\Payment;
 use App\Observers\HorseObserver;
 use App\Observers\PaymentObserver;
+use App\Observers\Tenant\HealthRecordObserver;
+use App\Observers\Tenant\InvoiceObserver;
 use App\Services\Billing\PayUService;
 use App\Services\Billing\Przelewy24Service;
 use App\Services\Billing\StripeBillingService;
@@ -114,6 +118,15 @@ class AppServiceProvider extends ServiceProvider
         // Horse observer: synchronizuje historię BoxAssignment gdy
         // Filament resource zmienia horses.box_id przez form save.
         Horse::observe(HorseObserver::class);
+
+        // Faza 6 PR 6.1 — Owner notifications hub:
+        //   * Invoice issued → NewInvoiceForOwner (database + mail)
+        //   * HealthRecord created (vet/dentist/farrier/...) →
+        //     VetVisitRecordedForOwner (database + mail)
+        // Soft-fail w obu (OwnerNotificationDispatcher loguje błędy
+        // ale nie cofa głównej akcji).
+        Invoice::observe(InvoiceObserver::class);
+        HealthRecord::observe(HealthRecordObserver::class);
 
         // SMTP config override z SystemSetting (zarządzane przez master admina
         // w /admin/smtp-settings). Pierwszeństwo nad .env. Pozwala rotować
