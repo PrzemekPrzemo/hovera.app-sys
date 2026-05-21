@@ -187,6 +187,42 @@ class InvitationFlowTest extends TestCase
         $this->assertSame(64, strlen($hash));
     }
 
+    public function test_send_invitation_soft_fails_when_mail_dispatch_throws(): void
+    {
+        // Regresja od raportu "brak potwierdzenia na thanks page" — SMTP
+        // padał w prod, exception bombował aż do controller'a i user
+        // dostawał 'provisioning_failed' zamiast thanks page'a.
+        // Teraz mail failure jest soft-fail: invitation row jest w DB,
+        // caller dostaje result, admin może resendować ręcznie.
+
+        // Wymuszamy SMTP fail przez ustawienie nieistniejącego mailera.
+        config()->set('mail.default', 'broken-driver');
+        config()->set('mail.mailers.broken-driver', ['transport' => 'array']);
+
+        // Symulujemy SMTP padu via Notification fasada throwing.
+        Notification::partialMock()
+            ->shouldReceive('route')
+            ->andThrow(new \RuntimeException('SMTP connection refused'));
+
+        // Wyciszamy exception handler żeby report($e) nie crashowało testu —
+        // testujemy soft-fail behavior, nie reporter implementation.
+        $this->withoutExceptionHandling([]);
+
+        $tenant = $this->makeTenant('soft-fail');
+
+        $result = $this->app->make(SendInvitation::class)->execute(
+            email: 'recipient@example.com',
+            tenant: $tenant,
+            role: 'owner',
+        );
+
+        // Invitation row musi być w DB mimo SMTP padu.
+        $this->assertNotNull($result['invitation']);
+        $this->assertSame('recipient@example.com', $result['invitation']->email);
+        $this->assertNotEmpty($result['plaintext_token']);
+        $this->assertDatabaseHas('user_invitations', ['id' => $result['invitation']->id]);
+    }
+
     private function makeTenant(string $slug = 'acme'): Tenant
     {
         $t = new Tenant([
