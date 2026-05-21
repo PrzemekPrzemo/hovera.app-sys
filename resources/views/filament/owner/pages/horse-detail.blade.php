@@ -188,16 +188,37 @@
         </section>
     @endif
 
-    {{-- Placeholder dla Faz 2-5 (timeline / invoices / messages / files).
-         W każdej kolejnej fazie zastąpimy hint widgetem / linkiem do
-         nowego tab'u. --}}
+    {{-- Linki do sub-sekcji (Faza 2: Timeline gotowy, Faza 3: Faktury
+         globalna lista. Faza 4-5: messages/files = placeholder). --}}
+    <section class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <a
+            href="{{ \App\Filament\Owner\Pages\HorseTimeline::getUrl(['centralHorseId' => $snapshot->centralHorseId]) }}"
+            class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 transition hover:border-primary-300 hover:bg-primary-50 dark:border-gray-800 dark:bg-gray-900/40 dark:hover:bg-primary-900/20"
+        >
+            <x-filament::icon icon="heroicon-o-clock" class="h-6 w-6 text-primary-600 dark:text-primary-400" />
+            <div>
+                <div class="font-medium">{{ __('owner/horse_timeline.title') }}</div>
+                <div class="text-xs text-gray-500">{{ __('owner/horse_detail.upcoming.timeline') }}</div>
+            </div>
+        </a>
+        <a
+            href="{{ \App\Filament\Owner\Pages\InvoiceList::getUrl() }}"
+            class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 transition hover:border-primary-300 hover:bg-primary-50 dark:border-gray-800 dark:bg-gray-900/40 dark:hover:bg-primary-900/20"
+        >
+            <x-filament::icon icon="heroicon-o-document-text" class="h-6 w-6 text-primary-600 dark:text-primary-400" />
+            <div>
+                <div class="font-medium">{{ __('owner/invoices.navigation') }}</div>
+                <div class="text-xs text-gray-500">{{ __('owner/horse_detail.upcoming.invoices') }}</div>
+            </div>
+        </a>
+    </section>
+
+    {{-- Placeholder dla Faz 4-5 (komunikacja + pliki). --}}
     <section class="space-y-3 rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500 dark:border-gray-800">
         <div class="font-medium text-gray-700 dark:text-gray-300">
             {{ __('owner/horse_detail.upcoming.heading') }}
         </div>
         <ul class="ml-4 list-disc space-y-1">
-            <li>{{ __('owner/horse_detail.upcoming.timeline') }}</li>
-            <li>{{ __('owner/horse_detail.upcoming.invoices') }}</li>
             <li>{{ __('owner/horse_detail.upcoming.messages') }}</li>
             <li>{{ __('owner/horse_detail.upcoming.files') }}</li>
         </ul>
