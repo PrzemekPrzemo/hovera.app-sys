@@ -84,4 +84,13 @@ return [
         'no_tenant' => 'Brak aktywnego tenanta — zaloguj się ponownie.',
         'unknown' => 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie.',
     ],
+
+    'live' => [
+        'title' => 'Podgląd na żywo',
+        'hint' => 'Aktualizuje się automatycznie podczas edycji',
+        'loading' => 'Liczenie…',
+        'missing' => 'Uzupełnij adresy, aby zobaczyć podgląd ceny',
+        'error' => 'Nie udało się odświeżyć podglądu.',
+        'currency_fallback' => 'PLN',
+    ],
 ];
