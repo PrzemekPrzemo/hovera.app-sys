@@ -575,7 +575,9 @@ Route::middleware(['web', 'throttle:30,1'])
     ->get('/przewoznicy/dolacz', [TransporterOnboardingController::class, 'show'])
     ->name('public.transport.onboarding.show');
 
-Route::middleware(['web', 'throttle:1,60'])
+// Throttle przez named limiter `transporter-onboarding` w AppServiceProvider:
+// prod=1/h (anti-abuse dla 30MB file uploads), inne env=30/h (testing).
+Route::middleware(['web', 'throttle:transporter-onboarding'])
     ->post('/przewoznicy/dolacz', [TransporterOnboardingController::class, 'submit'])
     ->name('public.transport.onboarding.submit');
 

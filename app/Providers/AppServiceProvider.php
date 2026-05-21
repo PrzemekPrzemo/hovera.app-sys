@@ -23,6 +23,9 @@ use App\Services\Integrations\LiveJumping\LiveJumpingFeatureGate;
 use App\Services\Integrations\TodoistClient;
 use App\Services\Ksef\CentralKsefService;
 use App\Services\TenantAuditLogger;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -134,11 +137,36 @@ class AppServiceProvider extends ServiceProvider
         Invoice::observe(InvoiceObserver::class);
         HealthRecord::observe(HealthRecordObserver::class);
 
+        // Named rate limiters — pozwalają na warunkowe limity per env
+        // bez duplikowania logiki w route definitions. `throttle:NAME`
+        // w route'cie używa ich tutaj zdefiniowanych.
+        $this->registerRateLimiters();
+
         // SMTP config override z SystemSetting (zarządzane przez master admina
         // w /admin/smtp-settings). Pierwszeństwo nad .env. Pozwala rotować
         // creds bez SSH. Bezpiecznie pomijane gdy DB nie zhydratowane (np.
         // route:list w boot — SystemSetting::getValue ma try/catch w środku).
         $this->overrideMailConfigFromSystemSettings();
+    }
+
+    /**
+     * Named rate limiters z env-awareness — prod ścisły anti-abuse,
+     * lokalne / staging luźne dla testowania.
+     */
+    private function registerRateLimiters(): void
+    {
+        // `transporter-onboarding` — POST /przewoznicy/dolacz (carrier
+        // signup z 6 file uploads × 5MB). Production zachowuje strict
+        // 1/h/IP (kompromituje SEO bota / scrapery), ale na non-prod
+        // 30/h żeby developer mógł testować flow bez czyszczenia cache.
+        //
+        // Per-IP key — `by(request->ip())` jest defaultem dla `Limit::perHour()`.
+        RateLimiter::for('transporter-onboarding', function (Request $request) {
+            $perHour = app()->environment('production') ? 1 : 30;
+
+            return Limit::perHour($perHour)
+                ->by($request->ip());
+        });
     }
 
     /**
