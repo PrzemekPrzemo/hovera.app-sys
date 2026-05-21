@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\HtmlString;
 
 class HealthRecordResource extends Resource
 {
@@ -70,7 +71,12 @@ class HealthRecordResource extends Resource
                         ->label(__('app/health.form.label.horse'))
                         ->options(fn () => Horse::query()->orderBy('name')->pluck('name', 'id'))
                         ->required()
+                        ->reactive()
                         ->searchable(),
+                    Forms\Components\Placeholder::make('horse_identification')
+                        ->label(__('app/health.form.label.horse_identification'))
+                        ->content(self::renderHorseIdentification())
+                        ->visible(fn (Forms\Get $get) => $get('horse_id') !== null),
                     Forms\Components\Select::make('treatment_template_id')
                         ->label(__('app/health.form.label.template'))
                         ->helperText(__('app/health.form.helper.template'))
@@ -208,6 +214,66 @@ class HealthRecordResource extends Resource
      * details / next_due_at from the template. Always overwrites — the
      * user explicitly chose a preset, so they want its values.
      */
+    /**
+     * Inline horse identification (microchip / passport / UELN) widoczne
+     * pod selectem konia w formularzu. Wet musi zweryfikować tożsamość
+     * konia przy zabiegu — chcemy żeby dane były na ekranie zaraz po
+     * wyborze, bez przeklikania do HorseResource.
+     *
+     * Zwracamy `callable(Get $get): HtmlString` — Placeholder Filament'a
+     * akceptuje closure z reactive context'em.
+     */
+    public static function renderHorseIdentification(): callable
+    {
+        return fn (Forms\Get $get): HtmlString => self::renderHorseIdentificationFor($get('horse_id'));
+    }
+
+    /**
+     * Czysta implementacja (testowalna bez Forms\Get) — przyjmuje horse_id,
+     * zwraca HTML do osadzenia w Placeholder content.
+     */
+    public static function renderHorseIdentificationFor(?string $horseId): HtmlString
+    {
+        if (! $horseId) {
+            return new HtmlString('');
+        }
+
+        $horse = Horse::query()->find($horseId);
+        if ($horse === null) {
+            return new HtmlString(
+                '<span class="text-sm text-gray-500">'.e(__('app/health.form.horse_identification.missing')).'</span>'
+            );
+        }
+
+        $rows = [
+            __('app/health.form.horse_identification.microchip') => $horse->microchip,
+            __('app/health.form.horse_identification.passport') => $horse->passport_number,
+            __('app/health.form.horse_identification.ueln') => $horse->ueln,
+        ];
+
+        $html = '<dl class="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">';
+        $shown = 0;
+        foreach ($rows as $label => $value) {
+            $html .= '<div>';
+            $html .= '<dt class="text-gray-500 uppercase tracking-wide">'.e($label).'</dt>';
+            if ($value) {
+                $html .= '<dd class="font-mono text-sm text-gray-900 dark:text-gray-100">'.e((string) $value).'</dd>';
+                $shown++;
+            } else {
+                $html .= '<dd class="text-gray-400">—</dd>';
+            }
+            $html .= '</div>';
+        }
+        $html .= '</dl>';
+
+        if ($shown === 0) {
+            $html .= '<div class="mt-2 text-xs text-amber-700 dark:text-amber-400">'
+                .e(__('app/health.form.horse_identification.empty_warning')).'</div>';
+        }
+
+        return new HtmlString($html);
+    }
+
     private static function applyTemplate(): callable
     {
         return function (?string $state, Forms\Get $get, Forms\Set $set) {

@@ -10,6 +10,7 @@ return [
         ],
         'label' => [
             'horse' => 'Horse',
+            'horse_identification' => 'Horse identification',
             'template' => 'Treatment template',
             'template_placeholder' => '— optionally pick a template —',
             'type' => 'Type',
@@ -28,6 +29,13 @@ return [
             'template' => 'Picking a template fills in type, summary and the suggested next-due date.',
             'next_due_at' => 'This triggers a dashboard alert closer to the due date.',
             'specialist' => 'List filtered by entry type — farriers for "Farrier", vets for others. Manage the list in Stable → Specialists.',
+        ],
+        'horse_identification' => [
+            'microchip' => 'Microchip',
+            'passport' => 'Passport number',
+            'ueln' => 'UELN',
+            'empty_warning' => 'No identification data for this horse. Fill in microchip / passport on the horse profile before treatment.',
+            'missing' => 'Selected horse no longer exists (record deleted).',
         ],
     ],
 
