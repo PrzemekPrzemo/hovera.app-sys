@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Invitations\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MasterAdController;
+use App\Http\Controllers\Owner\InvoiceCsvExportController;
 use App\Http\Controllers\Public\BookingCancellationController;
 use App\Http\Controllers\Public\ClientPortalController;
 use App\Http\Controllers\Public\DemoLoginController;
@@ -769,3 +770,13 @@ Route::middleware('web')
         Route::get('/{provider}/return/{payment}', [PaymentWebhookController::class, 'return'])
             ->name('return');
     });
+
+/*
+ * Owner panel — CSV eksport listy faktur (C.7 z OWNER-STABLE-ROADMAP).
+ * Web session (cookie z `/owner` panel login) — Auth jest w controller'ze.
+ * Throttle defensywne (rzadko używane, ale eksport >100 faktur jest
+ * heavier niż widoki listy).
+ */
+Route::middleware(['web', 'auth', 'throttle:10,1'])
+    ->get('/owner/invoices/export.csv', InvoiceCsvExportController::class)
+    ->name('owner.invoices.export-csv');

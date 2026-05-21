@@ -8,6 +8,60 @@
             @endif
         </div>
 
+        {{-- C.7 — Yearly totals banner + year filter chips + CSV export --}}
+        @if (! empty($this->yearlyTotals))
+            <div class="rounded-lg border border-primary-200 bg-primary-50 p-3 dark:border-primary-800 dark:bg-primary-900/20">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-baseline gap-3">
+                        <span class="text-xs uppercase tracking-wide text-primary-700 dark:text-primary-300">
+                            @if ($this->yearFilter)
+                                {{ __('owner/invoices.list.total_year', ['year' => $this->yearFilter]) }}
+                            @else
+                                {{ __('owner/invoices.list.total_all') }}
+                            @endif
+                        </span>
+                        <span class="text-xl font-bold text-primary-700 dark:text-primary-300">
+                            {{ $this->formatCents($this->currentYearTotal()) }}
+                        </span>
+                    </div>
+                    <a
+                        href="{{ $this->csvExportUrl() }}"
+                        class="inline-flex items-center gap-1 rounded-md border border-primary-300 bg-white px-3 py-1.5 text-xs font-medium text-primary-700 hover:bg-primary-100 dark:border-primary-700 dark:bg-gray-900 dark:text-primary-300 dark:hover:bg-primary-900/40"
+                    >
+                        <x-filament::icon icon="heroicon-o-arrow-down-tray" class="h-4 w-4" />
+                        {{ __('owner/invoices.list.export_csv') }}
+                    </a>
+                </div>
+
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <a
+                        href="{{ $this->yearFilterUrl(null) }}"
+                        @class([
+                            'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition',
+                            'bg-primary-600 text-white' => $this->yearFilter === null,
+                            'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700' => $this->yearFilter !== null,
+                        ])
+                    >
+                        {{ __('owner/invoices.list.year_all') }}
+                    </a>
+                    @foreach ($this->yearlyTotals as $yr => $totalCents)
+                        <a
+                            href="{{ $this->yearFilterUrl($yr) }}"
+                            @class([
+                                'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition',
+                                'bg-primary-600 text-white' => $this->yearFilter === $yr,
+                                'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700' => $this->yearFilter !== $yr,
+                            ])
+                        >
+                            <span>{{ $yr }}</span>
+                            <span class="opacity-70">·</span>
+                            <span class="font-mono">{{ $this->formatCents($totalCents) }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         @if (! empty($this->horseOptions))
             <div class="flex flex-wrap items-center gap-2">
                 <span class="text-xs uppercase tracking-wide text-gray-500">

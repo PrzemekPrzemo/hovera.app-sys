@@ -25,6 +25,10 @@ return [
             'label' => 'Filtruj wg konia:',
             'all' => 'Wszystkie',
         ],
+        'total_year' => 'Suma za :year',
+        'total_all' => 'Suma łącznie',
+        'year_all' => 'Wszystkie lata',
+        'export_csv' => 'Eksportuj CSV',
     ],
 
     'show' => [
