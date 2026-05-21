@@ -21,7 +21,9 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class CalendarEntryResource extends Resource
 {
@@ -240,6 +242,64 @@ class CalendarEntryResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
+    }
+
+    /**
+     * Row-level auth (G3 z audytu ról): instruktor / vet / employee mogą
+     * edytować TYLKO swoje wpisy (`created_by_central_user_id` matching).
+     * Owner / admin / manager mają pełny dostęp (operations override).
+     * Master admin zawsze passuje (impersonacja debug).
+     *
+     * Wcześniej każdy z HORSE_AND_CARE_STAFF mógł edytować wszystko —
+     * instruktor A mógł skasować lekcję instruktora B. Zamykamy ten gap
+     * przez sprawdzenie ownership na poziomie rekordu.
+     */
+    public static function canEdit(Model $record): bool
+    {
+        return self::canModify($record);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return self::canModify($record);
+    }
+
+    /**
+     * Wspólna logika dla canEdit + canDelete. Public dla testów —
+     * row-level decision musi być verifiable bez Filament render flow.
+     */
+    public static function canModify(Model $record): bool
+    {
+        if (! $record instanceof CalendarEntry) {
+            return false;
+        }
+
+        $gate = app(TenantRoleGate::class);
+
+        // Master admin zawsze (impersonacja debug — matching RestrictedByTenantRole).
+        if ($gate->isMasterAdmin()) {
+            return true;
+        }
+
+        // Owner / admin / manager — pełny dostęp do całego kalendarza tenant'u.
+        if ($gate->isAnyOf(TenantRoleGate::FULL_ADMINS_AND_MANAGERS)) {
+            return true;
+        }
+
+        // Pozostałe role (instructor/vet/employee/viewer) — tylko własne wpisy.
+        $userId = Auth::id();
+        if ($userId === null) {
+            return false;
+        }
+
+        // Legacy entries bez `created_by_central_user_id` → odmawiamy.
+        // Manager musi je nadal móc edytować/skasować (powyższy branch);
+        // dla pozostałych ról brak ownership info = brak modyfikacji.
+        if ($record->created_by_central_user_id === null) {
+            return false;
+        }
+
+        return (string) $record->created_by_central_user_id === (string) $userId;
     }
 
     public static function getPages(): array
