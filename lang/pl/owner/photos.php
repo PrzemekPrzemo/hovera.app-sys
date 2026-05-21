@@ -15,4 +15,30 @@ return [
         'too_large' => 'Plik ":name" przekracza limit :max_mb MB.',
         'unsupported_mime' => 'Niewspierany typ pliku ":mime" (":name"). Dozwolone: JPG, PNG, WebP.',
     ],
+
+    'page' => [
+        'title' => 'Galeria zdjęć konia',
+        'breadcrumb' => 'Galeria',
+        'stable' => 'Stajnia',
+        'empty_heading' => 'Brak zdjęć',
+        'empty_description' => 'Dodaj pierwsze zdjęcie swojego konia — pojawi się tutaj wraz z zdjęciami od stajni.',
+    ],
+
+    'form' => [
+        'section' => 'Dodaj zdjęcie',
+        'file' => 'Plik (JPG/PNG/WebP, max 10 MB)',
+        'caption' => 'Opis (opcjonalnie)',
+        'upload_button' => 'Wyślij',
+        'uploaded' => 'Zdjęcie dodane.',
+        'upload_failed' => 'Nie udało się dodać zdjęcia.',
+        'no_file' => 'Wybierz plik do wysłania.',
+        'delete' => 'Usuń',
+        'delete_confirm' => 'Czy na pewno chcesz usunąć to zdjęcie?',
+        'deleted' => 'Zdjęcie usunięte.',
+    ],
+
+    'uploader' => [
+        'you' => 'Ty',
+        'stable' => 'Stajnia',
+    ],
 ];
