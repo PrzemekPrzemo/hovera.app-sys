@@ -10,16 +10,20 @@ use App\Models\Tenant\BoardingService;
 use App\Models\Tenant\Box;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
+use App\Services\Integrations\LiveJumping\LiveJumpingClient;
+use App\Services\Integrations\LiveJumping\LiveJumpingFeatureGate;
 use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\HtmlString;
 
 class HorseResource extends Resource
 {
@@ -150,7 +154,7 @@ class HorseResource extends Resource
                 ->description(__('app/horse.form.section.sport_help'))
                 ->collapsed()
                 ->icon('heroicon-o-trophy')
-                ->visible(fn () => app(\App\Services\Integrations\LiveJumping\LiveJumpingFeatureGate::class)->enabled())
+                ->visible(fn () => app(LiveJumpingFeatureGate::class)->enabled())
                 ->schema([
                     Forms\Components\TextInput::make('livejumping_profile_url')
                         ->label(__('app/horse.form.label.livejumping_profile_url'))
@@ -160,17 +164,17 @@ class HorseResource extends Resource
                         ->placeholder('https://livejumping.com/horse/...'),
                     Forms\Components\Placeholder::make('livejumping_palmares')
                         ->label(__('app/horse.form.label.livejumping_palmares'))
-                        ->content(function (\Filament\Forms\Get $get): \Illuminate\Support\HtmlString {
+                        ->content(function (Get $get): HtmlString {
                             $url = (string) $get('livejumping_profile_url');
                             if ($url === '') {
-                                return new \Illuminate\Support\HtmlString(
+                                return new HtmlString(
                                     '<span class="text-gray-500 text-sm">'.e(__('app/horse.form.helper.livejumping_no_profile')).'</span>'
                                 );
                             }
-                            $profile = app(\App\Services\Integrations\LiveJumping\LiveJumpingClient::class)
+                            $profile = app(LiveJumpingClient::class)
                                 ->getHorseProfile($url);
                             if ($profile === null) {
-                                return new \Illuminate\Support\HtmlString(
+                                return new HtmlString(
                                     '<span class="text-amber-600 text-sm">'.e(__('app/horse.form.helper.livejumping_fetch_failed')).'</span>'
                                 );
                             }
@@ -186,7 +190,7 @@ class HorseResource extends Resource
      * Wyciągnięte do osobnej metody, żeby Placeholder content był
      * kompaktowy i łatwo testowalny.
      */
-    private static function renderHorsePalmares(array $profile): \Illuminate\Support\HtmlString
+    private static function renderHorsePalmares(array $profile): HtmlString
     {
         $stats = (array) ($profile['stats'] ?? []);
         $recent = (array) ($profile['recent_results'] ?? []);
@@ -228,7 +232,7 @@ class HorseResource extends Resource
         }
         $html .= '</div>';
 
-        return new \Illuminate\Support\HtmlString($html);
+        return new HtmlString($html);
     }
 
     public static function table(Table $table): Table
@@ -281,6 +285,7 @@ class HorseResource extends Resource
     {
         return [
             HorseResource\RelationManagers\HealthRecordsRelationManager::class,
+            HorseResource\RelationManagers\WeightMeasurementsRelationManager::class,
             HorseResource\RelationManagers\FeedingPlanRelationManager::class,
             HorseResource\RelationManagers\ActivitiesRelationManager::class,
             HorseResource\RelationManagers\MessagesRelationManager::class,
