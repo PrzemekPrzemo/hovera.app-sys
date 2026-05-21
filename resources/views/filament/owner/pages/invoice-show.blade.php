@@ -30,6 +30,22 @@
                         {{ __('owner/invoices.field.due_at') }}: {{ $inv->dueAt->format('Y-m-d') }}
                     </div>
                 @endif
+
+                @if ($this->canPay())
+                    <div class="mt-3">
+                        <x-filament::button
+                            wire:click="pay"
+                            icon="heroicon-o-credit-card"
+                            color="success"
+                            size="lg"
+                        >
+                            {{ __('owner/invoices.pay.button') }}
+                        </x-filament::button>
+                        <div class="mt-1 text-xs text-gray-500">
+                            {{ __('owner/invoices.pay.helper') }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
