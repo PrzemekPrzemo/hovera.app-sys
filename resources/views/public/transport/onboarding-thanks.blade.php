@@ -30,6 +30,19 @@
         <h1>{{ __('public/transporter_onboarding.thanks.heading') }}</h1>
         <p>{{ __('public/transporter_onboarding.thanks.intro', ['name' => $tenant->name]) }}</p>
 
+        @if (isset($uploadStatus) && is_array($uploadStatus) && ($uploadStatus['uploaded'] ?? 0) < ($uploadStatus['required'] ?? 0))
+            <div style="margin: 1.25rem 0; padding: 1rem 1.25rem; background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 10px; text-align: left; color: #78350F; font-size: .9rem;">
+                <strong>⚠ {{ __('public/transporter_onboarding.thanks.upload_warning_heading') }}</strong>
+                <p style="margin: .35rem 0 0; line-height: 1.5;">
+                    {{ __('public/transporter_onboarding.thanks.upload_warning_body', [
+                        'uploaded' => $uploadStatus['uploaded'],
+                        'required' => $uploadStatus['required'],
+                        'email' => config('hovera.legal.contact_email', 'office@hovera.app'),
+                    ]) }}
+                </p>
+            </div>
+        @endif
+
         <ol>
             <li>{{ __('public/transporter_onboarding.thanks.step_1') }}</li>
             <li>{{ __('public/transporter_onboarding.thanks.step_2') }}</li>

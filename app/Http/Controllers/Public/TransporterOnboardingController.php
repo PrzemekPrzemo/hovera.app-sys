@@ -244,6 +244,16 @@ class TransporterOnboardingController extends Controller
             ]);
         }
 
+        // Upload status flash — thanks page pokaże warning gdy <N z N docs
+        // się zapisało (np. wszystkie failowały bo tenant DB brakuje
+        // `transporter_documents` table; po DocumentUploadService backfill
+        // to powinno być bardzo rzadkie ale nadal raportujemy user'owi).
+        $required = count(self::REQUIRED_DOCUMENTS) + 1;
+        session()->flash('onboarding_upload_status', [
+            'uploaded' => $uploadedCount,
+            'required' => $required,
+        ]);
+
         return redirect()->route('public.transport.onboarding.thanks', ['slug' => $tenant->slug]);
     }
 
@@ -253,6 +263,7 @@ class TransporterOnboardingController extends Controller
 
         return view('public.transport.onboarding-thanks', [
             'tenant' => $tenant,
+            'uploadStatus' => session('onboarding_upload_status'),
         ]);
     }
 

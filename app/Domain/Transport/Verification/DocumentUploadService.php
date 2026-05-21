@@ -10,8 +10,11 @@ use App\Models\Central\Tenant;
 use App\Models\Tenant\TransporterDocument;
 use App\Tenancy\TenantManager;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -42,6 +45,25 @@ class DocumentUploadService
 
         $tenant = $this->tenants->tenantOrFail();
         $disk = $this->disk();
+
+        // Self-heal: gdy tenant DB nie ma `transporter_documents` table
+        // (luka migracji — np. tenant sprovisionowany przez stary
+        // tenant-schema.sql dump bez tej tabeli), próbujemy raz odpalić
+        // tenant migrations w tym tenant context. Bez tego DocumentUploadService
+        // failuje silently, owner widzi 0 uploaded docs i nie ma jak naprawić.
+        try {
+            $this->assertSchemaReady();
+        } catch (QueryException $e) {
+            if ($this->isMissingTableError($e)) {
+                $this->backfillTenantMigrations($tenant);
+                // Po backfill ponawiamy assertion — jeśli nadal failuje
+                // (np. brak PRIVILEGES), throw oryginalny exception żeby
+                // ops zobaczył.
+                $this->assertSchemaReady();
+            } else {
+                throw $e;
+            }
+        }
 
         // Replace existing (latest) document of same type if status=pending
         // or rejected — keeps history via soft deletes when status=verified
@@ -275,5 +297,64 @@ class DocumentUploadService
     private function disk(): Filesystem
     {
         return Storage::disk((string) config('transport.documents.disk', 'local'));
+    }
+
+    /**
+     * Lightweight check że schema jest gotowy — jedno SELECT na
+     * `transporter_documents`. Rzuca QueryException jeśli table missing,
+     * caller rozpoznaje 42S02 i decyduje czy backfillować migrations.
+     */
+    private function assertSchemaReady(): void
+    {
+        TransporterDocument::query()->limit(1)->exists();
+    }
+
+    /**
+     * Detekcja "tabela nie istnieje" agnostyczna względem driver'a DB.
+     * Mirror logiki z `EditTransporter::isMissingTableError()`.
+     */
+    private function isMissingTableError(QueryException $e): bool
+    {
+        $code = $e->getCode();
+        $message = $e->getMessage();
+
+        if (in_array($code, ['42S02', '42P01'], true)) {
+            return true;
+        }
+
+        return str_contains($message, "doesn't exist")
+            || str_contains($message, 'no such table')
+            || str_contains($message, 'does not exist');
+    }
+
+    /**
+     * One-shot self-heal: odpala `migrate --database=tenant
+     * --path=database/migrations/tenant --force` w aktualnym tenant
+     * context. Wywoływane gdy detektujemy missing `transporter_documents`
+     * — typowo dla tenants sprovisionowanych przez stary tenant-schema.sql
+     * dump (przed dodaniem migracji 2026_05_18_120831_create_transporter_documents_table).
+     *
+     * Soft-fail: jeśli migrate sam crashuje (np. brak GRANT na CREATE TABLE),
+     * loguje warning + propaguje exception przez caller. Owner zobaczy
+     * upload failed message.
+     */
+    private function backfillTenantMigrations(Tenant $tenant): void
+    {
+        Log::warning('Backfilling tenant migrations — transporter_documents missing', [
+            'tenant_id' => $tenant->id,
+            'db_name' => $tenant->db_name,
+        ]);
+
+        Artisan::call('migrate', [
+            '--database' => 'tenant',
+            '--path' => 'database/migrations/tenant',
+            '--realpath' => false,
+            '--force' => true,
+        ]);
+
+        Log::info('Tenant migration backfill completed', [
+            'tenant_id' => $tenant->id,
+            'output' => Artisan::output(),
+        ]);
     }
 }
