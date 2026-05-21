@@ -339,6 +339,12 @@ class Calculator extends Page implements HasForms
 
         $this->fromDisplayName = $from->displayName;
         $this->toDisplayName = $to->displayName;
+        // Zapisujemy lat/lng z geocodingu do public props — Leaflet w
+        // result section renderuje markery start/end (patrz x-route-map).
+        $this->pendingPickupLat = $from->coords->lat;
+        $this->pendingPickupLng = $from->coords->lng;
+        $this->pendingDropoffLat = $to->coords->lat;
+        $this->pendingDropoffLng = $to->coords->lng;
         $this->quotation = $quotation;
 
         Notification::make()
