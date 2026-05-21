@@ -11,9 +11,11 @@ use App\Models\Central\Tenant;
 use App\Models\Central\User;
 use App\Tenancy\TenantManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -232,6 +234,138 @@ class OwnerMessagesApiTest extends TestCase
         $response->assertJsonPath('count', 2);
     }
 
+    public function test_upload_attachment_returns_metadata(): void
+    {
+        Storage::fake('local');
+        $this->makeActiveBoarding();
+        $file = UploadedFile::fake()->image('iskra.jpg');
+
+        $response = $this->actingAs($this->owner)
+            ->postJson('/api/owner/horses/'.$this->centralHorseId.'/messages/attachments/upload', [
+                'file' => $file,
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonStructure(['data' => ['path', 'original_name', 'mime', 'size', 'uploader']]);
+        $response->assertJsonPath('data.original_name', 'iskra.jpg');
+        $response->assertJsonPath('data.uploader', 'owner');
+    }
+
+    public function test_upload_attachment_returns_403_for_ended_boarding(): void
+    {
+        Storage::fake('local');
+        HorseBoardingAssignment::create([
+            'id' => (string) Str::ulid(),
+            'central_horse_id' => $this->centralHorseId,
+            'stable_tenant_id' => $this->stableTenant->id,
+            'owner_user_id' => $this->owner->id,
+            'status' => HorseBoardingAssignment::STATUS_ENDED,
+            'started_at' => now()->subYear(),
+            'ended_at' => now()->subDays(30),
+        ]);
+
+        $response = $this->actingAs($this->owner)
+            ->postJson('/api/owner/horses/'.$this->centralHorseId.'/messages/attachments/upload', [
+                'file' => UploadedFile::fake()->image('x.jpg'),
+            ]);
+
+        $response->assertForbidden();
+    }
+
+    public function test_upload_attachment_returns_422_for_oversized_file(): void
+    {
+        Storage::fake('local');
+        $this->makeActiveBoarding();
+
+        $response = $this->actingAs($this->owner)
+            ->postJson('/api/owner/horses/'.$this->centralHorseId.'/messages/attachments/upload', [
+                'file' => UploadedFile::fake()->create('huge.pdf', 26 * 1024, 'application/pdf'),
+            ]);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_upload_attachment_returns_403_when_not_owner(): void
+    {
+        Storage::fake('local');
+        $other = User::create([
+            'name' => 'Other',
+            'email' => 'other-'.uniqid().'@example.test',
+            'password' => bcrypt('x'),
+        ]);
+
+        $response = $this->actingAs($other)
+            ->postJson('/api/owner/horses/'.$this->centralHorseId.'/messages/attachments/upload', [
+                'file' => UploadedFile::fake()->image('x.jpg'),
+            ]);
+
+        $response->assertForbidden();
+    }
+
+    public function test_download_attachment_streams_file(): void
+    {
+        Storage::fake('local');
+        $this->makeActiveBoarding();
+
+        // Najpierw upload
+        $uploadResponse = $this->actingAs($this->owner)
+            ->postJson('/api/owner/horses/'.$this->centralHorseId.'/messages/attachments/upload', [
+                'file' => UploadedFile::fake()->image('iskra.jpg'),
+            ]);
+        $uploadResponse->assertCreated();
+        $attachment = $uploadResponse->json('data');
+
+        // Zapisz wiadomość z tym attachment
+        $messageId = $this->seedMessageWithAttachments('from_client', 'Z fotą', '2026-05-01 09:00', [$attachment]);
+
+        // Download
+        $response = $this->actingAs($this->owner)
+            ->get('/api/owner/messages/'.$this->stableTenant->id.'/'.$messageId.'/attachments/0/download');
+
+        $response->assertOk();
+        $this->assertSame('image/jpeg', $response->headers->get('Content-Type'));
+    }
+
+    public function test_download_attachment_returns_404_for_unknown_message(): void
+    {
+        $response = $this->actingAs($this->owner)
+            ->get('/api/owner/messages/'.$this->stableTenant->id.'/'.(string) Str::ulid().'/attachments/0/download');
+
+        $response->assertNotFound();
+    }
+
+    public function test_download_attachment_returns_404_for_invalid_index(): void
+    {
+        $this->makeActiveBoarding();
+        $messageId = $this->seedMessage('from_stable', 'No attachment', '2026-05-01 09:00');
+
+        $response = $this->actingAs($this->owner)
+            ->get('/api/owner/messages/'.$this->stableTenant->id.'/'.$messageId.'/attachments/5/download');
+
+        $response->assertNotFound();
+    }
+
+    public function test_download_attachment_blocks_cross_tenant_path_injection(): void
+    {
+        Storage::fake('local');
+        $this->makeActiveBoarding();
+        // Podstawiamy ścieżkę z OBCEGO tenant'a w attachments JSON.
+        $maliciousAttachment = [
+            'path' => 'horse-messages/OTHER_TENANT/x/y.jpg',
+            'original_name' => 'stolen.jpg',
+            'mime' => 'image/jpeg',
+            'size' => 1024,
+        ];
+        $messageId = $this->seedMessageWithAttachments('from_client', 'Hack', '2026-05-01 09:00', [$maliciousAttachment]);
+
+        $response = $this->actingAs($this->owner)
+            ->get('/api/owner/messages/'.$this->stableTenant->id.'/'.$messageId.'/attachments/0/download');
+
+        // 403 — pathBelongsToStable() wykrywa cudze ścieżki nawet jeśli
+        // attachment jest w "naszej" wiadomości.
+        $response->assertForbidden();
+    }
+
     // ---- HELPERS ----
 
     private function makeActiveBoarding(): void
@@ -276,6 +410,14 @@ class OwnerMessagesApiTest extends TestCase
 
     private function seedMessage(string $direction, string $subject, string $sentAt): string
     {
+        return $this->seedMessageWithAttachments($direction, $subject, $sentAt, []);
+    }
+
+    /**
+     * @param  list<array<string,mixed>>  $attachments
+     */
+    private function seedMessageWithAttachments(string $direction, string $subject, string $sentAt, array $attachments): string
+    {
         $id = (string) Str::ulid();
         DB::connection('tenant')->table('horse_messages')->insert([
             'id' => $id,
@@ -285,6 +427,7 @@ class OwnerMessagesApiTest extends TestCase
             'client_id' => $this->clientId,
             'subject' => $subject,
             'body' => 'Body of '.$subject,
+            'attachments' => $attachments !== [] ? json_encode($attachments) : null,
             'sent_at' => $sentAt,
             'created_at' => $sentAt,
             'updated_at' => $sentAt,

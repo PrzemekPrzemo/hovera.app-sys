@@ -116,6 +116,14 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])
             ->name('messages.read');
         Route::get('/messages/unread-count', [OwnerMessagesController::class, 'unreadCount'])
             ->name('messages.unread_count');
+        // Faza 4 PR 4.2 — attachments upload + download. Upload zwraca
+        // metadata którą frontend embeduje w subsequent send(); download
+        // streamuje plik z authenticated controller.
+        Route::post('/horses/{centralHorseId}/messages/attachments/upload', [OwnerMessagesController::class, 'uploadAttachment'])
+            ->name('messages.attachments.upload');
+        Route::get('/messages/{stableTenantId}/{messageId}/attachments/{attachmentIndex}/download', [OwnerMessagesController::class, 'downloadAttachment'])
+            ->where('attachmentIndex', '[0-9]+')
+            ->name('messages.attachments.download');
     });
 
 // Public auth endpoints (no tenant context yet — user picks tenant after login).
