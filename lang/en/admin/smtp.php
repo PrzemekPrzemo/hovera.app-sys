@@ -8,6 +8,8 @@ return [
 
     'form' => [
         'section' => [
+            'diagnostics' => '🔬 Diagnostics — active mailer',
+            'diagnostics_description' => 'Verify SMTP config is actually in effect. If "active mailer" shows log/array — emails land in storage/logs/laravel.log instead of going out, despite a saved config.',
             'default' => 'Default mailer (master admin, password reset, notifications)',
             'default_description' => 'Used for: password reset links, master admin notifications, system alerts, tenant emails (e.g. transport company verification).',
             'transport' => 'Transport mailer (offers + dispatcher to drivers)',
@@ -25,6 +27,7 @@ return [
             'from_name' => 'From name',
             'status' => 'Status',
             'test_email' => 'Send test email to',
+            'effective_mailer' => 'Configuration state',
         ],
         'helper' => [
             'host' => 'E.g. smtp.gmail.com, smtp.sendgrid.net, smtp-relay.brevo.com',
@@ -46,8 +49,23 @@ return [
         'saved_body' => 'Override .env is now active. Next request will use the new settings.',
         'send_test_button' => 'Send test',
         'test_sent' => 'Test sent to :email — check the inbox.',
+        'test_sent_body' => 'Mailer used: :mailer. If the email does not arrive within 2 min — check spam, then logs (storage/logs/laravel.log) for SMTP errors.',
         'test_failed' => 'Test send failed — check the config',
         'test_invalid_email' => 'Enter a valid email address for the test',
+    ],
+
+    'diagnostics' => [
+        'effective_mailer' => 'Active mailer',
+        'env_mailer' => 'MAIL_MAILER (.env)',
+        'override_active' => 'UI override',
+        'override_yes' => 'active — UI overrides .env',
+        'override_no' => 'inactive — using .env',
+        'from' => 'From',
+        'from_missing' => 'no sender address',
+        'not_sending' => 'NOT sending emails!',
+        'no_host' => 'no SMTP host',
+        'log_mailer_warning' => 'Active mailer is ":mailer" — meaning emails do NOT go out via SMTP but land in the log file (storage/logs/laravel.log) or memory. Fix: save SMTP config below (Save) — AppServiceProvider will auto-switch the mailer to "smtp" on the next request.',
+        'log_mailer_explanation' => 'SMTP config saved in the UI is NOT enough if the active mailer is log/array. In that case: 1) Fill host/port/username/password/from below, 2) Click "Save SMTP configuration", 3) Refresh this page — diagnostics should show "smtp → <host>", 4) Then click "Send test".',
     ],
 
     'test_email' => [
