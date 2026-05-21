@@ -255,6 +255,12 @@ class CreateQuote extends CreateRecord
 
     protected function afterCreate(): void
     {
+        // Geokodujemy waypointy które jeszcze nie mają lat/lng. Filament
+        // Repeater::relationship() już je zapisał w quote_waypoints; my
+        // back-fillujemy coords zamiast crashować routing przy następnym
+        // recalc'u. Patrz docs/MARKETPLACE-ROADMAP.md "Waypoints".
+        $this->geocodeMissingWaypoints();
+
         // Kolejność preferencji payment_url (każdy guard early-returnuje gdy
         // $quote->payment_url jest już ustawione, więc pierwszy konfigurowany
         // wygrywa):
@@ -275,6 +281,40 @@ class CreateQuote extends CreateRecord
             (string) $this->record->getKey(),
             ['number' => $this->record->number],
         );
+    }
+
+    /**
+     * Back-fill lat/lng dla waypoint'ów które dostały tylko address
+     * (user wpisał ręcznie, bez wybrania POI). Soft-fail: gdy geocoder
+     * padnie, zostawiamy lat/lng=0 + warning notification.
+     */
+    private function geocodeMissingWaypoints(): void
+    {
+        /** @var Quote $quote */
+        $quote = $this->record;
+        foreach ($quote->waypoints as $wp) {
+            if (((float) $wp->lat) !== 0.0 || ((float) $wp->lng) !== 0.0) {
+                continue; // już ma coords (np. z POI auto-fill)
+            }
+            $address = trim((string) $wp->address);
+            if ($address === '') {
+                continue;
+            }
+            try {
+                $geo = app(MapboxGeocoder::class)->geocode($address);
+                $wp->forceFill([
+                    'lat' => $geo->coords->lat,
+                    'lng' => $geo->coords->lng,
+                    'address' => $geo->displayName !== '' ? $geo->displayName : $address,
+                ])->save();
+            } catch (Throwable $e) {
+                Log::warning('Quote waypoint geocoding failed', [
+                    'quote_id' => $quote->id,
+                    'waypoint_id' => $wp->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     /**

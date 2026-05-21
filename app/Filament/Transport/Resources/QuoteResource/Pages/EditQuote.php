@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Filament\Transport\Resources\QuoteResource\Pages;
 
+use App\Domain\Transport\Geocoding\MapboxGeocoder;
 use App\Enums\QuoteStatus;
 use App\Filament\Transport\Resources\QuoteResource;
 use App\Models\Tenant\Quote;
 use App\Services\TenantAuditLogger;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class EditQuote extends EditRecord
 {
@@ -82,6 +85,34 @@ class EditQuote extends EditRecord
 
     protected function afterSave(): void
     {
+        // Waypoint geocoding back-fill — analogicznie do CreateQuote
+        // (relationship Repeater zapisał nowe items'y bez coords, my
+        // dopełniamy lat/lng z MapboxGeocoder'a). Soft-fail per waypoint.
+        foreach ($this->record->waypoints as $wp) {
+            $hasCoords = ((float) $wp->lat) !== 0.0 || ((float) $wp->lng) !== 0.0;
+            if ($hasCoords) {
+                continue;
+            }
+            $address = trim((string) $wp->address);
+            if ($address === '') {
+                continue;
+            }
+            try {
+                $geo = app(MapboxGeocoder::class)->geocode($address);
+                $wp->forceFill([
+                    'lat' => $geo->coords->lat,
+                    'lng' => $geo->coords->lng,
+                    'address' => $geo->displayName !== '' ? $geo->displayName : $address,
+                ])->save();
+            } catch (Throwable $e) {
+                Log::warning('Quote waypoint geocoding failed on edit', [
+                    'quote_id' => $this->record->id,
+                    'waypoint_id' => $wp->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         app(TenantAuditLogger::class)->record(
             'quote.update',
             'Quote',

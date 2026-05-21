@@ -15,7 +15,9 @@ use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Filament\Transport\Resources\QuoteResource\Pages;
 use App\Models\Tenant\Customer;
 use App\Models\Tenant\Driver;
+use App\Models\Tenant\Poi;
 use App\Models\Tenant\Quote;
+use App\Models\Tenant\QuoteWaypoint;
 use App\Models\Tenant\TransportInvoice;
 use App\Models\Tenant\Vehicle;
 use App\Services\Tenancy\TenantRoleGate;
@@ -381,6 +383,79 @@ class QuoteResource extends Resource
                         ->reorderable(true)
                         ->defaultItems(0)
                         ->addActionLabel(__('transport/quote.form.action.add_line_item')),
+                ]),
+
+            // Waypointy — pośrednie punkty trasy między pickup a dropoff.
+            // CalculatorService multi-leg routing sumuje segmenty. Patrz
+            // docs/MARKETPLACE-ROADMAP.md "Waypoints + reorder + POI library".
+            //
+            // Lat/lng geokoduje CreateQuote/EditQuote afterSave (gdy nie
+            // ustawione lub adres zmieniony). Kolejność via Filament
+            // reorderable Repeater drag-handle.
+            Forms\Components\Section::make(__('transport/quote.section.waypoints'))
+                ->description(__('transport/quote.section.waypoints_description'))
+                ->collapsed(fn (?Quote $record) => $record === null || $record->waypoints->isEmpty())
+                ->schema([
+                    Forms\Components\Repeater::make('waypoints')
+                        ->relationship()
+                        ->label('')
+                        ->columnSpanFull()
+                        ->columns(3)
+                        ->orderColumn('sort_order')
+                        ->reorderable()
+                        ->schema([
+                            Forms\Components\Select::make('kind')
+                                ->label(__('transport/quote.form.label.waypoint_kind'))
+                                ->options([
+                                    QuoteWaypoint::KIND_STOP => __('transport/quote.waypoint_kind.stop'),
+                                    QuoteWaypoint::KIND_PICKUP => __('transport/quote.waypoint_kind.pickup'),
+                                    QuoteWaypoint::KIND_DROPOFF => __('transport/quote.waypoint_kind.dropoff'),
+                                    QuoteWaypoint::KIND_REST => __('transport/quote.waypoint_kind.rest'),
+                                    QuoteWaypoint::KIND_POI => __('transport/quote.waypoint_kind.poi'),
+                                ])
+                                ->default(QuoteWaypoint::KIND_STOP)
+                                ->required()
+                                ->native(false),
+                            Forms\Components\TextInput::make('address')
+                                ->label(__('transport/quote.form.label.waypoint_address'))
+                                ->required()
+                                ->maxLength(255)
+                                ->extraInputAttributes(['data-places-autocomplete' => 'panel', 'autocomplete' => 'off'])
+                                ->columnSpan(2),
+                            Forms\Components\Hidden::make('lat')->default(0),
+                            Forms\Components\Hidden::make('lng')->default(0),
+                            Forms\Components\Select::make('poi_id')
+                                ->label(__('transport/quote.form.label.waypoint_poi'))
+                                ->helperText(__('transport/quote.form.helper.waypoint_poi'))
+                                ->options(fn () => Poi::query()
+                                    ->where('is_active', true)
+                                    ->orderBy('sort_order')
+                                    ->pluck('name', 'id')
+                                    ->all())
+                                ->searchable()
+                                ->preload()
+                                ->native(false)
+                                ->columnSpan(2)
+                                ->live()
+                                ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                    if (! $state) {
+                                        return;
+                                    }
+                                    $poi = Poi::query()->find($state);
+                                    if ($poi === null) {
+                                        return;
+                                    }
+                                    // Auto-fill address + coords ze snapshotu POI.
+                                    $set('address', $poi->address);
+                                    $set('lat', $poi->lat);
+                                    $set('lng', $poi->lng);
+                                }),
+                            Forms\Components\TextInput::make('notes')
+                                ->label(__('transport/quote.form.label.waypoint_notes'))
+                                ->maxLength(500),
+                        ])
+                        ->defaultItems(0)
+                        ->addActionLabel(__('transport/quote.form.action.add_waypoint')),
                 ]),
 
             Forms\Components\Section::make(__('transport/quote.section.terms'))

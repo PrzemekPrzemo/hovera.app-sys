@@ -12,6 +12,8 @@ return [
         'terms' => 'Warunki i uwagi',
         'line_items' => 'Pozycje dodatkowe',
         'line_items_description' => 'Ad-hoc pozycje doliczane do wyceny (np. postój, opłaty dodatkowe). Każda pozycja sumuje się do netto, VAT i brutto przeliczane.',
+        'waypoints' => 'Punkty pośrednie',
+        'waypoints_description' => 'Pośrednie postoje między adresem odbioru a dostarczenia. Multi-leg routing — distance kalkulatora sumuje wszystkie segmenty. Drag-drop dla zmiany kolejności.',
         'payment' => 'Płatność (direct charge)',
         'payment_description' => 'Hovera NIE przyjmuje płatności. Klient płaci bezpośrednio do Ciebie — wklej link do swojej bramki lub zostaw puste i wypełnij instrukcje w ustawieniach.',
     ],
@@ -46,6 +48,10 @@ return [
             'line_item_quantity' => 'Ilość',
             'line_item_unit' => 'Jednostka',
             'line_item_unit_price' => 'Cena jedn. netto',
+            'waypoint_kind' => 'Typ',
+            'waypoint_address' => 'Adres',
+            'waypoint_poi' => 'POI (z biblioteki)',
+            'waypoint_notes' => 'Notatka',
             'vehicle' => 'Pojazd (prowadzący)',
             'trailer' => 'Przyczepa (opcjonalna)',
             'driver' => 'Kierowca',
@@ -76,6 +82,7 @@ return [
             'gross_total_auto' => 'Wyliczone automatycznie po zapisie.',
             'horses_count' => 'Liczba koni w transporcie. Doliczenie nalicza się od drugiego konia w górę zgodnie ze stawką w Ustawieniach Transportu.',
             'extra_horse_fee_snapshot' => 'Zamrożona stawka per dodatkowy koń (PLN/koń). Snapshot z momentu wystawienia oferty — zmiany w Ustawieniach Transportu nie modyfikują historycznych ofert.',
+            'waypoint_poi' => 'Wybierz POI z biblioteki — adres i współrzędne wypełnią się automatycznie. Możesz też wpisać adres ręcznie.',
             'customer_picker' => 'Wybierz istniejącego klienta z bazy (search po imieniu/firmie/NIP) albo zostaw puste i wypełnij dane ręcznie poniżej. Po wybraniu — dane zostaną skopiowane jako snapshot na ofercie.',
             'vehicle' => 'Pojazd z silnikiem — tylko trucks. Ten pojazd liczy spalanie.',
             'trailer' => 'Opcjonalna przyczepa (bez silnika) doczepiana do pojazdu prowadzącego.',
@@ -92,6 +99,7 @@ return [
         ],
         'action' => [
             'add_line_item' => 'Dodaj pozycję',
+            'add_waypoint' => 'Dodaj punkt pośredni',
         ],
         'value' => [
             'payment_completed_at' => 'Opłacone — potwierdzone :date',
@@ -119,6 +127,14 @@ return [
         'mark_as_paid' => 'Oznacz jako opłacone',
         'mark_as_paid_modal_heading' => 'Potwierdzenie wpływu płatności',
         'mark_as_paid_modal_description' => 'Klient zapłacił bezpośrednio do Ciebie? Zaznacz ofertę jako opłaconą. Hovera nie pośredniczyła w transakcji — to ręczne potwierdzenie idzie tylko do logu audytu i do widoku klienta.',
+    ],
+
+    'waypoint_kind' => [
+        'stop' => 'Przystanek',
+        'pickup' => 'Dodatkowy odbiór',
+        'dropoff' => 'Dodatkowy zwrot',
+        'rest' => 'Postój kierowcy',
+        'poi' => 'POI z biblioteki',
     ],
 
     'notify' => [

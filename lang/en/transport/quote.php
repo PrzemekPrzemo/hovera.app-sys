@@ -12,6 +12,8 @@ return [
         'terms' => 'Terms & notes',
         'line_items' => 'Additional line items',
         'line_items_description' => 'Ad-hoc items added to the quote (e.g. waiting time, extra fees). Each line adds to net total; VAT and gross are recalculated.',
+        'waypoints' => 'Waypoints',
+        'waypoints_description' => 'Stops between pickup and drop-off. Multi-leg routing — calculator distance sums all segments. Drag-drop to reorder.',
         'payment' => 'Payment (direct charge)',
         'payment_description' => 'Hovera does NOT process payments. The customer pays you directly — paste your gateway URL or leave empty to fall back to settings instructions.',
     ],
@@ -46,6 +48,10 @@ return [
             'line_item_quantity' => 'Quantity',
             'line_item_unit' => 'Unit',
             'line_item_unit_price' => 'Unit price (net)',
+            'waypoint_kind' => 'Type',
+            'waypoint_address' => 'Address',
+            'waypoint_poi' => 'POI (from library)',
+            'waypoint_notes' => 'Note',
             'vehicle' => 'Vehicle (powered)',
             'trailer' => 'Trailer (optional)',
             'driver' => 'Driver',
@@ -76,6 +82,7 @@ return [
             'gross_total_auto' => 'Will be computed automatically on save.',
             'horses_count' => 'Number of horses in the transport. The surcharge applies from the second horse onwards, per the rate in Transport Settings.',
             'extra_horse_fee_snapshot' => 'Frozen per-extra-horse rate (PLN/horse). Snapshot from the moment the quote was issued — later changes to Transport Settings do not modify historic quotes.',
+            'waypoint_poi' => 'Pick a POI from the library — address and coordinates will be filled in automatically. You can also type an address manually.',
             'customer_picker' => 'Pick an existing customer from the database (search by name / company / NIP) or leave empty and fill the fields manually below. Picking copies their data as a snapshot onto this quote.',
             'vehicle' => 'Powered vehicle only — trucks. Fuel consumption is calculated from this one.',
             'trailer' => 'Optional trailer (no engine) attached to the leading vehicle.',
@@ -92,6 +99,7 @@ return [
         ],
         'action' => [
             'add_line_item' => 'Add line item',
+            'add_waypoint' => 'Add waypoint',
         ],
         'value' => [
             'payment_completed_at' => 'Paid — confirmed :date',
@@ -119,6 +127,14 @@ return [
         'mark_as_paid' => 'Mark as paid',
         'mark_as_paid_modal_heading' => 'Confirm payment receipt',
         'mark_as_paid_modal_description' => 'Did the customer pay you directly? Mark the quote as paid. Hovera did not mediate the transaction — this is a manual confirmation for the audit log and the customer view.',
+    ],
+
+    'waypoint_kind' => [
+        'stop' => 'Stop',
+        'pickup' => 'Extra pickup',
+        'dropoff' => 'Extra drop-off',
+        'rest' => 'Driver rest',
+        'poi' => 'POI from library',
     ],
 
     'notify' => [
