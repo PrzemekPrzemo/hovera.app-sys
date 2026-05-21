@@ -30,6 +30,7 @@ return [
             'type' => [
                 'stable' => 'Stajnia jeździecka',
                 'transporter' => 'Firma transportowa',
+                'horse_owner' => 'Właściciel konia',
             ],
         ],
         'helper' => [

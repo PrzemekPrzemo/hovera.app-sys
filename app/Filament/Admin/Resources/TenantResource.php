@@ -69,6 +69,7 @@ class TenantResource extends Resource
                         ->options([
                             TenantType::Stable->value => __('admin/tenant.form.option.type.stable'),
                             TenantType::Transporter->value => __('admin/tenant.form.option.type.transporter'),
+                            TenantType::HorseOwner->value => __('admin/tenant.form.option.type.horse_owner'),
                         ])
                         ->default(TenantType::Stable->value)
                         ->required()
@@ -239,6 +240,7 @@ class TenantResource extends Resource
                     ->color(fn ($state) => match ($state instanceof TenantType ? $state->value : $state) {
                         TenantType::Transporter->value => 'warning',
                         TenantType::Stable->value => 'info',
+                        TenantType::HorseOwner->value => 'success',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn ($state) => $state instanceof TenantType ? $state->label() : (string) $state),
