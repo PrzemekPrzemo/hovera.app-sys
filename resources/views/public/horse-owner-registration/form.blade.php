@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ __('public/horse_owner_registration.meta.title') }}</title>
     <meta name="description" content="{{ __('public/horse_owner_registration.meta.description') }}">
-    <meta name="robots" content="index,follow">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ url('/register/horse-owner') }}">
     <link rel="icon" href="{{ asset('favicon.svg') }}">
     <x-pwa-head />
     <style>

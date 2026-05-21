@@ -20,6 +20,11 @@
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
+    <url>
+        <loc>{{ url('/register/horse-owner') }}</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
 @foreach ($transporters as $tenant)
     <url>
         <loc>{{ url('/t/'.$tenant->slug) }}</loc>
