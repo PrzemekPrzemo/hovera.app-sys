@@ -243,13 +243,30 @@
                 height="360px"
             />
 
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="text-xs text-gray-500">
                     {{ __('transport/calculator.result.routing_via', ['provider' => $quotation->routingProvider]) }}
                 </div>
-                <x-filament::button wire:click="saveAsQuote" icon="heroicon-o-document-plus">
-                    {{ __('transport/calculator.action.save_as_quote') }}
-                </x-filament::button>
+                <div class="flex flex-wrap items-center gap-2">
+                    {{-- One-shot save: tworzy Quote bezpośrednio i otwiera
+                         EditQuote. Szybsza ścieżka dla quote'ów bez customer
+                         picker'a / line items'ów. --}}
+                    <x-filament::button
+                        wire:click="saveAsQuoteInline"
+                        color="primary"
+                        icon="heroicon-o-bolt"
+                    >
+                        {{ __('transport/calculator.action.save_as_quote_inline') }}
+                    </x-filament::button>
+                    {{-- 2-step flow przez CreateQuote — dla complex quote'ów. --}}
+                    <x-filament::button
+                        wire:click="saveAsQuote"
+                        color="gray"
+                        icon="heroicon-o-document-plus"
+                    >
+                        {{ __('transport/calculator.action.save_as_quote') }}
+                    </x-filament::button>
+                </div>
             </div>
         </div>
     @endif

@@ -55,6 +55,10 @@ return [
         'calculated' => 'Quote calculated.',
         'failed' => 'Could not calculate quote',
         'save_as_quote' => 'Save as quote',
+        'save_as_quote_inline' => 'Save & open editor',
+        'saved_as_quote_inline_title' => 'Quote created',
+        'saved_as_quote_inline_body' => 'Quote :number has been saved. Fill in the customer and contract data to send it.',
+        'saved_as_quote_inline_placeholder_customer' => '(to fill in)',
     ],
     'notify' => [
         'lead_prefilled_title' => 'Inquiry data prefilled',

@@ -10,6 +10,7 @@ use App\Domain\Transport\Calculator\Data\Quotation;
 use App\Domain\Transport\Geocoding\Data\GeocodedAddress;
 use App\Domain\Transport\Geocoding\Exceptions\GeocodingException;
 use App\Domain\Transport\Geocoding\MapboxGeocoder;
+use App\Domain\Transport\Quotes\QuoteNumberGenerator;
 use App\Domain\Transport\Routing\Data\Coords;
 use App\Domain\Transport\Routing\Exceptions\RoutingException;
 use App\Enums\CalculationMode;
@@ -17,7 +18,9 @@ use App\Enums\QuoteStatus;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Filament\Transport\Resources\QuoteResource;
 use App\Models\Central\Tenant;
+use App\Models\Tenant\Quote;
 use App\Services\Tenancy\TenantRoleGate;
+use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -357,12 +360,95 @@ class Calculator extends Page implements HasForms
      * Zapisuje aktualną wycenę do session i przekierowuje na CreateQuote
      * (CreateQuote::fillForm konsumuje pending). Wymaga wcześniejszego
      * udanego `calculate()` — przycisk widoczny tylko gdy mamy `$quotation`.
+     *
+     * 2-step flow — używany dla complex quote'ów wymagających customer
+     * picker'a, line items'ów, valid_until i innych pól które Calculator
+     * sam nie zbiera. Dla szybkiej ścieżki bez customer'a — patrz
+     * `saveAsQuoteInline`.
      */
     public function saveAsQuote(): RedirectResponse|Redirector
     {
         abort_unless(self::canAccess(), 403);
         abort_unless($this->quotation !== null, 422);
 
+        $base = $this->buildQuoteSnapshot();
+
+        session()->put('transport.calc.pending', $base);
+
+        return redirect()->to(QuoteResource::getUrl('create'));
+    }
+
+    /**
+     * One-shot save: tworzy Quote bezpośrednio z aktualnej kalkulacji i
+     * przekierowuje na EditQuote. W odróżnieniu od `saveAsQuote` (2-step),
+     * pomijamy CreateQuote::fillForm — quote już istnieje, user trafia od
+     * razu na edycję żeby dopiąć customer'a, line items'y, valid_until itp.
+     *
+     * Co robimy:
+     *   - generujemy number (QuoteNumberGenerator, atomic)
+     *   - insertujemy Quote ze snapshot'em wszystkich komponentów wyceny
+     *   - audit log (quote.create) — parity z CreateQuote::afterCreate
+     *
+     * Czego NIE robimy (zostaje dla user'a na EditQuote):
+     *   - customer picker (customer_id) — Calculator nie ma tego pola
+     *   - line items — Calculator nie ma Repeater'a
+     *   - payment URL generation (Stripe Connect / P24 / PayU) — generuje
+     *     się dopiero przy sendzie quote'a w QuoteResource::sendQuote()
+     *   - waypoint geocoding — Calculator obecnie nie używa waypointów
+     *     (przyjdzie z roadmapy gdy doposażymy form)
+     */
+    public function saveAsQuoteInline(QuoteNumberGenerator $numbers, TenantAuditLogger $audit): RedirectResponse|Redirector
+    {
+        abort_unless(self::canAccess(), 403);
+        abort_unless($this->quotation !== null, 422);
+
+        $tenant = app(TenantManager::class)->current();
+        if (! $tenant instanceof Tenant) {
+            $this->fail(__('transport/calculator.error.no_tenant'));
+
+            return redirect()->to(self::getUrl());
+        }
+
+        $snapshot = $this->buildQuoteSnapshot();
+        $snapshot['number'] = $numbers->next();
+
+        // `customer_name` jest NOT NULL w DB; gdy Calculator nie miał lead
+        // pre-fillu z customer'em, wpisujemy placeholder — user uzupełni
+        // na EditQuote. Pusty string też przeszedłby (NOT NULL nie blokuje
+        // ''), ale label jest pomocny w listing'u quote'ów.
+        if (empty($snapshot['customer_name'])) {
+            $snapshot['customer_name'] = __('transport/calculator.action.saved_as_quote_inline_placeholder_customer');
+        }
+
+        // Status z snapshot'u jako enum value (string) — Quote model cast'uje
+        // automatycznie do QuoteStatus przez `casts()`.
+        $quote = Quote::create($snapshot);
+
+        $audit->record(
+            'quote.create',
+            'Quote',
+            (string) $quote->getKey(),
+            ['number' => $quote->number, 'source' => 'calculator_inline'],
+        );
+
+        Notification::make()
+            ->success()
+            ->title(__('transport/calculator.action.saved_as_quote_inline_title'))
+            ->body(__('transport/calculator.action.saved_as_quote_inline_body', ['number' => $quote->number]))
+            ->send();
+
+        return redirect()->to(QuoteResource::getUrl('edit', ['record' => $quote]));
+    }
+
+    /**
+     * Składa snapshot quote'a z aktualnej kalkulacji + lead pre-fillu.
+     * Współdzielona logika dla `saveAsQuote` (2-step → session pending)
+     * i `saveAsQuoteInline` (1-step → bezpośredni Quote::create).
+     *
+     * @return array<string, mixed>
+     */
+    private function buildQuoteSnapshot(): array
+    {
         $q = $this->quotation;
         $form = $this->data;
 
@@ -423,9 +509,7 @@ class Calculator extends Page implements HasForms
             }
         }
 
-        session()->put('transport.calc.pending', $base);
-
-        return redirect()->to(QuoteResource::getUrl('create'));
+        return $base;
     }
 
     /**
