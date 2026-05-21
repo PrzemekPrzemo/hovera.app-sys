@@ -76,7 +76,12 @@ class User extends Authenticatable implements FilamentUser
             // klienta (np. żeby zobaczyć perspektywę stajni / debugować).
             // /transport analogicznie — RequireTenantType middleware odbija
             // niewłaściwy typ tenanta na właściwy panel.
-            'app', 'transport' => $this->is_master_admin || $this->activeMemberships()->exists(),
+            // /owner — horse owner panel. Bez tej entry impersonacja master
+            // admina ("Zaloguj jako właściciel" z /admin/horse-owners) dawała
+            // 403 (Filament default → false). RequireTenantType:horse_owner
+            // middleware już bouncuje wrong-type tenants, więc tu otwieramy
+            // analogicznie do app/transport.
+            'app', 'transport', 'owner' => $this->is_master_admin || $this->activeMemberships()->exists(),
             default => false,
         };
     }
