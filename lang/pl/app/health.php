@@ -10,6 +10,7 @@ return [
         ],
         'label' => [
             'horse' => 'Koń',
+            'horse_identification' => 'Identyfikacja konia',
             'template' => 'Szablon zabiegu',
             'template_placeholder' => '— opcjonalnie wybierz szablon —',
             'type' => 'Typ',
@@ -28,6 +29,13 @@ return [
             'template' => 'Wybór szablonu wypełni typ, opis i sugerowany termin następnej wizyty.',
             'next_due_at' => 'Dzięki temu pojawi się alert na dashboardzie.',
             'specialist' => 'Lista filtrowana wg typu wpisu — kowale dla "Kowal", weterynarze dla pozostałych typów. Skonfiguruj listę w Stajnia → Specjaliści.',
+        ],
+        'horse_identification' => [
+            'microchip' => 'Mikrochip',
+            'passport' => 'Numer paszportu',
+            'ueln' => 'UELN',
+            'empty_warning' => 'Brak danych identyfikacyjnych dla tego konia. Uzupełnij mikrochip / paszport w karcie konia przed zabiegiem.',
+            'missing' => 'Wybrany koń nie istnieje (rekord usunięty).',
         ],
     ],
 

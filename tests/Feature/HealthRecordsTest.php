@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\HealthRecordType;
+use App\Filament\App\Resources\HealthRecordResource;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
@@ -56,6 +57,49 @@ class HealthRecordsTest extends TestCase
     {
         @unlink($this->tenantDbPath);
         parent::tearDown();
+    }
+
+    public function test_horse_identification_renderer_emits_microchip_passport_ueln(): void
+    {
+        // PR A — wet musi widzieć chip/paszport/UELN inline w form'ie HealthRecord,
+        // żeby zweryfikować tożsamość konia przed zabiegiem.
+        $this->horse->forceFill([
+            'microchip' => '985121000123456',
+            'passport_number' => 'PL00012345',
+            'ueln' => '616-1234-5678901',
+        ])->save();
+
+        $html = (string) HealthRecordResource::renderHorseIdentificationFor($this->horse->id);
+
+        $this->assertStringContainsString('985121000123456', $html);
+        $this->assertStringContainsString('PL00012345', $html);
+        $this->assertStringContainsString('616-1234-5678901', $html);
+        $this->assertStringNotContainsString(__('app/health.form.horse_identification.empty_warning'), $html);
+    }
+
+    public function test_horse_identification_renderer_warns_when_all_fields_empty(): void
+    {
+        // Bucefał z setUp() nie ma chip/paszport/UELN → warning powinien się pojawić.
+        $html = (string) HealthRecordResource::renderHorseIdentificationFor($this->horse->id);
+
+        $this->assertStringContainsString(__('app/health.form.horse_identification.empty_warning'), $html);
+    }
+
+    public function test_horse_identification_renderer_empty_when_no_horse_selected(): void
+    {
+        $this->assertSame(
+            '',
+            (string) HealthRecordResource::renderHorseIdentificationFor(null)
+        );
+    }
+
+    public function test_horse_identification_renderer_handles_missing_horse(): void
+    {
+        // Stale form state — koń usunięty po wyborze. Pokazujemy informację
+        // zamiast renderować pustki / crashować.
+        $html = (string) HealthRecordResource::renderHorseIdentificationFor('01HXXX000000000000000000NX');
+
+        $this->assertStringContainsString(__('app/health.form.horse_identification.missing'), $html);
     }
 
     public function test_default_follow_up_months_for_each_type(): void
