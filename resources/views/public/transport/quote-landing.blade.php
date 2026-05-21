@@ -44,6 +44,24 @@
         .payment-instructions { padding: 1rem; background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; border-radius: 10px; font-size: .9rem; line-height: 1.55; white-space: pre-wrap; }
         .payment-instructions strong { display: block; margin-bottom: .25rem; }
         .payment-contact { padding: 1rem; background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; border-radius: 10px; font-size: .9rem; line-height: 1.5; }
+        .buyer { margin-top: 1.25rem; padding: 1rem; background: #f7f4ef; border: 1px solid var(--border); border-radius: 10px; }
+        .buyer h2 { margin: 0 0 .75rem; font-size: 1rem; color: #3D2E22; }
+        .buyer-choice { display: flex; gap: 1rem; margin-bottom: .75rem; flex-wrap: wrap; }
+        .buyer-choice label { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; font-size: .95rem; }
+        .buyer-fields { display: none; margin-top: .75rem; }
+        .buyer-fields.show { display: block; }
+        .buyer-field { margin-bottom: .6rem; }
+        .buyer-field label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: .2rem; }
+        .buyer-field input, .buyer-field textarea { width: 100%; padding: .55rem .7rem; border: 1px solid var(--border); border-radius: 8px; font-size: .95rem; font-family: inherit; background: #fff; color: var(--text); }
+        .buyer-field textarea { resize: vertical; min-height: 3rem; }
+        .buyer-nip-row { display: flex; gap: .5rem; align-items: stretch; }
+        .buyer-nip-row input { flex: 1; }
+        .btn-lookup { padding: 0 .9rem; background: #fff; color: var(--primary); border: 1px solid var(--primary); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: .9rem; white-space: nowrap; }
+        .btn-lookup:hover:not(:disabled) { background: var(--primary); color: #fff; }
+        .btn-lookup:disabled { opacity: .5; cursor: wait; }
+        .buyer-feedback { font-size: .85rem; margin-top: .35rem; min-height: 1.1rem; }
+        .buyer-feedback.ok { color: #047857; }
+        .buyer-feedback.err { color: #b91c1c; }
         .footer { text-align: center; margin-top: 1.5rem; font-size: .75rem; color: var(--muted); }
                 /* Mobile (≤600px) — etykiety nad wartościami, przyciski jeden pod drugim,
            mniej paddingu w karcie, większe taps dla accept/reject. */
@@ -115,16 +133,123 @@
                     ]) !!}
                 </div>
 
-                <div class="actions">
-                    <form method="post" action="{{ route('public.transport.quote.accept', ['slug' => $slug, 'token' => $token]) }}">
-                        @csrf
+                {{-- Form akceptacji = otacza buyer choice + accept button. Klient
+                     wybiera "osoba prywatna" (default) lub "firma" → wtedy musi
+                     wpisać NIP, nazwę, adres. Dane lecą do quote.customer_* a
+                     IssueTransportInvoiceFromQuote snapshot'uje je na FV.
+                     Reject jest osobnym form'em poniżej (bez buyer fields). --}}
+                <form method="post" action="{{ route('public.transport.quote.accept', ['slug' => $slug, 'token' => $token]) }}" id="accept-form">
+                    @csrf
+                    <div class="buyer">
+                        <h2>{{ __('transport/landing.company.heading') }}</h2>
+                        <div class="buyer-choice">
+                            <label><input type="radio" name="buyer_type" value="private" {{ old('buyer_type', $quote->customer_tax_id ? 'company' : 'private') === 'private' ? 'checked' : '' }}> {{ __('transport/landing.company.as_private') }}</label>
+                            <label><input type="radio" name="buyer_type" value="company" {{ old('buyer_type', $quote->customer_tax_id ? 'company' : 'private') === 'company' ? 'checked' : '' }}> {{ __('transport/landing.company.as_company') }}</label>
+                        </div>
+                        <div class="buyer-fields" id="buyer-company-fields">
+                            <div class="buyer-field">
+                                <label for="customer_tax_id">{{ __('transport/landing.company.tax_id_label') }}</label>
+                                <div class="buyer-nip-row">
+                                    <input type="text" id="customer_tax_id" name="customer_tax_id"
+                                           value="{{ old('customer_tax_id', $quote->customer_tax_id) }}"
+                                           placeholder="{{ __('transport/landing.company.tax_id_placeholder') }}"
+                                           maxlength="32" inputmode="numeric" autocomplete="off">
+                                    <button type="button" class="btn-lookup" id="btn-lookup-nip">{{ __('transport/landing.company.lookup_action') }}</button>
+                                </div>
+                                <div class="buyer-feedback" id="buyer-feedback"></div>
+                            </div>
+                            <div class="buyer-field">
+                                <label for="customer_company">{{ __('transport/landing.company.company_name_label') }}</label>
+                                <input type="text" id="customer_company" name="customer_company"
+                                       value="{{ old('customer_company', $quote->customer_company) }}"
+                                       maxlength="255" autocomplete="organization">
+                            </div>
+                            <div class="buyer-field">
+                                <label for="customer_address">{{ __('transport/landing.company.address_label') }}</label>
+                                <textarea id="customer_address" name="customer_address"
+                                          rows="2" maxlength="1000"
+                                          placeholder="{{ __('transport/landing.company.address_placeholder') }}">{{ old('customer_address', $quote->customer_address) }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="actions">
                         <button type="submit" class="btn btn-accept">✓ {{ __('transport/landing.action.accept') }}</button>
-                    </form>
-                    <form method="post" action="{{ route('public.transport.quote.reject', ['slug' => $slug, 'token' => $token]) }}">
-                        @csrf
+                    </div>
+                </form>
+                <form method="post" action="{{ route('public.transport.quote.reject', ['slug' => $slug, 'token' => $token]) }}">
+                    @csrf
+                    <div class="actions">
                         <button type="submit" class="btn btn-reject">✕ {{ __('transport/landing.action.reject') }}</button>
-                    </form>
-                </div>
+                    </div>
+                </form>
+
+                {{-- JS: toggle buyer fields on radio + AJAX GUS lookup. Pure vanilla
+                     bez bundle'u (mobile-first, no JS framework w public flow).
+                     CSRF z accept-form (input[name="_token"]). --}}
+                <script>
+                    (function () {
+                        const radios = document.querySelectorAll('input[name="buyer_type"]');
+                        const fields = document.getElementById('buyer-company-fields');
+                        const nipInput = document.getElementById('customer_tax_id');
+                        const nameInput = document.getElementById('customer_company');
+                        const addrInput = document.getElementById('customer_address');
+                        const lookupBtn = document.getElementById('btn-lookup-nip');
+                        const feedback = document.getElementById('buyer-feedback');
+                        const csrfToken = document.querySelector('#accept-form input[name="_token"]').value;
+
+                        function syncVisibility() {
+                            const company = document.querySelector('input[name="buyer_type"]:checked').value === 'company';
+                            fields.classList.toggle('show', company);
+                            nameInput.required = company;
+                            nipInput.required = company;
+                            addrInput.required = company;
+                        }
+                        radios.forEach(r => r.addEventListener('change', syncVisibility));
+                        syncVisibility();
+
+                        lookupBtn.addEventListener('click', async () => {
+                            const nip = (nipInput.value || '').trim();
+                            if (!nip) return;
+                            lookupBtn.disabled = true;
+                            const origText = lookupBtn.textContent;
+                            lookupBtn.textContent = @json(__('transport/landing.company.lookup_loading'));
+                            feedback.textContent = '';
+                            feedback.className = 'buyer-feedback';
+                            try {
+                                const resp = await fetch(@json(route('public.transport.quote.lookup_nip', ['slug' => $slug, 'token' => $token])), {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': csrfToken,
+                                    },
+                                    body: JSON.stringify({ nip }),
+                                });
+                                const data = await resp.json();
+                                if (resp.status === 422 || data.error === 'invalid_nip') {
+                                    feedback.className = 'buyer-feedback err';
+                                    feedback.textContent = @json(__('transport/landing.company.invalid_nip'));
+                                } else if (!data.ok) {
+                                    feedback.className = 'buyer-feedback err';
+                                    feedback.textContent = @json(__('transport/landing.company.lookup_not_found'));
+                                } else {
+                                    if (data.name) nameInput.value = data.name;
+                                    if (data.address) addrInput.value = data.address;
+                                    const sources = (data.sources || []).join(', ') || 'GUS';
+                                    feedback.className = 'buyer-feedback ok';
+                                    feedback.textContent = @json(__('transport/landing.company.lookup_success', ['sources' => ':S'])).replace(':S', sources);
+                                }
+                            } catch (e) {
+                                feedback.className = 'buyer-feedback err';
+                                feedback.textContent = @json(__('transport/landing.company.lookup_error'));
+                            } finally {
+                                lookupBtn.disabled = false;
+                                lookupBtn.textContent = origText;
+                            }
+                        });
+                    })();
+                </script>
             @endif
 
             {{--

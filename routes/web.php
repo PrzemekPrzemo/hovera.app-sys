@@ -629,6 +629,9 @@ Route::middleware(['web'])
         Route::post('/reject', [QuoteAcceptanceController::class, 'reject'])
             ->middleware('throttle:10,1')
             ->name('quote.reject');
+        Route::post('/lookup-nip', [QuoteAcceptanceController::class, 'lookupNip'])
+            ->middleware('throttle:30,1')
+            ->name('quote.lookup_nip');
     });
 
 /*

@@ -192,6 +192,77 @@ class QuoteAcceptanceTest extends TestCase
         $this->assertTrue($names->contains('public.transport.quote'));
         $this->assertTrue($names->contains('public.transport.quote.accept'));
         $this->assertTrue($names->contains('public.transport.quote.reject'));
+        $this->assertTrue($names->contains('public.transport.quote.lookup_nip'));
+    }
+
+    public function test_accept_as_company_saves_buyer_data_on_quote(): void
+    {
+        NotificationFacade::fake();
+        $quote = $this->makeQuote(QuoteStatus::Sent, ['accept_token' => str_repeat('f', 48)]);
+
+        $this->post("/transport/quote/{$this->tenant->slug}/".str_repeat('f', 48).'/accept', [
+            'buyer_type' => 'company',
+            'customer_company' => 'Stajnia Sp. z o.o.',
+            'customer_tax_id' => '5260250274', // poprawny NIP (suma kontrolna OK)
+            'customer_address' => 'ul. Marszałkowska 1, 00-001 Warszawa',
+        ])->assertRedirect();
+
+        $fresh = $quote->fresh();
+        $this->assertSame(QuoteStatus::Accepted, $fresh->status);
+        $this->assertSame('Stajnia Sp. z o.o.', $fresh->customer_company);
+        $this->assertSame('5260250274', $fresh->customer_tax_id);
+        $this->assertSame('ul. Marszałkowska 1, 00-001 Warszawa', $fresh->customer_address);
+    }
+
+    public function test_accept_as_company_rejects_invalid_nip(): void
+    {
+        $this->makeQuote(QuoteStatus::Sent, ['accept_token' => str_repeat('g', 48)]);
+
+        $this->post("/transport/quote/{$this->tenant->slug}/".str_repeat('g', 48).'/accept', [
+            'buyer_type' => 'company',
+            'customer_company' => 'Foo',
+            'customer_tax_id' => '1234567890', // niepoprawna suma kontrolna
+            'customer_address' => 'gdzieś',
+        ])->assertSessionHasErrors('customer_tax_id');
+    }
+
+    public function test_accept_as_private_does_not_overwrite_existing_buyer_fields(): void
+    {
+        NotificationFacade::fake();
+        $quote = $this->makeQuote(QuoteStatus::Sent, [
+            'accept_token' => str_repeat('h', 48),
+            'customer_company' => 'PRE',
+            'customer_tax_id' => '5260250274',
+            'customer_address' => 'PRE addr',
+        ]);
+
+        $this->post("/transport/quote/{$this->tenant->slug}/".str_repeat('h', 48).'/accept', [
+            'buyer_type' => 'private',
+        ])->assertRedirect();
+
+        $fresh = $quote->fresh();
+        $this->assertSame(QuoteStatus::Accepted, $fresh->status);
+        // Private acceptance NIE czyści snapshot'u — transporter wciąż może
+        // wystawić FV firmową jeśli klient wcześniej (np. przy zapytaniu)
+        // podał dane firmy.
+        $this->assertSame('PRE', $fresh->customer_company);
+        $this->assertSame('5260250274', $fresh->customer_tax_id);
+    }
+
+    public function test_lookup_nip_returns_invalid_for_bad_checksum(): void
+    {
+        $this->makeQuote(QuoteStatus::Sent, ['accept_token' => str_repeat('i', 48)]);
+
+        $this->postJson("/transport/quote/{$this->tenant->slug}/".str_repeat('i', 48).'/lookup-nip', [
+            'nip' => '1234567890',
+        ])->assertStatus(422)->assertJson(['ok' => false, 'error' => 'invalid_nip']);
+    }
+
+    public function test_lookup_nip_unknown_token_returns_404(): void
+    {
+        $this->postJson("/transport/quote/{$this->tenant->slug}/".str_repeat('z', 48).'/lookup-nip', [
+            'nip' => '5260250274',
+        ])->assertStatus(404);
     }
 
     private function makeTenant(): Tenant

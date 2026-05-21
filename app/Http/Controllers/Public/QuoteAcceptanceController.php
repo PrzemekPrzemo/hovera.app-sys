@@ -11,13 +11,17 @@ use App\Enums\QuoteStatus;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\Quote;
 use App\Models\Tenant\TransportSettings;
+use App\Services\CompanyLookup\CompanyLookupService;
 use App\Tenancy\TenantManager;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
@@ -78,10 +82,22 @@ class QuoteAcceptanceController extends Controller
             return redirect()->route('public.transport.quote', ['slug' => $slug, 'token' => $token]);
         }
 
-        $quote->forceFill([
+        // Klient może zaakceptować ofertę jako FV firmowa (potrzebne NIP +
+        // nazwa + adres do snapshot'u na FV przez KSeF). Pola opcjonalne — gdy
+        // niewypełnione, FV idzie na osobę prywatną (customer_name z quote).
+        $buyerData = $this->validateBuyerData($request);
+
+        $fillData = [
             'status' => QuoteStatus::Accepted,
             'accepted_at' => now(),
-        ])->save();
+        ];
+        if ($buyerData['buyer_type'] === 'company') {
+            $fillData['customer_company'] = $buyerData['customer_company'];
+            $fillData['customer_tax_id'] = $buyerData['customer_tax_id'];
+            $fillData['customer_address'] = $buyerData['customer_address'];
+        }
+
+        $quote->forceFill($fillData)->save();
 
         // Marketplace close-out: jeśli quote powstała z lead'a (lead_id set),
         // domykamy całe zapytanie — pozostałe TransportLeadResponse → rejected,
@@ -116,6 +132,84 @@ class QuoteAcceptanceController extends Controller
 
         return redirect()->route('public.transport.quote', ['slug' => $slug, 'token' => $token])
             ->with('rejected', true);
+    }
+
+    /**
+     * AJAX lookup NIP-u przez GUS/CEIDG/KRS — używany na landing'u
+     * gdy klient akceptuje ofertę jako firma. Token chroni endpoint:
+     * tylko ktoś z linkiem widzi tę ofertę i może zrobić lookup. Throttle
+     * 30/min (10/min by zawiódł podczas wpisywania paru NIP-ów pod rząd).
+     */
+    public function lookupNip(Request $request, string $slug, string $token): JsonResponse
+    {
+        $quote = $this->resolveQuote($slug, $token);
+        if (! $quote) {
+            return new JsonResponse(['ok' => false, 'error' => 'not_found'], 404);
+        }
+
+        $nip = (string) $request->input('nip', '');
+        if (! CompanyLookupService::isValidNip($nip)) {
+            return new JsonResponse(['ok' => false, 'error' => 'invalid_nip'], 422);
+        }
+
+        $data = app(CompanyLookupService::class)->lookupByNip($nip);
+        if ($data === null) {
+            return new JsonResponse(['ok' => false, 'error' => 'not_found'], 200);
+        }
+
+        $street = trim(
+            ($data['street'] ?? '').' '
+            .($data['building'] ?? '')
+            .($data['apartment'] ? '/'.$data['apartment'] : '')
+        );
+        $addressLine = trim($street
+            .($street !== '' && ! empty($data['postal_code']) ? ', ' : '')
+            .(string) ($data['postal_code'] ?? '').' '
+            .(string) ($data['city'] ?? ''));
+
+        return new JsonResponse([
+            'ok' => true,
+            'name' => (string) ($data['name'] ?? ''),
+            'address' => $addressLine,
+            'sources' => array_map('strtoupper', (array) ($data['sources'] ?? [])),
+        ]);
+    }
+
+    /**
+     * @return array{buyer_type:string,customer_company:?string,customer_tax_id:?string,customer_address:?string}
+     */
+    private function validateBuyerData(Request $request): array
+    {
+        $validated = $request->validate([
+            'buyer_type' => ['nullable', Rule::in(['private', 'company'])],
+            'customer_company' => ['nullable', 'string', 'max:255'],
+            'customer_tax_id' => ['nullable', 'string', 'max:32'],
+            'customer_address' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $type = $validated['buyer_type'] ?? 'private';
+        if ($type === 'company') {
+            $request->validate([
+                'customer_company' => ['required', 'string', 'max:255'],
+                'customer_tax_id' => ['required', 'string', 'max:32'],
+                'customer_address' => ['required', 'string', 'max:1000'],
+            ]);
+            // Defence-in-depth: NIP musi być poprawny (suma kontrolna).
+            // Walidacja Laravel'a nie zna polskich NIP-ów, więc dorzucamy
+            // explicit check tu — błędny NIP = ValidationException 422.
+            if (! CompanyLookupService::isValidNip((string) $validated['customer_tax_id'])) {
+                throw ValidationException::withMessages([
+                    'customer_tax_id' => [__('transport/landing.company.invalid_nip')],
+                ]);
+            }
+        }
+
+        return [
+            'buyer_type' => $type,
+            'customer_company' => $validated['customer_company'] ?? null,
+            'customer_tax_id' => $validated['customer_tax_id'] ?? null,
+            'customer_address' => $validated['customer_address'] ?? null,
+        ];
     }
 
     /**
