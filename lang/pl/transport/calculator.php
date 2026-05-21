@@ -92,5 +92,10 @@ return [
         'missing' => 'Uzupełnij adresy, aby zobaczyć podgląd ceny',
         'error' => 'Nie udało się odświeżyć podglądu.',
         'currency_fallback' => 'PLN',
+        'extra_horses' => 'Dodatkowe konie (:count)',
+        'surcharge' => 'Marża (:percent%)',
+        'vat' => 'VAT (:rate%)',
+        'expand' => 'Pokaż szczegóły',
+        'collapse' => 'Schowaj szczegóły',
     ],
 ];

@@ -91,5 +91,10 @@ return [
         'missing' => 'Enter addresses to see live price preview',
         'error' => 'Could not refresh the preview.',
         'currency_fallback' => 'PLN',
+        'extra_horses' => 'Extra horses (:count)',
+        'surcharge' => 'Margin (:percent%)',
+        'vat' => 'VAT (:rate%)',
+        'expand' => 'Show details',
+        'collapse' => 'Hide details',
     ],
 ];
