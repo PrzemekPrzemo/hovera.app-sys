@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Actions\Stable;
 
+use App\Domain\Notifications\Owner\OwnerNotificationDispatcher;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\HorseMessage;
 use App\Notifications\HorseMessageNotification;
+use App\Notifications\Owner\NewMessageForOwner;
 use App\Services\Portal\ClientMessageJournal;
 use App\Services\TenantAuditLogger;
 use Illuminate\Http\UploadedFile;
@@ -99,6 +101,27 @@ class SendHorseMessage
                 'HorseMessage',
                 (string) $message->id,
             );
+        }
+
+        // Faza 6 PR 6.1 — dispatch do User w central (Owner panel database
+        // notification). Klient portal'u i owner panel'u Hovery to mogą
+        // być DWIE różne osoby (central_user_id), więc oba dispatch'e są
+        // niezależne — mail wyżej leci do `client->email` (zawsze), tu
+        // mamy database notif do central User'a + dodatkowy mail jeśli
+        // User.email różny od client.email.
+        if ($client !== null && $horse->central_horse_id !== null) {
+            app(OwnerNotificationDispatcher::class)
+                ->forClient($client, new NewMessageForOwner(
+                    stableTenantId: (string) $tenant->id,
+                    stableName: (string) $tenant->name,
+                    centralHorseId: (string) $horse->central_horse_id,
+                    horseName: (string) $horse->name,
+                    messageId: (string) $message->id,
+                    subject: $subject,
+                    bodyPreview: $this->truncate($body, 280),
+                    attachmentCount: $message->attachmentCount(),
+                    ownerPanelUrl: url('/owner/horses/'.$horse->central_horse_id.'/messages'),
+                ));
         }
 
         $this->audit->record('horse_message.sent', 'HorseMessage', (string) $message->id, [

@@ -124,4 +124,38 @@ return [
         'line_security' => 'Jeśli to nie Ty, możesz zignorować tę wiadomość — bez kliknięcia konto nie zostanie aktywowane.',
         'salutation' => '— Hovera',
     ],
+
+    // Faza 6 PR 6.1 — Owner notifications hub (database + mail) gdy
+    // stajnia wykonuje akcję dotyczącą konia ownera.
+    'owner_new_message' => [
+        'subject_default' => 'Nowa wiadomość — :horse — :stable',
+        'subject_with_subject' => ':subject (:horse)',
+        'line_intro' => 'Stajnia **:stable** wysłała wiadomość dotyczącą konia **:horse**.',
+        'attachment_count' => '📎 Załączników: :count',
+        'action' => 'Otwórz wiadomość',
+    ],
+
+    'owner_new_invoice' => [
+        'subject_default' => 'Nowa faktura — :stable',
+        'subject_with_number' => 'Faktura :number — :stable',
+        'line_intro' => 'Stajnia **:stable** wystawiła nową fakturę.',
+        'field' => [
+            'number' => 'Numer',
+            'period' => 'Okres rozliczeniowy',
+            'horse' => 'Koń',
+            'total' => 'Razem (brutto)',
+            'due_at' => 'Termin płatności',
+        ],
+        'action' => 'Zobacz fakturę',
+    ],
+
+    'owner_vet_visit' => [
+        'subject' => ':horse — :type',
+        'line_intro' => 'Stajnia **:stable** zarejestrowała :type dla konia **:horse**.',
+        'field' => [
+            'cost' => 'Koszt',
+            'next_due' => 'Kolejny termin',
+        ],
+        'action' => 'Zobacz oś czasu',
+    ],
 ];

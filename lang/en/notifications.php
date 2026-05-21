@@ -123,4 +123,37 @@ return [
         'line_security' => "If this wasn't you, you can ignore this message — without clicking, the account won't be activated.",
         'salutation' => '— Hovera',
     ],
+
+    // Faza 6 PR 6.1 — Owner notifications hub
+    'owner_new_message' => [
+        'subject_default' => 'New message — :horse — :stable',
+        'subject_with_subject' => ':subject (:horse)',
+        'line_intro' => 'Stable **:stable** sent a message about horse **:horse**.',
+        'attachment_count' => '📎 Attachments: :count',
+        'action' => 'Open message',
+    ],
+
+    'owner_new_invoice' => [
+        'subject_default' => 'New invoice — :stable',
+        'subject_with_number' => 'Invoice :number — :stable',
+        'line_intro' => 'Stable **:stable** issued a new invoice.',
+        'field' => [
+            'number' => 'Number',
+            'period' => 'Billing period',
+            'horse' => 'Horse',
+            'total' => 'Total (gross)',
+            'due_at' => 'Due date',
+        ],
+        'action' => 'View invoice',
+    ],
+
+    'owner_vet_visit' => [
+        'subject' => ':horse — :type',
+        'line_intro' => 'Stable **:stable** recorded :type for horse **:horse**.',
+        'field' => [
+            'cost' => 'Cost',
+            'next_due' => 'Next due',
+        ],
+        'action' => 'Open timeline',
+    ],
 ];
