@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Jobs\Owner\GenerateMonthlyBoardingInvoicesJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -72,6 +73,18 @@ Schedule::command('transport:ksef:poll-submitted')
 // działały spójnie. Patrz docs/TRANSPORT.md §16.
 Schedule::command('transport:expire-featured')
     ->dailyAt('02:00')
+    ->timezone('Europe/Warsaw')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Auto-billing pensjonatu — 1. dnia każdego miesiąca o 02:00 generuje
+// draft invoice dla każdego active HorseBoardingAssignment z items
+// (monthly box rate + active monthly boarding services). Operator stajni
+// dostaje draft do review przed wystawieniem (KSeF, klient email itp.).
+// Idempotent — uniqueId per okres (YYYY-MM), więc retry / podwójny tick
+// nie tworzy duplikatów. Patrz docs/OWNER-STABLE-ROADMAP.md Faza 3.
+Schedule::job(new GenerateMonthlyBoardingInvoicesJob)
+    ->monthlyOn(1, '02:00')
     ->timezone('Europe/Warsaw')
     ->withoutOverlapping()
     ->onOneServer();
