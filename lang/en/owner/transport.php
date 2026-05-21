@@ -12,6 +12,8 @@ return [
             'horse' => 'Horse',
             'route' => 'Route and date',
             'notes' => 'Notes for the carrier',
+            'favorite_route' => '⭐ Load favorite route',
+            'favorite_transporters' => '⭐ Pick carriers (optional)',
         ],
 
         'label' => [
@@ -22,6 +24,9 @@ return [
             'preferred_time' => 'Preferred time',
             'mode' => 'Trip mode',
             'notes' => 'Additional information',
+            'favorite_route' => 'Pick from saved routes',
+            'targeted_mode' => 'Send ONLY to my favorite carriers',
+            'favorite_transporters' => 'Pick carriers to send the request to',
         ],
 
         'placeholder' => [
@@ -29,15 +34,26 @@ return [
             'pickup' => 'e.g. 1 Stable Lane, 02-123 Warsaw',
             'dropoff' => 'e.g. Sopot Racecourse, Polanki 91',
             'notes' => 'Special needs of the horse, availability windows, etc.',
+            'favorite_route' => '— pick from saved routes —',
         ],
 
         'helper' => [
             'horse' => 'You can add a horse first under "My horses".',
             'mode' => 'One way / round trip / carrier returns to base.',
+            'favorite_route' => 'Picking a saved route auto-fills pickup, drop-off and notes. Save new routes via the "Save as favorite route" action after filling the form.',
+            'favorite_transporters' => 'By default the request goes to all verified carriers in your region (broadcast). When you tick "favorites only" it goes ONLY to the chosen list. Manage favorites in "Favorite carriers".',
+            'targeted_mode' => 'OFF = broadcast (more offers). ON = targeted (only trusted).',
         ],
 
         'action' => [
             'submit' => 'Send request to carriers',
+            'save_as_favorite' => [
+                'label' => 'Save as favorite route',
+                'label_input' => 'Route name',
+                'placeholder' => 'e.g. "Equine clinic in Warsaw"',
+                'missing_addresses' => 'Fill in pickup and drop-off addresses first.',
+                'success' => 'Route ":label" saved — pick it from the dropdown next time.',
+            ],
         ],
 
         'info' => [

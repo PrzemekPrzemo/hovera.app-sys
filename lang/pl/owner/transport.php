@@ -12,6 +12,8 @@ return [
             'horse' => 'Koń',
             'route' => 'Trasa i termin',
             'notes' => 'Uwagi dla przewoźnika',
+            'favorite_route' => '⭐ Wczytaj ulubioną trasę',
+            'favorite_transporters' => '⭐ Wybierz przewoźników (opcjonalnie)',
         ],
 
         'label' => [
@@ -22,6 +24,9 @@ return [
             'preferred_time' => 'Preferowana godzina',
             'mode' => 'Tryb przewozu',
             'notes' => 'Dodatkowe informacje',
+            'favorite_route' => 'Wybierz z zapisanych tras',
+            'targeted_mode' => 'Wyślij TYLKO do moich ulubionych przewoźników',
+            'favorite_transporters' => 'Wybierz przewoźników do których wyślemy zapytanie',
         ],
 
         'placeholder' => [
@@ -29,15 +34,28 @@ return [
             'pickup' => 'np. ul. Stajenna 1, 02-123 Warszawa',
             'dropoff' => 'np. Hipodrom Sopot, Polanki 91',
             'notes' => 'Specjalne potrzeby konia, godziny dostępności, itp.',
+            'favorite_route' => '— wybierz z listy zapisanych tras —',
         ],
 
         'helper' => [
             'horse' => 'Możesz najpierw dodać konia w sekcji „Moje konie".',
             'mode' => 'Jedna strona / w obie strony / powrót przewoźnika do bazy.',
+            'favorite_route' => 'Po wyborze formularz automatycznie wypełni pickup, dropoff i notatki. Dodajesz nowe trasy przez akcję „Zapisz jako ulubiona trasa" po wypełnieniu pól.',
+            'favorite_transporters' => 'Domyślnie zapytanie idzie do wszystkich zweryfikowanych przewoźników w Twoim regionie (broadcast). Jeśli zaznaczysz „tylko ulubieni" — leci wyłącznie do wybranej listy. Listę ulubionych edytujesz w „Ulubieni przewoźnicy".',
+            'targeted_mode' => 'WYŁĄCZONE = broadcast (więcej ofert). WŁĄCZONE = targeted (tylko zaufani).',
         ],
+
+        // (action key merged below)
 
         'action' => [
             'submit' => 'Wyślij zapytanie do przewoźników',
+            'save_as_favorite' => [
+                'label' => 'Zapisz jako ulubiona trasa',
+                'label_input' => 'Nazwa trasy',
+                'placeholder' => 'np. „Klinika koni Janów Podlaski"',
+                'missing_addresses' => 'Najpierw wypełnij adres odbioru i dostarczenia.',
+                'success' => 'Trasa „:label" zapisana — wybierzesz ją z dropdown\'u przy następnym zamówieniu.',
+            ],
         ],
 
         'info' => [
