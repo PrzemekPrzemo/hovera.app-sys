@@ -278,16 +278,22 @@ class AppServiceProvider extends ServiceProvider
     {
         Mail::extend('smtp', function (array $config) {
             // Replicate Laravel default smtp factory (MailManager::createSmtpTransport).
+            // Scheme: 'smtp' lub 'smtps'. Empty string crashuje
+            // EsmtpTransportFactory („The \"\" scheme is not supported”), więc
+            // ZAWSZE fallback'ujemy do 'smtp' gdy nie wyderywowaliśmy 'smtps'.
+            // Encryption=tls + port 465 = 'smtps', wszystko inne = 'smtp'
+            // (Symfony przełącza na STARTTLS na podstawie portu/parametrów).
             $scheme = $config['scheme'] ?? null;
             if (! $scheme) {
                 $scheme = ! empty($config['encryption']) && $config['encryption'] === 'tls'
-                    ? (((int) ($config['port'] ?? 587) === 465) ? 'smtps' : 'smtp')
-                    : '';
+                    && ((int) ($config['port'] ?? 587) === 465)
+                    ? 'smtps'
+                    : 'smtp';
             }
 
             $factory = new EsmtpTransportFactory;
             $transport = $factory->create(new Dsn(
-                $scheme ?: '',
+                $scheme,
                 $config['host'] ?? 'localhost',
                 $config['username'] ?? null,
                 $config['password'] ?? null,
