@@ -13,7 +13,9 @@ use App\Models\Central\TenantMembership;
 use App\Models\Central\User;
 use App\Tenancy\Provisioner;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -177,13 +179,70 @@ class CreateTenant
             return;
         }
 
-        // New user — send invitation. Membership is created on accept.
+        // Horse owner: 1 email = 1 konto, no team. Pomijamy invitation flow
+        // (który był designed dla wieloużytkownikowych team'ów stable/transport).
+        // Tworzymy User'a od razu z losowym hasłem + Password::sendResetLink —
+        // właściciel dostaje 1 mail "ustaw hasło", po klikknięciu loguje się
+        // pod adresem z formularza rejestracji. Brak step'u "akceptuj zaproszenie".
+        //
+        // Patrz docs/OWNER-STABLE-ROADMAP.md "self-service rejestracja" + PR #361.
+        if ($tenant->type === TenantType::HorseOwner) {
+            $this->attachHorseOwnerDirectly($tenant, $email, $name);
+
+            return;
+        }
+
+        // New user (stable/transport) — send invitation. Membership na accept.
+        // Tu invitation flow ma sens bo team'y multi-user (manager zaprasza
+        // instruktora/vet'a/employee'go), name kolizji email + role.
         app(SendInvitation::class)->execute(
             email: $email,
             tenant: $tenant,
             role: 'owner',
             name: $name,
         );
+    }
+
+    /**
+     * Horse owner registration path — tworzy User + Membership od razu +
+     * wysyła password reset link. Bez invitation row, bez accept step.
+     *
+     * Mail dispatch jest soft-fail (analogicznie do SendInvitation #353):
+     * jeśli SMTP padnie, tenant + user + membership pozostają w DB,
+     * master admin może resendować password reset z /admin/horse-owners
+     * (action `force_password_reset`).
+     */
+    private function attachHorseOwnerDirectly(Tenant $tenant, string $email, ?string $name): void
+    {
+        // Random password — user go nie zna, nigdy nie używa. Reset link
+        // z `Password::sendResetLink()` ustanowi własne hasło.
+        $user = User::create([
+            'name' => $name ?? Str::before($email, '@'),
+            'email' => $email,
+            'password' => Hash::make(Str::random(64)),
+        ]);
+
+        TenantMembership::create([
+            'tenant_id' => $tenant->id,
+            'user_id' => $user->id,
+            'role' => 'owner',
+            'joined_at' => now(),
+        ]);
+
+        try {
+            Password::sendResetLink(['email' => $email]);
+        } catch (Throwable $e) {
+            // SMTP padło — user + membership są w DB, admin resendnie ręcznie.
+            // NIE rzucamy: chcemy żeby HorseOwnerRegistrationController dotarł
+            // do thanks page (parity z SendInvitation soft-fail behavior).
+            report($e);
+            Log::warning('Horse owner password reset mail failed (soft-fail)', [
+                'tenant_id' => $tenant->id,
+                'user_id' => $user->id,
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function validate(array $input): array
