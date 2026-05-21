@@ -112,4 +112,15 @@ return [
         'contact_hint' => 'Masz pytanie? Napisz na :email.',
         'cta_directory' => 'Zobacz katalog przewoźników',
     ],
+
+    'rate_limited' => [
+        'title' => 'Zbyt wiele prób rejestracji',
+        'heading' => 'Zwolnij — zbyt wiele prób z Twojego IP',
+        'intro' => 'Limit zgłoszeń rejestracyjnych został wyczerpany. To zabezpieczenie przed botami i scraperami spamującymi formularz.',
+        'already_submitted_heading' => 'Już wysłałeś zgłoszenie?',
+        'already_submitted_body' => 'Jeśli formularz przeszedł wcześniej, Twoje konto firmy zostało utworzone — sprawdź skrzynkę email (także spam) pod kątem wiadomości potwierdzającej. Weryfikacja dokumentów zajmuje 2-3 dni robocze. Nie ma potrzeby ponownego wysyłania.',
+        'retry_after' => 'Spróbuj ponownie za około :minutes minut, jeśli nie otrzymałeś żadnego potwierdzenia.',
+        'back_to_landing' => 'Wróć do strony Hovera Transport',
+        'contact_hint' => 'Pomoc i kontakt: :email',
+    ],
 ];

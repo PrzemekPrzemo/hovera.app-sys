@@ -112,4 +112,15 @@ return [
         'contact_hint' => 'Have a question? Email :email.',
         'cta_directory' => 'Browse the carriers directory',
     ],
+
+    'rate_limited' => [
+        'title' => 'Too many registration attempts',
+        'heading' => 'Slow down — too many attempts from your IP',
+        'intro' => 'The registration submission limit has been exhausted. This protects the form from bots and spam scrapers.',
+        'already_submitted_heading' => 'Already submitted?',
+        'already_submitted_body' => 'If a previous submission went through, your company account has been created — check your inbox (and spam folder) for a confirmation email. Document verification takes 2-3 business days. No need to resubmit.',
+        'retry_after' => 'Try again in roughly :minutes minutes if you have not received any confirmation.',
+        'back_to_landing' => 'Back to Hovera Transport',
+        'contact_hint' => 'Help & contact: :email',
+    ],
 ];

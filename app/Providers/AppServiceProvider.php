@@ -156,16 +156,31 @@ class AppServiceProvider extends ServiceProvider
     private function registerRateLimiters(): void
     {
         // `transporter-onboarding` — POST /przewoznicy/dolacz (carrier
-        // signup z 6 file uploads × 5MB). Production zachowuje strict
-        // 1/h/IP (kompromituje SEO bota / scrapery), ale na non-prod
-        // 30/h żeby developer mógł testować flow bez czyszczenia cache.
+        // signup z 6 file uploads × 5MB). Prod: 3/h/IP (anti-abuse dla
+        // bot scrapers, ale luźno tolerantne dla legit user'a który
+        // poprawia formularz po validation error). Non-prod: 30/h.
+        //
+        // Wcześniej było 1/h prod — za agresywne, user dostawał 429 przy
+        // 2. próbie po fixie formy + nie wiedział czy 1. submit zadziałał.
+        // Custom response callback renderuje branded blade z instrukcją
+        // zamiast bare HTTP 429 default page.
         //
         // Per-IP key — `by(request->ip())` jest defaultem dla `Limit::perHour()`.
         RateLimiter::for('transporter-onboarding', function (Request $request) {
-            $perHour = app()->environment('production') ? 1 : 30;
+            $perHour = app()->environment('production') ? 3 : 30;
 
             return Limit::perHour($perHour)
-                ->by($request->ip());
+                ->by($request->ip())
+                ->response(function (Request $request, array $headers) {
+                    $retryAfterSec = (int) ($headers['Retry-After'] ?? 3600);
+
+                    return response()->view(
+                        'public.transport.onboarding-rate-limited',
+                        ['retry_after_minutes' => max(1, (int) ceil($retryAfterSec / 60))],
+                        429,
+                        $headers,
+                    );
+                });
         });
     }
 
