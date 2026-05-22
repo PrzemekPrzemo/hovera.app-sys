@@ -18,8 +18,9 @@ return [
             'number_placeholder' => '— nadawany przy wystawieniu —',
             'status' => 'Status',
             'client' => 'Klient',
+            'buyer_type' => 'Typ nabywcy',
             'buyer_name' => 'Nazwa / imię i nazwisko',
-            'buyer_nip' => 'NIP (opcjonalnie dla os. fizycznych)',
+            'buyer_nip' => 'NIP',
             'buyer_address' => 'Adres',
             'buyer_postal_code' => 'Kod',
             'buyer_city' => 'Miasto',
@@ -39,6 +40,12 @@ return [
             'item_unit_price' => 'Cena j. netto',
             'item_vat' => 'VAT',
             'notes_label' => 'Uwagi',
+        ],
+        'buyer_type' => [
+            'individual' => 'Osoba fizyczna',
+            'individual_hint' => 'FV bez NIP-u — tylko imię i nazwisko (osoba nieprowadząca działalności).',
+            'company' => 'Firma / przedsiębiorca',
+            'company_hint' => 'FV firmowa — wymagany NIP, nazwa, adres.',
         ],
     ],
 

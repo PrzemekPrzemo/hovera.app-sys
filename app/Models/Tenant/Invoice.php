@@ -21,7 +21,7 @@ class Invoice extends TenantModel
         'number', 'kind', 'status',
         'client_id', 'related_payment_id', 'related_pass_id', 'corrects_invoice_id',
         'seller_name', 'seller_nip', 'seller_address', 'seller_postal_code', 'seller_city', 'seller_country',
-        'buyer_name', 'buyer_nip', 'buyer_address', 'buyer_postal_code', 'buyer_city', 'buyer_country',
+        'buyer_name', 'buyer_nip', 'buyer_address', 'buyer_postal_code', 'buyer_city', 'buyer_country', 'buyer_type',
         'issued_at', 'sale_date', 'due_at', 'paid_at',
         'currency', 'exchange_rate', 'exchange_rate_date', 'exchange_rate_source',
         'subtotal_cents', 'vat_cents', 'total_cents',

@@ -234,6 +234,34 @@ class InvoicingFoundationTest extends TestCase
         app(IssueInvoice::class)->execute($invoice);
     }
 
+    public function test_issue_for_individual_buyer_works_with_only_name(): void
+    {
+        // FV osoba fizyczna — brak NIP, brak adresu, tylko imie i nazwisko.
+        // Polskie prawo VAT pozwala wystawic FV bez NIP-u dla osoby fizycznej
+        // nieprowadzacej dzialalnosci. Tylko `buyer_name` wymagane.
+        $invoice = $this->makeDraftInvoice([
+            'buyer_type' => 'individual',
+            'buyer_name' => 'Jan Kowalski',
+            'buyer_nip' => null,
+            'buyer_address' => null,
+        ]);
+        InvoiceItem::create([
+            'id' => (string) Str::ulid(),
+            'invoice_id' => $invoice->id,
+            'name' => 'Pensjonat',
+            'quantity' => 1, 'unit' => 'mies.', 'vat_rate' => '23',
+            'unit_price_cents' => 100000, 'net_cents' => 100000,
+            'vat_cents' => 23000, 'total_cents' => 123000,
+        ]);
+
+        $issued = app(IssueInvoice::class)->execute($invoice->refresh());
+
+        $this->assertSame(InvoiceStatus::Issued, $issued->status);
+        $this->assertSame('individual', $issued->buyer_type);
+        $this->assertNull($issued->buyer_nip);
+        $this->assertSame('Jan Kowalski', $issued->buyer_name);
+    }
+
     public function test_issue_in_foreign_currency_snapshots_nbp_rate_for_preceding_day(): void
     {
         $invoice = $this->makeDraftInvoice(['currency' => 'EUR']);
@@ -536,6 +564,7 @@ class InvoicingFoundationTest extends TestCase
             $t->string('buyer_postal_code', 16)->nullable();
             $t->string('buyer_city', 120)->nullable();
             $t->char('buyer_country', 2)->default('PL');
+            $t->string('buyer_type', 16)->default('individual');
             $t->date('issued_at')->nullable();
             $t->date('sale_date')->nullable();
             $t->date('due_at')->nullable();

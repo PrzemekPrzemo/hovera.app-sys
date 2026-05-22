@@ -506,6 +506,7 @@ class TransporterKsefServiceTest extends TestCase
             $t->string('buyer_postal_code', 16)->nullable();
             $t->string('buyer_city', 120)->nullable();
             $t->string('buyer_country', 2)->default('PL');
+            $t->string('buyer_type', 16)->default('individual');
             $t->string('buyer_email')->nullable();
             $t->string('pickup_address')->nullable();
             $t->string('dropoff_address')->nullable();

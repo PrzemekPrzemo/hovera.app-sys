@@ -25,7 +25,7 @@ class TransportInvoice extends TenantModel
         'seller_iban', 'seller_bank_name',
         'buyer_name', 'buyer_nip', 'buyer_address',
         'buyer_postal_code', 'buyer_city', 'buyer_country',
-        'buyer_email',
+        'buyer_email', 'buyer_type',
         'pickup_address', 'dropoff_address', 'service_date',
         'distance_km', 'vehicle_id', 'driver_id',
         'issued_at', 'sale_date', 'due_at', 'paid_at',

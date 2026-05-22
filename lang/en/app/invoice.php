@@ -18,8 +18,9 @@ return [
             'number_placeholder' => '— assigned on issue —',
             'status' => 'Status',
             'client' => 'Client',
+            'buyer_type' => 'Buyer type',
             'buyer_name' => 'Name / full name',
-            'buyer_nip' => 'Tax ID (optional for individuals)',
+            'buyer_nip' => 'Tax ID',
             'buyer_address' => 'Address',
             'buyer_postal_code' => 'Postal code',
             'buyer_city' => 'City',
@@ -39,6 +40,12 @@ return [
             'item_unit_price' => 'Net unit price',
             'item_vat' => 'VAT',
             'notes_label' => 'Notes',
+        ],
+        'buyer_type' => [
+            'individual' => 'Individual',
+            'individual_hint' => 'Invoice without VAT ID — name only (private individual, not running a business).',
+            'company' => 'Company / sole trader',
+            'company_hint' => 'Business invoice — VAT ID, name and address required.',
         ],
     ],
 

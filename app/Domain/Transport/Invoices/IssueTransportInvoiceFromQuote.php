@@ -103,7 +103,11 @@ class IssueTransportInvoiceFromQuote
             'seller_iban' => (string) ($branding['iban'] ?? ''),
             'seller_bank_name' => (string) ($branding['bank_name'] ?? ''),
 
-            // Snapshot nabywcy z Quote
+            // Snapshot nabywcy z Quote. Buyer type wnioskujemy z obecności
+            // NIP-u: klient na public quote landing wybrał "Firma" → NIP set,
+            // wybrał "Osoba prywatna" → NIP brak → buyer_type=individual,
+            // FV idzie tylko z imieniem (KSeF FA(3) tolerated dla osób
+            // fizycznych nieprowadzących działalności).
             'buyer_name' => $quote->customer_company ?: $quote->customer_name,
             'buyer_nip' => $quote->customer_tax_id,
             'buyer_address' => $quote->customer_address,
@@ -111,6 +115,7 @@ class IssueTransportInvoiceFromQuote
             'buyer_city' => null,
             'buyer_country' => 'PL',
             'buyer_email' => $quote->customer_email,
+            'buyer_type' => $quote->customer_tax_id ? 'company' : 'individual',
 
             // Snapshot trasy
             'pickup_address' => $quote->pickup_address,
