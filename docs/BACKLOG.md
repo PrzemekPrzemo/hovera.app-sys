@@ -3,42 +3,11 @@
 Lista zadań w kolejności priorytetu. Format: krótki opis + uzasadnienie + szkic
 implementacji. Aktualizować po każdym PR z tej listy.
 
-## 1. Audit log viewer w `/admin`
+## 1. Audit log viewer w `/admin` ✅ DONE (PR #394)
 
-**Po co.** `MasterAuditLogger` zapisuje wpisy do `central.master_audit_logs`
-przy każdej krytycznej operacji (tenant.destroy, tenant.bulk_purge,
-tenant.update, ksef.send, impersonation.start itd.). Brak UI do przeglądu —
-master admin musi `SELECT * FROM master_audit_logs` ręcznie. Wartość:
-
-- **Compliance**: gdy klient pyta "co robiliście z moimi danymi" (RODO art. 15)
-  — wyciąg z audit log w 30 sekund zamiast godziny grzebania
-- **Debug**: gdy coś się popsuło — kiedy i kto co zmieniał?
-- **Security**: pokaż impersonation events, niespodziewane purge'y itp.
-
-**Szkic implementacji** (1 PR, ~3-4h):
-
-- `app/Models/Central/MasterAuditLogEntry.php` jeśli nie istnieje (sprawdzić)
-- `app/Filament/Admin/Resources/MasterAuditLogEntryResource.php` (read-only,
-  `canCreate=false`, `canEdit=false`, `canDelete=false`)
-  - Table: timestamp, actor (user_id → email), tenant (jeśli set), action,
-    target_type, target_id, payload (JSON column)
-  - Filters: actor / tenant / action / date range
-  - Search: action keyword
-  - Default sort: created_at DESC
-- Navigation: `/admin/audit-log` pod sekcją "Bezpieczeństwo" lub
-  "System"
-- i18n: PL/EN
-- Test: read-only enforcement (canCreate/canEdit/canDelete → false dla
-  master admin)
-
-**Acceptance criteria.**
-- [ ] `/admin/audit-log` listuje wszystkie wpisy z paginacją
-- [ ] Filter po action (e.g. tenant.destroy)
-- [ ] Filter po actor (master admin email)
-- [ ] Filter po tenant slug
-- [ ] Date range filter
-- [ ] Brak edycji / kasowania (też dla master admin — audit log immutable)
-- [ ] Test: insert do audit log → pojawia się w UI
+Zrealizowane: `AuditLogMasterResource` (read-only) w `/admin/audit-log-masters`
+z filtrami (actor / tenant / date range), search po action, view modal z
+JSON payload. `canCreate/canEdit/canDelete` → false (audit log immutable).
 
 ---
 
