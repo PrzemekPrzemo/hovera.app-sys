@@ -14,10 +14,14 @@ return [
             'label' => 'Edytuj rezerwację',
             'modal_heading' => 'Edycja rezerwacji',
             'success' => 'Rezerwacja zaktualizowana',
+            'forbidden_title' => 'Brak uprawnień do edycji tej rezerwacji',
+            'forbidden_body' => 'Jako pracownik możesz edytować tylko swoje własne wpisy. Poproś instruktora lub managera o zmianę.',
         ],
         'delete' => [
             'label' => 'Usuń rezerwację',
             'success' => 'Rezerwacja usunięta',
+            'forbidden_title' => 'Brak uprawnień do usunięcia tej rezerwacji',
+            'forbidden_body' => 'Jako pracownik możesz usuwać tylko swoje własne wpisy.',
         ],
     ],
 

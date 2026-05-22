@@ -14,10 +14,14 @@ return [
             'label' => 'Edit booking',
             'modal_heading' => 'Edit booking',
             'success' => 'Booking updated',
+            'forbidden_title' => 'Not allowed to edit this booking',
+            'forbidden_body' => 'As an employee you can only edit your own entries. Ask an instructor or manager to make the change.',
         ],
         'delete' => [
             'label' => 'Delete booking',
             'success' => 'Booking deleted',
+            'forbidden_title' => 'Not allowed to delete this booking',
+            'forbidden_body' => 'As an employee you can only delete your own entries.',
         ],
     ],
 

@@ -16,7 +16,10 @@ use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\Instructor;
 use App\Services\Calendar\TimetableLoader;
+use App\Services\Integrations\LiveJumping\LiveJumpingClient;
+use App\Services\Integrations\LiveJumping\LiveJumpingFeatureGate;
 use App\Services\Tenancy\TenantRoleGate;
+use App\Tenancy\TenantManager;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -28,6 +31,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class Calendar extends Page implements HasActions, HasForms
 {
@@ -113,7 +117,7 @@ class Calendar extends Page implements HasActions, HasForms
      */
     public function getLiveJumpingEvents(): array
     {
-        $gate = app(\App\Services\Integrations\LiveJumping\LiveJumpingFeatureGate::class);
+        $gate = app(LiveJumpingFeatureGate::class);
         if (! $gate->enabled()) {
             return [];
         }
@@ -121,7 +125,7 @@ class Calendar extends Page implements HasActions, HasForms
         $from = Carbon::parse($this->date);
         $to = $from->copy()->addDays(7);
 
-        return app(\App\Services\Integrations\LiveJumping\LiveJumpingClient::class)
+        return app(LiveJumpingClient::class)
             ->getCompetitions($from, $to);
     }
 
@@ -186,6 +190,15 @@ class Calendar extends Page implements HasActions, HasForms
             ->action(function (array $arguments, array $data) {
                 $entry = CalendarEntry::findOrFail($arguments['entry_id']);
 
+                if (! self::canMutateEntry($entry)) {
+                    Notification::make()->danger()
+                        ->title(__('app/calendar_widget.action.edit.forbidden_title'))
+                        ->body(__('app/calendar_widget.action.edit.forbidden_body'))
+                        ->send();
+
+                    return;
+                }
+
                 try {
                     app(UpdateCalendarEntry::class)->execute($entry, $data);
                     Notification::make()->success()->title(__('app/calendar_widget.action.edit.success'))->send();
@@ -206,9 +219,54 @@ class Calendar extends Page implements HasActions, HasForms
             ->requiresConfirmation()
             ->action(function (array $arguments) {
                 $entry = CalendarEntry::findOrFail($arguments['entry_id']);
+
+                if (! self::canMutateEntry($entry)) {
+                    Notification::make()->danger()
+                        ->title(__('app/calendar_widget.action.delete.forbidden_title'))
+                        ->body(__('app/calendar_widget.action.delete.forbidden_body'))
+                        ->send();
+
+                    return;
+                }
+
                 $entry->delete();
                 Notification::make()->success()->title(__('app/calendar_widget.action.delete.success'))->send();
             });
+    }
+
+    /**
+     * Czy zalogowany user moze edytowac / usunac wskazany entry?
+     *
+     * Reguly:
+     *   - owner/admin/manager/instructor/vet — pelen dostep (zarzadzanie
+     *     kalendarzem stajni)
+     *   - employee — tylko WLASNE entries (created_by_central_user_id ==
+     *     user.id); blokowany jesli ktos inny utworzyl wpis
+     *   - viewer — read-only (oddzielnie chroniony na poziomie navi,
+     *     ale defense-in-depth check tez tu)
+     */
+    private static function canMutateEntry(CalendarEntry $entry): bool
+    {
+        $tenant = app(TenantManager::class)->current();
+        $user = Auth::user();
+        if (! $tenant || ! $user) {
+            return false;
+        }
+
+        $role = (string) ($tenant->memberships()
+            ->where('user_id', $user->id)
+            ->whereNull('revoked_at')
+            ->value('role') ?? '');
+
+        if ($role === 'viewer') {
+            return false;
+        }
+
+        if ($role === 'employee') {
+            return (string) $entry->created_by_central_user_id === (string) $user->id;
+        }
+
+        return in_array($role, ['owner', 'admin', 'manager', 'instructor', 'vet'], true);
     }
 
     /**
