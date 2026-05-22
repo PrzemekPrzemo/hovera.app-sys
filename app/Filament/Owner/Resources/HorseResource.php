@@ -4,15 +4,23 @@ declare(strict_types=1);
 
 namespace App\Filament\Owner\Resources;
 
+use App\Domain\Horses\HorseRegistrySyncService;
 use App\Filament\Owner\Resources\HorseResource\Pages;
+use App\Models\Central\CentralHorseRegistry;
+use App\Models\Central\HorseBoardingAssignment;
+use App\Models\Central\Tenant;
+use App\Models\Central\User;
 use App\Models\Tenant\OwnerHorse;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Owner: "Moje konie". Lekki CRUD z minimum pól — owner nie zarządza
@@ -135,6 +143,7 @@ class HorseResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                self::connectToStableAction(),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\RestoreAction::make(),
             ])
@@ -155,5 +164,79 @@ class HorseResource extends Resource
             'create' => Pages\CreateHorse::route('/create'),
             'edit' => Pages\EditHorse::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * "Połącz ze stajnią" — owner składa request boarding'u dla danego
+     * konia. Wymaga `central_horse_id` na OwnerHorse (Horse zsynchowany
+     * z central registry). Stajnia później widzi pending request w
+     * `/app/pending-boarding-requests` i klika "Akceptuj".
+     *
+     * Visible tylko gdy koń ma central_horse_id (sync zrobiony przy
+     * Create) i brak istniejacego pending/active assignment dla tego
+     * konia w którejkolwiek stajni (idempotent na poziomie serwisu).
+     */
+    private static function connectToStableAction(): Action
+    {
+        return Action::make('connect_to_stable')
+            ->label(__('owner/horses.action.connect.label'))
+            ->icon('heroicon-o-building-storefront')
+            ->color('primary')
+            ->visible(fn (OwnerHorse $record) => $record->central_horse_id !== null)
+            ->form([
+                Forms\Components\Select::make('stable_tenant_id')
+                    ->label(__('owner/horses.action.connect.stable_label'))
+                    ->required()
+                    ->searchable()
+                    ->preload()
+                    ->options(fn () => Tenant::query()
+                        ->stables()
+                        ->whereIn('status', Tenant::PANEL_ACCESSIBLE_STATUSES)
+                        ->orderBy('name')
+                        ->limit(50)
+                        ->pluck('name', 'id')
+                        ->all())
+                    ->getOptionLabelUsing(fn ($value) => Tenant::query()->find($value)?->name)
+                    ->helperText(__('owner/horses.action.connect.stable_helper')),
+            ])
+            ->modalHeading(fn (OwnerHorse $record) => __('owner/horses.action.connect.modal_heading', [
+                'horse' => $record->name,
+            ]))
+            ->modalDescription(__('owner/horses.action.connect.modal_description'))
+            ->action(function (OwnerHorse $record, array $data) {
+                $stable = Tenant::find($data['stable_tenant_id']);
+                if (! $stable || ! $stable->isStable()) {
+                    Notification::make()->danger()
+                        ->title(__('owner/horses.action.connect.notify_invalid_stable'))
+                        ->send();
+
+                    return;
+                }
+
+                /** @var CentralHorseRegistry|null $centralHorse */
+                $centralHorse = CentralHorseRegistry::find($record->central_horse_id);
+                if ($centralHorse === null) {
+                    Notification::make()->danger()
+                        ->title(__('owner/horses.action.connect.notify_no_central'))
+                        ->send();
+
+                    return;
+                }
+
+                $owner = Auth::user();
+                $assignment = app(HorseRegistrySyncService::class)
+                    ->requestBoarding($centralHorse, $stable, $owner instanceof User ? $owner : null);
+
+                $isAlreadyActive = $assignment->status === HorseBoardingAssignment::STATUS_ACTIVE;
+                Notification::make()
+                    ->success()
+                    ->title($isAlreadyActive
+                        ? __('owner/horses.action.connect.notify_already_active_title')
+                        : __('owner/horses.action.connect.notify_requested_title'))
+                    ->body($isAlreadyActive
+                        ? __('owner/horses.action.connect.notify_already_active_body', ['stable' => $stable->name])
+                        : __('owner/horses.action.connect.notify_requested_body', ['stable' => $stable->name]))
+                    ->send();
+            });
     }
 }
