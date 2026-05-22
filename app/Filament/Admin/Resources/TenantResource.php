@@ -24,6 +24,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
@@ -583,6 +584,63 @@ class TenantResource extends Resource
                             ->title(__('admin/tenant.action.destroy.success_title'))
                             ->send();
                     }),
+            ])
+            // Bulk purge dla soft-deleted tenantow — uwalnia slug + drop DB.
+            // Wymaga wpisania literalu "USUN" (lub "DELETE" w EN) zeby
+            // chronic przed misclick'iem; non-soft-deleted w selekcji
+            // sa pomijane (filter trashed only).
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('purge_soft_deleted')
+                        ->label(__('admin/tenant.bulk_action.purge.label'))
+                        ->icon('heroicon-o-fire')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading(__('admin/tenant.bulk_action.purge.modal_heading'))
+                        ->modalDescription(__('admin/tenant.bulk_action.purge.modal_description'))
+                        ->form([
+                            Forms\Components\TextInput::make('confirm_phrase')
+                                ->label(__('admin/tenant.bulk_action.purge.confirm_label'))
+                                ->helperText(__('admin/tenant.bulk_action.purge.confirm_helper'))
+                                ->required(),
+                        ])
+                        ->action(function (Collection $records, array $data, DeleteTenant $deleter, MasterAuditLogger $audit) {
+                            $expected = (string) __('admin/tenant.bulk_action.purge.confirm_phrase_value');
+                            if (trim((string) ($data['confirm_phrase'] ?? '')) !== $expected) {
+                                Notification::make()->danger()
+                                    ->title(__('admin/tenant.bulk_action.purge.phrase_mismatch'))
+                                    ->body(__('admin/tenant.bulk_action.purge.phrase_mismatch_body', ['phrase' => $expected]))
+                                    ->send();
+
+                                return;
+                            }
+
+                            $purged = 0;
+                            $skipped = 0;
+                            foreach ($records as $record) {
+                                /** @var Tenant $record */
+                                if (! $record->trashed()) {
+                                    $skipped++;
+
+                                    continue;
+                                }
+                                $audit->record('tenant.bulk_purge', 'Tenant', $record->id, $record->id, [
+                                    'db_name' => $record->db_name,
+                                    'slug' => $record->slug,
+                                ]);
+                                $deleter->destroy($record);
+                                $purged++;
+                            }
+
+                            Notification::make()->success()
+                                ->title(__('admin/tenant.bulk_action.purge.success_title'))
+                                ->body(__('admin/tenant.bulk_action.purge.success_body', [
+                                    'purged' => $purged,
+                                    'skipped' => $skipped,
+                                ]))
+                                ->send();
+                        }),
+                ]),
             ]);
     }
 

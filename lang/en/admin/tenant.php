@@ -106,4 +106,19 @@ return [
             'success_title' => 'Stable permanently deleted',
         ],
     ],
+
+    'bulk_action' => [
+        'purge' => [
+            'label' => 'Purge soft-deleted (permanent)',
+            'modal_heading' => 'Permanently delete all selected soft-deleted tenants',
+            'modal_description' => 'The operation drops the MySQL DB + user account for every selected tenant. Their slugs are freed up and become available for new registrations. This CANNOT be undone. Non-trashed tenants in the selection are skipped.',
+            'confirm_label' => 'Confirm by typing the phrase below',
+            'confirm_helper' => 'Type exactly: DELETE',
+            'confirm_phrase_value' => 'DELETE',
+            'phrase_mismatch' => 'Wrong confirmation phrase',
+            'phrase_mismatch_body' => 'To proceed, type exactly: :phrase',
+            'success_title' => 'Soft-deleted tenants purged',
+            'success_body' => 'Permanently deleted: :purged. Skipped (not soft-deleted): :skipped.',
+        ],
+    ],
 ];

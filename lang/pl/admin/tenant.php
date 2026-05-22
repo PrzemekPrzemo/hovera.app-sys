@@ -106,4 +106,19 @@ return [
             'success_title' => 'Stajnia trwale usunięta',
         ],
     ],
+
+    'bulk_action' => [
+        'purge' => [
+            'label' => 'Wyczyść soft-deleted (trwale)',
+            'modal_heading' => 'Trwale usuń wszystkie wybrane soft-deleted tenanty',
+            'modal_description' => 'Operacja drop\'uje bazę MySQL + konto użytkownika dla każdego zaznaczonego tenanta. Slugi zostają zwolnione i będą dostępne dla nowych rejestracji. Tej operacji NIE można cofnąć. Tenanty nie-trashed w selekcji zostaną pominięte.',
+            'confirm_label' => 'Potwierdź wpisując poniższe hasło',
+            'confirm_helper' => 'Wpisz dokładnie: USUN (bez polskich znaków).',
+            'confirm_phrase_value' => 'USUN',
+            'phrase_mismatch' => 'Niepoprawne hasło potwierdzenia',
+            'phrase_mismatch_body' => 'Aby kontynuować, wpisz dokładnie: :phrase',
+            'success_title' => 'Soft-deleted tenanty wyczyszczone',
+            'success_body' => 'Usunięto trwale: :purged. Pominięto (nie były soft-deleted): :skipped.',
+        ],
+    ],
 ];
