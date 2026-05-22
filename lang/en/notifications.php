@@ -147,6 +147,18 @@ return [
         'action' => 'View invoice',
     ],
 
+    'owner_quote_sent' => [
+        'subject' => 'New transport offer — :transporter',
+        'line_intro' => 'Carrier **:transporter** sent you an offer for your transport inquiry.',
+        'field' => [
+            'route' => 'Route',
+            'price' => 'Price (gross)',
+            'date' => 'Proposed date',
+        ],
+        'action_accept' => 'Open offer',
+        'line_panel' => 'You can also compare offers in your panel: :url',
+    ],
+
     'owner_vet_visit' => [
         'subject' => ':horse — :type',
         'line_intro' => 'Stable **:stable** recorded :type for horse **:horse**.',

@@ -57,6 +57,19 @@ class OwnerNotificationDispatcher
     }
 
     /**
+     * Dispatch po znanym central user ID — np. originator transport
+     * leadu (`TransportLead.originator_user_id`).
+     */
+    public function forCentralUser(?string $centralUserId, Notification $notification): void
+    {
+        if ($centralUserId === null || $centralUserId === '') {
+            return;
+        }
+
+        $this->dispatchToUserId($centralUserId, $notification);
+    }
+
+    /**
      * Bezpośredni dispatch po user ID. Soft-fail.
      */
     private function dispatchToUserId(string $userId, Notification $notification): void

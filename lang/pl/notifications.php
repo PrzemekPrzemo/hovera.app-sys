@@ -149,6 +149,18 @@ return [
         'action' => 'Zobacz fakturę',
     ],
 
+    'owner_quote_sent' => [
+        'subject' => 'Nowa oferta transportu — :transporter',
+        'line_intro' => 'Przewoźnik **:transporter** wysłał Ci ofertę na Twoje zapytanie transportowe.',
+        'field' => [
+            'route' => 'Trasa',
+            'price' => 'Cena (brutto)',
+            'date' => 'Proponowany termin',
+        ],
+        'action_accept' => 'Otwórz ofertę',
+        'line_panel' => 'Możesz też porównać oferty w panelu: :url',
+    ],
+
     'owner_vet_visit' => [
         'subject' => ':horse — :type',
         'line_intro' => 'Stajnia **:stable** zarejestrowała :type dla konia **:horse**.',
