@@ -121,6 +121,7 @@ return [
 
     'action' => [
         'send' => 'Wyślij do klienta',
+        'share_whatsapp' => 'Wyślij na WhatsApp',
         'withdraw' => 'Wycofaj ofertę',
         'download_pdf' => 'Pobierz PDF',
         'issue_invoice' => 'Wystaw fakturę',
