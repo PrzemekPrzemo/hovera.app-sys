@@ -216,6 +216,7 @@ class KsefKorReferenceTest extends TestCase
             $t->string('seller_nip', 16)->nullable();
             $t->string('buyer_name');
             $t->string('buyer_nip', 16)->nullable();
+            $t->string('buyer_type', 16)->default('individual');
             $t->string('buyer_email')->nullable();
             $t->string('currency', 3)->default('PLN');
             $t->decimal('exchange_rate', 14, 6)->nullable();

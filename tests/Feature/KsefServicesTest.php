@@ -388,6 +388,7 @@ class KsefServicesTest extends TestCase
             $t->string('buyer_postal_code', 16)->nullable();
             $t->string('buyer_city', 120)->nullable();
             $t->char('buyer_country', 2)->default('PL');
+            $t->string('buyer_type', 16)->default('individual');
             $t->date('issued_at')->nullable();
             $t->date('sale_date')->nullable();
             $t->date('due_at')->nullable();

@@ -115,11 +115,32 @@ class InvoiceResource extends Resource
                             $set('buyer_postal_code', $client->postal_code);
                             $set('buyer_city', $client->city);
                             $set('buyer_country', $client->country ?? 'PL');
+                            // Buyer type wnioskujemy z client.tax_id — klient
+                            // z NIP'em to firma, bez = osoba fizyczna.
+                            $set('buyer_type', $client->tax_id ? 'company' : 'individual');
                         }),
+                    Forms\Components\Radio::make('buyer_type')
+                        ->label(__('app/invoice.form.label.buyer_type'))
+                        ->options([
+                            'individual' => __('app/invoice.form.buyer_type.individual'),
+                            'company' => __('app/invoice.form.buyer_type.company'),
+                        ])
+                        ->descriptions([
+                            'individual' => __('app/invoice.form.buyer_type.individual_hint'),
+                            'company' => __('app/invoice.form.buyer_type.company_hint'),
+                        ])
+                        ->default('individual')
+                        ->required()
+                        ->reactive()
+                        ->columnSpanFull(),
                     Forms\Components\TextInput::make('buyer_name')
                         ->label(__('app/invoice.form.label.buyer_name'))->required(),
                     Forms\Components\TextInput::make('buyer_nip')
                         ->label(__('app/invoice.form.label.buyer_nip'))
+                        // Wymagany TYLKO dla FV firmowej; FV na osobę fizyczną
+                        // nieprowadzącą działalności może mieć tylko nazwę.
+                        ->required(fn (Forms\Get $get) => $get('buyer_type') === 'company')
+                        ->visible(fn (Forms\Get $get) => $get('buyer_type') === 'company')
                         ->suffixAction(GusLookupAction::make([
                             'name' => 'buyer_name',
                             'street' => 'buyer_address',
@@ -128,11 +149,14 @@ class InvoiceResource extends Resource
                             'country' => 'buyer_country',
                         ], sourceField: 'buyer_nip')),
                     Forms\Components\TextInput::make('buyer_address')
-                        ->label(__('app/invoice.form.label.buyer_address')),
+                        ->label(__('app/invoice.form.label.buyer_address'))
+                        ->required(fn (Forms\Get $get) => $get('buyer_type') === 'company'),
                     Forms\Components\TextInput::make('buyer_postal_code')
-                        ->label(__('app/invoice.form.label.buyer_postal_code')),
+                        ->label(__('app/invoice.form.label.buyer_postal_code'))
+                        ->required(fn (Forms\Get $get) => $get('buyer_type') === 'company'),
                     Forms\Components\TextInput::make('buyer_city')
-                        ->label(__('app/invoice.form.label.buyer_city')),
+                        ->label(__('app/invoice.form.label.buyer_city'))
+                        ->required(fn (Forms\Get $get) => $get('buyer_type') === 'company'),
                     Forms\Components\TextInput::make('buyer_country')
                         ->label(__('app/invoice.form.label.buyer_country'))->default('PL')->maxLength(2),
                 ]),
