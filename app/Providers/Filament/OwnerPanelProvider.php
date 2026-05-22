@@ -10,6 +10,7 @@ use App\Filament\Owner\Widgets\UpcomingTransportWidget;
 use App\Http\Middleware\EnforceImpersonationExpiry;
 use App\Http\Middleware\InitialiseTenantFromSession;
 use App\Http\Middleware\RedirectIfTenantSuspended;
+use App\Http\Middleware\RedirectToOnboarding;
 use App\Http\Middleware\RequireTenantType;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -177,6 +178,7 @@ class OwnerPanelProvider extends PanelProvider
                 // NIE używamy `RedirectIfTrialExpired` — owner nie ma trial'a
                 // i nie ma billing'u do wyegzekwowania.
                 RedirectIfTenantSuspended::class,
+                RedirectToOnboarding::class,
             ]);
     }
 }
