@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Components;
 
 use App\Services\CompanyLookup\CompanyLookupService;
-use App\Services\CompanyLookup\GusApiService;
+use App\Services\CompanyLookup\ViesService;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
@@ -56,10 +56,18 @@ class GusLookupAction
         return Action::make('lookupGus')
             ->label(__('common.gus_lookup.label'))
             ->icon('heroicon-m-magnifying-glass')
-            ->visible(fn () => app(GusApiService::class)->isConfigured())
+            // VIES jest zawsze dostępny (publiczne API bez creds), więc
+            // przycisk pokazujemy nawet gdy GUS nie jest skonfigurowany —
+            // user może wpisać NIP UE i zweryfikować przez VIES.
+            ->visible(fn () => true)
             ->action(function (Get $get, Set $set) use ($effective, $sourceField) {
-                $nip = (string) $get($sourceField);
-                if (! CompanyLookupService::isValidNip($nip)) {
+                $identifier = (string) $get($sourceField);
+
+                // Smart-route: prefix UE inny niż PL → VIES, PL/cyfry → GUS.
+                $euParsed = ViesService::parseEuVatId($identifier);
+                $isForeignEu = $euParsed !== null && $euParsed['country_code'] !== 'PL';
+
+                if (! $isForeignEu && ! CompanyLookupService::isValidNip($identifier)) {
                     Notification::make()
                         ->title(__('common.gus_lookup.invalid_nip'))
                         ->danger()
@@ -68,11 +76,21 @@ class GusLookupAction
                     return;
                 }
 
-                $data = app(CompanyLookupService::class)->lookupByNip($nip);
+                $data = app(CompanyLookupService::class)->lookupSmart($identifier);
                 if ($data === null) {
                     Notification::make()
                         ->title(__('common.gus_lookup.not_found'))
                         ->warning()
+                        ->send();
+
+                    return;
+                }
+
+                // VIES może zwrócić valid=false (NIP UE nie istnieje w bazie).
+                if (($data['valid'] ?? null) === false) {
+                    Notification::make()
+                        ->title(__('common.vies_lookup.invalid_vat'))
+                        ->danger()
                         ->send();
 
                     return;
@@ -95,7 +113,7 @@ class GusLookupAction
                     $set($effective['postal_code'], (string) ($data['postal_code'] ?? ''));
                 }
                 if (isset($effective['country'])) {
-                    $set($effective['country'], 'PL');
+                    $set($effective['country'], (string) ($data['country'] ?? 'PL'));
                 }
 
                 $sources = is_array($data['sources'] ?? null) ? implode(', ', $data['sources']) : 'GUS';

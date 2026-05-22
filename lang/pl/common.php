@@ -68,10 +68,14 @@ return [
     'dismiss' => 'Ukryj',
 
     'gus_lookup' => [
-        'label' => 'Pobierz z GUS',
-        'invalid_nip' => 'NIP jest niepoprawny (10 cyfr + suma kontrolna).',
+        'label' => 'Pobierz z GUS / VIES',
+        'invalid_nip' => 'NIP jest niepoprawny (10 cyfr + suma kontrolna lub prefix UE np. DE123456789).',
         'not_found' => 'Nie znaleziono firmy o tym NIP. Sprawdź pisownię lub uzupełnij ręcznie.',
         'success' => 'Dane pobrane',
         'success_body' => 'Źródło: :sources. Sprawdź adres i zaktualizuj jeśli potrzeba.',
+    ],
+
+    'vies_lookup' => [
+        'invalid_vat' => 'Numer VAT UE nie został odnaleziony w bazie VIES (niepoprawny lub nieaktywny).',
     ],
 ];

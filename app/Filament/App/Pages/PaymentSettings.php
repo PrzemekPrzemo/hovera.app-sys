@@ -82,10 +82,21 @@ class PaymentSettings extends Page implements HasForms
         'mollie' => ['api_key'],
     ];
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return self::canAccess();
+    }
+
     public static function canAccess(): bool
     {
         $tenant = app(TenantManager::class)->current();
         if (! $tenant) {
+            return false;
+        }
+        // Bramki płatności (P24/PayU/Stripe) są dla podmiotów przyjmujących
+        // płatności (stable / transporter). HorseOwner nie przyjmuje
+        // płatności — strona ukryta i 403 przy bezpośrednim wejściu.
+        if ($tenant->type?->isFreeTier()) {
             return false;
         }
         $user = Auth::user();

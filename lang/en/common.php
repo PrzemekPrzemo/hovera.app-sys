@@ -68,10 +68,14 @@ return [
     'dismiss' => 'Dismiss',
 
     'gus_lookup' => [
-        'label' => 'Fetch from GUS',
-        'invalid_nip' => 'NIP is invalid (10 digits + checksum).',
-        'not_found' => 'No company found for this NIP. Check the spelling or fill in manually.',
+        'label' => 'Fetch from GUS / VIES',
+        'invalid_nip' => 'VAT ID is invalid (10 digits + checksum, or EU prefix e.g. DE123456789).',
+        'not_found' => 'No company found for this VAT ID. Check the spelling or fill in manually.',
         'success' => 'Data fetched',
         'success_body' => 'Source: :sources. Verify the address and adjust if needed.',
+    ],
+
+    'vies_lookup' => [
+        'invalid_vat' => 'EU VAT number was not found in VIES (invalid or inactive).',
     ],
 ];

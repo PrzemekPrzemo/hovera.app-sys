@@ -157,4 +157,16 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | VIES — EU VAT validation
+    |--------------------------------------------------------------------------
+    | Publiczne API Komisji Europejskiej (bez klucza), używane do walidacji
+    | NIP-ów UE (klienci zagraniczni). Patrz App\Services\CompanyLookup\ViesService.
+    | base_url — override domyślnego endpoint'a (proxy / mirror).
+    */
+    'vies' => [
+        'base_url' => env('VIES_BASE_URL'),
+    ],
+
 ];

@@ -67,10 +67,21 @@ class KsefSettings extends Page implements HasForms
     /** @var array<string,mixed> */
     public array $data = [];
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return self::canAccess();
+    }
+
     public static function canAccess(): bool
     {
         $tenant = app(TenantManager::class)->current();
         if (! $tenant) {
+            return false;
+        }
+        // KSeF jest dla podatników VAT (stable / transporter). HorseOwner
+        // tenant nie wystawia faktur — strona ukryta i 403 przy bezpośrednim
+        // wejściu. Patrz docs/ROLE-MATRIX.md.
+        if ($tenant->type?->isFreeTier()) {
             return false;
         }
         $user = Auth::user();
