@@ -177,7 +177,23 @@ Sidebar jest filtrowany. Co widzisz, zależy od roli:
 
 ---
 
-## 10. Wsparcie
+## 10. Co nowego — zasady RBAC po ostatniej aktualizacji
+
+Po audycie ról wprowadziliśmy **dwie istotne zasady** dotyczące Twojego konta:
+
+### Pracownik — kalendarz tylko własnych wpisów
+
+Jako `pracownik` (employee) możesz **dodawać** wpisy w kalendarzu (np. zaplanowaną aktywność konia), ale **edytować i usuwać tylko swoje własne** wpisy. Wpisy stworzone przez instruktora / managera są dla Ciebie read-only — jeśli musisz coś zmienić, poproś osobę która utworzyła wpis lub managera.
+
+Próba edycji cudzego wpisu → toast „Brak uprawnień. Jako pracownik możesz edytować tylko swoje własne wpisy."
+
+### Viewer (tylko podgląd) — read-only nawet w magazynie paszy
+
+Jako `viewer` widzisz **listę** w magazynie paszy (do raportów), ale **nie możesz** dodawać/edytować/usuwać wpisów. Akcje są ukryte w UI. To zmiana — wcześniej omyłkowo viewer miał pełen CRUD w magazynie.
+
+---
+
+## 11. Wsparcie
 
 - **Twoja stajnia** — właściciel / admin (kontakt w karcie stajni),
 - **hovera (techniczne)** — `support@hovera.app`.
