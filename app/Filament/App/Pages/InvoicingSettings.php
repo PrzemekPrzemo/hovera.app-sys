@@ -58,10 +58,21 @@ class InvoicingSettings extends Page implements HasForms
     /** @var array<string,mixed> */
     public array $data = [];
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return self::canAccess();
+    }
+
     public static function canAccess(): bool
     {
         $tenant = app(TenantManager::class)->current();
         if (! $tenant) {
+            return false;
+        }
+        // InvoicingSettings (numeracja FV + seller snapshot) jest tylko dla
+        // podatników VAT. HorseOwner nie wystawia FV — strona ukryta. Patrz
+        // docs/ROLE-MATRIX.md.
+        if ($tenant->type?->isFreeTier()) {
             return false;
         }
         $user = Auth::user();

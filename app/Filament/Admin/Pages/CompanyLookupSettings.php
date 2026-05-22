@@ -12,6 +12,7 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Master-admin: GUS / KRS configuration. KRS is public and works without
@@ -55,6 +56,7 @@ class CompanyLookupSettings extends Page implements HasForms
             'gus_api_key' => SystemSetting::getSecret('gus.api_key', '') ?? '',
             'gus_env' => SystemSetting::getValue('gus.env', 'test'),
             'ceidg_api_token' => SystemSetting::getSecret('ceidg.api_token', '') ?? '',
+            'vies_base_url' => (string) (SystemSetting::getValue('vies.base_url', '') ?? ''),
         ]);
     }
 
@@ -98,6 +100,16 @@ class CompanyLookupSettings extends Page implements HasForms
                             ->label(__('admin/company_lookup.form.label.krs_status'))
                             ->content(__('admin/company_lookup.form.options.krs_enabled')),
                     ]),
+
+                Forms\Components\Section::make(__('admin/company_lookup.form.section.vies'))
+                    ->description(__('admin/company_lookup.form.section.vies_description'))
+                    ->schema([
+                        Forms\Components\TextInput::make('vies_base_url')
+                            ->label(__('admin/company_lookup.form.label.vies_base_url'))
+                            ->placeholder(__('admin/company_lookup.form.label.vies_base_url_placeholder'))
+                            ->helperText(__('admin/company_lookup.form.helper.vies_base_url'))
+                            ->url(),
+                    ]),
             ]);
     }
 
@@ -115,6 +127,16 @@ class CompanyLookupSettings extends Page implements HasForms
         if ($ceidg !== '') {
             SystemSetting::setSecret('ceidg.api_token', $ceidg);
         }
+
+        $viesUrl = trim((string) ($form['vies_base_url'] ?? ''));
+        // Pusty string → kasujemy override (powrót do config default).
+        // Niepusty → zapisujemy. setValue (nie setSecret) — to URL publiczny,
+        // nie ma sensu szyfrować.
+        SystemSetting::setValue('vies.base_url', $viesUrl);
+        // Cache invalidation: VIES service trzyma responses per (cc, vat) na
+        // 24h; po zmianie base_url chcemy wymusić ponowne fetch'e na nowy
+        // endpoint. Cache flush tylko VIES key'ów.
+        Cache::flush();
 
         Notification::make()->title(__('admin/company_lookup.action.saved'))->success()->send();
     }

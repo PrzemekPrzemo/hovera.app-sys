@@ -25,6 +25,7 @@ class CompanyLookupService
         private readonly GusApiService $gus,
         private readonly KrsApiService $krs,
         private readonly CeidgApiService $ceidg,
+        private readonly ViesService $vies,
     ) {}
 
     /**
@@ -126,6 +127,54 @@ class CompanyLookupService
         // bezpośrednio KRS, byłby potrzebny dodatkowy call DanePelnyRaport.
         // Master admin tymczasowo może użyć osobnego pola KRS jeśli zna.
         return null;
+    }
+
+    /**
+     * Smart-routed lookup. Wykrywa format input'u i dispatch'uje do
+     * właściwego serwisu:
+     *
+     *   1. Prefix UE inny niż PL (np. "DE123456789") → VIES (walidacja
+     *      EU VAT + opcjonalnie name/address gdy państwo udostępnia).
+     *   2. Prefix "PL" lub same cyfry (10) → istniejący flow GUS/CEIDG/KRS.
+     *
+     * Wynikowy array ma zawsze klucz `sources` (lista źródeł). Dla
+     * VIES dodatkowo `valid` (bool) + `vies_country_code` + `vies_vat_number`
+     * — UI używa do oznaczenia "zweryfikowane w UE" badge.
+     *
+     * @return array<string,mixed>|null
+     */
+    public function lookupSmart(string $identifier): ?array
+    {
+        $eu = ViesService::parseEuVatId($identifier);
+        if ($eu !== null && $eu['country_code'] !== 'PL') {
+            $vies = $this->vies->validate($eu['country_code'], $eu['vat_number']);
+            if ($vies === null) {
+                return null;
+            }
+
+            // Normalizujemy do formatu zgodnego z konsumentem GUS-action,
+            // żeby UI mógł użyć jednego mappingu. `street` = pełny adres
+            // (VIES nie rozdziela na ulicę / kod / miasto).
+            return [
+                'nip' => $eu['country_code'].$eu['vat_number'],
+                'name' => $vies['name'],
+                'street' => $vies['address'],
+                'building' => null,
+                'apartment' => null,
+                'postal_code' => null,
+                'city' => null,
+                'country' => $eu['country_code'],
+                'valid' => $vies['valid'],
+                'vies_country_code' => $eu['country_code'],
+                'vies_vat_number' => $eu['vat_number'],
+                'sources' => ['vies'],
+            ];
+        }
+
+        // Strip ewentualnego PL prefix przed GUS lookup'em.
+        $nip = preg_replace('/^PL/i', '', trim($identifier));
+
+        return $this->lookupByNip((string) $nip);
     }
 
     /**
