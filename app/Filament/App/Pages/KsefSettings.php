@@ -81,7 +81,7 @@ class KsefSettings extends Page implements HasForms
         // KSeF jest dla podatników VAT (stable / transporter). HorseOwner
         // tenant nie wystawia faktur — strona ukryta i 403 przy bezpośrednim
         // wejściu. Patrz docs/ROLE-MATRIX.md.
-        if ($tenant->type?->isFreeTier()) {
+        if (! $tenant->type?->canIssueInvoices()) {
             return false;
         }
         $user = Auth::user();

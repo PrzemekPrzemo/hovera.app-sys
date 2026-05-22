@@ -57,4 +57,22 @@ enum TenantType: string
     {
         return $this === self::HorseOwner;
     }
+
+    /**
+     * Czy tenant tego typu wystawia faktury (VAT podatnik). Stable +
+     * Transporter mogą wystawiać; HorseOwner jest konsumentem marketplace'u
+     * — kupuje, ale sam FV nie wystawia.
+     *
+     * Używane do gating'u:
+     *   - `KsefSettings` / `InvoicingSettings` / `PaymentSettings` w /app
+     *   - widoczność navigation linków do tych pages
+     *   - logiki billing'owej (faktury subskrypcji idą tylko do payers)
+     */
+    public function canIssueInvoices(): bool
+    {
+        return match ($this) {
+            self::Stable, self::Transporter => true,
+            self::HorseOwner => false,
+        };
+    }
 }

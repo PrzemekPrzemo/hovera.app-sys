@@ -96,7 +96,7 @@ class PaymentSettings extends Page implements HasForms
         // Bramki płatności (P24/PayU/Stripe) są dla podmiotów przyjmujących
         // płatności (stable / transporter). HorseOwner nie przyjmuje
         // płatności — strona ukryta i 403 przy bezpośrednim wejściu.
-        if ($tenant->type?->isFreeTier()) {
+        if (! $tenant->type?->canIssueInvoices()) {
             return false;
         }
         $user = Auth::user();
