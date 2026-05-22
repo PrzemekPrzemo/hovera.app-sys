@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature\Filament;
 
 use App\Enums\TenantType;
+use App\Filament\App\Widgets\OnboardingBannerWidget;
 use App\Http\Middleware\RedirectToOnboarding;
 use App\Models\Central\Tenant;
 use App\Models\Central\User;
+use App\Tenancy\TenantManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -189,6 +191,47 @@ class OnboardingWizardTest extends TestCase
 
         $response = (new RedirectToOnboarding)->handle($request, $next);
         $this->assertSame(200, $response->getStatusCode());
+    }
+
+    public function test_banner_widget_visible_only_when_deferred_not_finished(): void
+    {
+        // Stable tenant w stanie "deferred" (user widzial wizarda ale
+        // nie kliknal Finish/Skip) → widget pokazuje sie.
+        $tenant = $this->makeTenant(TenantType::Stable);
+        $tenant->markOnboardingFinished('deferred');
+        $tenant->refresh();
+
+        $this->mock(TenantManager::class, function ($m) use ($tenant) {
+            $m->shouldReceive('current')->andReturn($tenant);
+        });
+
+        $this->assertTrue(OnboardingBannerWidget::canView());
+    }
+
+    public function test_banner_widget_hidden_after_completed(): void
+    {
+        $tenant = $this->makeTenant(TenantType::Stable);
+        $tenant->markOnboardingFinished('completed');
+        $tenant->refresh();
+
+        $this->mock(TenantManager::class, function ($m) use ($tenant) {
+            $m->shouldReceive('current')->andReturn($tenant);
+        });
+
+        $this->assertFalse(OnboardingBannerWidget::canView());
+    }
+
+    public function test_banner_widget_hidden_for_brand_new_tenant(): void
+    {
+        // Brak deferred_at — middleware redirectuje na wizard, banner
+        // pojawi sie dopiero po pierwszym mount'cie wizarda.
+        $tenant = $this->makeTenant(TenantType::Stable);
+
+        $this->mock(TenantManager::class, function ($m) use ($tenant) {
+            $m->shouldReceive('current')->andReturn($tenant);
+        });
+
+        $this->assertFalse(OnboardingBannerWidget::canView());
     }
 
     private function makeTenant(TenantType $type): Tenant

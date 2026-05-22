@@ -42,4 +42,10 @@ return [
         'skipped_title' => 'Wizard pominięty',
         'skipped_body' => 'W każdej chwili możesz wrócić do „Moich koni" lub „Zamów transport" z menu.',
     ],
+
+    'banner' => [
+        'title' => 'Dokończ pierwsze kroki',
+        'subtitle' => 'Onboarding zaczął się, ale jeszcze go nie ukończyłeś — kliknij, by wrócić do wizardu.',
+        'cta' => 'Wróć do wizardu',
+    ],
 ];

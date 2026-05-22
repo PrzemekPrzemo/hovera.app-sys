@@ -42,4 +42,10 @@ return [
         'skipped_title' => 'Wizard pominięty',
         'skipped_body' => 'Dokumenty PWL musisz wgrać przed pierwszą ofertą — wracaj do Ustawień transportu, gdy będziesz gotowy.',
     ],
+
+    'banner' => [
+        'title' => 'Dokończ pierwsze kroki',
+        'subtitle' => 'Onboarding zaczął się, ale jeszcze go nie ukończyłeś — kliknij, by wrócić do wizardu.',
+        'cta' => 'Wróć do wizardu',
+    ],
 ];

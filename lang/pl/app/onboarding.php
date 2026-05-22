@@ -42,4 +42,10 @@ return [
         'skipped_title' => 'Wizard pominięty',
         'skipped_body' => 'Zawsze możesz wrócić do skonfigurowania KSeF i danych firmy w sekcji Ustawienia.',
     ],
+
+    'banner' => [
+        'title' => 'Dokończ pierwsze kroki',
+        'subtitle' => 'Onboarding zaczął się, ale jeszcze go nie ukończyłeś — kliknij, by wrócić do wizardu.',
+        'cta' => 'Wróć do wizardu',
+    ],
 ];
