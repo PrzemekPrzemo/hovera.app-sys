@@ -77,6 +77,8 @@ return [
             'client_desc' => 'Portal: Buchungen, Karten, mein Pferd.',
             'transporter' => 'Transportunternehmen',
             'transporter_desc' => 'Fahrzeuge, Fahrer, Leads, Angebote, PLW-Dokumente.',
+            'horse_owner' => 'Pferdebesitzer',
+            'horse_owner_desc' => 'KOSTENLOSES Konto — meine Pferde, Transportbestellungen, Rechnungshistorie.',
         ],
         'legal' => [
             'open_in_new_tab' => 'Öffentliche Version öffnen',

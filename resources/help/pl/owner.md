@@ -421,7 +421,42 @@ między Tobą a wybranym przewoźnikiem po akceptacji jego oferty. Szczegóły w
 
 ---
 
-## 26. Wskazówki
+## 26. Klient firmowy — pobieranie danych z GUS / VIES
+
+Gdy dodajesz nowego klienta (Klienci → Dodaj) lub wystawiasz FV i wpisujesz
+NIP nabywcy — masz przycisk **„Pobierz z GUS / VIES"**. Jeden przycisk
+obsługuje:
+
+- **NIP polski** (10 cyfr) → GUS BIR (REGON) + CEIDG + KRS. Wypełnia
+  nazwę firmy, ulicę, kod, miasto.
+- **NIP UE** (np. `DE123456789`, `IT12345678901`) → VIES (publiczne API
+  Komisji Europejskiej). Walidacja + opcjonalnie nazwa i adres (zależy
+  od państwa — DE/ES zwracają „---" przy włączonej prywatności).
+
+Spacjowanie i myślniki tolerowane (`DE 123 456 789` / `PL 526-025-02-74`).
+Master admin Hovera konfiguruje globalnie klucze API (GUS / CEIDG / VIES
+base URL) w `/admin/company-lookup-settings`.
+
+---
+
+## 27. FV w walucie obcej (NBP, Art. 31a VAT)
+
+Gdy faktura jest w walucie innej niż PLN (EUR, USD, CZK itd.) — Hovera
+**automatycznie pobiera** średni kurs NBP z tabeli A. Zgodnie z Art. 31a
+ust. 1 ustawy o VAT używany jest kurs z **dnia ROBOCZEGO poprzedzającego
+dzień wystawienia FV** (z fallback'iem do ostatniego dnia publikacji NBP
+przy weekendach / świętach).
+
+Snapshot kursu (`exchange_rate`, `exchange_rate_date`, source = `nbp_a`)
+zapisany jest immutable na FV. Korekta tworzy NOWĄ FV z nowym snapshot'em.
+
+Jeśli NBP API jest niedostępne podczas wystawienia, FV przechodzi do
+statusu Issued bez kursu (kolumny null + log warning). Możesz potem
+ręcznie uzupełnić kurs przed wysyłką do KSeF.
+
+---
+
+## 28. Wskazówki
 
 - **Skróty z klawiatury** — `?` w panelu pokazuje listę skrótów
 - **Język** — przełącz w user menu (PL / EN / DE / FR); preferencja zapisuje się per user

@@ -38,9 +38,12 @@ class HelpController extends Controller
      * + PR #250 (publiczna rejestracja `/przewoznicy/dolacz` — nowi
      * transporter'zy potrzebują dedykowanej dokumentacji od day-1).
      *
+     * `horse_owner` dodany w Fazie C planu (FREE tier, panel `/owner` —
+     * marketplace consumer, własne konie + zamawianie transportu).
+     *
      * @var list<string>
      */
-    public const PERSONAS = ['owner', 'employee', 'specialist', 'client', 'transporter'];
+    public const PERSONAS = ['owner', 'employee', 'specialist', 'client', 'transporter', 'horse_owner'];
 
     /** @var list<string> */
     public const LEGAL_DOCS = ['terms', 'privacy', 'dpa'];
@@ -98,6 +101,7 @@ class HelpController extends Controller
                     'specialist' => 'heart',
                     'client' => 'identification',
                     'transporter' => 'truck',
+                    'horse_owner' => 'star',
                     default => 'storefront',
                 },
             ];

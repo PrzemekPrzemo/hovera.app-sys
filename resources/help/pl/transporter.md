@@ -346,6 +346,108 @@ natychmiast (cache 60 s s-maxage). Suspended ≠ verified — choć
 zachowujesz status verification, marketplace ukrywa firmę dopóki
 Hovera nie zdejmie blokady.
 
+## Klient firmowy — pobieranie danych z GUS / VIES
+
+W formularzach z polem **NIP** (Klienci, Faktura, Public quote landing
+po stronie klienta) jest przycisk „Pobierz z GUS / VIES". Jeden przycisk
+obsługuje:
+
+- **NIP polski** (10 cyfr, np. `5260250274`) → GUS BIR (REGON) + CEIDG
+  + KRS. Wypełnia: nazwę firmy, ulicę, kod, miasto. Source attribution
+  („Źródło: GUS, CEIDG") pojawia się w toaście.
+- **NIP UE** (np. `DE123456789`, `IT12345678901`, `FR12345678901`) →
+  VIES (publiczne API Komisji Europejskiej). Walidacja + opcjonalnie
+  nazwa i adres (zależnie od państwa — DE/ES zwracają „---" gdy
+  firma wyłączyła pokazywanie danych).
+
+Spacjowanie i myślniki są tolerowane: `DE 123 456 789` lub `PL 526-025-02-74`
+też zadziała. Master admin konfiguruje globalne klucze API w
+`/admin/company-lookup-settings` (GUS API key, CEIDG token, VIES base URL).
+
+**Walidacja NIP-u UE w trakcie akceptacji oferty** — jeśli klient na
+public quote landing zaakceptuje ofertę jako firma z NIP-em UE, Hovera
+zweryfikuje go w VIES *przed* przyjęciem akceptacji. Niepoprawny /
+nieaktywny NIP UE → klient widzi czerwony toast i nie może wysłać
+formularza.
+
+## FV w walucie obcej (NBP rate, Art. 31a ustawy o VAT)
+
+Gdy quote / faktura jest w walucie innej niż PLN (EUR, USD, GBP, CZK,
+SEK itd.), Hovera **automatycznie pobiera** średni kurs NBP z tabeli A.
+
+Zgodnie z **Art. 31a ust. 1 ustawy o VAT** używany jest kurs z **dnia
+ROBOCZEGO poprzedzającego dzień wystawienia FV**:
+
+- Wystawiasz FV w czwartek 21 maja → kurs z 20 maja (środa)
+- Wystawiasz FV w poniedziałek → kurs z piątku (cofamy się przez
+  weekend)
+- Wystawiasz w dniu po święcie (np. wtorek 27 maja po święcie konst.)
+  → cofamy się aż do ostatniej publikacji NBP
+
+Snapshot kursu zapisany jest immutable na FV (kolumny: `exchange_rate`,
+`exchange_rate_date`, `exchange_rate_source = nbp_a`). Korekta tworzy
+NOWĄ FV z nowym snapshot'em — oryginalna FV nie jest modyfikowana.
+
+**Soft-fail:** jeśli NBP API jest niedostępne podczas wystawienia, FV
+przechodzi do statusu Issued **bez** kursu (kolumny zostają null) +
+log warning. Możesz potem ręcznie uzupełnić kurs przed wysyłką do KSeF
+(KSeF wymaga PLN-equivalentów dla FV walutowej — Art. 106e ust. 11).
+
+## FV firmowa po akceptacji oferty (public quote landing)
+
+Klient otrzymuje link do oferty mailem — działa **bez logowania**. Na
+stronie akceptacji wybiera typ odbiorcy FV:
+
+- **Osoba prywatna** (domyślnie) → akceptacja zapisuje status, Ty
+  wystawiasz FV imienną na klienta (`customer_name` z quote)
+- **Firma** → klient wpisuje NIP + nazwę firmy + adres. Wbudowany
+  przycisk „Pobierz dane z GUS" odpalany po NIP-ie wypełnia nazwę i
+  adres automatycznie. Po akceptacji `quote.customer_company` /
+  `customer_tax_id` / `customer_address` są snapshot'owane.
+
+**Po akceptacji** używaj akcji „Wystaw FV" w `Oferty → [oferta] →
+akcje`. `IssueTransportInvoiceFromQuote` snapshot'uje pełne dane (w
+tym kurs NBP gdy waluta != PLN). FV idzie do KSeF zgodnie z Twoją
+konfiguracją.
+
+## KSeF — krok po kroku
+
+1. **Dostęp do KSeF** dla firmy transportowej konfigurujesz w
+   `Ustawienia transportu → KSeF`:
+
+   - **Środowisko** — test (deweloperski) / demo / production. Master
+     admin systemu Hovera pomoże Ci przejść z demo na prod gdy będziesz
+     gotowy (post-2026-02-01).
+   - **NIP kontekstu** — Twój NIP jako wystawcy. Domyślnie zaciągamy
+     z danych firmy.
+   - **Certyfikat** — wgrywasz `.pfx` (PKCS#12) lub parę `.crt + .key`
+     (PEM). Hovera szyfruje go przez Laravel Crypt (AES-256-CBC + HMAC).
+
+2. **Identifier type** — `certificateSubject` lub `certificateFingerprint`.
+   Wybierz zgodnie z konfiguracją certyfikatu w Twoim podpisie
+   elektronicznym (typowo `certificateSubject`).
+
+3. **Test send** — w sekcji KSeF jest „Testuj wysyłkę próbnej FV". Wyśle
+   dummy FV do środowiska test i pokaże response z KSeF. Jeśli sukces
+   → konfiguracja OK; jeśli błąd → log payload widoczny dla supportu.
+
+4. **Auto-send włączony** — od momentu zapisania konfiguracji, każda
+   `IssueInvoice` / `IssueTransportInvoiceFromQuote` wysyła FV do KSeF
+   asynchronicznie. Status w panelu: `ksef_status` = `submitted` →
+   `accepted` (przyjęte przez MF) lub `rejected` (z error_payload).
+
+5. **Tryb offline** — jeśli klient (np. konkurencyjna stajnia) prosi
+   o FV ad-hoc i Twój internet padł — FV wystawiona lokalnie z
+   `ksef_status = pending`; cron `KsefPollSubmittedInvoicesCommand`
+   spróbuje wysłać ponownie co 5 min, do 24h. Po 24h fail = manual
+   intervention przez support.
+
+**Master admin override** — od 2026-02-01 KSeF jest obowiązkowy w
+Polsce. Jeśli Hovera dostanie informację o awarii MF (publiczny
+incident), master admin może czasowo wyłączyć auto-send dla
+wszystkich tenantów — wracasz do trybu offline-only. Powrót do
+normalnego trybu jest automatyczny gdy MF wraca online.
+
 ## Wsparcie
 
 - **Email supportu:** `support@hovera.app` (czas reakcji: 1 dzień
