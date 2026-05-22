@@ -610,6 +610,18 @@ class QuoteResource extends Resource
                     ->visible(fn (Quote $q) => $q->status === QuoteStatus::Draft)
                     ->requiresConfirmation()
                     ->action(fn (Quote $q) => self::sendQuote($q)),
+                Tables\Actions\Action::make('shareWhatsApp')
+                    ->label(__('transport/quote.action.share_whatsapp'))
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('success')
+                    // Pokazujemy gdy quote jest juz Sent (ma accept_token)
+                    // I klient ma numer telefonu. Klik otwiera wa.me/{phone}?text=...
+                    // w nowej karcie — uzytkownik widzi draft w WhatsApp Web/desktop/
+                    // telefon (cokolwiek ma zainstalowane). Nie wysylamy sami nic
+                    // przez API — to share intent, nie WhatsApp Business API.
+                    ->visible(fn (Quote $q) => $q->status === QuoteStatus::Sent
+                        && ! empty($q->customer_phone))
+                    ->url(fn (Quote $q) => self::buildWhatsAppShareUrl($q), shouldOpenInNewTab: true),
                 Tables\Actions\Action::make('withdraw')
                     ->label(__('transport/quote.action.withdraw'))
                     ->icon('heroicon-o-x-circle')
@@ -720,6 +732,86 @@ class QuoteResource extends Resource
                 ->body(__('transport/quote.notify.sent_no_customer_email', ['number' => $quote->number]))
                 ->send();
         }
+    }
+
+    /**
+     * Buduje URL `wa.me/{phone}?text={draft}` do otwarcia WhatsApp z
+     * pre-filled wiadomością. WhatsApp obsługuje:
+     *  - app mobilną (auto-launch przez deep link)
+     *  - desktop app (jeśli zainstalowana)
+     *  - WhatsApp Web (fallback w przeglądarce)
+     *
+     * Phone preprocessing:
+     *  - Usuwa wszystko poza cyframi i znakiem '+'
+     *  - Strip leading '0' (krajowy prefix PL)
+     *  - Bez '+' i mniej niż 9 cyfr → zakładamy PL, dodajemy '48'
+     *  - Reszta przekazana jak jest (user już ma format międzynarodowy)
+     *
+     * Draft message zawiera:
+     *  - Imię klienta + krótki text "Dzień dobry"
+     *  - Trasa + cena
+     *  - Link do public landing (klient klika → akceptuje na stronie)
+     *  - Imię nadawcy (legal_name firmy transportowej)
+     *
+     * WAŻNE: to **share intent**, nie WhatsApp Business API. User klika
+     * → WhatsApp pokazuje draft → user wciska "Send". My nie wysyłamy
+     * niczego ani nie autoryzujemy się WA API.
+     */
+    public static function buildWhatsAppShareUrl(Quote $quote): string
+    {
+        $tenant = app(TenantManager::class)->current();
+        $sellerName = (string) ($tenant?->legal_name ?: $tenant?->name ?: 'Hovera Transport');
+        $slug = (string) ($tenant?->slug ?? '');
+
+        $phone = self::normalizeWhatsAppPhone((string) ($quote->customer_phone ?? ''));
+        $landing = $slug !== '' && $quote->accept_token
+            ? url("/transport/quote/{$slug}/{$quote->accept_token}")
+            : url('/');
+
+        $price = number_format((float) ($quote->gross_total ?? 0), 2, ',', ' ').' '.$quote->currency;
+        $date = $quote->preferred_date?->format('Y-m-d') ?? '';
+
+        $greeting = $quote->customer_name ? "Dzień dobry {$quote->customer_name}!" : 'Dzień dobry!';
+        $msg = $greeting
+            ."\n\n"
+            .'Oto oferta transportu '
+            .($quote->pickup_address ? "z {$quote->pickup_address} " : '')
+            .($quote->dropoff_address ? "do {$quote->dropoff_address}" : '')
+            .($date ? " ({$date})" : '')
+            .":\n"
+            ."Cena: {$price}\n\n"
+            ."Szczegóły i akceptacja:\n{$landing}\n\n"
+            ."Pozdrawiam,\n{$sellerName}";
+
+        return 'https://wa.me/'.$phone.'?text='.rawurlencode($msg);
+    }
+
+    /**
+     * Normalizuje numer telefonu do formatu wa.me (cyfry, bez + ani spacji).
+     * PL numbers (9-cyfrowe) → prefix 48 dodany automatycznie. Międzynarodowe
+     * (z + lub >=11 cyfr) — zostawiamy z usunięciem '+' i niepotrzebnych
+     * znaków.
+     */
+    private static function normalizeWhatsAppPhone(string $raw): string
+    {
+        $digits = preg_replace('/[^\d]/', '', $raw) ?? '';
+
+        // Usuń leading '00' (alternatywny prefix międzynarodowy).
+        if (str_starts_with($digits, '00')) {
+            $digits = substr($digits, 2);
+        }
+
+        // PL national: 9 digits → prefix z 48.
+        if (strlen($digits) === 9) {
+            return '48'.$digits;
+        }
+
+        // PL z leading '0' (10 cyfr, 0 + 9) — strip 0, prefix 48.
+        if (strlen($digits) === 10 && str_starts_with($digits, '0')) {
+            return '48'.substr($digits, 1);
+        }
+
+        return $digits;
     }
 
     /**

@@ -121,6 +121,7 @@ return [
 
     'action' => [
         'send' => 'Send to customer',
+        'share_whatsapp' => 'Share via WhatsApp',
         'withdraw' => 'Withdraw quote',
         'download_pdf' => 'Download PDF',
         'issue_invoice' => 'Issue invoice',
