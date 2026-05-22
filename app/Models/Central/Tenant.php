@@ -239,6 +239,42 @@ class Tenant extends Model
     }
 
     /**
+     * Onboarding wizard state — czy tenant ukończył (lub świadomie
+     * pominął) guided tour. Stored w settings.onboarding.completed_at
+     * (ISO 8601 string) ALBO settings.onboarding.skipped_at.
+     *
+     * Sprawdzane przez RedirectToOnboarding middleware na panelach
+     * /app /transport /owner — first login → redirect, post-completion
+     * normalny dashboard.
+     */
+    public function isOnboardingFinished(): bool
+    {
+        $onb = (array) (data_get($this->settings, 'onboarding') ?? []);
+
+        return ! empty($onb['completed_at']) || ! empty($onb['skipped_at']);
+    }
+
+    /**
+     * Oznacz wizard jako ukończony (user przeszedł wszystkie kroki LUB
+     * świadomie skipnął). Idempotent — kolejny call nie nadpisuje
+     * istniejącego timestamp'u (single source of truth dla „first time").
+     *
+     * @param  'completed'|'skipped'  $mode
+     */
+    public function markOnboardingFinished(string $mode = 'completed'): void
+    {
+        $settings = (array) ($this->settings ?? []);
+        $onb = (array) ($settings['onboarding'] ?? []);
+        $key = $mode === 'skipped' ? 'skipped_at' : 'completed_at';
+        if (! empty($onb[$key])) {
+            return;
+        }
+        $onb[$key] = now()->toIso8601String();
+        $settings['onboarding'] = $onb;
+        $this->forceFill(['settings' => $settings])->save();
+    }
+
+    /**
      * True when this tenant has a custom domain that has been verified
      * (DNS confirmed by the admin). Until verified, the middleware
      * ignores the column to prevent half-configured CNAMEs from blackholing.

@@ -19,6 +19,7 @@ use App\Http\Middleware\EnforceImpersonationExpiry;
 use App\Http\Middleware\InitialiseTenantFromSession;
 use App\Http\Middleware\RedirectIfTenantSuspended;
 use App\Http\Middleware\RedirectIfTrialExpired;
+use App\Http\Middleware\RedirectToOnboarding;
 use App\Http\Middleware\RequireTenantType;
 use App\Tenancy\TenantManager;
 use Filament\Http\Middleware\Authenticate;
@@ -199,6 +200,7 @@ class TransportPanelProvider extends PanelProvider
                 RedirectIfTrialExpired::class,
                 RedirectIfTenantSuspended::class,
                 RequireTenantType::class.':transporter',
+                RedirectToOnboarding::class,
             ]);
     }
 }

@@ -9,6 +9,7 @@ use App\Http\Middleware\EnforceImpersonationExpiry;
 use App\Http\Middleware\InitialiseTenantFromSession;
 use App\Http\Middleware\RedirectIfTenantSuspended;
 use App\Http\Middleware\RedirectIfTrialExpired;
+use App\Http\Middleware\RedirectToOnboarding;
 use App\Http\Middleware\RequireTenantType;
 use App\Services\Tenancy\TenantRoleGate;
 use Filament\Http\Middleware\Authenticate;
@@ -202,6 +203,10 @@ class AppPanelProvider extends PanelProvider
                 // instead of half-rendered panels — ordering matters,
                 // must run after tenant init for the same reason.
                 RedirectIfTenantSuspended::class,
+                // First-login → /app/onboarding-wizard. Po `completed_at`
+                // lub `skipped_at` w settings.onboarding nie redirectuje.
+                // Master admin bypassed (impersonation).
+                RedirectToOnboarding::class,
             ]);
     }
 }
