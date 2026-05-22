@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'last_updated' => '2026-05-09',
+    'last_updated' => '2026-05-22',
     'last_updated_label' => 'Letzte Aktualisierung',
 
     'nav' => [
