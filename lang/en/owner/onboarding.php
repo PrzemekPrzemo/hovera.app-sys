@@ -42,4 +42,10 @@ return [
         'skipped_title' => 'Wizard skipped',
         'skipped_body' => 'You can always come back to "My horses" or "Order transport" from the menu.',
     ],
+
+    'banner' => [
+        'title' => 'Finish your first steps',
+        'subtitle' => 'Onboarding has started but you have not finished yet — click to return to the wizard.',
+        'cta' => 'Return to wizard',
+    ],
 ];

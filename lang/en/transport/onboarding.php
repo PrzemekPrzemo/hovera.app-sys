@@ -42,4 +42,10 @@ return [
         'skipped_title' => 'Wizard skipped',
         'skipped_body' => 'PLW documents must be uploaded before your first offer — come back to Transport Settings whenever you are ready.',
     ],
+
+    'banner' => [
+        'title' => 'Finish your first steps',
+        'subtitle' => 'Onboarding has started but you have not finished yet — click to return to the wizard.',
+        'cta' => 'Return to wizard',
+    ],
 ];
