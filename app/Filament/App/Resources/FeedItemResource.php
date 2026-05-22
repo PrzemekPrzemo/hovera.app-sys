@@ -9,11 +9,13 @@ use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\FeedItem;
 use App\Models\Tenant\FeedStockMovement;
 use App\Services\Tenancy\TenantRoleGate;
+use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class FeedItemResource extends Resource
@@ -24,6 +26,41 @@ class FeedItemResource extends Resource
     protected static function allowedRoles(): array
     {
         return TenantRoleGate::FEED_STAFF;
+    }
+
+    /**
+     * Viewer to read-only rola w calym systemie — moze przegladac, ale
+     * nie modyfikowac. FEED_STAFF zawiera viewer'a (chcemy zeby widzial
+     * stan paszy do raportow), wiec CRUD blokujemy oddzielnie.
+     */
+    public static function canCreate(): bool
+    {
+        return parent::canCreate() && ! self::userIsViewer();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return parent::canEdit($record) && ! self::userIsViewer();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return parent::canDelete($record) && ! self::userIsViewer();
+    }
+
+    private static function userIsViewer(): bool
+    {
+        $tenant = app(TenantManager::class)->current();
+        $user = Auth::user();
+        if (! $tenant || ! $user) {
+            return false;
+        }
+
+        return $tenant->memberships()
+            ->where('user_id', $user->id)
+            ->whereNull('revoked_at')
+            ->where('role', 'viewer')
+            ->exists();
     }
 
     protected static ?string $model = FeedItem::class;
