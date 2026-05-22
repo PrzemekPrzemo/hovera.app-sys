@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'last_updated' => '2026-05-22',
+    'last_updated' => '2026-05-23',
     'last_updated_label' => 'Последнее обновление',
 
     // @todo translate — intro/section_2 updated for marketplace intermediary positioning; full RU review pending.
