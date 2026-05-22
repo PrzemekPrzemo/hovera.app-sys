@@ -180,6 +180,45 @@ class KsefServicesTest extends TestCase
         $this->assertStringContainsString('Jan Kowalski', $xml);
     }
 
+    public function test_invoice_xml_builder_foreign_currency_includes_kurs_and_vat_in_pln(): void
+    {
+        // FV w EUR: vat_cents = 2300 (czyli 23.00 EUR). Kurs NBP 4.30 PLN/EUR.
+        // Art. 106e ust. 11: P_14_1 (VAT) MUSI byc w PLN → 23 * 4.30 = 98.90 PLN.
+        // Art. 31a ust. 1: KursWaluty z dnia roboczego poprzedzajacego.
+        $invoice = $this->makeInvoiceWithItem(overrides: [
+            'currency' => 'EUR',
+            'exchange_rate' => '4.300000',
+            'exchange_rate_date' => '2026-05-14',
+            'exchange_rate_source' => 'nbp_a',
+        ]);
+
+        $xml = app(KsefInvoiceXmlBuilder::class)->build($invoice);
+
+        $this->assertStringContainsString('<KodWaluty>EUR</KodWaluty>', $xml);
+        $this->assertStringContainsString('<KursWaluty>4.300000</KursWaluty>', $xml);
+        // 23.00 EUR * 4.30 = 98.90 PLN
+        $this->assertStringContainsString('<P_14_1>98.90</P_14_1>', $xml);
+        // P_13 i P_15 zostaja w EUR (Art. 106e dotyczy tylko kwoty VAT).
+        $this->assertStringContainsString('<P_13_1>100.00</P_13_1>', $xml);
+        $this->assertStringContainsString('<P_15>123.00</P_15>', $xml);
+
+        // XML jest waliduje sie skladniowo (loadable).
+        $doc = new \DOMDocument;
+        $this->assertTrue($doc->loadXML($xml));
+    }
+
+    public function test_invoice_xml_builder_pln_does_not_emit_kurs_waluty(): void
+    {
+        $invoice = $this->makeInvoiceWithItem();  // default PLN
+        $xml = app(KsefInvoiceXmlBuilder::class)->build($invoice);
+
+        $this->assertStringContainsString('<KodWaluty>PLN</KodWaluty>', $xml);
+        // PLN → bez KursWaluty (ten element jest tylko dla walut obcych).
+        $this->assertStringNotContainsString('<KursWaluty>', $xml);
+        // VAT bez konwersji.
+        $this->assertStringContainsString('<P_14_1>23.00</P_14_1>', $xml);
+    }
+
     public function test_ksef_client_is_ready_only_when_cert_and_nip_set(): void
     {
         $client = app(KsefClient::class);
@@ -284,14 +323,14 @@ class KsefServicesTest extends TestCase
         $tenant->refresh();
     }
 
-    private function makeInvoiceWithItem(?string $buyerNip = '5260250274', string $buyerName = 'Stadnina Klienta'): Invoice
+    private function makeInvoiceWithItem(?string $buyerNip = '5260250274', string $buyerName = 'Stadnina Klienta', array $overrides = []): Invoice
     {
         $client = Client::create([
-            'id' => '01HCLI0000000000000000001',
+            'id' => '01HCLI'.uniqid(),
             'name' => $buyerName,
             'tax_id' => $buyerNip,
         ]);
-        $invoice = Invoice::create([
+        $invoice = Invoice::create(array_merge([
             'id' => (string) Str::ulid(),
             'kind' => InvoiceKind::Fv->value,
             'status' => InvoiceStatus::Issued->value,
@@ -315,7 +354,7 @@ class KsefServicesTest extends TestCase
             'subtotal_cents' => 10000,
             'vat_cents' => 2300,
             'total_cents' => 12300,
-        ]);
+        ], $overrides));
         InvoiceItem::create([
             'id' => (string) Str::ulid(),
             'invoice_id' => $invoice->id,
@@ -394,6 +433,9 @@ class KsefServicesTest extends TestCase
             $t->date('due_at')->nullable();
             $t->timestamp('paid_at')->nullable();
             $t->char('currency', 3)->default('PLN');
+            $t->decimal('exchange_rate', 14, 6)->nullable();
+            $t->date('exchange_rate_date')->nullable();
+            $t->string('exchange_rate_source', 16)->nullable();
             $t->bigInteger('subtotal_cents')->default(0);
             $t->bigInteger('vat_cents')->default(0);
             $t->bigInteger('total_cents')->default(0);

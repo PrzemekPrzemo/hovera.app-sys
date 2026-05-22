@@ -150,13 +150,22 @@ class KsefInvoiceXmlBuilder
             }
         }
 
+        $currency = (string) ($invoice->currency ?? 'PLN');
+        $rate = $invoice->exchange_rate !== null ? (float) $invoice->exchange_rate : 1.0;
+        $isForeignCurrency = $currency !== 'PLN' && $rate > 0;
+
         return '<Fa>'
-            .'<KodWaluty>'.htmlspecialchars($invoice->currency ?? 'PLN', ENT_XML1).'</KodWaluty>'
+            .'<KodWaluty>'.htmlspecialchars($currency, ENT_XML1).'</KodWaluty>'
+            // Art. 31a ust. 1 ustawy o VAT — gdy FV w walucie obcej,
+            // dodajemy KursWaluty (kurs NBP z dnia roboczego poprzedzajacego).
+            .($isForeignCurrency ? '<KursWaluty>'.number_format($rate, 6, '.', '').'</KursWaluty>' : '')
             .'<P_1>'.($invoice->issued_at?->format('Y-m-d') ?? date('Y-m-d')).'</P_1>'      // data wystawienia
             .'<P_2>'.htmlspecialchars((string) $invoice->number, ENT_XML1).'</P_2>'        // numer FV
             .'<P_6>'.($invoice->sale_date?->format('Y-m-d') ?? $invoice->issued_at?->format('Y-m-d') ?? date('Y-m-d')).'</P_6>' // data sprzedaży
-            .'<P_13_1>'.$this->cents($invoice->subtotal_cents).'</P_13_1>'  // suma netto 23%
-            .'<P_14_1>'.$this->cents($invoice->vat_cents).'</P_14_1>'      // VAT
+            .'<P_13_1>'.$this->cents($invoice->subtotal_cents).'</P_13_1>'  // suma netto
+            // Art. 106e ust. 11 — kwota podatku MUSI byc w PLN. Dla FV
+            // walutowej przeliczamy vat_cents przez snapshot kursu NBP.
+            .'<P_14_1>'.$this->vatInPln($invoice->vat_cents, $rate, $isForeignCurrency).'</P_14_1>'
             .'<P_15>'.$this->cents($invoice->total_cents).'</P_15>'        // suma brutto
             .'<RodzajFaktury>'.$rodzajFaktury.'</RodzajFaktury>'
             .$correctionRefXml
@@ -166,5 +175,18 @@ class KsefInvoiceXmlBuilder
     private function cents(int $cents): string
     {
         return number_format($cents / 100, 2, '.', '');
+    }
+
+    /**
+     * Kwota VAT zawsze w PLN (Art. 106e ust. 11). Dla PLN no-op,
+     * dla waluty obcej mnozymy przez kurs NBP zapisany na FV.
+     */
+    private function vatInPln(int $vatCents, float $rate, bool $isForeignCurrency): string
+    {
+        if (! $isForeignCurrency) {
+            return $this->cents($vatCents);
+        }
+
+        return number_format(($vatCents / 100) * $rate, 2, '.', '');
     }
 }
