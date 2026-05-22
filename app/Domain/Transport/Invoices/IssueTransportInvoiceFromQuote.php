@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Transport\Invoices;
 
+use App\Domain\Transport\Currency\NbpExchangeRateService;
 use App\Enums\TransportInvoiceKind;
 use App\Enums\TransportInvoiceStatus;
 use App\Models\Central\Tenant;
@@ -13,6 +14,7 @@ use App\Models\Tenant\TransportInvoiceItem;
 use App\Tenancy\TenantManager;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -34,6 +36,7 @@ class IssueTransportInvoiceFromQuote
     public function __construct(
         private readonly TransportInvoiceNumberGenerator $numbers,
         private readonly TenantManager $tenants,
+        private readonly NbpExchangeRateService $nbp,
     ) {}
 
     /**
@@ -77,6 +80,7 @@ class IssueTransportInvoiceFromQuote
     ): array {
         $number = $this->numbers->next($kind, $issueDate);
         $branding = (array) ($tenant->branding ?? []);
+        $exchange = $this->resolveExchangeRate((string) $quote->currency, $issueDate);
 
         return [
             'id' => (string) Str::ulid(),
@@ -121,12 +125,34 @@ class IssueTransportInvoiceFromQuote
             'sale_date' => $issueDate->toDateString(),
             'due_at' => $issueDate->copy()->addDays($paymentTermsDays)->toDateString(),
 
-            // Currency — z Quote
+            // Currency — z Quote. Snapshot kursu NBP (Art. 31a ust. 1
+            // ustawy o VAT) tylko dla walut obcych. Soft-fail: gdy NBP API
+            // padło, kurs zostaje null + log warning — nie blokujemy
+            // wystawienia FV, transporter może uzupełnić ręcznie.
             'currency' => $quote->currency,
+            'exchange_rate' => $exchange['rate'],
+            'exchange_rate_date' => $exchange['date'],
+            'exchange_rate_source' => $exchange['source'],
             'subtotal_cents' => 0,
             'vat_cents' => 0,
             'total_cents' => 0,
         ];
+    }
+
+    /**
+     * @return array{rate: ?float, date: ?string, source: ?string}
+     */
+    private function resolveExchangeRate(string $currency, Carbon $issueDate): array
+    {
+        $snapshot = $this->nbp->rateForInvoiceDate($currency, $issueDate);
+        if ($currency !== 'PLN' && $snapshot['rate'] === null) {
+            Log::warning('TransportInvoice issued without NBP rate snapshot (API offline)', [
+                'currency' => $currency,
+                'issued_at' => $issueDate->toDateString(),
+            ]);
+        }
+
+        return $snapshot;
     }
 
     private function buildLineItems(TransportInvoice $invoice, Quote $quote): void

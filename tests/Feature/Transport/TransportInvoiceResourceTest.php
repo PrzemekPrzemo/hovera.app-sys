@@ -342,6 +342,9 @@ class TransportInvoiceResourceTest extends TestCase
             $t->date('due_at')->nullable();
             $t->timestamp('paid_at')->nullable();
             $t->char('currency', 3)->default('PLN');
+            $t->decimal('exchange_rate', 14, 6)->nullable();
+            $t->date('exchange_rate_date')->nullable();
+            $t->string('exchange_rate_source', 16)->nullable();
             $t->unsignedBigInteger('subtotal_cents')->default(0);
             $t->unsignedBigInteger('vat_cents')->default(0);
             $t->unsignedBigInteger('total_cents')->default(0);

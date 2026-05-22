@@ -29,7 +29,8 @@ class TransportInvoice extends TenantModel
         'pickup_address', 'dropoff_address', 'service_date',
         'distance_km', 'vehicle_id', 'driver_id',
         'issued_at', 'sale_date', 'due_at', 'paid_at',
-        'currency', 'subtotal_cents', 'vat_cents', 'total_cents',
+        'currency', 'exchange_rate', 'exchange_rate_date', 'exchange_rate_source',
+        'subtotal_cents', 'vat_cents', 'total_cents',
         'ksef_status', 'ksef_reference', 'ksef_sent_at',
         'ksef_reference_number', 'ksef_submitted_at', 'ksef_accepted_at',
         'ksef_xml', 'ksef_error_payload',
@@ -55,6 +56,8 @@ class TransportInvoice extends TenantModel
             'subtotal_cents' => 'integer',
             'vat_cents' => 'integer',
             'total_cents' => 'integer',
+            'exchange_rate' => 'decimal:6',
+            'exchange_rate_date' => 'date',
             'metadata' => 'array',
         ];
     }

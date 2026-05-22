@@ -23,7 +23,8 @@ class Invoice extends TenantModel
         'seller_name', 'seller_nip', 'seller_address', 'seller_postal_code', 'seller_city', 'seller_country',
         'buyer_name', 'buyer_nip', 'buyer_address', 'buyer_postal_code', 'buyer_city', 'buyer_country',
         'issued_at', 'sale_date', 'due_at', 'paid_at',
-        'currency', 'subtotal_cents', 'vat_cents', 'total_cents',
+        'currency', 'exchange_rate', 'exchange_rate_date', 'exchange_rate_source',
+        'subtotal_cents', 'vat_cents', 'total_cents',
         'ksef_status', 'ksef_reference', 'ksef_sent_at',
         'notes', 'metadata',
     ];
@@ -41,6 +42,8 @@ class Invoice extends TenantModel
             'subtotal_cents' => 'integer',
             'vat_cents' => 'integer',
             'total_cents' => 'integer',
+            'exchange_rate' => 'decimal:6',
+            'exchange_rate_date' => 'date',
             'metadata' => 'array',
         ];
     }

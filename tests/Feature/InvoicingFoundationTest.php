@@ -20,6 +20,7 @@ use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -233,6 +234,60 @@ class InvoicingFoundationTest extends TestCase
         app(IssueInvoice::class)->execute($invoice);
     }
 
+    public function test_issue_in_foreign_currency_snapshots_nbp_rate_for_preceding_day(): void
+    {
+        $invoice = $this->makeDraftInvoice(['currency' => 'EUR']);
+        InvoiceItem::create([
+            'id' => (string) Str::ulid(),
+            'invoice_id' => $invoice->id,
+            'name' => 'Lekcja',
+            'quantity' => 1, 'unit' => 'szt.', 'vat_rate' => '23',
+            'unit_price_cents' => 10000, 'net_cents' => 10000,
+            'vat_cents' => 2300, 'total_cents' => 12300,
+        ]);
+
+        // Wystawienie w czwartek 2026-05-21 → kurs z środy 2026-05-20.
+        Http::fake([
+            'api.nbp.pl/api/exchangerates/rates/A/EUR/2026-05-20/*' => Http::response([
+                'rates' => [['no' => '098/A/NBP/2026', 'effectiveDate' => '2026-05-20', 'mid' => 4.2950]],
+            ]),
+        ]);
+
+        $issued = app(IssueInvoice::class)->execute(
+            $invoice->refresh(),
+            Carbon::parse('2026-05-21'),
+        );
+
+        $this->assertSame(InvoiceStatus::Issued, $issued->status);
+        $this->assertSame('4.295000', $issued->exchange_rate);
+        $this->assertSame('2026-05-20', $issued->exchange_rate_date->toDateString());
+        $this->assertSame('nbp_a', $issued->exchange_rate_source);
+    }
+
+    public function test_issue_in_pln_does_not_call_nbp_api(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake();
+
+        $invoice = $this->makeDraftInvoice(['currency' => 'PLN']);
+        InvoiceItem::create([
+            'id' => (string) Str::ulid(),
+            'invoice_id' => $invoice->id,
+            'name' => 'Lekcja',
+            'quantity' => 1, 'unit' => 'szt.', 'vat_rate' => '23',
+            'unit_price_cents' => 10000, 'net_cents' => 10000,
+            'vat_cents' => 2300, 'total_cents' => 12300,
+        ]);
+
+        $issued = app(IssueInvoice::class)->execute($invoice->refresh());
+
+        // PLN FV nie ma snapshot'u kursu — nullable kolumny zostają null.
+        $this->assertNull($issued->exchange_rate);
+        $this->assertNull($issued->exchange_rate_date);
+        $this->assertNull($issued->exchange_rate_source);
+        Http::assertNothingSent();
+    }
+
     public function test_correction_clones_with_negative_amounts(): void
     {
         $original = $this->makeIssuedInvoice('FV/100/05/2026');
@@ -368,9 +423,9 @@ class InvoicingFoundationTest extends TestCase
         $this->assertSame($unpaid->id, $overdue->first()->id);
     }
 
-    private function makeDraftInvoice(): Invoice
+    private function makeDraftInvoice(array $overrides = []): Invoice
     {
-        return Invoice::create([
+        return Invoice::create(array_merge([
             'id' => (string) Str::ulid(),
             'kind' => InvoiceKind::Fv->value,
             'status' => InvoiceStatus::Draft->value,
@@ -378,7 +433,7 @@ class InvoicingFoundationTest extends TestCase
             'seller_name' => 'Sprzedawca',
             'buyer_name' => 'Nabywca',
             'currency' => 'PLN',
-        ]);
+        ], $overrides));
     }
 
     private function makeIssuedInvoice(string $number, ?string $dueDate = null): Invoice
@@ -486,6 +541,9 @@ class InvoicingFoundationTest extends TestCase
             $t->date('due_at')->nullable();
             $t->timestamp('paid_at')->nullable();
             $t->char('currency', 3)->default('PLN');
+            $t->decimal('exchange_rate', 14, 6)->nullable();
+            $t->date('exchange_rate_date')->nullable();
+            $t->string('exchange_rate_source', 16)->nullable();
             $t->bigInteger('subtotal_cents')->default(0);
             $t->bigInteger('vat_cents')->default(0);
             $t->bigInteger('total_cents')->default(0);
