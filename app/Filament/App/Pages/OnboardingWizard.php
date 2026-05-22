@@ -34,8 +34,6 @@ class OnboardingWizard extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-sparkles';
 
-    protected static bool $shouldRegisterNavigation = false;
-
     protected static string $view = 'filament.app.pages.onboarding-wizard';
 
     /** @var array<string, mixed> */
@@ -48,14 +46,49 @@ class OnboardingWizard extends Page implements HasForms
 
     public static function canAccess(): bool
     {
-        // Każdy zalogowany stable user z aktywnym tenant'em — middleware
-        // redirectuje tu pierwszy raz, a wizard sam wpisuje sobie w
-        // settings.onboarding.completed_at po finish.
         return true;
+    }
+
+    /**
+     * Link w sidebar pokazujemy DOPÓKI user nie ukończył / nie pominął
+     * wizarda — po deferred (silent) wciąż widać link, żeby user mógł
+     * wrócić i dokończyć. Po explicit completed/skipped znika.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $tenant = app(TenantManager::class)->current();
+        if (! $tenant) {
+            return false;
+        }
+
+        return ! $tenant->isOnboardingFinished();
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('app/onboarding.navigation_label');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('navigation.group.settings');
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return 1;
     }
 
     public function mount(): void
     {
+        // Pierwsze otwarcie wizarda → silent `deferred_at`. Od tej chwili
+        // middleware nie redirectuje już z innych stron, user ma pełen
+        // dostęp do systemu. Banner na dashboardzie zachęca do dokończenia.
+        $tenant = app(TenantManager::class)->current();
+        if ($tenant !== null && ! $tenant->wasOnboardingShown()) {
+            $tenant->markOnboardingFinished('deferred');
+        }
+
         $this->form->fill();
     }
 

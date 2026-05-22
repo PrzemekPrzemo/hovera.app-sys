@@ -31,8 +31,6 @@ class OnboardingWizard extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-sparkles';
 
-    protected static bool $shouldRegisterNavigation = false;
-
     protected static string $view = 'filament.owner.pages.onboarding-wizard';
 
     /** @var array<string, mixed> */
@@ -48,8 +46,34 @@ class OnboardingWizard extends Page implements HasForms
         return true;
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        $tenant = app(TenantManager::class)->current();
+        if (! $tenant) {
+            return false;
+        }
+
+        return ! $tenant->isOnboardingFinished();
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('owner/onboarding.navigation_label');
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return 1;
+    }
+
     public function mount(): void
     {
+        // Silent deferral — patrz docstring App\OnboardingWizard.
+        $tenant = app(TenantManager::class)->current();
+        if ($tenant !== null && ! $tenant->wasOnboardingShown()) {
+            $tenant->markOnboardingFinished('deferred');
+        }
+
         $this->form->fill();
     }
 

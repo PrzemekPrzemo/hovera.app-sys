@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     'title' => 'Witaj w Hovera Transport',
+    'navigation_label' => 'Pierwsze kroki',
     'welcome' => [
         'heading' => 'Krok 1 z 3 — Twoja firma transportowa w Hoverze',
         'body' => 'Przeprowadzimy Cię przez 3 najważniejsze ustawienia: dokumenty PWL, strefy działania i KSeF. Wszystko zajmie 10–15 minut.',

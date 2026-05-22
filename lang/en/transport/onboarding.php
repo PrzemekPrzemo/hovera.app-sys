@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     'title' => 'Welcome to Hovera Transport',
+    'navigation_label' => 'First steps',
     'welcome' => [
         'heading' => 'Step 1 of 3 — your transport company on Hovera',
         'body' => 'We will walk you through the 3 most important settings: PLW documents, service areas and KSeF. The whole thing takes 10-15 minutes.',
