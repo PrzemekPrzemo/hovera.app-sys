@@ -77,6 +77,8 @@ return [
             'client_desc' => 'Portal: rezerwacje, karnety, mój koń.',
             'transporter' => 'Firma transportowa',
             'transporter_desc' => 'Pojazdy, kierowcy, leady, oferty, dokumenty PLW.',
+            'horse_owner' => 'Właściciel konia',
+            'horse_owner_desc' => 'Konto FREE — moje konie, zamawianie transportu, historia FV od stajni.',
         ],
         'legal' => [
             'open_in_new_tab' => 'Otwórz wersję publiczną',

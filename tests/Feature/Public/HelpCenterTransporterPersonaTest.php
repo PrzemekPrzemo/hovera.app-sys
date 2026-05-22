@@ -60,12 +60,34 @@ class HelpCenterTransporterPersonaTest extends TestCase
         $response = $this->get('/help');
         $response->assertOk();
 
-        // Persona cards rendered as navigation — wszystkie 5 (owner /
-        // employee / specialist / client / transporter) powinno być widoczne.
+        // Persona cards rendered as navigation — wszystkie 6 (owner /
+        // employee / specialist / client / transporter / horse_owner)
+        // powinny być widoczne po dodaniu horse_owner w Fazie C.
         $response->assertSee(__('pages.help.persona.owner'), false);
         $response->assertSee(__('pages.help.persona.employee'), false);
         $response->assertSee(__('pages.help.persona.specialist'), false);
         $response->assertSee(__('pages.help.persona.client'), false);
         $response->assertSee(__('pages.help.persona.transporter'), false);
+        $response->assertSee(__('pages.help.persona.horse_owner'), false);
+    }
+
+    public function test_help_horse_owner_persona_route_renders(): void
+    {
+        $this->get('/help/horse_owner')
+            ->assertOk()
+            ->assertSee(__('pages.help.persona.horse_owner'), false);
+    }
+
+    public function test_help_horse_owner_persona_loads_markdown(): void
+    {
+        $response = $this->get('/help/horse_owner');
+        $response->assertOk();
+
+        $body = (string) $response->getContent();
+        // resources/help/pl/horse_owner.md ma sekcje "Moje konie", "Zamawianie
+        // transportu", "ulubieni przewoźnicy" itp.
+        $this->assertGreaterThan(500, strlen($body), 'Horse owner help content should be substantial.');
+        // Konkretne smoke: kluczowe sformułowania z markdownu.
+        $response->assertSee('Hovera', false);
     }
 }

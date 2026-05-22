@@ -77,6 +77,8 @@ return [
             'client_desc' => 'Portail : réservations, cartes, mon cheval.',
             'transporter' => 'Société de transport',
             'transporter_desc' => 'Véhicules, conducteurs, demandes, devis, documents PLW.',
+            'horse_owner' => 'Propriétaire de cheval',
+            'horse_owner_desc' => 'Compte GRATUIT — mes chevaux, commandes de transport, historique des factures.',
         ],
         'legal' => [
             'open_in_new_tab' => 'Ouvrir la version publique',

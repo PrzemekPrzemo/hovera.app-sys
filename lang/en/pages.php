@@ -77,6 +77,8 @@ return [
             'client_desc' => 'Portal: bookings, passes, my horse.',
             'transporter' => 'Transport company',
             'transporter_desc' => 'Vehicles, drivers, leads, quotes, PLW documents.',
+            'horse_owner' => 'Horse owner',
+            'horse_owner_desc' => 'FREE account — my horses, transport orders, stable invoice history.',
         ],
         'legal' => [
             'open_in_new_tab' => 'Open public version',
