@@ -192,15 +192,7 @@ class MasterAdResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-            ])
-            ->mutateFormDataUsing(fn (array $data) => self::stampCreator($data));
-    }
-
-    private static function stampCreator(array $data): array
-    {
-        $data['created_by'] ??= Auth::id();
-
-        return $data;
+            ]);
     }
 
     public static function getPages(): array
