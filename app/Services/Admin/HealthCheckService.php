@@ -112,8 +112,10 @@ class HealthCheckService
     public function viesStatus(bool $live = true): array
     {
         // VIES jest public API — nie wymaga konfiguracji. Sprawdzamy
-        // override base_url w SystemSetting (opcjonalne).
-        $baseUrl = (string) (SystemSetting::getValue('vies.base_url', '') ?? '');
+        // override base_url w SystemSetting (opcjonalne). Defensive cast
+        // przez `stringSetting()` — gdyby ktoś przypadkiem zapisał array,
+        // nie wybuchamy "Array to string conversion".
+        $baseUrl = self::stringSetting(SystemSetting::getValue('vies.base_url', ''));
         $detail = $baseUrl !== '' ? __('admin/health_checks.detail.vies_custom_url', ['url' => $baseUrl])
             : __('admin/health_checks.detail.vies_default');
 
@@ -193,9 +195,13 @@ class HealthCheckService
      */
     public function smtpStatus(bool $live = false): array
     {
-        $host = (string) (SystemSetting::getValue('mail.default.host', '') ?? '');
+        // SMTP host w SystemSetting jest zapisany przez `setSecret()` —
+        // wrap `['__crypt' => ...]`. Trzeba `getSecret()` zeby odszyfrowac,
+        // nie `getValue()` (zwraca array i (string)cast wybucha
+        // "Array to string conversion"). Patrz SmtpSettings.php:79.
+        $host = self::stringSetting(SystemSetting::getSecret('mail.default.host', ''));
         if ($host === '') {
-            $host = (string) (config('mail.mailers.smtp.host') ?? '');
+            $host = self::stringSetting(config('mail.mailers.smtp.host'));
         }
         if ($host === '') {
             return $this->row('smtp', 'SMTP (poczta)', 'not_configured',
@@ -229,5 +235,19 @@ class HealthCheckService
     private function row(string $key, string $label, string $status, ?string $detail): array
     {
         return ['key' => $key, 'label' => $label, 'status' => $status, 'detail' => $detail];
+    }
+
+    /**
+     * Defensive cast SystemSetting value → string. Gdy ktoś przypadkowo
+     * zapisze array (np. zapomni `setSecret` vs `setValue`), nie wybuchamy
+     * "Array to string conversion" — zwracamy ''.
+     */
+    private static function stringSetting(mixed $value): string
+    {
+        if ($value === null || is_array($value) || is_object($value)) {
+            return '';
+        }
+
+        return (string) $value;
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Admin;
 
 use App\Models\Central\NbpExchangeRate;
+use App\Models\Central\SystemSetting;
 use App\Services\Admin\HealthCheckService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -102,5 +103,34 @@ class HealthCheckServiceTest extends TestCase
 
         $this->assertSame('ksef_central', $row['key']);
         $this->assertSame('not_configured', $row['status']);
+    }
+
+    public function test_smtp_status_does_not_crash_when_host_value_is_encrypted(): void
+    {
+        // Regression: SmtpSettings zapisuje mail.default.host przez
+        // setSecret() (encrypted wrap ['__crypt' => ...]). Bezposredni
+        // getValue() zwracal array i (string)cast wybuchal "Array to
+        // string conversion". HealthCheckService musi czytac przez
+        // getSecret() albo defensive cast.
+        SystemSetting::setSecret('mail.default.host', 'smtp.example.com');
+
+        $row = app(HealthCheckService::class)->smtpStatus(live: false);
+
+        $this->assertSame('smtp', $row['key']);
+        $this->assertSame('ok', $row['status']);
+        $this->assertStringContainsString('smtp.example.com', $row['detail'] ?? '');
+    }
+
+    public function test_vies_status_does_not_crash_when_base_url_is_accidentally_array(): void
+    {
+        // Defense-in-depth: gdy ktos przypadkowo zapisze vies.base_url
+        // jako array (np. legacy migrate), HealthCheckService nie powinien
+        // crashowac.
+        SystemSetting::setValue('vies.base_url', ['accidentally' => 'array']);
+
+        $row = app(HealthCheckService::class)->viesStatus(live: false);
+
+        $this->assertSame('vies', $row['key']);
+        $this->assertSame('ok', $row['status']);
     }
 }
