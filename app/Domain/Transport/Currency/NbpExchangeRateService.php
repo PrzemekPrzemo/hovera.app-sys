@@ -6,6 +6,7 @@ namespace App\Domain\Transport\Currency;
 
 use App\Models\Central\NbpExchangeRate;
 use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -105,6 +106,66 @@ class NbpExchangeRateService
     }
 
     /**
+     * VAT-correct kurs do wystawienia FV w walucie obcej.
+     *
+     * Art. 31a ust. 1 ustawy o VAT: przeliczenie kwot w walucie obcej
+     * następuje wg średniego kursu NBP z ostatniego dnia ROBOCZEGO
+     * poprzedzającego dzień wystawienia faktury (lub powstania
+     * obowiązku podatkowego). Dla poniedziałku / dnia po święcie /
+     * weekendu cofamy się aż do dnia, w którym NBP publikowało tabelę.
+     *
+     * Strategia:
+     *   1. target = issuanceDate - 1 dzień
+     *   2. cache check (currency_code, effective_date == target)
+     *   3. fetch z `/rates/A/{code}/{target}/?format=json`; 404 = NBP nie
+     *      publikowało w tym dniu → cofamy o kolejny dzień
+     *   4. max 10 prób (długi weekend + święto majowe = ~5 dni cofnięcia max)
+     *
+     * Soft-fail: gdy nie udało się ustalić kursu w żadnym z dni, zwracamy
+     * ['rate' => null, 'date' => null, 'source' => null] — caller decyduje
+     * czy zablokować wystawienie czy zostawić bez konwersji.
+     *
+     * @return array{rate: ?float, date: ?string, source: ?string}
+     */
+    public function rateForInvoiceDate(string $code, Carbon $issuanceDate): array
+    {
+        $code = strtoupper(trim($code));
+        if ($code === self::BASE_CURRENCY) {
+            return ['rate' => 1.0, 'date' => $issuanceDate->toDateString(), 'source' => 'pln_base'];
+        }
+
+        $target = $issuanceDate->copy()->subDay();
+        for ($i = 0; $i < 10; $i++) {
+            $dateStr = $target->toDateString();
+
+            $cached = NbpExchangeRate::query()
+                ->where('currency_code', $code)
+                ->where('effective_date', $dateStr)
+                ->first();
+            if ($cached !== null) {
+                return [
+                    'rate' => (float) $cached->rate_to_pln,
+                    'date' => $dateStr,
+                    'source' => 'nbp_a',
+                ];
+            }
+
+            $fetched = $this->fetchAndCacheForDate($code, $dateStr);
+            if ($fetched !== null) {
+                return [
+                    'rate' => $fetched['rate'],
+                    'date' => $fetched['date'],
+                    'source' => 'nbp_a',
+                ];
+            }
+
+            $target = $target->subDay();
+        }
+
+        return ['rate' => null, 'date' => null, 'source' => null];
+    }
+
+    /**
      * Konwersja PLN → target currency. Dla PLN no-op.
      */
     public function convertPlnTo(float $amountPln, string $code): float
@@ -115,6 +176,60 @@ class NbpExchangeRateService
         }
 
         return round($amountPln / $rate, 2);
+    }
+
+    /**
+     * Fetch kursu dla KONKRETNEJ daty (NBP zwraca 404 gdy w tym dniu
+     * nie było publikacji — weekend/święto). Zwraca null w obu przypadkach
+     * (404 i błąd transportu); caller `rateForInvoiceDate` interpretuje
+     * null jako "spróbuj poprzedni dzień".
+     *
+     * @return array{rate: float, date: string}|null
+     */
+    private function fetchAndCacheForDate(string $code, string $date): ?array
+    {
+        try {
+            $response = $this->http
+                ->timeout(10)
+                ->acceptJson()
+                ->get(self::BASE_URL.'/'.$code.'/'.$date.'/', ['format' => 'json']);
+
+            if (! $response->successful()) {
+                // 404 = brak publikacji (weekend/święto). Inne kody loguj.
+                if ($response->status() !== 404) {
+                    Log::info('NBP API non-2xx for date', [
+                        'code' => $code, 'date' => $date, 'status' => $response->status(),
+                    ]);
+                }
+
+                return null;
+            }
+
+            $payload = $response->json();
+            $rate = (float) data_get($payload, 'rates.0.mid', 0);
+            $effectiveDate = (string) data_get($payload, 'rates.0.effectiveDate', '');
+            if ($rate <= 0 || $effectiveDate === '') {
+                return null;
+            }
+
+            NbpExchangeRate::query()->updateOrCreate(
+                ['currency_code' => $code, 'effective_date' => $effectiveDate],
+                [
+                    'rate_to_pln' => $rate,
+                    'source' => 'nbp_api',
+                    'raw_payload' => $payload,
+                    'created_at' => now(),
+                ],
+            );
+
+            return ['rate' => $rate, 'date' => $effectiveDate];
+        } catch (Throwable $e) {
+            Log::warning('NBP API fetch by-date failed', [
+                'code' => $code, 'date' => $date, 'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Actions\Invoicing;
 
+use App\Domain\Transport\Currency\NbpExchangeRateService;
 use App\Enums\InvoiceStatus;
 use App\Models\Tenant\Invoice;
 use App\Services\Invoicing\InvoiceNumberGenerator;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -26,6 +28,7 @@ class IssueInvoice
         private readonly InvoiceNumberGenerator $numbers,
         private readonly TenantManager $tenants,
         private readonly TenantAuditLogger $audit,
+        private readonly NbpExchangeRateService $nbp,
     ) {}
 
     public function execute(Invoice $invoice, ?Carbon $issueDate = null): Invoice
@@ -65,12 +68,35 @@ class IssueInvoice
         }
         $invoice->load('items')->recomputeTotals();
 
-        $invoice->forceFill([
+        $fillData = [
             'number' => $number,
             'status' => InvoiceStatus::Issued->value,
             'issued_at' => $date->toDateString(),
             'sale_date' => $invoice->sale_date ?? $date->toDateString(),
-        ])->save();
+        ];
+
+        // VAT-correct snapshot kursu NBP dla FV w walucie obcej (Art. 31a
+        // ust. 1 ustawy o VAT). Tylko gdy kurs jeszcze nie zapisany —
+        // pozwalamy override z UI (np. master admin chce zachować kurs
+        // z innego dnia, choć w 99% przypadków snapshot tu jest poprawny).
+        if ($invoice->currency !== 'PLN' && $invoice->exchange_rate === null) {
+            $snapshot = $this->nbp->rateForInvoiceDate((string) $invoice->currency, $date);
+            if ($snapshot['rate'] !== null) {
+                $fillData['exchange_rate'] = $snapshot['rate'];
+                $fillData['exchange_rate_date'] = $snapshot['date'];
+                $fillData['exchange_rate_source'] = $snapshot['source'];
+            } else {
+                // Bez kursu nie blokujemy wystawienia (offline-friendly), ale
+                // logujemy żeby user mógł uzupełnić ręcznie i ponownie issue.
+                Log::warning('Invoice issued without NBP rate snapshot (API offline)', [
+                    'invoice_id' => $invoice->id,
+                    'currency' => $invoice->currency,
+                    'issued_at' => $date->toDateString(),
+                ]);
+            }
+        }
+
+        $invoice->forceFill($fillData)->save();
 
         $this->audit->record('invoice.issued', 'Invoice', (string) $invoice->id, [
             'number' => $number,

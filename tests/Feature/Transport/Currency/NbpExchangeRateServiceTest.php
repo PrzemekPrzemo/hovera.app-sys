@@ -7,6 +7,7 @@ namespace Tests\Feature\Transport\Currency;
 use App\Domain\Transport\Currency\NbpExchangeRateService;
 use App\Models\Central\NbpExchangeRate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -164,5 +165,91 @@ class NbpExchangeRateServiceTest extends TestCase
 
         $this->assertSame(1.0, $snapshot['rate']);
         $this->assertNull($snapshot['date']);
+    }
+
+    /*
+     * rateForInvoiceDate — VAT-correct kurs do wystawienia FV.
+     * Art. 31a ust. 1 ustawy o VAT: dzień poprzedzający dzień wystawienia,
+     * a w przypadku weekendu/święta — ostatni dzień roboczy w którym
+     * NBP publikowało tabelę. Mockujemy NBP API i pokrywamy:
+     *   - cache hit dla preceding day → bez fetch'u
+     *   - poniedziałek → fetch piątku (sob+ndz = 404)
+     *   - PLN → 1.0 bez fetch'u
+     *   - long weekend → cofa się dalej
+     *   - całkowity failure → null (caller decyduje)
+     */
+
+    public function test_rate_for_invoice_uses_cached_preceding_day(): void
+    {
+        $issuance = Carbon::parse('2026-05-21'); // czwartek
+        $preceding = '2026-05-20'; // środa
+        NbpExchangeRate::create([
+            'currency_code' => 'EUR',
+            'effective_date' => $preceding,
+            'rate_to_pln' => 4.2900,
+        ]);
+
+        Http::preventStrayRequests();
+        Http::fake();
+
+        $result = app(NbpExchangeRateService::class)->rateForInvoiceDate('EUR', $issuance);
+
+        $this->assertSame(4.29, $result['rate']);
+        $this->assertSame($preceding, $result['date']);
+        $this->assertSame('nbp_a', $result['source']);
+        Http::assertNothingSent();
+    }
+
+    public function test_rate_for_invoice_on_monday_walks_back_to_friday(): void
+    {
+        $issuance = Carbon::parse('2026-05-25'); // poniedziałek
+        // Niedziela 2026-05-24 i sobota 2026-05-23 → 404 z NBP.
+        // Piątek 2026-05-22 → publikacja. Wildcard po dacie żeby
+        // ?format=json query string nie odpadł.
+        Http::fake([
+            'api.nbp.pl/api/exchangerates/rates/A/EUR/2026-05-24/*' => Http::response('Not Found', 404),
+            'api.nbp.pl/api/exchangerates/rates/A/EUR/2026-05-23/*' => Http::response('Not Found', 404),
+            'api.nbp.pl/api/exchangerates/rates/A/EUR/2026-05-22/*' => Http::response([
+                'rates' => [['no' => '098/A/NBP/2026', 'effectiveDate' => '2026-05-22', 'mid' => 4.2750]],
+            ]),
+        ]);
+
+        $result = app(NbpExchangeRateService::class)->rateForInvoiceDate('EUR', $issuance);
+
+        $this->assertSame(4.275, $result['rate']);
+        $this->assertSame('2026-05-22', $result['date']);
+        $this->assertSame('nbp_a', $result['source']);
+        $this->assertDatabaseHas('nbp_exchange_rates', [
+            'currency_code' => 'EUR',
+            'effective_date' => '2026-05-22',
+        ]);
+    }
+
+    public function test_rate_for_invoice_pln_is_one_without_api(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake();
+
+        $result = app(NbpExchangeRateService::class)
+            ->rateForInvoiceDate('PLN', Carbon::parse('2026-05-22'));
+
+        $this->assertSame(1.0, $result['rate']);
+        $this->assertSame('pln_base', $result['source']);
+        Http::assertNothingSent();
+    }
+
+    public function test_rate_for_invoice_returns_null_when_no_data_after_walkback(): void
+    {
+        // Każda data → 404, brak cache. Po 10 próbach soft-fail.
+        Http::fake([
+            'api.nbp.pl/*' => Http::response('Not Found', 404),
+        ]);
+
+        $result = app(NbpExchangeRateService::class)
+            ->rateForInvoiceDate('EUR', Carbon::parse('2026-05-22'));
+
+        $this->assertNull($result['rate']);
+        $this->assertNull($result['date']);
+        $this->assertNull($result['source']);
     }
 }
