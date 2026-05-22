@@ -72,7 +72,7 @@ class InvoicingSettings extends Page implements HasForms
         // InvoicingSettings (numeracja FV + seller snapshot) jest tylko dla
         // podatników VAT. HorseOwner nie wystawia FV — strona ukryta. Patrz
         // docs/ROLE-MATRIX.md.
-        if ($tenant->type?->isFreeTier()) {
+        if (! $tenant->type?->canIssueInvoices()) {
             return false;
         }
         $user = Auth::user();
