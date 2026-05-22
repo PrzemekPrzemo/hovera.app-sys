@@ -189,3 +189,45 @@ widzisz tylko jego dane potrzebne do prowadzenia pensjonatu.
 - **Centrum pomocy:** `/help/horse_owner` (publicznie dostępne)
 - **Bug reporter w panelu:** prawy dolny róg — raport leci do nas z
   metadanymi (przeglądarka, URL), nie musisz nic kopiować
+
+---
+
+## Co nowego w panelu (od ostatniej aktualizacji)
+
+### Dashboard — szybsza nawigacja
+
+- **Karta zaproszenia ze stajni** (góra dashboard'u) — jeśli zarejestrowałeś
+  się przez link od konkretnej stajni (`?stable=...&token=...`), karta
+  zachęca do dodania konia i połączenia go z tą stajnią jednym kliknięciem.
+  Znika po pierwszym aktywnym boarding'u.
+- **Widget „Pierwsze kroki"** — niedokończony onboarding wraca jako baner
+  z linkiem powrotnym (nie blokuje już używania panelu).
+- **Karta „Szybki start"** — empty-state CTAs gdy masz 0 koni: „Dodaj
+  konia" + „Zamów transport".
+- **Karta „Ostatnie faktury"** — 5 najnowszych FV od stajni/przewoźników
+  z przyciskiem „Zapłać" gdy stajnia obsługuje płatności online (P24,
+  PayU, Stripe).
+
+### „Połącz ze stajnią" — przycisk na karcie konia
+
+W tabeli `Moje konie → akcje → Połącz ze stajnią` możesz teraz SAM
+zainicjować boarding (zamiast czekać aż stajnia wyśle invite). Wybierasz
+stajnię z listy zweryfikowanych — stajnia dostaje powiadomienie z
+przyciskiem „Akceptuj". Po akceptacji koń pojawia się w jej panelu
+i mogą prowadzić dziennik opieki/zdrowia/lekcji.
+
+### Listy ofert transportu — bezpośrednio w panelu
+
+Wcześniej w `Moje zamówienia → [zamówienie]` widziałeś tylko liczbę
+ofert („3 nowe oferty"). Teraz jest **klikalna lista kart** — nazwa
+przewoźnika, cena, proponowana data, link „Otwórz ofertę" prowadzący
+prosto na stronę akceptacji. Nie musisz już szukać maili.
+
+### Notyfikacje w aplikacji (bell icon)
+
+Gdy przewoźnik wyśle ofertę — dostajesz **dwie wiadomości**:
+1. Mail z linkiem do strony akceptacji (jak dotychczas)
+2. **In-app notyfikacja w panelu** (dzwonek w prawym górnym rogu) z
+   sumą oferty i linkiem do `Moje zamówienia`
+
+Dotyczy tylko ofert na Twoje zapytania — nie spamujemy innymi rzeczami.

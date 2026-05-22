@@ -448,6 +448,66 @@ incident), master admin może czasowo wyłączyć auto-send dla
 wszystkich tenantów — wracasz do trybu offline-only. Powrót do
 normalnego trybu jest automatyczny gdy MF wraca online.
 
+## Wysyłanie oferty przez WhatsApp
+
+Po wystawieniu oferty (status `sent`) na karcie oferty w tabeli pojawia
+się akcja **„Wyślij na WhatsApp"** (obok „Wyślij do klienta", która
+wysyła mail). Akcja generuje deep link `wa.me/{telefon}?text={draft}` —
+po kliknięciu otwiera się Twoja zainstalowana aplikacja WhatsApp
+(mobilna lub desktop) lub WhatsApp Web w przeglądarce, z pre-filled
+wiadomością zawierającą:
+
+- Powitanie z imieniem klienta
+- Trasę (pickup → dropoff)
+- Datę
+- Cenę z walutą
+- Klikalny link do publicznej strony akceptacji
+- Twój podpis (nazwa firmy)
+
+**To Ty wysyłasz wiadomość — Hovera nie integruje się z WhatsApp Business API.**
+Klient ma w jednym SMS-like message wszystko czego potrzebuje:
+przeczytanie 30s, akceptacja jednym tap'em. Konwersja oferty po WhatsApp
+jest typowo 3× wyższa niż po mailu (klient PL bardziej refleksywnie
+łapie messengery).
+
+Warunki widoczności akcji:
+- Quote musi być w statusie `sent` (ma już `accept_token` wygenerowany)
+- Klient musi mieć `customer_phone` ustawiony na ofercie
+
+Numer telefonu jest normalizowany do formatu WA automatycznie:
+- 9 cyfr (PL national) → dodajemy `48`
+- 0XXXXXXXXX (z leading 0) → strip 0, prefix `48`
+- `+48...` / `0048...` / spacje / myślniki / nawiasy → strip wszystkiego
+  poza cyframi (i `+` traktowane jak nic)
+
+## Konta kierowców — driver-only widoki
+
+Kierowca, który ma swoje konto w Hoverze (ty go założyłeś w sekcji
+`Kierowcy` z opcją „Stwórz konto użytkownika" + linkiem do central
+User'a), po zalogowaniu zobaczy **tylko 2 strony** zamiast pełnego
+panelu operatora:
+
+- **„Moje trasy"** — lista quote'ów (`status = sent` lub `accepted`)
+  gdzie jest przypisany jako `driver_id`. Kolumny: data, pickup,
+  dropoff, klient, telefon (klikalny `tel:` link), status. Read-only —
+  kierowca nie modyfikuje cudzych ofert.
+- **„Moje dokumenty"** — status własnego prawa jazdy, ADR, świadectwa
+  kompetencji (transport zwierząt). Kolorowe karty:
+    - zielone „aktualne" (>30 dni do końca)
+    - żółte „wygasa do 30 dni"
+    - czerwone „wygasło"
+  Edycję dokumentów wykonuje operator (Ty) — kierowca tylko widzi co
+  ma odnowić.
+
+Kierowca **nie widzi** cudzych ofert, leadów, faktur, kierowców,
+pojazdów. Pełna izolacja per-kierowca.
+
+Aby kierowca zobaczył te widoki, musi mieć:
+1. Konto użytkownika w Hoverze (zaprosiłeś go via Team Members z rolą
+   `driver`)
+2. Driver record z `central_user_id` linkującym do jego User'a (robisz
+   to gdy dodajesz lub edytujesz kierowcę — sekcja „Konto Hovera")
+
 ## Wsparcie
 
 - **Email supportu:** `support@hovera.app` (czas reakcji: 1 dzień

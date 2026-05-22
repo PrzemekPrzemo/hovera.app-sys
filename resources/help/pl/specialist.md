@@ -173,7 +173,15 @@ Jeśli musisz coś sprawdzić w sekcji „X której nie widzisz" — poproś adm
 
 ---
 
-## 10. Wsparcie
+## 10. Co nowego — zasady RBAC po audycie
+
+- **Kalendarz** — jako vet jesteś w grupie zaufanego team'u (`owner` / `admin` / `manager` / `instructor` / `vet`). Możesz edytować i usuwać **dowolne** wpisy kalendarza (nie tylko swoje). Sensowne, bo rehabilitacja pokrytkraj często wymaga przesuwania sesji.
+- **Szablony zabiegów** (`TreatmentTemplate`) — masz CRUD (grupa `SPECIALIST_STAFF`). Możesz dodawać własne szablony procedur, których potem inni members team'u używają w `HealthRecord`.
+- **Finanse** — bez zmian: nie widzisz Faktur, Karnetów, Raportów (różny scope niż vet). W formularzu zdrowotnym możesz wpisać `cost_cents` jako podpowiedź dla managera — on potem wystawia FV.
+
+---
+
+## 11. Wsparcie
 
 - **Stajnia** — kontakt mailowy / telefoniczny widoczny w karcie stajni,
 - **hovera (techniczne)** — `support@hovera.app`.
