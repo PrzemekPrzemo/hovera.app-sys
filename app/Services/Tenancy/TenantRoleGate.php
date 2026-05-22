@@ -93,10 +93,21 @@ class TenantRoleGate
      * Wszyscy członkowie team'u transportera włącznie z kierowcami — używane dla
      * widoków typu „company directory" gdzie kierowca też powinien widzieć
      * np. listę kolegów.
+     *
+     * @phpstan-ignore-next-line Intentionally unused — placeholder dla planowanego
+     *   "Company directory" view (post-MVP). NIE usuwać — chcemy mieć stałą
+     *   gotową, żeby przy implementacji nie definiować od nowa.
      */
     public const TRANSPORT_TEAM = ['owner', 'admin', 'operator', 'manager', 'driver'];
 
-    /** Tylko kierowcy — driver-only views (moje trasy, mój kalendarz). */
+    /**
+     * Tylko kierowcy — driver-only views (moje trasy, mój kalendarz, mój
+     * tachograf, moje dokumenty PWL).
+     *
+     * @phpstan-ignore-next-line Intentionally unused — placeholder dla
+     *   planowanych driver-only resources w panelu /transport (TODO faza 14).
+     *   NIE usuwać.
+     */
     public const DRIVERS_ONLY = ['driver'];
 
     public function __construct(private readonly TenantManager $tenants) {}
