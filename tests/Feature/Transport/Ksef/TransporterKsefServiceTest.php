@@ -324,6 +324,28 @@ class TransporterKsefServiceTest extends TestCase
         $this->assertTrue(app(TransporterKsefService::class)->isEnabledForCurrentTransporter());
     }
 
+    public function test_generate_xml_foreign_currency_includes_kurs_and_vat_in_pln(): void
+    {
+        // FV w EUR z snapshot kursu — Art. 106e ust. 11 wymaga VAT w PLN.
+        $this->configureKsef('per-tenant-token-XYZ');
+        $invoice = $this->makeInvoice([
+            'currency' => 'EUR',
+            'exchange_rate' => '4.290000',
+            'exchange_rate_date' => '2026-05-14',
+            'exchange_rate_source' => 'nbp_a',
+            'vat_cents' => 23000, // 230.00 EUR
+        ]);
+
+        $xml = app(TransporterKsefService::class)->generateXml($invoice);
+
+        $this->assertStringContainsString('<KodWaluty>EUR</KodWaluty>', $xml);
+        $this->assertStringContainsString('<KursWaluty>4.290000</KursWaluty>', $xml);
+        // 230.00 EUR * 4.29 = 986.70 PLN
+        $this->assertStringContainsString('<P_14_1>986.70</P_14_1>', $xml);
+        // P_13 i P_15 zostaja w EUR (Art. 106e dotyczy tylko VAT).
+        $this->assertStringContainsString('<P_13_1>1000.00</P_13_1>', $xml);
+    }
+
     public function test_redacted_token_preview_does_not_expose_full_token(): void
     {
         $this->configureKsef('SUPER-LONG-SECRET-12345');

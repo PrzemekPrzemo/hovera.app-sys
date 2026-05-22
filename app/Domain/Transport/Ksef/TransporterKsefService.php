@@ -241,8 +241,16 @@ class TransporterKsefService
         $buyerNip = $this->normalizeNip((string) ($invoice->buyer_nip ?? ''));
         $buyerName = (string) ($invoice->buyer_name ?? 'Klient');
         $issued = $invoice->issued_at?->format('Y-m-d') ?? date('Y-m-d');
+        $currency = (string) ($invoice->currency ?? 'PLN');
+        $rate = $invoice->exchange_rate !== null ? (float) $invoice->exchange_rate : 1.0;
+        $isForeignCurrency = $currency !== 'PLN' && $rate > 0;
         $net = number_format(((int) $invoice->subtotal_cents) / 100, 2, '.', '');
-        $vat = number_format(((int) $invoice->vat_cents) / 100, 2, '.', '');
+        // Art. 106e ust. 11 — VAT zawsze w PLN. Dla FV walutowej
+        // przeliczamy przez snapshot kursu NBP zapisany na FV.
+        $vatInCurrency = ((int) $invoice->vat_cents) / 100;
+        $vat = $isForeignCurrency
+            ? number_format($vatInCurrency * $rate, 2, '.', '')
+            : number_format($vatInCurrency, 2, '.', '');
         $total = number_format(((int) $invoice->total_cents) / 100, 2, '.', '');
 
         $kodSystemowy = match ((string) ($invoice->kind?->value ?? $invoice->kind ?? 'fv')) {
@@ -291,7 +299,10 @@ class TransporterKsefService
             .'</DaneIdentyfikacyjne>'
             .'</Podmiot2>'
             .'<Fa>'
-            .'<KodWaluty>'.htmlspecialchars((string) ($invoice->currency ?? 'PLN'), ENT_XML1).'</KodWaluty>'
+            .'<KodWaluty>'.htmlspecialchars($currency, ENT_XML1).'</KodWaluty>'
+            // Art. 31a ust. 1 — kurs NBP z dnia roboczego poprzedzajacego.
+            // Snapshot zapisany na FV przez NbpExchangeRateService.
+            .($isForeignCurrency ? '<KursWaluty>'.number_format($rate, 6, '.', '').'</KursWaluty>' : '')
             .'<P_1>'.$issued.'</P_1>'
             .'<P_2>'.htmlspecialchars((string) $invoice->number, ENT_XML1).'</P_2>'
             .'<P_13_1>'.$net.'</P_13_1>'
