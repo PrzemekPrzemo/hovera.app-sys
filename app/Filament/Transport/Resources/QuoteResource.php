@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Transport\Resources;
 
+use App\Domain\Notifications\Owner\OwnerNotificationDispatcher;
 use App\Domain\Transport\Invoices\IssueTransportInvoiceFromQuote;
 use App\Domain\Transport\Notifications\QuoteSentNotification;
 use App\Domain\Transport\Quotes\QuoteNumberGenerator;
@@ -13,6 +14,8 @@ use App\Enums\QuoteStatus;
 use App\Enums\VehicleType;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Filament\Transport\Resources\QuoteResource\Pages;
+use App\Models\Central\Tenant;
+use App\Models\Central\TransportLead;
 use App\Models\Tenant\Customer;
 use App\Models\Tenant\Driver;
 use App\Models\Tenant\Poi;
@@ -20,6 +23,7 @@ use App\Models\Tenant\Quote;
 use App\Models\Tenant\QuoteWaypoint;
 use App\Models\Tenant\TransportInvoice;
 use App\Models\Tenant\Vehicle;
+use App\Notifications\Owner\QuoteSentForOwnerNotification;
 use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use App\Tenancy\TenantManager;
@@ -688,6 +692,13 @@ class QuoteResource extends Resource
             }
         }
 
+        // Bonus dispatch: gdy quote pochodzi z TransportLead'a złożonego
+        // przez horse_owner'a, leci dodatkowa notyfikacja w panelu /owner
+        // (database+mail przez OwnerNotificationDispatcher) — owner widzi
+        // ofertę w bell + dostaje powtórny mail z linkiem do public landing.
+        // Patrz docs/BACKLOG.md item #4.
+        self::dispatchToOriginatorOwner($quote);
+
         app(TenantAuditLogger::class)->record('quote.send', 'Quote', (string) $quote->id, [
             'number' => $quote->number,
             'emailed' => $emailed,
@@ -708,6 +719,62 @@ class QuoteResource extends Resource
                 ->title(__('transport/quote.notify.sent'))
                 ->body(__('transport/quote.notify.sent_no_customer_email', ['number' => $quote->number]))
                 ->send();
+        }
+    }
+
+    /**
+     * Dispatch QuoteSentForOwnerNotification gdy quote pochodzi z lead'a
+     * stworzonego przez horse_owner tenant'a — owner dostaje notyfikację
+     * in-app + mail. Idempotent: brak lead'a / lead niefirmy ownera =
+     * silent skip.
+     */
+    private static function dispatchToOriginatorOwner(Quote $quote): void
+    {
+        try {
+            if (empty($quote->lead_id)) {
+                return;
+            }
+
+            $lead = TransportLead::query()->find($quote->lead_id);
+            if ($lead === null || empty($lead->originator_user_id)) {
+                return;
+            }
+
+            // Tenant typ originatora — dispatchujemy tylko dla horse_owner.
+            $originatorTenant = $lead->originator_tenant_id
+                ? Tenant::query()->find($lead->originator_tenant_id)
+                : null;
+            if ($originatorTenant === null || ! $originatorTenant->isHorseOwner()) {
+                return;
+            }
+
+            $transporter = app(TenantManager::class)->current();
+            if ($transporter === null) {
+                return;
+            }
+
+            $landingUrl = url("/transport/quote/{$transporter->slug}/{$quote->accept_token}");
+            $orderUrl = url('/owner/transport-orders');
+
+            app(OwnerNotificationDispatcher::class)
+                ->forCentralUser(
+                    (string) $lead->originator_user_id,
+                    new QuoteSentForOwnerNotification(
+                        transporterTenantId: (string) $transporter->id,
+                        transporterName: (string) ($transporter->legal_name ?: $transporter->name),
+                        quoteNumber: (string) ($quote->number ?? ''),
+                        priceGrossCents: (int) round(((float) $quote->gross_total) * 100),
+                        currency: (string) ($quote->currency ?? 'PLN'),
+                        proposedDate: $quote->preferred_date?->format('Y-m-d'),
+                        pickupAddress: (string) ($quote->pickup_address ?? ''),
+                        dropoffAddress: (string) ($quote->dropoff_address ?? ''),
+                        publicLandingUrl: $landingUrl,
+                        orderPanelUrl: $orderUrl,
+                    ),
+                );
+        } catch (\Throwable $e) {
+            // Owner notification jest BONUS — głównego flow nie cofamy.
+            report($e);
         }
     }
 
