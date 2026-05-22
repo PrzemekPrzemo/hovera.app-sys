@@ -101,12 +101,15 @@ class TenantRoleGate
     public const TRANSPORT_TEAM = ['owner', 'admin', 'operator', 'manager', 'driver'];
 
     /**
-     * Tylko kierowcy — driver-only views (moje trasy, mój kalendarz, mój
-     * tachograf, moje dokumenty PWL).
+     * Tylko kierowcy — używane przez driver-only views w panelu /transport:
+     *   - `MyRoutesResource` (Moje trasy — quotes assigned do kierowcy)
+     *   - `MyDocuments` page (Moje dokumenty — license/ADR/animal cert
+     *     status + alerts wygasniecia)
      *
-     * @phpstan-ignore-next-line Intentionally unused — placeholder dla
-     *   planowanych driver-only resources w panelu /transport (TODO faza 14).
-     *   NIE usuwać.
+     * Aktualne resource'y gate'ują przez `CurrentDriverResolver` (sprawdza
+     * czy user ma linked Driver record w tenant DB), nie przez te stałą
+     * bezpośrednio — zostawione dla całościowej dokumentacji ról
+     * w docs/ROLE-MATRIX.md.
      */
     public const DRIVERS_ONLY = ['driver'];
 
