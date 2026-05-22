@@ -11,7 +11,36 @@ JSON payload. `canCreate/canEdit/canDelete` → false (audit log immutable).
 
 ---
 
-## 2. Audyt funkcjonalny horse_owner panel
+## 2. Audyt funkcjonalny horse_owner panel ✅ PARTIAL (PR #395)
+
+Przeprowadzony 3 równoległymi Explore agentami. Audit ustalił że
+większość założeń jest OK (welcome mail leci przez `Password::sendResetLink`
+w `CreateTenant`, `InvoiceShow` ma pay button przez `OwnerInvoicePaymentService`,
+RBAC scope per-tenant prawidłowe).
+
+**Naprawione w PR #395:**
+- `ViewTransportOrder` — była tylko liczba ofert ("3 nowych ofert"); teraz
+  pełna lista kart z nazwą przewoźnika, ceną, datą i klikalnym linkiem
+  "Otwórz ofertę" → public quote landing (`/transport/quote/{slug}/{token}`).
+  Owner nie musi już szukać w mailach.
+
+**Zostaje (lower priority, kolejne PR-y wg potrzeby):**
+
+- [ ] **"Connect to Stable" UI button na karcie konia** — owner widzi
+  pending boarding requests w sidebar, ale brak buttona "Połącz mojego
+  konia ze stajnią X" w `HorseResource`
+- [ ] **Invite origin card na dashboard** — jeśli rejestracja przyszła
+  przez `?stable=...&token=...`, zachowujemy `invite_origin` w
+  `tenant.settings`, ale nie ma UI na dashboardzie
+- [ ] **Recent Invoices widget** — dedicated "Ostatnie FV" zamiast
+  generic `LastOwnerActivityWidget`
+- [ ] **`QuoteSentForOwnerNotification`** — gdy carrier wysyła ofertę,
+  brak database+mail dla ownera w panelu (`OwnerNotificationDispatcher`
+  do reuse)
+
+---
+
+### Original scope (archive — zostaje dla referencji)
 
 **Po co.** Po audycie RBAC vet/employee siostra dla horse_ownera. Sprawdzić
 realny flow z perspektywy właściciela konia:

@@ -123,6 +123,11 @@ return [
             'lead_missing' => 'Nie udało się pobrać szczegółów. Skontaktuj się z nami, jeśli problem się powtarza.',
         ],
 
+        'response' => [
+            'proposed_date' => 'Proponowany termin: :date',
+            'open' => 'Otwórz ofertę',
+        ],
+
         'empty' => [
             'heading' => 'Brak zamówień transportu',
             'description' => 'Złóż pierwsze zapytanie — porównaj oferty zweryfikowanych przewoźników.',

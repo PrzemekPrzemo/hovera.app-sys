@@ -121,6 +121,11 @@ return [
             'lead_missing' => 'Could not fetch details. Contact us if the issue persists.',
         ],
 
+        'response' => [
+            'proposed_date' => 'Proposed date: :date',
+            'open' => 'Open offer',
+        ],
+
         'empty' => [
             'heading' => 'No transport orders',
             'description' => 'Place your first request — compare offers from verified carriers.',
