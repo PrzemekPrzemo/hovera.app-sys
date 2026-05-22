@@ -11,8 +11,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Po pierwszym logowaniu w danym tenant'cie redirect na wizard
- * onboardingu (per panel). Wizard ustawia `tenant.settings.onboarding.
- * {completed_at|skipped_at}` → kolejne wizyty nie redirectują.
+ * onboardingu (per panel). Wizard `mount()` ustawia automatycznie
+ * `settings.onboarding.deferred_at` → od kolejnego requestu middleware
+ * NIE redirectuje już (user ma pełen dostęp do systemu).
+ *
+ * Trzy stany w settings.onboarding:
+ *   deferred_at — wizard widziany (silent mount); user może nawigować
+ *   skipped_at  — user kliknął "Pomiń wizard"
+ *   completed_at — user przeszedł wszystkie kroki + Finish
+ *
+ * Jakiekolwiek z 3 (wasOnboardingShown) → przepuszcza.
  *
  * Master admin (is_master_admin) zawsze przepuszczany — impersonation
  * debug nie powinien być blokowany przez wizard.
@@ -44,7 +52,10 @@ class RedirectToOnboarding
             return $next($request);
         }
 
-        if ($tenant->isOnboardingFinished()) {
+        // Wizard już raz widziany (deferred/skipped/completed) → middleware
+        // przepuszcza, user pracuje normalnie. Banner na dashboardzie + link
+        // w sidebar przypomina że można dokończyć.
+        if ($tenant->wasOnboardingShown()) {
             return $next($request);
         }
 

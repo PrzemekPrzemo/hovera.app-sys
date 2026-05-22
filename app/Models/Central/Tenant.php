@@ -239,13 +239,19 @@ class Tenant extends Model
     }
 
     /**
-     * Onboarding wizard state — czy tenant ukończył (lub świadomie
-     * pominął) guided tour. Stored w settings.onboarding.completed_at
-     * (ISO 8601 string) ALBO settings.onboarding.skipped_at.
+     * Onboarding wizard state — 3 wartości w settings.onboarding:
+     *   completed_at — user przeszedł wszystkie kroki + kliknął Finish
+     *   skipped_at   — user kliknął "Pomiń wizard" (świadoma decyzja)
+     *   deferred_at  — user otworzył wizard przynajmniej raz (silent —
+     *                  middleware przestaje redirectować, ale dashboard
+     *                  wciąż pokazuje banner "Dokończ onboarding")
      *
-     * Sprawdzane przez RedirectToOnboarding middleware na panelach
-     * /app /transport /owner — first login → redirect, post-completion
-     * normalny dashboard.
+     * `isOnboardingFinished` (completed/skipped) → banner się chowa.
+     * `wasOnboardingShown` (jakiekolwiek z 3) → middleware nie redirectuje.
+     *
+     * User-friendly UX: po pierwszym mount'cie wizarda automatycznie
+     * ustawiamy `deferred_at` — od tego momentu user ma pełen dostęp do
+     * systemu, a wizard pozostaje dostępny przez sidebar/banner.
      */
     public function isOnboardingFinished(): bool
     {
@@ -254,18 +260,32 @@ class Tenant extends Model
         return ! empty($onb['completed_at']) || ! empty($onb['skipped_at']);
     }
 
+    public function wasOnboardingShown(): bool
+    {
+        $onb = (array) (data_get($this->settings, 'onboarding') ?? []);
+
+        return ! empty($onb['completed_at'])
+            || ! empty($onb['skipped_at'])
+            || ! empty($onb['deferred_at']);
+    }
+
     /**
-     * Oznacz wizard jako ukończony (user przeszedł wszystkie kroki LUB
-     * świadomie skipnął). Idempotent — kolejny call nie nadpisuje
-     * istniejącego timestamp'u (single source of truth dla „first time").
+     * Oznacz wizard jako ukończony / pominięty / odroczony. Idempotent —
+     * kolejny call nie nadpisuje istniejącego timestamp'u (single source
+     * of truth dla "kiedy user faktycznie kliknął" albo "kiedy pierwszy
+     * raz zobaczył wizarda").
      *
-     * @param  'completed'|'skipped'  $mode
+     * @param  'completed'|'skipped'|'deferred'  $mode
      */
     public function markOnboardingFinished(string $mode = 'completed'): void
     {
         $settings = (array) ($this->settings ?? []);
         $onb = (array) ($settings['onboarding'] ?? []);
-        $key = $mode === 'skipped' ? 'skipped_at' : 'completed_at';
+        $key = match ($mode) {
+            'skipped' => 'skipped_at',
+            'deferred' => 'deferred_at',
+            default => 'completed_at',
+        };
         if (! empty($onb[$key])) {
             return;
         }

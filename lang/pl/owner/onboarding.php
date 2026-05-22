@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     'title' => 'Witaj, właścicielu konia',
+    'navigation_label' => 'Pierwsze kroki',
     'welcome' => [
         'heading' => 'Krok 1 z 3 — Twoje konto Hovera',
         'body' => 'Konto bezpłatne na zawsze — opłacają je stajnie i przewoźnicy. Pokażemy Ci 3 najważniejsze rzeczy: jak dodać konia, jak znaleźć ulubionych przewoźników i jak zamówić pierwszy transport.',

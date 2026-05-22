@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     'title' => 'Witaj w Hovera',
+    'navigation_label' => 'Pierwsze kroki',
     'welcome' => [
         'heading' => 'Krok 1 z 3 — Twoja stajnia w Hoverze',
         'body' => 'Przeprowadzimy Cię przez 3 najważniejsze ustawienia. Każdy krok ma link do właściwej strony — wypełnij na spokojnie albo pomiń i wróć później.',

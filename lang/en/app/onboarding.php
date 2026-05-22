@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     'title' => 'Welcome to Hovera',
+    'navigation_label' => 'First steps',
     'welcome' => [
         'heading' => 'Step 1 of 3 — your stable on Hovera',
         'body' => 'We will walk you through the 3 most important settings. Each step links to the relevant page — fill it in now or skip and come back later.',

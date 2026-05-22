@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 return [
     'title' => 'Welcome, horse owner',
+    'navigation_label' => 'First steps',
     'welcome' => [
         'heading' => 'Step 1 of 3 — your Hovera account',
         'body' => 'Free forever — paid for by the stables and carriers. We will show you 3 essentials: how to add a horse, how to find favourite carriers, and how to order your first transport.',

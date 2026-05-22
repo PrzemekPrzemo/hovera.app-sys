@@ -71,6 +71,44 @@ class OnboardingWizardTest extends TestCase
         $this->assertSame($first, $second);
     }
 
+    public function test_mark_onboarding_finished_deferred_sets_deferred_at(): void
+    {
+        $tenant = $this->makeTenant(TenantType::HorseOwner);
+        $tenant->markOnboardingFinished('deferred');
+        $tenant->refresh();
+
+        // Silent deferral — wizard byl pokazany, ale user nie kliknal
+        // ani Finish ani Skip. Middleware go nie zatrzymuje, ale banner
+        // wciaz pokazuje "dokoncz onboarding".
+        $this->assertFalse($tenant->isOnboardingFinished());
+        $this->assertTrue($tenant->wasOnboardingShown());
+        $this->assertNotEmpty(data_get($tenant->settings, 'onboarding.deferred_at'));
+    }
+
+    public function test_completed_and_skipped_also_count_as_shown(): void
+    {
+        $a = $this->makeTenant(TenantType::Stable);
+        $a->markOnboardingFinished('completed');
+        $this->assertTrue($a->fresh()->wasOnboardingShown());
+
+        $b = $this->makeTenant(TenantType::Transporter);
+        $b->markOnboardingFinished('skipped');
+        $this->assertTrue($b->fresh()->wasOnboardingShown());
+    }
+
+    public function test_middleware_passes_through_when_only_deferred(): void
+    {
+        // User pierwszy raz wszedl na wizarda (auto-deferred w mount),
+        // potem kliknal w nawigacje do innej strony. Middleware musi go
+        // przepuscic — inaczej user utknie w petli "redirect na wizard".
+        $tenant = $this->makeTenant(TenantType::HorseOwner);
+        $tenant->markOnboardingFinished('deferred');
+        $tenant->refresh();
+
+        $response = $this->runMiddleware($tenant, '/owner', '/owner/horses');
+        $this->assertSame(200, $response->getStatusCode());
+    }
+
     public function test_middleware_redirects_unfinished_stable_to_app_wizard(): void
     {
         $tenant = $this->makeTenant(TenantType::Stable);
