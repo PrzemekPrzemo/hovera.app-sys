@@ -88,3 +88,14 @@ Schedule::job(new GenerateMonthlyBoardingInvoicesJob)
     ->timezone('Europe/Warsaw')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Fuel price snapshot — codziennie o 06:00 Warsaw (po publikacji nowych
+// cen przez e-petrol.pl, przed start dnia pracy klienta). Wynik trafia
+// do central `fuel_prices` (unique key: type+date+source). Bez tego
+// transporter quotes oparte na cenie paliwa lecą po stale starym
+// snapshocie. Patrz TransportScrapeFuelCommand docblock.
+Schedule::command('transport:scrape-fuel')
+    ->dailyAt('06:00')
+    ->timezone('Europe/Warsaw')
+    ->withoutOverlapping()
+    ->onOneServer();
