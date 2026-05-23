@@ -60,6 +60,10 @@ return [
         'locale_help' => 'Choose the default UI language. You can change it anytime.',
     ],
 
+    'form' => [
+        'errors_heading' => 'Please fix the errors below:',
+    ],
+
     'yes' => 'Yes',
     'no' => 'No',
     'none' => 'None',

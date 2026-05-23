@@ -60,6 +60,10 @@ return [
         'locale_help' => 'Wybierz domyślny język interfejsu. Możesz w każdej chwili zmienić.',
     ],
 
+    'form' => [
+        'errors_heading' => 'Popraw poniższe błędy:',
+    ],
+
     'yes' => 'Tak',
     'no' => 'Nie',
     'none' => 'Brak',

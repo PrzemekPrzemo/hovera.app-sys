@@ -43,6 +43,9 @@ return [
 
     'action' => [
         'submit' => 'Send to KSeF',
+        'submit_tooltip' => 'Requires a handshake with the Ministry of Finance (challenge + encryption). '
+            .'The first submission after a longer break takes a couple of seconds — '
+            .'subsequent ones within 2h reuse the cached session.',
         'submit_confirm' => 'Submit this invoice to KSeF? This cannot be undone.',
         'submit_bulk' => 'Send selected to KSeF',
         'submit_bulk_confirm' => 'Submit selected invoices (max 50) to KSeF? Irreversible.',
