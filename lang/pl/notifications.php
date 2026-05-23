@@ -82,6 +82,7 @@ return [
         'attachments_one' => '📎 1 załącznik',
         'attachments_many' => '📎 :count załączniki',
         'action' => 'Otwórz wiadomość',
+        'title' => 'Nowa wiadomość o koniu',
     ],
 
     'owner_message_to_stable' => [
@@ -189,5 +190,24 @@ return [
         'subject' => ':horse — pensjonat odrzucony',
         'line_intro' => 'Właściciel **:owner** odrzucił prośbę o pensjonat dla konia **:horse** z powodem:',
         'line_contact' => 'Skontaktuj się bezpośrednio z właścicielem (:email) jeśli sytuacja wymaga wyjaśnienia.',
+    ],
+
+    // Krótkie tytuły push (APN/FCM) — używane jako `title` na ekranie
+    // blokady telefonu. Body dostarczany jest osobno (preview/treść).
+    'client_message' => [
+        'title' => 'Nowa wiadomość od klienta',
+    ],
+
+    'calendar' => [
+        'title' => 'Zmiana w kalendarzu',
+        'status' => 'Status: :status',
+    ],
+
+    'invoice' => [
+        'title' => 'Nowa faktura',
+    ],
+
+    'stable_activity' => [
+        'title' => 'Nowe zadanie w stajni',
     ],
 ];

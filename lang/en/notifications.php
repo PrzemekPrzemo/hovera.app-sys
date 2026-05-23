@@ -81,6 +81,7 @@ return [
         'attachments_one' => '📎 1 attachment',
         'attachments_many' => '📎 :count attachments',
         'action' => 'Open message',
+        'title' => 'New horse message',
     ],
 
     'owner_message_to_stable' => [
@@ -187,5 +188,24 @@ return [
         'subject' => ':horse — boarding declined',
         'line_intro' => 'Owner **:owner** declined the boarding request for horse **:horse** with the reason:',
         'line_contact' => 'Contact the owner directly (:email) if clarification is needed.',
+    ],
+
+    // Short push titles (APN/FCM) — shown as `title` on the device lock
+    // screen. Body is delivered separately (preview/content).
+    'client_message' => [
+        'title' => 'New message from a client',
+    ],
+
+    'calendar' => [
+        'title' => 'Calendar change',
+        'status' => 'Status: :status',
+    ],
+
+    'invoice' => [
+        'title' => 'New invoice',
+    ],
+
+    'stable_activity' => [
+        'title' => 'New stable task',
     ],
 ];
