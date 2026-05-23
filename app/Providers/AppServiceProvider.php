@@ -24,7 +24,11 @@ use App\Services\Integrations\TodoistClient;
 use App\Services\Ksef\CentralKsefService;
 use App\Services\TenantAuditLogger;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -157,6 +161,46 @@ class AppServiceProvider extends ServiceProvider
         // domenie — np. lh.pl serwuje *.lh.pl na smtp.galoptrans.pl).
         // Bez tego TLS handshake failuje z "peer cert CN mismatch".
         $this->registerSmtpStreamOptionsExtension();
+
+        // Performance monitoring — domyślnie OFF, włącz przez env (zobacz
+        // docs/PERFORMANCE.md). Brak narzutu gdy wyłączone.
+        $this->registerPerformanceMonitoring();
+    }
+
+    /**
+     * Dwa opt-in flagi do tropienia performance issues bez instalowania
+     * Telescope. Defaults OFF — zero kosztu w produkcji bez konfiguracji.
+     *
+     *   HOVERA_SLOW_QUERY_LOG_MS=100
+     *     Loguje każde query > N ms (z connection + bindings) do default
+     *     log channel. Włącz w prod tylko na czas debugu — log spam.
+     *
+     *   HOVERA_PREVENT_LAZY_LOADING=true
+     *     Model::preventLazyLoading() — lazy load relacji rzuca exception
+     *     zamiast po cichu odpalać N+1. Włącz lokalnie / w CI żeby wykryć
+     *     brakujące `->with()` przed deployem. NIE włączaj w prod (user
+     *     widzi 500 zamiast wolniejszej strony).
+     */
+    private function registerPerformanceMonitoring(): void
+    {
+        $thresholdMs = (int) env('HOVERA_SLOW_QUERY_LOG_MS', 0);
+        if ($thresholdMs > 0) {
+            DB::listen(function (QueryExecuted $query) use ($thresholdMs): void {
+                if ($query->time < $thresholdMs) {
+                    return;
+                }
+                Log::warning('Slow query', [
+                    'connection' => $query->connectionName,
+                    'time_ms' => round($query->time, 2),
+                    'sql' => $query->sql,
+                    'bindings' => $query->bindings,
+                ]);
+            });
+        }
+
+        if (filter_var(env('HOVERA_PREVENT_LAZY_LOADING', false), FILTER_VALIDATE_BOOLEAN)) {
+            Model::preventLazyLoading();
+        }
     }
 
     /**
