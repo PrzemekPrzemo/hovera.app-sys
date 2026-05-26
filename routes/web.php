@@ -257,6 +257,8 @@ Route::middleware(['web', 'auth'])->prefix('impersonation')->name('impersonation
 Route::middleware(['web', 'auth'])->prefix('app/billing')->name('billing.')->group(function () {
     Route::get('/', [BillingController::class, 'show'])->name('show');
     Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout');
+    Route::post('/payu/checkout', [BillingController::class, 'payuCheckout'])->name('payu.checkout');
+    Route::post('/payu/cancel', [BillingController::class, 'payuCancel'])->name('payu.cancel');
     Route::get('/return', [BillingController::class, 'return'])->name('return');
     Route::post('/portal', [BillingController::class, 'portal'])->name('portal');
 });

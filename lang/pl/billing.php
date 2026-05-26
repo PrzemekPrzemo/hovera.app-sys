@@ -71,6 +71,29 @@ return [
         'label' => 'Opłata wdrożeniowa — plan :plan',
         'description' => 'Jednorazowa opłata aktywacyjna doliczana przy starcie subskrypcji.',
     ],
+
+    'payment_method' => [
+        'label' => 'Metoda płatności',
+        'stripe' => 'Karta — Stripe',
+        'stripe_hint' => 'Międzynarodowe karty, EUR/PLN, wygodny portal samoobsługowy.',
+        'payu' => 'PayU (karta + BLIK + przelew)',
+        'payu_hint' => 'Polskie metody płatności, niższa prowizja, szybki BLIK.',
+    ],
+
+    'payu' => [
+        'card' => [
+            'heading' => 'Twoja karta (PayU)',
+            'brand_mask' => ':brand :mask',
+            'expires' => 'Wygasa: :expires',
+            'no_expiry' => 'Wygasa: nieznane',
+            'cancel_cta' => 'Anuluj odnawianie',
+            'cancel_confirm' => 'Na pewno anulować? Dostęp masz do końca opłaconego okresu, ale po tej dacie subskrypcja wygaśnie i będziesz musiał wybrać plan ponownie.',
+        ],
+        'cancel_success' => 'Anulowano. Karta usunięta — dostęp do końca opłaconego okresu, potem subskrypcja wygaśnie.',
+        'status' => [
+            'past_due' => 'Płatność nie powiodła się — sprawdź kartę',
+        ],
+    ],
     'onboarding_fee_label' => 'jednorazowo (opłata wdrożeniowa)',
     'vat_notice' => 'Ceny netto. Do każdej kwoty doliczamy 23% VAT.',
     'vat_notice_short' => '+ 23% VAT',

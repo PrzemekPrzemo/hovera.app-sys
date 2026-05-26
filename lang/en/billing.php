@@ -71,6 +71,29 @@ return [
         'label' => 'Onboarding fee — :plan plan',
         'description' => 'One-time activation fee charged at the start of the subscription.',
     ],
+
+    'payment_method' => [
+        'label' => 'Payment method',
+        'stripe' => 'Card — Stripe',
+        'stripe_hint' => 'International cards, EUR/PLN, convenient self-service portal.',
+        'payu' => 'PayU (card + BLIK + bank transfer)',
+        'payu_hint' => 'Polish payment methods, lower fees, fast BLIK.',
+    ],
+
+    'payu' => [
+        'card' => [
+            'heading' => 'Your card (PayU)',
+            'brand_mask' => ':brand :mask',
+            'expires' => 'Expires: :expires',
+            'no_expiry' => 'Expires: unknown',
+            'cancel_cta' => 'Cancel recurring',
+            'cancel_confirm' => 'Cancel for sure? You keep access until the end of the paid period, but after that the subscription will expire and you will need to pick a plan again.',
+        ],
+        'cancel_success' => 'Cancelled. Card removed — access until the end of the paid period, then the subscription expires.',
+        'status' => [
+            'past_due' => 'Last payment failed — check your card',
+        ],
+    ],
     'onboarding_fee_label' => 'one-time (onboarding fee)',
     'vat_notice' => 'Prices are net. 23% VAT is added to every amount.',
     'vat_notice_short' => '+ 23% VAT',
