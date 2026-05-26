@@ -89,5 +89,22 @@ return [
             'thanks' => 'Glad to have you with us!',
             'signoff' => 'Best regards,',
         ],
+        'payu_charge_failed' => [
+            'subject' => 'Subscription payment failed — :stable',
+            'greeting' => 'Hi!',
+            'intro' => 'We could not charge your recurring payment for the :plan subscription at :stable.',
+            'attempt' => 'This is attempt #:attempts. We will try again in :next_in_days days.',
+            'fix' => 'Common causes: insufficient funds, expired card, or a bank block. Please review your payment method in the billing panel to avoid your subscription being suspended.',
+            'cta' => 'Review payment method',
+            'signoff' => '— Hovera',
+        ],
+        'payu_subscription_suspended' => [
+            'subject' => 'Subscription suspended — :stable',
+            'greeting' => 'Hi!',
+            'intro' => 'Unfortunately, after 3 attempts we could not charge your :plan subscription for :stable.',
+            'consequence' => 'Your subscription has been suspended. Your data is safe, but access to premium features is paused until you start a new subscription.',
+            'cta' => 'Resume subscription',
+            'signoff' => '— Hovera',
+        ],
     ],
 ];
