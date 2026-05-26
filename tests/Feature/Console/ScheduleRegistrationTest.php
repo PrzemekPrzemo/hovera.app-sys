@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Console;
 
+use App\Jobs\Billing\ChargeRecurringPayUSubscriptionsJob;
+use App\Jobs\Owner\GenerateMonthlyBoardingInvoicesJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Tests\TestCase;
 
@@ -28,6 +30,16 @@ class ScheduleRegistrationTest extends TestCase
         'transport:scrape-fuel',
     ];
 
+    /**
+     * Lista krytycznych jobów (klasy queue jobs, nie artisan commands).
+     * Schedule::job() rejestruje CallbackEvent (a nie command), więc
+     * sprawdzamy je przez inny mechanizm niż command list.
+     */
+    private const EXPECTED_JOBS = [
+        GenerateMonthlyBoardingInvoicesJob::class,
+        ChargeRecurringPayUSubscriptionsJob::class,
+    ];
+
     public function test_all_critical_commands_are_scheduled(): void
     {
         $schedule = $this->app->make(Schedule::class);
@@ -44,6 +56,22 @@ class ScheduleRegistrationTest extends TestCase
                 $expected,
                 $registered,
                 "Schedule for `{$expected}` is missing from routes/console.php"
+            );
+        }
+    }
+
+    public function test_all_critical_jobs_are_scheduled(): void
+    {
+        $schedule = $this->app->make(Schedule::class);
+        $descriptions = collect($schedule->events())
+            ->map(fn ($event) => $event->getSummaryForDisplay())
+            ->all();
+
+        foreach (self::EXPECTED_JOBS as $jobClass) {
+            $found = collect($descriptions)->contains(fn (string $d) => str_contains($d, $jobClass));
+            $this->assertTrue(
+                $found,
+                "Schedule for job `{$jobClass}` is missing from routes/console.php"
             );
         }
     }

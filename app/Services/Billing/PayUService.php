@@ -8,10 +8,13 @@ use App\Domain\Transport\Sponsored\SponsoredPlacementService;
 use App\Models\Central\AddonPurchase;
 use App\Models\Central\Invoice;
 use App\Models\Central\Subscription;
+use App\Notifications\Billing\PayuChargeFailedNotification;
+use App\Notifications\Billing\PayuSubscriptionSuspendedNotification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -207,6 +210,179 @@ class PayUService
     }
 
     /**
+     * Cykliczny charge — server-to-server bez user-action. Używa zapisanego
+     * card tokenu (encrypted w `subscriptions.payu_recurring_token`) z
+     * `recurring=STANDARD`. PayU ack natychmiast SUCCESS, ale rzeczywista
+     * akceptacja przychodzi przez webhook (COMPLETED → success path,
+     * REJECTED → markChargeFailed → dunning).
+     *
+     * `extOrderId` w formacie `recur_{subscription_id}_{YYYY-MM}` — period
+     * suffix zapewnia idempotencję miesięczną (drugi tick job'a na ten sam
+     * okres dostanie duplicate order error z PayU).
+     *
+     * @return bool true gdy order utworzony (PayU ack SUCCESS); false gdy
+     *              ack BUSINESS_ERROR (np. token unieważniony przez PayU
+     *              przed wysłaniem) — caller decyduje czy to retry/fail.
+     *
+     * @throws InvalidArgumentException gdy brak tokenu / zła kwota
+     */
+    public function chargeRecurring(Invoice $invoice, Subscription $subscription): bool
+    {
+        if (! $subscription->hasPayuRecurring()) {
+            throw new InvalidArgumentException(
+                'Subscription has no payu_recurring_token — call createRecurringSetup() first.',
+            );
+        }
+        if ((int) $invoice->total_cents <= 0) {
+            throw new InvalidArgumentException('Recurring invoice total must be > 0.');
+        }
+        if ($invoice->subscription_id !== $subscription->id) {
+            throw new InvalidArgumentException('Invoice does not belong to the given subscription.');
+        }
+
+        $period = now()->format('Y-m');
+        $extOrderId = self::EXT_ORDER_PREFIX_RECURRING.$subscription->id.'_'.$period;
+
+        $payload = $this->buildOrderPayload(
+            extOrderId: $extOrderId,
+            amountCents: (int) $invoice->total_cents,
+            currency: (string) ($invoice->currency ?: 'PLN'),
+            description: $this->recurringDescription($invoice, $subscription),
+            buyerEmail: $this->resolveEmail($invoice),
+            notifyUrl: route('webhooks.payu'),
+            continueUrl: route('webhooks.payu.return', ['invoice_id' => $invoice->id]),
+        );
+
+        // STANDARD = re-charge przy użyciu już zapisanego tokenu. Nie ma
+        // `customerIp` z request'u (server-side), więc loopback.
+        $payload['recurring'] = 'STANDARD';
+        $payload['customerIp'] = '127.0.0.1';
+        $payload['payMethods'] = [
+            'payMethod' => [
+                'type' => 'CARD_TOKEN',
+                'value' => (string) $subscription->payu_recurring_token,
+            ],
+        ];
+
+        try {
+            $order = $this->createOrder($payload);
+        } catch (RuntimeException $e) {
+            // PayU odrzucił już na poziomie createOrder (np. token nieważny)
+            // — mark failed od razu, dunning policy zdecyduje co dalej.
+            Log::warning('PayU recurring charge — createOrder failed', [
+                'subscription_id' => $subscription->id,
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage(),
+            ]);
+            $this->markChargeFailed($subscription, $invoice, $e->getMessage());
+
+            return false;
+        }
+
+        $invoice->forceFill([
+            'payu_order_id' => $order['orderId'],
+            'payu_ext_order_id' => $extOrderId,
+            'payu_payment_url' => $order['redirectUri'],
+        ])->save();
+
+        return true;
+    }
+
+    /**
+     * Stripe-like dunning policy — escalation po liczniku failed_attempts:
+     *   1 → next retry +3d  (status=past_due, email do tenant'a)
+     *   2 → next retry +7d  (status=past_due, email)
+     *   3 → suspend()       (status=cancelled, email do tenant'a + admin'a)
+     *
+     * Sub nie jest natychmiast suspended po 1. fail'u — daje user'owi szansę
+     * naprawić kartę zanim straci dostęp. Łącznie ~14 dni grace period.
+     *
+     * Email jest dispatch'owany przez Mail facade (queued), więc job nie
+     * blokuje się na SMTP.
+     */
+    public function markChargeFailed(Subscription $subscription, ?Invoice $invoice = null, ?string $reason = null): void
+    {
+        $attempts = (int) $subscription->payu_failed_attempts + 1;
+        $shouldSuspend = $attempts >= 3;
+
+        $subscription->forceFill([
+            'payu_failed_attempts' => $attempts,
+            'payu_last_failed_at' => now(),
+            'payu_last_charge_status' => 'failed',
+            'status' => $shouldSuspend ? 'cancelled' : 'past_due',
+            'cancelled_at' => $shouldSuspend ? now() : $subscription->cancelled_at,
+        ])->save();
+
+        if ($invoice !== null) {
+            $invoice->forceFill(['status' => 'open'])->save();
+        }
+
+        // Email side-effect — soft-fail żeby SMTP outage nie ubił dunning
+        // state machine.
+        try {
+            if ($shouldSuspend) {
+                $this->sendSuspendedNotification($subscription, $reason);
+            } else {
+                $this->sendChargeFailedNotification($subscription, $attempts, $reason);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('PayU dunning email failed', [
+                'subscription_id' => $subscription->id,
+                'attempts' => $attempts,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Po sukcesie cyklicznego charge'a — advance period, reset failed counter.
+     */
+    public function markChargeSucceeded(Subscription $subscription, Invoice $invoice): void
+    {
+        $cycle = $subscription->billing_cycle === 'yearly' ? 'addYear' : 'addMonth';
+        // Anchor advance do current_period_end (a nie now()), żeby nie tracić
+        // dni gdy job odpalił późno po expiry.
+        $newEnd = ($subscription->current_period_end ?? now())->copy()->{$cycle}();
+
+        $subscription->forceFill([
+            'payu_failed_attempts' => 0,
+            'payu_last_charge_status' => 'success',
+            'status' => 'active',
+            'current_period_start' => $subscription->current_period_end ?? now(),
+            'current_period_end' => $newEnd,
+        ])->save();
+
+        $invoice->forceFill([
+            'paid_at' => now(),
+            'payu_paid_at' => now(),
+            'status' => 'paid',
+        ])->save();
+    }
+
+    private function sendChargeFailedNotification(Subscription $subscription, int $attempts, ?string $reason): void
+    {
+        $email = $this->resolveOwnerEmail($subscription->tenant);
+        Notification::route('mail', $email)->notify(
+            new PayuChargeFailedNotification(
+                subscription: $subscription,
+                attempts: $attempts,
+                reason: $reason,
+            ),
+        );
+    }
+
+    private function sendSuspendedNotification(Subscription $subscription, ?string $reason): void
+    {
+        $email = $this->resolveOwnerEmail($subscription->tenant);
+        Notification::route('mail', $email)->notify(
+            new PayuSubscriptionSuspendedNotification(
+                subscription: $subscription,
+                reason: $reason,
+            ),
+        );
+    }
+
+    /**
      * Webhook handler dla PayU notify URL — invoice path.
      * Idempotent — drugi webhook na zapłaconą FV zwraca true bez side-effect.
      *
@@ -241,6 +417,16 @@ class PayUService
             return false;
         }
 
+        // FAIL terminal — dla recurring path'a routujemy na dunning,
+        // dla setup/legacy ack i zwracamy.
+        if (in_array($status, ['CANCELED', 'REJECTED'], true)) {
+            if (str_starts_with($extOrderId, self::EXT_ORDER_PREFIX_RECURRING)) {
+                $this->routeRecurringFailure($orderId, $extOrderId, $status);
+            }
+
+            return true;
+        }
+
         if ($status !== 'COMPLETED') {
             // Akceptujemy ack ale nie flipujemy statusu (PENDING/WAITING/etc.).
             return true;
@@ -265,6 +451,19 @@ class PayUService
             ]);
 
             return false;
+        }
+
+        // Recurring charge — route przez markChargeSucceeded (advance
+        // period + reset counter). Setup i zwykła jednorazowa idą przez
+        // krótki flip paid_at — setup dodatkowo aktywuje sub.
+        if (str_starts_with($extOrderId, self::EXT_ORDER_PREFIX_RECURRING)) {
+            $subscription = Subscription::query()->find($invoice->subscription_id);
+            if ($subscription !== null) {
+                $this->markChargeSucceeded($subscription, $invoice);
+
+                return true;
+            }
+            // Sub orphan — postępujemy jak zwykła FV.
         }
 
         $invoice->forceFill([
@@ -595,6 +794,38 @@ class PayUService
         $plan = $subscription->plan?->name ?? $invoice->plan_code ?? 'plan';
 
         return 'Hovera subskrypcja '.$plan.' — pierwsza płatność (FV '.$invoice->number.')';
+    }
+
+    private function recurringDescription(Invoice $invoice, Subscription $subscription): string
+    {
+        $plan = $subscription->plan?->name ?? $invoice->plan_code ?? 'plan';
+
+        return 'Hovera subskrypcja '.$plan.' — FV '.$invoice->number;
+    }
+
+    /**
+     * Webhook'owy fail recurring charge'a — odpalany dla `recur_*` orders
+     * gdy status=CANCELED/REJECTED. Znajduje invoice/sub i deleguje do
+     * markChargeFailed (dunning state machine).
+     */
+    private function routeRecurringFailure(string $orderId, string $extOrderId, string $status): void
+    {
+        $invoice = Invoice::query()->where('payu_order_id', $orderId)->first();
+        $subscription = $invoice
+            ? Subscription::query()->find($invoice->subscription_id)
+            : null;
+
+        if ($subscription === null) {
+            Log::warning('PayU recurring webhook: subscription not found for failed order', [
+                'order_id' => $orderId,
+                'ext_order_id' => $extOrderId,
+                'status' => $status,
+            ]);
+
+            return;
+        }
+
+        $this->markChargeFailed($subscription, $invoice, "PayU webhook status={$status}");
     }
 
     private function addonDescription(AddonPurchase $purchase): string

@@ -39,6 +39,7 @@ class Invoice extends Model
         'issued_at', 'due_at', 'paid_at', 'pdf_path',
         'stripe_invoice_id',
         'p24_session_id', 'p24_payment_url', 'p24_order_id', 'p24_paid_at',
+        'payu_order_id', 'payu_ext_order_id', 'payu_payment_url', 'payu_paid_at',
         'ksef_status', 'ksef_uuid', 'ksef_reference', 'ksef_pushed_at', 'ksef_last_response',
         'peppol_status',
         'snapshot', 'payload_snapshot',

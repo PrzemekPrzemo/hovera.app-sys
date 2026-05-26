@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Jobs\Billing\ChargeRecurringPayUSubscriptionsJob;
 use App\Jobs\Owner\GenerateMonthlyBoardingInvoicesJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -96,6 +97,17 @@ Schedule::job(new GenerateMonthlyBoardingInvoicesJob)
 // snapshocie. Patrz TransportScrapeFuelCommand docblock.
 Schedule::command('transport:scrape-fuel')
     ->dailyAt('06:00')
+    ->timezone('Europe/Warsaw')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// PayU recurring billing — codziennie 02:00 Warsaw pobiera cykliczne
+// opłaty z aktywnych subskrypcji których current_period_end już minął.
+// Idempotent: invoice z prefiksem `recur_{sub}_{YYYY-MM}` blokuje
+// duplikaty. Dunning (3+7d retry, suspend po 14d) leci przez webhook.
+// Patrz docs/BILLING.md (PR 3).
+Schedule::job(new ChargeRecurringPayUSubscriptionsJob)
+    ->dailyAt('02:00')
     ->timezone('Europe/Warsaw')
     ->withoutOverlapping()
     ->onOneServer();

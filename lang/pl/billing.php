@@ -89,5 +89,22 @@ return [
             'thanks' => 'Cieszymy się, że zostajesz z nami!',
             'signoff' => 'Pozdrawiamy,',
         ],
+        'payu_charge_failed' => [
+            'subject' => 'Nie udało się pobrać opłaty subskrypcji — :stable',
+            'greeting' => 'Cześć!',
+            'intro' => 'Nie udało nam się pobrać cyklicznej opłaty za subskrypcję :plan w stajni :stable.',
+            'attempt' => 'To :attempts próba pobrania. Spróbujemy ponownie za :next_in_days dni.',
+            'fix' => 'Najczęstsze przyczyny: niewystarczające środki, karta wygasła lub blokada przez bank. Sprawdź kartę w panelu rozliczeń, żeby uniknąć zawieszenia subskrypcji.',
+            'cta' => 'Sprawdź metodę płatności',
+            'signoff' => '— Hovera',
+        ],
+        'payu_subscription_suspended' => [
+            'subject' => 'Subskrypcja zawieszona — :stable',
+            'greeting' => 'Cześć!',
+            'intro' => 'Niestety, mimo 3 prób nie udało się pobrać opłaty za subskrypcję :plan dla stajni :stable.',
+            'consequence' => 'Subskrypcja została zawieszona. Twoje dane są bezpieczne, ale dostęp do funkcji premium jest wstrzymany do momentu opłacenia nowej subskrypcji.',
+            'cta' => 'Wznów subskrypcję',
+            'signoff' => '— Hovera',
+        ],
     ],
 ];
