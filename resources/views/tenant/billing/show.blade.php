@@ -98,7 +98,13 @@
         <span class="badge expired">{{ __('billing.status.trial_expired') }}</span>
     @endif
 
-    @if ($hasSubscription)
+    @if (session('status'))
+        <div class="manage-row" style="margin-top: 1rem; background: #d1fae5; border-color: #6ee7b7;">
+            <div>{{ session('status') }}</div>
+        </div>
+    @endif
+
+    @if ($hasSubscription && $tenant->stripe_subscription_id !== null)
         <div class="manage-row" style="margin-top: 1rem;">
             <div>
                 <strong>{{ __('billing.manage.title') }}</strong>
@@ -111,10 +117,58 @@
         </div>
     @endif
 
+    @if ($payuSubscription !== null)
+        <div class="manage-row" style="margin-top: 1rem;">
+            <div>
+                <strong>{{ __('billing.payu.card.heading') }}</strong>
+                <div style="font-size: .9rem; color: #6b5b4a; margin-top: .25rem;">
+                    {{ __('billing.payu.card.brand_mask', [
+                        'brand' => $payuSubscription->payu_card_brand ?? '—',
+                        'mask' => $payuSubscription->payu_card_mask ?? '—',
+                    ]) }}
+                </div>
+                <div style="font-size: .85rem; color: #6b5b4a;">
+                    {{ $payuSubscription->payu_card_expires_at
+                        ? __('billing.payu.card.expires', ['expires' => $payuSubscription->payu_card_expires_at->format('m/Y')])
+                        : __('billing.payu.card.no_expiry') }}
+                </div>
+                @if ($payuSubscription->status === 'past_due')
+                    <div style="font-size: .85rem; color: #991b1b; margin-top: .25rem;">⚠ {{ __('billing.payu.status.past_due') }}</div>
+                @endif
+            </div>
+            <form method="POST" action="{{ route('billing.payu.cancel') }}" onsubmit="return confirm('{{ __('billing.payu.card.cancel_confirm') }}');">
+                @csrf
+                <button type="submit" class="secondary" style="border-color: #991b1b; color: #991b1b;">
+                    {{ __('billing.payu.card.cancel_cta') }}
+                </button>
+            </form>
+        </div>
+    @endif
+
     <div class="toggle" role="tablist" aria-label="{{ __('billing.period.label') }}">
         <button type="button" data-period="monthly" class="active">{{ __('billing.period.monthly') }}</button>
         <button type="button" data-period="yearly">{{ __('billing.period.yearly') }}</button>
     </div>
+
+    <fieldset style="border: 1px solid var(--line); border-radius: 8px; padding: .75rem 1rem; margin: 0 0 1.5rem; background: white;">
+        <legend style="padding: 0 .5rem; font-size: .85rem; font-weight: 600; color: #6b5b4a;">
+            {{ __('billing.payment_method.label') }}
+        </legend>
+        <label style="display: flex; align-items: flex-start; gap: .5rem; padding: .35rem 0; cursor: pointer;">
+            <input type="radio" name="payment_method" value="stripe" checked data-payment-method>
+            <span>
+                <strong style="font-size: .9rem;">{{ __('billing.payment_method.stripe') }}</strong><br>
+                <span style="font-size: .8rem; color: #6b5b4a;">{{ __('billing.payment_method.stripe_hint') }}</span>
+            </span>
+        </label>
+        <label style="display: flex; align-items: flex-start; gap: .5rem; padding: .35rem 0; cursor: pointer;">
+            <input type="radio" name="payment_method" value="payu" data-payment-method>
+            <span>
+                <strong style="font-size: .9rem;">{{ __('billing.payment_method.payu') }}</strong><br>
+                <span style="font-size: .8rem; color: #6b5b4a;">{{ __('billing.payment_method.payu_hint') }}</span>
+            </span>
+        </label>
+    </fieldset>
 
     <div class="grid">
         @foreach ($plans as $plan)
@@ -160,7 +214,11 @@
                 @if ($isCurrent)
                     <button class="primary" disabled>{{ __('billing.actions.current') }}</button>
                 @else
-                    <form method="POST" action="{{ route('billing.checkout') }}" data-plan-form>
+                    <form method="POST"
+                          action="{{ route('billing.checkout') }}"
+                          data-plan-form
+                          data-action-stripe="{{ route('billing.checkout') }}"
+                          data-action-payu="{{ route('billing.payu.checkout') }}">
                         @csrf
                         <input type="hidden" name="plan_code" value="{{ $plan->code }}">
                         <input type="hidden" name="period" value="monthly" data-period-input>
@@ -204,6 +262,24 @@
             document.querySelectorAll('button[data-checkout-monthly]').forEach(btn => {
                 const enabled = period === 'monthly' ? btn.dataset.checkoutMonthly === '1' : btn.dataset.checkoutYearly === '1';
                 btn.disabled = !enabled;
+            });
+        });
+
+        // Payment method picker — swap form action between Stripe i PayU.
+        // PayU dla MVP wspiera tylko monthly (yearly = osobny mini-PR).
+        function syncFormAction(method) {
+            document.querySelectorAll('form[data-plan-form]').forEach(form => {
+                const url = method === 'payu'
+                    ? form.dataset.actionPayu
+                    : form.dataset.actionStripe;
+                if (url) {
+                    form.setAttribute('action', url);
+                }
+            });
+        }
+        document.querySelectorAll('input[data-payment-method]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.checked) syncFormAction(radio.value);
             });
         });
     })();
