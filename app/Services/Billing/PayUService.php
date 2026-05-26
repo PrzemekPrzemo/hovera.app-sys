@@ -7,6 +7,8 @@ namespace App\Services\Billing;
 use App\Domain\Transport\Sponsored\SponsoredPlacementService;
 use App\Models\Central\AddonPurchase;
 use App\Models\Central\Invoice;
+use App\Models\Central\Subscription;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -41,6 +43,21 @@ class PayUService
     public const PROD_HOST = 'https://secure.payu.com';
 
     public const SANDBOX_HOST = 'https://secure.snd.payu.com';
+
+    /**
+     * Prefix `extOrderId` dla pierwszej (setup) płatności subskrypcji —
+     * webhook rozpoznaje że ma wyciągnąć card token z `paymentMethods[]`
+     * i zapisać na Subscription. Format: `sub_setup_{subscription_id}`.
+     */
+    public const EXT_ORDER_PREFIX_SETUP = 'sub_setup_';
+
+    /**
+     * Prefix `extOrderId` dla cyklicznych charge'ów — webhook routuje do
+     * recurring handlera (advance period_end albo dunning). Format:
+     * `recur_{subscription_id}_{YYYY-MM}`. Period suffix daje idempotencję
+     * miesięczną — drugi job tick na ten sam okres zwraca duplicate order.
+     */
+    public const EXT_ORDER_PREFIX_RECURRING = 'recur_';
 
     /**
      * OAuth token cache TTL — PayU access_token żyje 12h (43199s). Cache
@@ -142,11 +159,65 @@ class PayUService
     }
 
     /**
+     * Tworzy pierwsze (setup) zamówienie subskrypcji z `recurring=FIRST` —
+     * PayU tokenizuje kartę i w webhook'u zwraca `paymentMethods[0].value`,
+     * który zapisujemy na Subscription jako `payu_recurring_token`.
+     *
+     * Amount = total faktury (price_monthly + onboarding_fee, ustawione
+     * przy tworzeniu Invoice w UI/job). `cardOnFile=FIRST` daje PayU
+     * pozwolenie na re-charge bez user-action.
+     *
+     * @throws RuntimeException
+     */
+    public function createRecurringSetup(Invoice $invoice, Subscription $subscription): string
+    {
+        if ((int) $invoice->total_cents <= 0) {
+            throw new InvalidArgumentException('Setup invoice total must be > 0.');
+        }
+        if ($invoice->subscription_id === null || $invoice->subscription_id !== $subscription->id) {
+            throw new InvalidArgumentException('Setup invoice does not belong to the given subscription.');
+        }
+
+        $extOrderId = self::EXT_ORDER_PREFIX_SETUP.$subscription->id;
+        $payload = $this->buildOrderPayload(
+            extOrderId: $extOrderId,
+            amountCents: (int) $invoice->total_cents,
+            currency: (string) ($invoice->currency ?: 'PLN'),
+            description: $this->setupDescription($invoice, $subscription),
+            buyerEmail: $this->resolveEmail($invoice),
+            notifyUrl: route('webhooks.payu'),
+            continueUrl: route('webhooks.payu.return', ['invoice_id' => $invoice->id]),
+        );
+
+        // recurring=FIRST + cardOnFile=FIRST — autoryzuje pierwszą płatność
+        // i prosi PayU o zwrot tokenu w webhook'u. Następne charge'y idą
+        // przez chargeRecurring() z recurring=STANDARD.
+        $payload['recurring'] = 'FIRST';
+        $payload['cardOnFile'] = 'FIRST';
+
+        $order = $this->createOrder($payload);
+
+        $invoice->forceFill([
+            'payu_order_id' => $order['orderId'],
+            'payu_ext_order_id' => $extOrderId,
+            'payu_payment_url' => $order['redirectUri'],
+        ])->save();
+
+        return $order['redirectUri'];
+    }
+
+    /**
      * Webhook handler dla PayU notify URL — invoice path.
      * Idempotent — drugi webhook na zapłaconą FV zwraca true bez side-effect.
      *
      * PayU wysyła JSON z `order.status` ∈ PENDING|WAITING_FOR_CONFIRMATION|
      * COMPLETED|CANCELED|REJECTED. Mark as paid tylko gdy COMPLETED.
+     *
+     * Rozpoznajemy 3 rodzaje order po prefiksie `extOrderId`:
+     *  - `sub_setup_*` — pierwsza płatność subskrypcji → wyciągnij card
+     *    token z `paymentMethods[0]` i zapisz na Subscription.
+     *  - `recur_*` — cykliczna płatność (handler dodany w PR 2).
+     *  - inne — zwykła jednorazowa FV (legacy path).
      *
      * @param  array<string,mixed>  $payload
      */
@@ -201,7 +272,80 @@ class PayUService
             'payu_paid_at' => now(),
         ])->save();
 
+        // Setup płatność subskrypcji — wyciągnij card token z payload'a i
+        // zaktywuj sub. Brak tokenu w webhook'u nie jest fatal (możemy
+        // dostać go w późniejszym notify), ale logujemy bo to wymaga
+        // diagnozy.
+        if (str_starts_with($extOrderId, self::EXT_ORDER_PREFIX_SETUP)) {
+            $this->activateSubscriptionFromSetup($invoice, (array) ($payload['order'] ?? []));
+        }
+
         return true;
+    }
+
+    /**
+     * Po sukcesie pierwszej płatności subskrypcji: zapisuje encrypted
+     * token + metadane karty na Subscription, flipuje status na `active`
+     * i ustawia okres rozliczeniowy.
+     *
+     * Bezpieczne idempotent — drugi webhook na ten sam setup z tym samym
+     * tokenem nadpisze tę samą wartość. Brak `payMethods` w payload zwraca
+     * bez side-effect (PayU czasami wysyła notify przed tokenizacją;
+     * następny webhook dowiezie token).
+     *
+     * @param  array<string,mixed>  $orderPayload
+     */
+    private function activateSubscriptionFromSetup(Invoice $invoice, array $orderPayload): void
+    {
+        $subscription = Subscription::query()->find($invoice->subscription_id);
+        if ($subscription === null) {
+            Log::warning('PayU setup webhook: subscription not found', [
+                'invoice_id' => $invoice->id,
+                'subscription_id' => $invoice->subscription_id,
+            ]);
+
+            return;
+        }
+
+        $payMethods = (array) data_get($orderPayload, 'payMethod', data_get($orderPayload, 'payMethods', []));
+        // PayU wysyła pojedynczy obiekt LUB listę — normalizujemy do listy.
+        if (! array_is_list($payMethods)) {
+            $payMethods = [$payMethods];
+        }
+        $card = (array) ($payMethods[0] ?? []);
+        $token = (string) data_get($card, 'value', '');
+        $mask = (string) data_get($card, 'card.number', data_get($card, 'masked', ''));
+        $brand = (string) data_get($card, 'card.brand', data_get($card, 'brandImageUrl', ''));
+        $expMonth = (int) data_get($card, 'card.expirationMonth', 0);
+        $expYear = (int) data_get($card, 'card.expirationYear', 0);
+        $expiresAt = $expMonth > 0 && $expYear > 0
+            ? Carbon::createFromDate($expYear, $expMonth, 1)->endOfMonth()->toDateString()
+            : null;
+
+        $updates = [];
+        if ($token !== '' && ! $subscription->hasPayuRecurring()) {
+            $updates['payu_recurring_token'] = $token;
+            $updates['payu_card_mask'] = $mask !== '' ? $mask : null;
+            $updates['payu_card_brand'] = $brand !== '' ? $brand : null;
+            $updates['payu_card_expires_at'] = $expiresAt;
+            $updates['payu_last_charge_status'] = 'success';
+            $updates['payu_failed_attempts'] = 0;
+        }
+
+        // Aktywacja statusu + okresu rozliczeniowego — tylko jeśli sub
+        // jeszcze nie była aktywna (idempotent dla retry webhook'ów).
+        if (! in_array($subscription->status, ['active', 'past_due'], true)) {
+            $now = now();
+            $updates['status'] = 'active';
+            $updates['current_period_start'] = $now;
+            $updates['current_period_end'] = $subscription->billing_cycle === 'yearly'
+                ? $now->copy()->addYear()
+                : $now->copy()->addMonth();
+        }
+
+        if ($updates !== []) {
+            $subscription->forceFill($updates)->save();
+        }
     }
 
     /**
@@ -444,6 +588,13 @@ class PayUService
         $plan = $invoice->plan_code !== null ? ' ('.$invoice->plan_code.')' : '';
 
         return 'Hovera FV '.$invoice->number.$plan;
+    }
+
+    private function setupDescription(Invoice $invoice, Subscription $subscription): string
+    {
+        $plan = $subscription->plan?->name ?? $invoice->plan_code ?? 'plan';
+
+        return 'Hovera subskrypcja '.$plan.' — pierwsza płatność (FV '.$invoice->number.')';
     }
 
     private function addonDescription(AddonPurchase $purchase): string
