@@ -210,4 +210,36 @@ return [
     'stable_activity' => [
         'title' => 'Nowe zadanie w stajni',
     ],
+
+    // Powiadomienia o zbliżających się terminach ekspiracji health
+    // records (szczepienia, odrobaczenia, wizyty weta). Wysyłane w 3
+    // fazach (30/14/7 dni) przez `health-records:remind-due` command.
+    'health_reminder' => [
+        'push_title' => ':type — termin za chwilę',
+        'push_body' => ':horse — termin za :days dni',
+        'calendar_title' => ':type: :horse — przypomnienie',
+        'calendar_notes' => 'Wygenerowane automatycznie z health record. Oryginalny opis: :summary. Edytuj termin/wete/godzinę przed przyjazdem.',
+
+        'vet' => [
+            'subject' => 'Termin :type dla :horse — za :days dni',
+            'greeting' => 'Dzień dobry!',
+            'intro' => 'Termin :type konia :horse w stajni :stable upływa :due (za :days dni).',
+            'cta_line' => 'Sprawdź dotychczasową historię i zaplanuj wizytę.',
+            'cta' => 'Otwórz panel weterynarza',
+        ],
+        'owner' => [
+            'subject' => ':horse — zbliża się termin :type (:days dni)',
+            'greeting' => 'Cześć!',
+            'intro' => 'Twojemu koniu :horse w stajni :stable zbliża się termin :type — :due (za :days dni).',
+            'cta_line' => 'Skontaktuj się ze stajnią lub przewoźnikiem żeby zaplanować wizytę.',
+            'cta' => 'Zobacz oś czasu konia',
+        ],
+        'staff' => [
+            'subject' => ':type — :horse — za :days dni',
+            'greeting' => 'Dzień dobry!',
+            'intro' => 'Termin :type konia :horse upływa :due (za :days dni). Stajnia: :stable.',
+            'cta_line' => 'Skontaktuj się z wetem i zaplanuj wizytę — w kalendarzu jest już wpis tymczasowy do potwierdzenia.',
+            'cta' => 'Otwórz health records',
+        ],
+    ],
 ];

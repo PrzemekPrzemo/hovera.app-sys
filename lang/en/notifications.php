@@ -208,4 +208,35 @@ return [
     'stable_activity' => [
         'title' => 'New stable task',
     ],
+
+    // Health record expiry reminders — sent in 3 phases (30/14/7 days
+    // before next_due_at) by `health-records:remind-due` command.
+    'health_reminder' => [
+        'push_title' => ':type — upcoming due date',
+        'push_body' => ':horse — due in :days days',
+        'calendar_title' => ':type: :horse — reminder',
+        'calendar_notes' => 'Auto-generated from health record. Original summary: :summary. Edit time/vet/notes before the visit.',
+
+        'vet' => [
+            'subject' => ':type due for :horse — in :days days',
+            'greeting' => 'Hello!',
+            'intro' => 'The :type follow-up for :horse at :stable is due on :due (in :days days).',
+            'cta_line' => 'Review the horse history and schedule the visit.',
+            'cta' => 'Open vet panel',
+        ],
+        'owner' => [
+            'subject' => ':horse — :type due in :days days',
+            'greeting' => 'Hi!',
+            'intro' => 'Your horse :horse at :stable has a :type follow-up due on :due (in :days days).',
+            'cta_line' => 'Contact the stable or transporter to plan the visit.',
+            'cta' => 'View horse timeline',
+        ],
+        'staff' => [
+            'subject' => ':type — :horse — in :days days',
+            'greeting' => 'Hello!',
+            'intro' => 'The :type follow-up for :horse is due on :due (in :days days). Stable: :stable.',
+            'cta_line' => 'Contact the vet and plan the visit — a tentative calendar entry has been created.',
+            'cta' => 'Open health records',
+        ],
+    ],
 ];
