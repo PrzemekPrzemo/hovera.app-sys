@@ -23,6 +23,8 @@ class HealthRecord extends TenantModel
         'next_due_at', 'cost_cents',
         'attachments', 'metadata',
         'created_by_central_user_id',
+        'reminder_30d_sent_at', 'reminder_14d_sent_at', 'reminder_7d_sent_at',
+        'reminder_calendar_entry_id',
     ];
 
     protected function casts(): array
@@ -34,6 +36,9 @@ class HealthRecord extends TenantModel
             'metadata' => 'array',
             'cost_cents' => 'integer',
             'type' => HealthRecordType::class,
+            'reminder_30d_sent_at' => 'datetime',
+            'reminder_14d_sent_at' => 'datetime',
+            'reminder_7d_sent_at' => 'datetime',
         ];
     }
 

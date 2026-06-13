@@ -28,6 +28,7 @@ class ScheduleRegistrationTest extends TestCase
         'transport:ksef:poll-submitted',
         'transport:expire-featured',
         'transport:scrape-fuel',
+        'health-records:remind-due',
     ];
 
     /**

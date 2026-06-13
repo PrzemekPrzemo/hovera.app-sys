@@ -101,6 +101,17 @@ Schedule::command('transport:scrape-fuel')
     ->withoutOverlapping()
     ->onOneServer();
 
+// Health record reminders — codziennie 07:00 Warsaw skanuje stable'y
+// w poszukiwaniu HealthRecord'ów których next_due_at zbliża się w
+// fazach 30/14/7 dni. Wysyła vet+owner+staff i auto-tworzy CalendarEntry.
+// Per faza idempotent przez `reminder_{30,14,7}d_sent_at`. Patrz
+// HealthRecordsRemindDueCommand docblock.
+Schedule::command('health-records:remind-due')
+    ->dailyAt('07:00')
+    ->timezone('Europe/Warsaw')
+    ->withoutOverlapping()
+    ->onOneServer();
+
 // PayU recurring billing — codziennie 02:00 Warsaw pobiera cykliczne
 // opłaty z aktywnych subskrypcji których current_period_end już minął.
 // Idempotent: invoice z prefiksem `recur_{sub}_{YYYY-MM}` blokuje
