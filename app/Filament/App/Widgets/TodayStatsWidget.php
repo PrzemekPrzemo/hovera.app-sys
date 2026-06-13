@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\App\Widgets;
 
 use App\Services\Dashboard\TodayDashboardService;
+use App\Services\Tenancy\TenantRoleGate;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -20,9 +21,7 @@ class TodayStatsWidget extends BaseWidget
     {
         $snapshot = app(TodayDashboardService::class)->snapshot();
 
-        $unpaidTotal = number_format($snapshot['unpaid_invoices_total_cents'] / 100, 2, ',', ' ').' zł';
-
-        return [
+        $stats = [
             Stat::make(__('app/dashboard.today.bookings'), (string) $snapshot['bookings_today'])
                 ->description(__('app/dashboard.today.bookings_desc'))
                 ->descriptionIcon('heroicon-m-calendar-days')
@@ -40,8 +39,16 @@ class TodayStatsWidget extends BaseWidget
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
                 ->color($snapshot['overdue_care'] > 0 ? 'danger' : 'gray')
                 ->url(url('/app/health-records?tableFilters[overdue][isActive]=1')),
+        ];
 
-            Stat::make(__('app/dashboard.today.unpaid_invoices'), $unpaidTotal)
+        // Unpaid invoices tile — tylko dla FINANCE_STAFF. Vet/instructor/
+        // employee nie powinni widzieć kwot finansowych nawet jako KPI
+        // na dashboard'zie (canAccess InvoiceResource i tak ich blokuje,
+        // ale ten kafelek omijał gate). Po stronie role-blocked usera
+        // tablica skraca się do 3 stat-ów — layout sam się przegrupuje.
+        if (app(TenantRoleGate::class)->allows(TenantRoleGate::FINANCE_STAFF)) {
+            $unpaidTotal = number_format($snapshot['unpaid_invoices_total_cents'] / 100, 2, ',', ' ').' zł';
+            $stats[] = Stat::make(__('app/dashboard.today.unpaid_invoices'), $unpaidTotal)
                 ->description(trans_choice(
                     'app/dashboard.today.unpaid_invoices_desc',
                     $snapshot['unpaid_invoices_count'],
@@ -49,7 +56,9 @@ class TodayStatsWidget extends BaseWidget
                 ))
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color($snapshot['unpaid_invoices_count'] > 0 ? 'warning' : 'gray')
-                ->url(url('/app/invoices?tableFilters[status][value]=issued')),
-        ];
+                ->url(url('/app/invoices?tableFilters[status][value]=issued'));
+        }
+
+        return $stats;
     }
 }

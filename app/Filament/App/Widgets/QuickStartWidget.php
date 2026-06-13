@@ -7,6 +7,7 @@ namespace App\Filament\App\Widgets;
 use App\Models\Central\Tenant;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Horse;
+use App\Services\Tenancy\TenantRoleGate;
 use App\Tenancy\TenantManager;
 use Filament\Widgets\Widget;
 use Throwable;
@@ -94,7 +95,11 @@ class QuickStartWidget extends Widget
 
         // KSeF: brak certyfikatu w settings → karta. Tylko dla
         // canIssueInvoices() — horse_owner i tak nie ma tej strony.
-        if ($tenant->type?->canIssueInvoices()) {
+        // PLUS gate na FINANCE_STAFF: vet/instructor/employee nie widzą
+        // KSeF nawet jako suggestion na onboarding'u (canAccess
+        // KsefSettings i tak ich zablokuje, ale link na dashboard'zie
+        // wprowadzałby w błąd).
+        if ($tenant->type?->canIssueInvoices() && app(TenantRoleGate::class)->allows(TenantRoleGate::FINANCE_STAFF)) {
             $ksefCert = data_get($tenant->settings, 'ksef.cert_metadata');
             if (empty($ksefCert)) {
                 $slots[] = [
