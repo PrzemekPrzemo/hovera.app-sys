@@ -9,6 +9,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MasterAdController;
 use App\Http\Controllers\Owner\InvoiceCsvExportController;
 use App\Http\Controllers\Public\BookingCancellationController;
+use App\Http\Controllers\Public\BoxInquiryController;
 use App\Http\Controllers\Public\ClientPortalController;
 use App\Http\Controllers\Public\DemoLoginController;
 use App\Http\Controllers\Public\HelpController;
@@ -516,6 +517,21 @@ Route::middleware('web')
         Route::get('/{widget}', [PublicSiteController::class, 'embed'])
             ->where(['widget' => 'box-availability|booking|instructors|pricing'])
             ->name('show');
+    });
+
+/*
+ * Publiczne zapytania o boks — formularz dostępny bez auth z embed widget'a
+ * (target=_blank) lub bezpośrednio z public micro-site. Throttle 5/h per
+ * IP żeby zatrzymać spam-boty (plus honeypot field w formularzu).
+ */
+Route::middleware(['web', 'throttle:5,60'])
+    ->prefix('/'.$publicPrefix.'/{slug}/box-inquiry')
+    ->where(['slug' => $slugRegex])
+    ->name('public.box_inquiry.')
+    ->group(function () {
+        Route::get('/', [BoxInquiryController::class, 'form'])->name('form');
+        Route::post('/', [BoxInquiryController::class, 'submit'])->name('submit');
+        Route::get('/thanks', [BoxInquiryController::class, 'thanks'])->name('thanks');
     });
 
 /*

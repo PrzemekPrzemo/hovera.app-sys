@@ -47,23 +47,31 @@
                     ? 'embed.box_availability.free_singular'
                     : ($count < 5 ? 'embed.box_availability.free_few' : 'embed.box_availability.free_many');
             @endphp
+            @php
+                $publicPrefix = config('hovera.public_site.prefix', 's');
+                $inquiryUrl = url('/'.$publicPrefix.'/'.$tenant->slug.'/box-inquiry?source=embed');
+            @endphp
             <div class="pill free">{{ $count }}</div>
             <div class="body">
                 <strong>{{ __($key, ['count' => $count]) }}</strong>
                 <span>{{ __('embed.box_availability.free_subtitle', ['tenant' => $tenant->name]) }}</span>
-                <a class="cta" href="{{ url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug) }}" target="_blank" rel="noopener">{{ __('embed.box_availability.cta_details') }}</a>
+                <a class="cta" href="{{ $inquiryUrl }}" target="_blank" rel="noopener">{{ __('embed.box_availability.cta_inquire') }}</a>
             </div>
         @elseif ($box_availability)
+            @php
+                $publicPrefix = config('hovera.public_site.prefix', 's');
+                $inquiryUrl = url('/'.$publicPrefix.'/'.$tenant->slug.'/box-inquiry?source=embed');
+            @endphp
             <div class="pill full">0</div>
             <div class="body">
                 <strong>{{ __('embed.box_availability.full_heading') }}</strong>
                 <span>{{ __('embed.box_availability.full_subtitle', ['tenant' => $tenant->name]) }}</span>
-                <a class="cta" href="{{ url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug) }}" target="_blank" rel="noopener">{{ __('embed.box_availability.cta_contact') }}</a>
+                <a class="cta" href="{{ $inquiryUrl }}" target="_blank" rel="noopener">{{ __('embed.box_availability.cta_inquire_waitlist') }}</a>
             </div>
         @else
             <div class="body">
                 <strong>{{ $tenant->name }}</strong>
-                <a class="cta" href="{{ url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug) }}" target="_blank" rel="noopener">{{ __('embed.box_availability.cta_open') }}</a>
+                <a class="cta" href="{{ url('/'.config('hovera.public_site.prefix', 's').'/'.$tenant->slug) }}" target="_blank" rel="noopener">{{ __('embed.box_availability.cta_open') }}</a>
             </div>
         @endif
     </div>

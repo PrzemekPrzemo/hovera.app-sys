@@ -16,6 +16,8 @@ return [
         'free_many' => 'We have :count vacant boxes',
         'free_subtitle' => ':tenant · waiting for you',
         'cta_details' => 'See details →',
+        'cta_inquire' => 'Ask about a box →',
+        'cta_inquire_waitlist' => 'Join the waiting list →',
         'full_heading' => 'All boxes are full',
         'full_subtitle' => ':tenant · leave your contact — we will add you to the list',
         'cta_contact' => 'Contact us →',
