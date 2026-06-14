@@ -20,35 +20,45 @@
 
     <style>
         :root {
-            --primary: {{ $primary_color }};
+            --ochre: #A8956B;
+            --ochre-dark: #8a7a55;
+            --brown: #3D2E22;
+            --brown-soft: #6b5b4a;
+            --brown-faint: #9a8c7a;
+            --bg: #F7F4EF;
+            --line: #E9E2D3;
         }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-            background: #fafafa;
-            color: #3a2f25;
+            background: var(--bg);
+            color: var(--brown);
             line-height: 1.6;
         }
-        a { color: var(--primary); text-decoration: none; }
-        a:hover { text-decoration: underline; }
+        a { color: var(--ochre-dark); text-decoration: none; }
+        a:hover { color: var(--brown); text-decoration: underline; }
 
+        /* HERO — jasny, biały, z ochre akcentem zamiast solid primary background */
         header.hero {
-            background: var(--primary);
-            color: #fff;
-            padding: 3rem 1.5rem 4rem;
+            background: #fff;
+            color: var(--brown);
+            padding: 3rem 1.5rem 3.5rem;
             text-align: center;
             position: relative;
-            overflow: hidden;
+            border-bottom: 3px solid var(--ochre);
         }
         header.hero.with-image {
+            color: #fff;
             background-size: cover;
             background-position: center;
             min-height: 320px;
+            border-bottom: 0;
+            box-shadow: inset 0 -3px 0 var(--ochre);
         }
         header.hero.with-image::before {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,.55) 100%);
+            background: linear-gradient(180deg, rgba(61, 46, 34, .35) 0%, rgba(61, 46, 34, .75) 100%);
         }
         header.hero > * { position: relative; z-index: 1; }
         header.hero img.logo {
@@ -58,25 +68,8 @@
             background: #fff;
             border-radius: 8px;
             padding: 8px;
+            border: 1px solid var(--line);
         }
-        ul.social {
-            list-style: none; padding: 0; margin: 1.25rem 0 0;
-            display: flex; justify-content: center; gap: .75rem; flex-wrap: wrap;
-        }
-        ul.social a {
-            display: inline-flex; align-items: center; gap: .35rem;
-            padding: .4rem .9rem; background: rgba(255,255,255,.18);
-            border-radius: 999px; color: #fff; text-decoration: none;
-            font-size: .85rem; font-weight: 500;
-            transition: background .15s;
-        }
-        ul.social a:hover { background: rgba(255,255,255,.3); text-decoration: none; }
-
-        section.card.pricing table { width: 100%; border-collapse: collapse; }
-        section.card.pricing th { text-align: left; padding: .5rem .25rem; color: #6b7280; font-weight: 500; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; border-bottom: 1px solid #f7f4ef; }
-        section.card.pricing td { padding: .65rem .25rem; border-bottom: 1px solid #f3f4f6; font-size: .95rem; }
-        section.card.pricing td.price { text-align: right; font-weight: 600; color: var(--primary); white-space: nowrap; }
-        section.card.pricing td.unit { text-align: right; color: #6b7280; font-size: .85rem; white-space: nowrap; }
         header.hero h1 {
             font-size: clamp(1.75rem, 4vw, 2.75rem);
             margin: 0 0 .5rem;
@@ -85,7 +78,33 @@
         header.hero p.tagline {
             margin: 0;
             font-size: 1.05rem;
-            opacity: .92;
+            opacity: .9;
+            color: inherit;
+        }
+
+        /* Social — pillsy: cream tło, brown text, ochre na hover */
+        ul.social {
+            list-style: none; padding: 0; margin: 1.25rem 0 0;
+            display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap;
+        }
+        ul.social a {
+            display: inline-flex; align-items: center; gap: .35rem;
+            padding: .4rem .9rem;
+            background: var(--bg); border: 1px solid var(--line);
+            border-radius: 999px; color: var(--brown);
+            text-decoration: none;
+            font-size: .85rem; font-weight: 600;
+            transition: background .15s, border-color .15s, color .15s;
+        }
+        ul.social a:hover {
+            background: var(--ochre); border-color: var(--ochre);
+            color: #fff; text-decoration: none;
+        }
+        header.hero.with-image ul.social a {
+            background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.35); color: #fff;
+        }
+        header.hero.with-image ul.social a:hover {
+            background: #fff; border-color: #fff; color: var(--brown);
         }
 
         main {
@@ -95,105 +114,142 @@
         }
         section.card {
             background: #fff;
+            border: 1px solid var(--line);
             border-radius: 12px;
             padding: 1.75rem 2rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,.06);
+            box-shadow: 0 4px 18px rgba(168, 149, 107, 0.08);
             margin-bottom: 1.25rem;
         }
         section.card h2 {
             margin: 0 0 .85rem;
             font-size: 1.15rem;
-            color: #111827;
+            color: var(--brown);
+            font-weight: 700;
         }
         section.card .description {
             white-space: pre-line;
-            color: #374151;
+            color: var(--brown-soft);
         }
 
         dl.contact {
             display: grid;
             grid-template-columns: max-content 1fr;
-            gap: .35rem 1rem;
+            gap: .4rem 1rem;
             margin: 0;
             font-size: .95rem;
         }
         dl.contact dt {
-            color: #6b7280;
-            font-weight: 500;
+            color: var(--brown-soft);
+            font-weight: 600;
         }
         dl.contact dd {
             margin: 0;
-            color: #111827;
+            color: var(--brown);
         }
 
         .cta {
             display: inline-block;
-            background: var(--primary);
+            background: var(--ochre);
             color: #fff;
             padding: .7rem 1.4rem;
             border-radius: 8px;
             font-weight: 600;
             margin-top: .5rem;
+            transition: background .15s ease;
         }
-        .cta:hover { opacity: .92; text-decoration: none; }
+        .cta:hover { background: var(--ochre-dark); color: #fff; text-decoration: none; }
 
-        .soon {
+        .cta-secondary {
             display: inline-block;
-            color: #6b7280;
-            font-size: .85rem;
-            margin-left: .5rem;
+            background: transparent;
+            color: var(--ochre-dark);
+            border: 1px solid var(--ochre);
+            padding: .55rem 1.1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: .9rem;
+            margin-top: .5rem;
+            transition: background .15s ease;
         }
+        .cta-secondary:hover { background: var(--bg); color: var(--brown); text-decoration: none; }
 
+        /* Box availability — pill cream + ochre border, jak embed widget */
         section.card.box-availability {
-            display: flex; align-items: center; gap: 1rem;
-            padding: 1.25rem;
+            display: flex; align-items: center; gap: 1.25rem;
+            padding: 1.25rem 1.5rem;
         }
         .box-pill {
             display: grid; place-items: center;
-            min-width: 64px; min-height: 64px;
+            min-width: 72px; min-height: 72px;
             border-radius: 999px;
-            font-weight: 800; font-size: 1.5rem;
-            color: #fff;
+            font-weight: 800; font-size: 1.7rem;
+            color: var(--brown);
+            background: var(--bg);
+            border: 3px solid var(--ochre);
         }
-        .box-pill.box-free { background: var(--primary); }
-        .box-pill.box-full { background: #6b7280; }
-        .box-availability strong { display: block; font-size: 1.05rem; margin-bottom: .15rem; }
-        .box-availability .meta { display: block; color: #6b7280; font-size: .85rem; }
+        .box-pill.box-full {
+            color: var(--brown-faint);
+            border-color: var(--line);
+            background: #fafaf7;
+        }
+        .box-availability .body { flex: 1; }
+        .box-availability strong { display: block; font-size: 1.05rem; margin-bottom: .15rem; color: var(--brown); }
+        .box-availability .meta { display: block; color: var(--brown-soft); font-size: .85rem; }
 
+        /* Instructors — cream cards z ochre dot */
         ul.instructors {
             list-style: none; padding: 0; margin: 0;
             display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: .5rem;
         }
         ul.instructors li {
-            display: flex; align-items: center; gap: .6rem;
-            padding: .5rem .75rem;
-            background: #f9fafb;
+            display: flex; align-items: center; gap: .65rem;
+            padding: .6rem .85rem;
+            background: var(--bg); border: 1px solid var(--line);
             border-radius: 8px;
             font-size: .95rem;
+            font-weight: 500;
+            color: var(--brown);
         }
         ul.instructors .dot {
             width: 10px; height: 10px; border-radius: 50%;
             display: inline-block; flex: 0 0 auto;
+            background: var(--ochre);
+        }
+
+        /* Pricing table */
+        section.card.pricing table { width: 100%; border-collapse: collapse; }
+        section.card.pricing th {
+            text-align: left; padding: .7rem .25rem;
+            color: var(--brown-soft); font-weight: 600;
+            font-size: .78rem; text-transform: uppercase; letter-spacing: .04em;
+            border-bottom: 1px solid var(--line);
+        }
+        section.card.pricing td {
+            padding: .75rem .25rem;
+            border-bottom: 1px solid var(--line);
+            font-size: .95rem;
+            color: var(--brown);
+        }
+        section.card.pricing tr:last-child td { border-bottom: 0; }
+        section.card.pricing td.price {
+            text-align: right; font-weight: 700;
+            color: var(--ochre-dark); white-space: nowrap;
+        }
+        section.card.pricing td.unit {
+            text-align: right;
+            color: var(--brown-soft);
+            font-size: .85rem; white-space: nowrap;
         }
 
         footer.site-footer {
             text-align: center;
-            color: #9ca3af;
+            color: var(--brown-faint);
             font-size: .8rem;
             padding: 1.5rem;
         }
-        footer.site-footer a { color: #6b7280; }
-
-        @media (prefers-color-scheme: dark) {
-            body { background: #2a2017; color: #f7f4ef; }
-            section.card { background: #3a2f25; }
-            section.card h2 { color: #f3f4f6; }
-            section.card .description { color: #e9e2d3; }
-            dl.contact dt { color: #c8b8a4; }
-            dl.contact dd { color: #f3f4f6; }
-            footer.site-footer a { color: #c8b8a4; }
-        }
+        footer.site-footer a { color: var(--brown-soft); }
+        footer.site-footer a:hover { color: var(--ochre-dark); }
     </style>
     <x-google-analytics />
 </head>
@@ -226,20 +282,25 @@
 
     <main>
         @if (! empty($box_availability))
+            @php
+                $inquiryUrl = url('/' . config('hovera.public_site.prefix', 's') . '/' . $tenant->slug . '/box-inquiry');
+            @endphp
             <section class="card box-availability">
                 @if ($box_availability['free'] > 0)
-                    <div class="box-pill box-free">{{ $box_availability['free'] }}</div>
-                    <div>
+                    <div class="box-pill">{{ $box_availability['free'] }}</div>
+                    <div class="body">
                         <strong>Mamy {{ $box_availability['free'] }}
                             {{ $box_availability['free'] === 1 ? 'wolny box' : ($box_availability['free'] < 5 ? 'wolne boksy' : 'wolnych boksów') }}
                             — czekamy na Ciebie!</strong>
-                        <span class="meta">na {{ $box_availability['total'] }} łącznie · skontaktuj się ze stajnią</span>
+                        <span class="meta">na {{ $box_availability['total'] }} łącznie</span>
+                        <a class="cta-secondary" href="{{ $inquiryUrl }}">Zapytaj o boks →</a>
                     </div>
                 @else
                     <div class="box-pill box-full">0</div>
-                    <div>
+                    <div class="body">
                         <strong>Wszystkie boksy są zajęte</strong>
                         <span class="meta">{{ $box_availability['total'] }} boksów · zostaw kontakt — wpiszemy na listę oczekujących</span>
+                        <a class="cta-secondary" href="{{ $inquiryUrl }}">Wpisz się na listę →</a>
                     </div>
                 @endif
             </section>
@@ -286,7 +347,7 @@
                 <ul class="instructors">
                     @foreach ($instructors as $i)
                         <li>
-                            <span class="dot" style="background: {{ $i['color'] }}"></span>
+                            <span class="dot" @if (! empty($i['color'])) style="background: {{ $i['color'] }}" @endif></span>
                             <span>{{ $i['name'] }}</span>
                         </li>
                     @endforeach
