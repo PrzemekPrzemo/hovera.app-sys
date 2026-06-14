@@ -78,6 +78,167 @@ class TimetableLoader
     }
 
     /**
+     * Tydzień (poniedziałek–niedziela) — lista 7 dni, każdy z posortowanymi
+     * po godzinie wpisami (bez time-grid bo kolumny są za wąskie). Klient
+     * blade renderuje 7 kolumn obok siebie. Klik na dzień → przełącza
+     * widok dzienny dla tej daty.
+     *
+     * Single query dla całego tygodnia, potem group-by-date w PHP — żeby
+     * uniknąć 7× round-trip do DB.
+     *
+     * @return array{
+     *     week_start: Carbon,
+     *     week_end: Carbon,
+     *     days: array<int, array{
+     *         date: string,
+     *         label: string,
+     *         is_today: bool,
+     *         entries: array<int, array<string,mixed>>,
+     *     }>,
+     * }
+     */
+    public function loadWeek(Carbon $anyDateInWeek, ?string $typeFilter = null): array
+    {
+        $weekStart = $anyDateInWeek->copy()->startOfWeek(Carbon::MONDAY);
+        $weekEnd = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
+
+        $entries = CalendarEntry::query()
+            ->with(['horse', 'instructor', 'arena', 'client'])
+            ->overlapping($weekStart, $weekEnd)
+            ->blockingResources()
+            ->when($typeFilter, fn ($q, $t) => $q->where('type', $t))
+            ->orderBy('starts_at')
+            ->get();
+
+        // Group entries by date string (start day).
+        $byDate = $entries->groupBy(fn (CalendarEntry $e) => $e->starts_at->toDateString());
+
+        $today = today()->toDateString();
+        $days = [];
+        $cursor = $weekStart->copy();
+        while ($cursor->lte($weekEnd)) {
+            $dateStr = $cursor->toDateString();
+            $dayStart = $cursor->copy()->startOfDay();
+            $dayEnd = $cursor->copy()->endOfDay();
+            $entriesForDay = ($byDate->get($dateStr, collect()))
+                ->map(fn (CalendarEntry $e) => $this->decorateEntryBrief($e, $dayStart, $dayEnd))
+                ->all();
+
+            $days[] = [
+                'date' => $dateStr,
+                'label' => $cursor->translatedFormat('D, d.m'),
+                'is_today' => $dateStr === $today,
+                'entries' => $entriesForDay,
+            ];
+            $cursor->addDay();
+        }
+
+        return [
+            'week_start' => $weekStart,
+            'week_end' => $weekEnd,
+            'days' => $days,
+        ];
+    }
+
+    /**
+     * Miesiąc — grid kalendarzowy (5-6 wierszy × 7 kolumn). Każdy dzień
+     * pokazuje krótką listę wpisów (kolor + godzina + tytuł), max 3
+     * widoczne, reszta jako "+N". Pierwsze dni przed pn. + ostatnie po
+     * niedz. wypełniają grid z poprzedniego/następnego miesiąca z flagą
+     * `in_month=false`, żeby blade je przygasił.
+     *
+     * @return array{
+     *     month_start: Carbon,
+     *     month_label: string,
+     *     days: array<int, array{
+     *         date: string,
+     *         day_of_month: int,
+     *         in_month: bool,
+     *         is_today: bool,
+     *         entries: array<int, array<string,mixed>>,
+     *         total_count: int,
+     *     }>,
+     * }
+     */
+    public function loadMonth(Carbon $anyDateInMonth, ?string $typeFilter = null): array
+    {
+        $monthStart = $anyDateInMonth->copy()->startOfMonth();
+        $monthEnd = $anyDateInMonth->copy()->endOfMonth();
+        // Rozszerz do pełnych tygodni — żeby grid miał równe 7 kolumn.
+        $gridStart = $monthStart->copy()->startOfWeek(Carbon::MONDAY);
+        $gridEnd = $monthEnd->copy()->endOfWeek(Carbon::SUNDAY);
+
+        $entries = CalendarEntry::query()
+            ->with(['horse', 'instructor', 'arena', 'client'])
+            ->overlapping($gridStart, $gridEnd)
+            ->blockingResources()
+            ->when($typeFilter, fn ($q, $t) => $q->where('type', $t))
+            ->orderBy('starts_at')
+            ->get();
+
+        $byDate = $entries->groupBy(fn (CalendarEntry $e) => $e->starts_at->toDateString());
+
+        $today = today()->toDateString();
+        $days = [];
+        $cursor = $gridStart->copy();
+        while ($cursor->lte($gridEnd)) {
+            $dateStr = $cursor->toDateString();
+            $forDay = $byDate->get($dateStr, collect());
+            $total = $forDay->count();
+            $brief = $forDay->take(3)
+                ->map(fn (CalendarEntry $e) => [
+                    'id' => $e->id,
+                    'starts_at_display' => $e->starts_at->format('H:i'),
+                    'title' => $e->title ?: ($e->horse?->name ?? $e->type->label()),
+                    'color' => $this->pickColor($e),
+                ])
+                ->all();
+
+            $days[] = [
+                'date' => $dateStr,
+                'day_of_month' => $cursor->day,
+                'in_month' => $cursor->month === $monthStart->month,
+                'is_today' => $dateStr === $today,
+                'entries' => $brief,
+                'total_count' => $total,
+            ];
+            $cursor->addDay();
+        }
+
+        return [
+            'month_start' => $monthStart,
+            'month_label' => $monthStart->translatedFormat('F Y'),
+            'days' => $days,
+        ];
+    }
+
+    /**
+     * Wariant `decorateEntry` bez positioning (week view nie ma time
+     * gridu — tylko lista). Color + godzina + krótki tytuł.
+     *
+     * @return array<string, mixed>
+     */
+    private function decorateEntryBrief(CalendarEntry $entry, Carbon $viewStart, Carbon $viewEnd): array
+    {
+        return [
+            'id' => $entry->id,
+            'type' => $entry->type,
+            'type_label' => $entry->type->label(),
+            'status' => $entry->status,
+            'starts_at' => $entry->starts_at,
+            'ends_at' => $entry->ends_at,
+            'starts_at_display' => $entry->starts_at->format('H:i'),
+            'ends_at_display' => $entry->ends_at->format('H:i'),
+            'horse' => $entry->horse?->name,
+            'instructor' => $entry->instructor?->name,
+            'arena' => $entry->arena?->name,
+            'client' => $entry->client?->name,
+            'title' => $entry->title,
+            'color' => $this->pickColor($entry),
+        ];
+    }
+
+    /**
      * @return array<int, array{id:?string, label:string, color:?string, entries: array<int, array<string,mixed>>}>
      */
     private function buildLanes(string $groupBy, Collection $entries, Carbon $viewStart, Carbon $viewEnd): array

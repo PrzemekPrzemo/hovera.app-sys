@@ -172,6 +172,77 @@ class TimetableLoaderTest extends TestCase
         $this->assertSame('#10b981', $result['lanes'][0]['entries'][0]['color']);
     }
 
+    public function test_load_week_returns_seven_days_starting_on_monday(): void
+    {
+        // 2026-06-15 is a Monday — week_start should equal it.
+        $result = $this->loader()->loadWeek($this->date());
+
+        $this->assertCount(7, $result['days']);
+        $this->assertSame('2026-06-15', $result['week_start']->toDateString());
+        $this->assertSame('2026-06-21', $result['week_end']->toDateString());
+        $this->assertSame('2026-06-15', $result['days'][0]['date']);
+        $this->assertSame('2026-06-21', $result['days'][6]['date']);
+    }
+
+    public function test_load_week_groups_entries_into_their_calendar_days(): void
+    {
+        $this->seedEntry('09:00', '10:00'); // 2026-06-15 (Monday)
+        $this->seedEntry('14:00', '15:00'); // same day
+        // Wpis na środę — wymaga zmiany daty bazowej seedEntry, więc
+        // wstrzykujemy bezpośrednio.
+        DB::connection('tenant')->table('calendar_entries')->insert([
+            'id' => (string) Str::ulid(),
+            'type' => CalendarEntryType::Training->value,
+            'starts_at' => Carbon::parse('2026-06-17 10:00:00'),
+            'ends_at' => Carbon::parse('2026-06-17 11:00:00'),
+            'horse_id' => '01HHORSE0000000000000000A1',
+            'instructor_id' => '01HINSTRUCT00000000000001',
+            'arena_id' => '01HARENA000000000000000001',
+            'status' => CalendarEntryStatus::Confirmed->value,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $result = $this->loader()->loadWeek($this->date());
+
+        $this->assertCount(2, $result['days'][0]['entries']); // Mon
+        $this->assertCount(0, $result['days'][1]['entries']); // Tue
+        $this->assertCount(1, $result['days'][2]['entries']); // Wed
+    }
+
+    public function test_load_month_returns_grid_aligned_to_full_weeks(): void
+    {
+        // June 2026 starts on Monday (2026-06-01 → poniedziałek), so
+        // gridStart == monthStart. June ends Sunday 2026-06-28? No —
+        // 2026-06-30 is Tuesday, so grid extends to 2026-07-05 (Sunday).
+        $result = $this->loader()->loadMonth($this->date());
+
+        $this->assertSame('2026-06-01', $result['month_start']->toDateString());
+        $this->assertSame('2026-06-01', $result['days'][0]['date']);
+        $this->assertTrue($result['days'][0]['in_month']);
+
+        // Count of days = multiple of 7
+        $this->assertSame(0, count($result['days']) % 7);
+
+        // Days from following month must be flagged out-of-month.
+        $lastDay = end($result['days']);
+        $this->assertFalse($lastDay['in_month']);
+    }
+
+    public function test_load_month_brief_caps_at_three_entries_per_day(): void
+    {
+        // 5 entries on 2026-06-15 — month view should show 3 + total_count=5.
+        for ($i = 9; $i < 14; $i++) {
+            $this->seedEntry(sprintf('%02d:00', $i), sprintf('%02d:30', $i));
+        }
+
+        $result = $this->loader()->loadMonth($this->date());
+        $monday = collect($result['days'])->firstWhere('date', '2026-06-15');
+
+        $this->assertCount(3, $monday['entries']);
+        $this->assertSame(5, $monday['total_count']);
+    }
+
     private function loader(): TimetableLoader
     {
         return $this->app->make(TimetableLoader::class);
