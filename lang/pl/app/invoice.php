@@ -19,6 +19,7 @@ return [
             'status' => 'Status',
             'client' => 'Klient',
             'buyer_type' => 'Typ nabywcy',
+            'buyer_source' => 'Skąd dane nabywcy',
             'buyer_name' => 'Nazwa / imię i nazwisko',
             'buyer_nip' => 'NIP',
             'buyer_address' => 'Adres',
@@ -46,6 +47,12 @@ return [
             'individual_hint' => 'FV bez NIP-u — tylko imię i nazwisko (osoba nieprowadząca działalności).',
             'company' => 'Firma / przedsiębiorca',
             'company_hint' => 'FV firmowa — wymagany NIP, nazwa, adres.',
+        ],
+        'buyer_source' => [
+            'client' => 'Klient z bazy',
+            'client_hint' => 'Wybierz istniejącego klienta — dane nabywcy wypełnią się automatycznie.',
+            'adhoc' => 'Jednorazowy odbiorca (ad-hoc)',
+            'adhoc_hint' => 'FV dla osoby/firmy która nie jest jeszcze w bazie klientów — wpisz dane ręcznie. Możesz użyć "Pobierz z GUS" do uzupełnienia adresu po NIP-ie.',
         ],
     ],
 
