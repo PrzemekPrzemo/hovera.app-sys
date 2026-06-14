@@ -43,7 +43,11 @@ class PublicSiteTest extends TestCase
             ->assertSee('kontakt@stajnia-wisla.pl', false)
             ->assertSee('ul. Łąkowa 5, 00-001 Warszawa', false)
             ->assertSee('https://stajnia-wisla.pl', false)
-            ->assertSee('#7c3aed', false)
+            // Public micro-site rendered in unified Hovera light palette
+            // (ochre + cream + brown) — per-tenant `branding.primary_color`
+            // is no longer leaked into hero/CTA backgrounds. See PR
+            // "Restyle tenant micro-site to consistent Hovera light palette".
+            ->assertSee('#A8956B', false)
             ->assertSee('https://example.com/logo.png', false);
     }
 
