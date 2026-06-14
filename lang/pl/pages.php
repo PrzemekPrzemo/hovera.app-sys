@@ -9,7 +9,25 @@ return [
     ],
 
     'calendar' => [
-        'navigation' => 'Plan dnia',
+        'navigation' => 'Kalendarz',
+        'today' => 'Dziś',
+        'date' => 'Data',
+        'group_by' => 'Grupuj',
+        'type' => 'Typ',
+        'type_all' => 'Wszystkie',
+        'entries_short' => 'wpisy',
+        'empty_lanes' => 'Brak zdefiniowanych zasobów.',
+        'view' => [
+            'day' => 'Dzień',
+            'week' => 'Tydzień',
+            'month' => 'Miesiąc',
+        ],
+        'group' => [
+            'instructor' => 'wg instruktora',
+            'arena' => 'wg ujeżdżalni',
+            'horse' => 'wg konia',
+            'none' => 'brak',
+        ],
         'livejumping' => [
             'heading' => 'Zawody (LiveJumping) — najbliższe 7 dni',
             'more' => 'więcej',

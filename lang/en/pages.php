@@ -9,7 +9,25 @@ return [
     ],
 
     'calendar' => [
-        'navigation' => "Today's plan",
+        'navigation' => 'Calendar',
+        'today' => 'Today',
+        'date' => 'Date',
+        'group_by' => 'Group by',
+        'type' => 'Type',
+        'type_all' => 'All',
+        'entries_short' => 'entries',
+        'empty_lanes' => 'No active resources defined.',
+        'view' => [
+            'day' => 'Day',
+            'week' => 'Week',
+            'month' => 'Month',
+        ],
+        'group' => [
+            'instructor' => 'by instructor',
+            'arena' => 'by arena',
+            'horse' => 'by horse',
+            'none' => 'none',
+        ],
         'livejumping' => [
             'heading' => 'Competitions (LiveJumping) — next 7 days',
             'more' => 'more',

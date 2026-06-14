@@ -71,9 +71,32 @@ class Calendar extends Page implements HasActions, HasForms
 
     public ?string $typeFilter = null;
 
+    /**
+     * Widok: 'day' (domyślne — pełen time-grid jak wcześniej),
+     * 'week' (pn-nd, 7 kolumn z listą wpisów), 'month' (klasyczny grid
+     * kalendarzowy z chipami wpisów). `$date` w trybie week/month
+     * jest dowolną datą W okresie — TimetableLoader sam liczy granice.
+     */
+    public string $viewMode = 'day';
+
     public function mount(): void
     {
         $this->date = today()->toDateString();
+    }
+
+    public function setViewDay(): void
+    {
+        $this->viewMode = 'day';
+    }
+
+    public function setViewWeek(): void
+    {
+        $this->viewMode = 'week';
+    }
+
+    public function setViewMonth(): void
+    {
+        $this->viewMode = 'month';
     }
 
     public function previousDay(): void
@@ -91,6 +114,36 @@ class Calendar extends Page implements HasActions, HasForms
         $this->date = today()->toDateString();
     }
 
+    public function previousWeek(): void
+    {
+        $this->date = Carbon::parse($this->date)->subWeek()->toDateString();
+    }
+
+    public function nextWeek(): void
+    {
+        $this->date = Carbon::parse($this->date)->addWeek()->toDateString();
+    }
+
+    public function previousMonth(): void
+    {
+        $this->date = Carbon::parse($this->date)->subMonthNoOverflow()->toDateString();
+    }
+
+    public function nextMonth(): void
+    {
+        $this->date = Carbon::parse($this->date)->addMonthNoOverflow()->toDateString();
+    }
+
+    /**
+     * Wybierz datę z widoku week/month — przełącz na dzień + ustaw datę.
+     * Wywołane z bladu przez `wire:click="jumpToDay('Y-m-d')"`.
+     */
+    public function jumpToDay(string $date): void
+    {
+        $this->date = $date;
+        $this->viewMode = 'day';
+    }
+
     /**
      * Renders the day plan for the current props. Called from the Blade
      * view; results are not memoised because Livewire re-renders on
@@ -103,6 +156,28 @@ class Calendar extends Page implements HasActions, HasForms
         return app(TimetableLoader::class)->loadDay(
             date: Carbon::parse($this->date),
             groupBy: $this->groupBy,
+            typeFilter: $this->typeFilter,
+        );
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function getWeekTimetable(): array
+    {
+        return app(TimetableLoader::class)->loadWeek(
+            anyDateInWeek: Carbon::parse($this->date),
+            typeFilter: $this->typeFilter,
+        );
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function getMonthTimetable(): array
+    {
+        return app(TimetableLoader::class)->loadMonth(
+            anyDateInMonth: Carbon::parse($this->date),
             typeFilter: $this->typeFilter,
         );
     }
