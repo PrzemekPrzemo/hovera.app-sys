@@ -6,30 +6,67 @@
     <title>{{ __('public/box_inquiry.title', ['tenant' => $tenant->name]) }}</title>
     <meta name="robots" content="noindex">
     <style>
-        :root { --primary: {{ $primary_color }}; }
-        * { box-sizing: border-box; }
-        html, body { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #fafafa; color: #1f2937; }
-        body { display: flex; flex-direction: column; min-height: 100vh; }
-        header.hero { background: var(--primary); color: #fff; padding: 1.5rem; text-align: center; }
-        header.hero a { color: #fff; text-decoration: none; opacity: .85; font-size: .85rem; }
-        header.hero h1 { margin: .25rem 0; font-size: 1.3rem; }
-        header.hero .sub { font-size: 1rem; opacity: .9; }
-        main { flex: 1; max-width: 480px; width: 100%; margin: 1.5rem auto; padding: 0 1rem; }
-        form { background: #fff; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 20px rgba(0,0,0,.06); }
-        label { display: block; font-size: .85rem; color: #374151; margin: .75rem 0 .25rem; font-weight: 600; }
-        input, textarea, select { width: 100%; padding: .65rem .8rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; font-family: inherit; }
-        input:focus, textarea:focus, select:focus { outline: 2px solid var(--primary); outline-offset: 1px; border-color: transparent; }
-        button { margin-top: 1.25rem; width: 100%; padding: .85rem; background: var(--primary); color: #fff; border: 0; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
-        .error { color: #dc2626; font-size: .85rem; margin-top: .25rem; }
-        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-        .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
-        .alert { background: #fee2e2; color: #991b1b; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; }
-        footer.site-footer { text-align: center; color: #9ca3af; font-size: .75rem; padding: 1rem; }
-        @media (prefers-color-scheme: dark) {
-            body { background: #0f172a; color: #e5e7eb; }
-            form { background: #1e293b; }
-            input, textarea, select { background: #0f172a; color: #e5e7eb; border-color: #475569; }
+        :root {
+            --ochre: #A8956B;
+            --ochre-dark: #8a7a55;
+            --brown: #3D2E22;
+            --brown-soft: #6b5b4a;
+            --bg: #F7F4EF;
+            --line: #E9E2D3;
         }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--brown); }
+        body { display: flex; flex-direction: column; min-height: 100vh; }
+        header.hero {
+            background: #fff;
+            border-bottom: 3px solid var(--ochre);
+            color: var(--brown);
+            padding: 1.5rem; text-align: center;
+        }
+        header.hero a {
+            color: var(--brown-soft); text-decoration: none;
+            font-size: .85rem;
+            display: inline-block; margin-bottom: .5rem;
+        }
+        header.hero a:hover { color: var(--ochre); }
+        header.hero h1 { margin: .25rem 0; font-size: 1.4rem; color: var(--brown); font-weight: 700; }
+        header.hero .sub { font-size: .95rem; color: var(--brown-soft); }
+        main { flex: 1; max-width: 520px; width: 100%; margin: 1.5rem auto; padding: 0 1rem; }
+        form {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 12px; padding: 1.5rem;
+            box-shadow: 0 4px 18px rgba(168, 149, 107, 0.08);
+        }
+        label { display: block; font-size: .85rem; color: var(--brown); margin: .85rem 0 .3rem; font-weight: 600; }
+        input, textarea, select {
+            width: 100%; padding: .7rem .85rem;
+            background: #fff; color: var(--brown);
+            border: 1px solid var(--line);
+            border-radius: 8px; font-size: 1rem; font-family: inherit;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--ochre);
+            box-shadow: 0 0 0 3px rgba(168, 149, 107, 0.18);
+        }
+        button {
+            margin-top: 1.5rem; width: 100%; padding: .9rem;
+            background: var(--ochre); color: #fff;
+            border: 0; border-radius: 8px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: background .15s ease;
+        }
+        button:hover { background: var(--ochre-dark); }
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+        .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+        .alert {
+            background: #fef3f2; border: 1px solid #fda4af; color: #991b1b;
+            padding: .8rem 1rem; border-radius: 8px;
+            margin-bottom: 1rem; font-size: .9rem;
+        }
+        footer.site-footer { text-align: center; color: var(--brown-soft); font-size: .75rem; padding: 1rem; opacity: .8; }
     </style>
     <x-google-analytics />
 </head>
