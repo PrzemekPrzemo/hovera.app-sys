@@ -209,6 +209,22 @@ return [
         'title' => 'New stable task',
     ],
 
+    // Mail to stable owner when someone fills out the public "Ask about
+    // a box" form via /s/{slug}/box-inquiry (embed widget or micro-site).
+    'box_inquiry' => [
+        'subject' => 'New box inquiry from :name — :tenant',
+        'greeting' => 'Hello!',
+        'intro' => ':name asked about a box for :count horse(s) at your stable.',
+        'field' => [
+            'email' => 'Email',
+            'phone' => 'Phone',
+            'preferred_from' => 'Preferred start date',
+            'message' => 'Message',
+        ],
+        'cta' => 'View inquiries in the panel',
+        'signoff' => '— Hovera',
+    ],
+
     // Health record expiry reminders — sent in 3 phases (30/14/7 days
     // before next_due_at) by `health-records:remind-due` command.
     'health_reminder' => [

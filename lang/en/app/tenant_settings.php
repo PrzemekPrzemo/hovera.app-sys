@@ -51,6 +51,8 @@ return [
             'pp_social_youtube' => 'YouTube URL',
             'pp_social_tiktok' => 'TikTok URL',
             'embed_box_availability' => 'Vacant boxes ("We have X vacant boxes")',
+            'embed_box_inquiry' => 'Box inquiry page',
+            'embed_box_inquiry_helper' => 'Direct link to the public "Ask about a box" form. Link from your site menu or a CTA button — visitors send inquiries without logging in.',
             'embed_booking' => 'Book online (CTA to booking flow)',
             'embed_pricing' => 'Boarding pricing',
             'embed_instructors' => 'Instructor list',

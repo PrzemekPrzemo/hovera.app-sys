@@ -211,6 +211,23 @@ return [
         'title' => 'Nowe zadanie w stajni',
     ],
 
+    // Mail do owner'a stajni gdy ktoś z zewnątrz wypełni formularz
+    // "Zapytaj o boks" przez `/s/{slug}/box-inquiry` (z embed widget'a
+    // lub z public micro-site).
+    'box_inquiry' => [
+        'subject' => 'Nowe zapytanie o boks od :name — :tenant',
+        'greeting' => 'Dzień dobry!',
+        'intro' => ':name zapytał/a o miejsce dla :count koni w Twojej stajni.',
+        'field' => [
+            'email' => 'Email',
+            'phone' => 'Telefon',
+            'preferred_from' => 'Preferowana data rozpoczęcia',
+            'message' => 'Wiadomość',
+        ],
+        'cta' => 'Zobacz zapytania w panelu',
+        'signoff' => '— Hovera',
+    ],
+
     // Powiadomienia o zbliżających się terminach ekspiracji health
     // records (szczepienia, odrobaczenia, wizyty weta). Wysyłane w 3
     // fazach (30/14/7 dni) przez `health-records:remind-due` command.

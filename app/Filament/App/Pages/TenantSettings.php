@@ -293,6 +293,14 @@ class TenantSettings extends Page implements HasForms
                         Forms\Components\Placeholder::make('embed_instructors')
                             ->label(__('app/tenant_settings.form.label.embed_instructors'))
                             ->content(fn () => self::embedSnippet('instructors', 320)),
+                        Forms\Components\Placeholder::make('embed_box_inquiry_link')
+                            ->label(__('app/tenant_settings.form.label.embed_box_inquiry'))
+                            ->helperText(__('app/tenant_settings.form.label.embed_box_inquiry_helper'))
+                            ->content(fn () => new HtmlString(
+                                '<a href="'.url('/s/'.$slug.'/box-inquiry').'" target="_blank" rel="noopener" style="color:var(--primary-600,#A8956B);text-decoration:underline;font-family:ui-monospace,SFMono-Regular,monospace;font-size:.85rem;">'
+                                .e(url('/s/'.$slug.'/box-inquiry'))
+                                .'</a>',
+                            )),
                     ]),
 
                 Forms\Components\Section::make(__('app/tenant_settings.form.section.online_booking'))

@@ -51,6 +51,8 @@ return [
             'pp_social_youtube' => 'YouTube URL',
             'pp_social_tiktok' => 'TikTok URL',
             'embed_box_availability' => 'Wolne boksy ("Mamy X wolnych boksów")',
+            'embed_box_inquiry' => 'Strona zapytania o boks',
+            'embed_box_inquiry_helper' => 'Bezpośredni link do publicznej formy "Zapytaj o boks". Możesz podlinkować z menu strony WWW, albo button CTA zaprosi klienta do wysłania zapytania bez logowania.',
             'embed_booking' => 'Zarezerwuj online (CTA do booking flow)',
             'embed_pricing' => 'Cennik pensjonatu',
             'embed_instructors' => 'Lista instruktorów',
