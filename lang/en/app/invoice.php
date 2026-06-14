@@ -19,6 +19,7 @@ return [
             'status' => 'Status',
             'client' => 'Client',
             'buyer_type' => 'Buyer type',
+            'buyer_source' => 'Buyer data source',
             'buyer_name' => 'Name / full name',
             'buyer_nip' => 'Tax ID',
             'buyer_address' => 'Address',
@@ -46,6 +47,12 @@ return [
             'individual_hint' => 'Invoice without VAT ID — name only (private individual, not running a business).',
             'company' => 'Company / sole trader',
             'company_hint' => 'Business invoice — VAT ID, name and address required.',
+        ],
+        'buyer_source' => [
+            'client' => 'Existing client',
+            'client_hint' => 'Pick a client from the database — buyer details auto-fill from their record.',
+            'adhoc' => 'One-off buyer (ad-hoc)',
+            'adhoc_hint' => 'Invoice for a person/company not yet in the clients list — fill in details manually. You can use "Look up in GUS" to autofill the address by VAT ID.',
         ],
     ],
 

@@ -95,11 +95,32 @@ class InvoiceResource extends Resource
             Forms\Components\Section::make(__('app/invoice.form.section.buyer'))
                 ->columns(2)
                 ->schema([
+                    // Toggle "klient z bazy" / "ad-hoc" — przy ad-hoc nie
+                    // wymagamy `client_id` (FV dla jednorazowego odbiorcy
+                    // bez zakładania Client'a). Pole jest virtual — nie
+                    // jest zapisywane do DB, służy wyłącznie UI.
+                    Forms\Components\Radio::make('buyer_source')
+                        ->label(__('app/invoice.form.label.buyer_source'))
+                        ->options([
+                            'client' => __('app/invoice.form.buyer_source.client'),
+                            'adhoc' => __('app/invoice.form.buyer_source.adhoc'),
+                        ])
+                        ->descriptions([
+                            'client' => __('app/invoice.form.buyer_source.client_hint'),
+                            'adhoc' => __('app/invoice.form.buyer_source.adhoc_hint'),
+                        ])
+                        ->default(fn ($record) => $record?->client_id ? 'client' : 'client')
+                        ->formatStateUsing(fn ($record) => $record && $record->client_id === null ? 'adhoc' : 'client')
+                        ->dehydrated(false)
+                        ->live()
+                        ->columnSpanFull(),
+
                     Forms\Components\Select::make('client_id')
                         ->label(__('app/invoice.form.label.client'))
                         ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id'))
                         ->searchable()
-                        ->required()
+                        ->required(fn (Forms\Get $get) => $get('buyer_source') !== 'adhoc')
+                        ->visible(fn (Forms\Get $get) => $get('buyer_source') !== 'adhoc')
                         ->reactive()
                         ->afterStateUpdated(function ($state, Forms\Set $set) {
                             if (! $state) {
@@ -433,6 +454,16 @@ class InvoiceResource extends Resource
         }
         $data['status'] = InvoiceStatus::Draft->value;
         $data['currency'] = $data['currency'] ?? 'PLN';
+
+        // Ad-hoc FV — Filament wyrzuca virtual `buyer_source` przez
+        // `dehydrated(false)`, ale `client_id` może wciąż siedzieć w
+        // submitted data jako null (Radio przełączył widoczność, ale
+        // pole `Select::make('client_id')` jeśli było wcześniej wybrane
+        // i user kliknął "ad-hoc", zostawia stary state). Forsujemy
+        // null gdy brak buyer_name z bazy klientów.
+        if (! empty($data['buyer_name']) && empty($data['client_id'])) {
+            $data['client_id'] = null;
+        }
 
         return $data;
     }
