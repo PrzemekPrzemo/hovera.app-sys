@@ -16,6 +16,9 @@ return [
         'unpaid_invoices' => 'Unpaid invoices',
         'unpaid_invoices_desc' => '{0} none outstanding|{1} :count invoice issued|[2,*] :count invoices issued',
 
+        'delta_suffix' => 'vs yesterday',
+        'delta_flat' => 'flat vs yesterday',
+
         'bookings_table_heading' => 'Today\'s bookings',
         'col_time' => 'Time',
         'col_horse' => 'Horse',

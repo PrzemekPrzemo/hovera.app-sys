@@ -148,6 +148,12 @@ class VetCannotSeeFinanceWidgetsTest extends TestCase
             'unpaid_invoices_count' => $unpaidCount,
             'unpaid_invoices_total_cents' => $unpaidCents,
         ]);
+        $mock->shouldReceive('trend')->andReturn([
+            'bookings_today' => [1, 2, 2, 3, 1, 2, 3],
+            'overdue_care' => [0, 0, 1, 1, 1, 0, 1],
+            'unpaid_invoices_count' => [4, 4, 5, 5, 5, 5, $unpaidCount],
+            'unpaid_invoices_total_cents' => [1000_00, 1000_00, 1200_00, 1200_00, 1200_00, 1200_00, $unpaidCents],
+        ]);
         $this->app->instance(TodayDashboardService::class, $mock);
     }
 

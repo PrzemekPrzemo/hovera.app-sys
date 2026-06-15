@@ -17,6 +17,10 @@ return [
         // Polish 3-form plural — keyed by count.
         'unpaid_invoices_desc' => '{0} brak nieuregulowanych|{1} :count faktura wystawiona|[2,4] :count faktury wystawione|[5,*] :count faktur wystawionych',
 
+        // Delta-vs-yesterday chip dla sparkline'a (np. "↑3 vs wczoraj").
+        'delta_suffix' => 'vs wczoraj',
+        'delta_flat' => 'bez zmian vs wczoraj',
+
         'bookings_table_heading' => 'Dzisiejsze rezerwacje',
         'col_time' => 'Godzina',
         'col_horse' => 'Koń',
