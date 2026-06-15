@@ -22,6 +22,29 @@ class CreateCalendarEntry extends CreateRecord
 {
     protected static string $resource = CalendarEntryResource::class;
 
+    /**
+     * Prefill z query string — używane przez follow-up toast po complete
+     * lekcji (`EditCalendarEntry::maybeSuggestFollowupBooking`). Akceptowane
+     * klucze: type, horse_id, instructor_id, arena_id, client_id, starts_at,
+     * ends_at. Pozostałe query params ignorowane.
+     */
+    protected function fillForm(): void
+    {
+        $allowed = ['type', 'horse_id', 'instructor_id', 'arena_id', 'client_id', 'starts_at', 'ends_at'];
+        $prefill = array_filter(
+            request()->only($allowed),
+            static fn ($v) => $v !== null && $v !== '',
+        );
+
+        if ($prefill === []) {
+            parent::fillForm();
+
+            return;
+        }
+
+        $this->form->fill($prefill);
+    }
+
     protected function handleRecordCreation(array $data): Model
     {
         try {
