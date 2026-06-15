@@ -12,6 +12,7 @@ use App\Filament\App\Resources\InvoiceResource\Pages;
 use App\Filament\Components\GusLookupAction;
 use App\Filament\Components\PriceInput;
 use App\Filament\Concerns\RestrictedByTenantRole;
+use App\Jobs\Stable\SendInvoiceToClientJob;
 use App\Models\Tenant\Client;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\InvoiceItem;
@@ -28,6 +29,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Notification as MailFacade;
@@ -414,6 +416,9 @@ class InvoiceResource extends Resource
                             (string) $record->id,
                         );
 
+                        // Mark sent — żeby bulk action skipping był spójny.
+                        $record->forceFill(['email_sent_at' => now()])->save();
+
                         Notification::make()->title(__('app/invoice.action.email.success'))->success()->send();
                     }),
                 Tables\Actions\EditAction::make()
@@ -421,6 +426,61 @@ class InvoiceResource extends Resource
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\DeleteAction::make()
                     ->visible(fn (Invoice $r) => $r->status === InvoiceStatus::Draft),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    // Bulk wysyłka maili do klientów — idempotent (skip
+                    // tych z `email_sent_at`). Job queue per invoice żeby
+                    // 100+ FV nie blokowało UI. "Wyślij ponownie" wariant
+                    // resetuje flag i wymusza.
+                    Tables\Actions\BulkAction::make('email_clients')
+                        ->label(__('app/invoice.bulk_action.email.label'))
+                        ->icon('heroicon-m-envelope')
+                        ->color('primary')
+                        ->requiresConfirmation()
+                        ->modalDescription(__('app/invoice.bulk_action.email.modal_description'))
+                        ->form([
+                            Forms\Components\Toggle::make('force')
+                                ->label(__('app/invoice.bulk_action.email.force_label'))
+                                ->helperText(__('app/invoice.bulk_action.email.force_helper'))
+                                ->default(false),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $tenant = app(TenantManager::class)->current();
+                            if (! $tenant) {
+                                return;
+                            }
+                            $force = (bool) ($data['force'] ?? false);
+                            $queued = 0;
+                            $skipped = 0;
+                            foreach ($records as $invoice) {
+                                if (! $invoice->status->isPosted()) {
+                                    $skipped++;
+
+                                    continue;
+                                }
+                                if (! $force && $invoice->email_sent_at !== null) {
+                                    $skipped++;
+
+                                    continue;
+                                }
+                                SendInvoiceToClientJob::dispatch(
+                                    tenantId: (string) $tenant->id,
+                                    invoiceId: (string) $invoice->id,
+                                    force: $force,
+                                );
+                                $queued++;
+                            }
+                            Notification::make()
+                                ->title(__('app/invoice.bulk_action.email.success_title'))
+                                ->body(__('app/invoice.bulk_action.email.success_body', [
+                                    'queued' => $queued,
+                                    'skipped' => $skipped,
+                                ]))
+                                ->success()
+                                ->send();
+                        }),
+                ]),
             ]);
     }
 

@@ -97,4 +97,15 @@ return [
             'success' => 'Invoice emailed to client',
         ],
     ],
+
+    'bulk_action' => [
+        'email' => [
+            'label' => 'Email clients',
+            'modal_description' => 'We will email an invoice link to each selected client (only issued/paid invoices with a client email). Invoices already emailed are skipped unless you tick "Resend".',
+            'force_label' => 'Resend',
+            'force_helper' => 'By default we skip invoices already emailed once. Tick this if a client did not receive the message and you want it re-sent.',
+            'success_title' => 'Sending queued',
+            'success_body' => 'Queued :queued emails, skipped :skipped (already sent or draft).',
+        ],
+    ],
 ];

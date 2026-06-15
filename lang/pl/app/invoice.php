@@ -97,4 +97,15 @@ return [
             'success' => 'Wysłano fakturę na e-mail klienta',
         ],
     ],
+
+    'bulk_action' => [
+        'email' => [
+            'label' => 'Wyślij maile do klientów',
+            'modal_description' => 'Wyślemy maila z linkiem do faktury do każdego wybranego klienta (tylko faktury wystawione/opłacone z e-mailem klienta). Faktury już wysłane mailem zostaną pominięte — chyba że zaznaczysz "Wyślij ponownie".',
+            'force_label' => 'Wyślij ponownie',
+            'force_helper' => 'Domyślnie pomijamy FV, które już raz wysłaliśmy. Zaznacz jeśli klient nie dostał maila i ma być wysłany ponownie.',
+            'success_title' => 'Wysyłka zakolejkowana',
+            'success_body' => 'Zakolejkowano :queued maili, pominięto :skipped (już wysłane lub draft).',
+        ],
+    ],
 ];
