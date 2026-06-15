@@ -8,6 +8,7 @@ use App\Filament\App\Resources\BoxInquiryResource\Pages;
 use App\Filament\Concerns\RestrictedByTenantRole;
 use App\Models\Tenant\BoxInquiry;
 use App\Services\Tenancy\TenantRoleGate;
+use App\Tenancy\TenantManager;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -56,9 +57,21 @@ class BoxInquiryResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $count = BoxInquiry::query()->where('status', BoxInquiry::STATUS_NEW)->count();
+        // Defensive — Filament wywołuje badge'e przy każdym render'ze,
+        // także w kontekstach bez aktywnego tenanta (np. tenant selector,
+        // master admin panel po fast-switch). Bez tego query leci na
+        // tenant connection bez creds → SQLSTATE 1045 access denied.
+        if (! app(TenantManager::class)->hasTenant()) {
+            return null;
+        }
 
-        return $count > 0 ? (string) $count : null;
+        try {
+            $count = BoxInquiry::query()->where('status', BoxInquiry::STATUS_NEW)->count();
+
+            return $count > 0 ? (string) $count : null;
+        } catch (\Throwable) {
+            return null; // tenant DB nieosiągalna, brak migracji itp.
+        }
     }
 
     public static function getNavigationBadgeColor(): ?string

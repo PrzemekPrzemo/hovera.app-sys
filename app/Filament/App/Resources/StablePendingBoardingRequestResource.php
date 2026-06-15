@@ -76,9 +76,19 @@ class StablePendingBoardingRequestResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $count = static::getEloquentQuery()->count();
+        // Defensive — Filament render'uje navi/badge'e w kontekstach bez
+        // aktywnego tenanta (np. tenant selector pre-resolution). Bez
+        // tego query leci bez creds → SQLSTATE 1045 access denied.
+        // BoardingRequest leży w central DB, więc hasTenant guard mniej
+        // krytyczny, ale dla spójności i defense-in-depth — try/catch
+        // mirroring BoxInquiryResource + FeedItemResource.
+        try {
+            $count = static::getEloquentQuery()->count();
 
-        return $count > 0 ? (string) $count : null;
+            return $count > 0 ? (string) $count : null;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public static function getNavigationBadgeColor(): ?string
