@@ -43,6 +43,12 @@ return [
         'add_participant' => '+ Add participant',
     ],
 
+    'followup' => [
+        'title' => 'Lesson completed — schedule the next one?',
+        'body' => 'Suggested slot: :date (in one week).',
+        'cta' => 'Plan next',
+    ],
+
     'table' => [
         'column' => [
             'starts_at' => 'Starts',

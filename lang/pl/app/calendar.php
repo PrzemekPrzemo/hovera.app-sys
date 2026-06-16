@@ -43,6 +43,12 @@ return [
         'add_participant' => '+ Dodaj uczestnika',
     ],
 
+    'followup' => [
+        'title' => 'Lekcja zakończona — zaplanować kolejną?',
+        'body' => 'Sugerowany termin: :date (za tydzień).',
+        'cta' => 'Zaplanuj kolejną',
+    ],
+
     'table' => [
         'column' => [
             'starts_at' => 'Początek',
