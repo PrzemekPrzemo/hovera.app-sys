@@ -120,6 +120,23 @@ class TransporterDocumentsRelationManager extends RelationManager
             ])
             ->headerActions([])
             ->actions([
+                Tables\Actions\Action::make('preview_doc')
+                    ->label(__('admin/transporter.documents.action.preview'))
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->openUrlInNewTab()
+                    ->url(fn (TransporterDocument $r) => route('admin.transporter.document.preview', [
+                        'tenant' => $tenant->id,
+                        'document' => $r->id,
+                    ])),
+                Tables\Actions\Action::make('download_doc')
+                    ->label(__('admin/transporter.documents.action.download'))
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->url(fn (TransporterDocument $r) => route('admin.transporter.document.download', [
+                        'tenant' => $tenant->id,
+                        'document' => $r->id,
+                    ])),
                 Tables\Actions\Action::make('verify_doc')
                     ->label(__('transport/documents.admin.verify_doc'))
                     ->icon('heroicon-o-shield-check')
