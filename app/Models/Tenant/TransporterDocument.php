@@ -26,6 +26,10 @@ class TransporterDocument extends TenantModel
         'verified_by_user_id', 'verified_at', 'rejection_reason',
         'expiry_notified_at',
         'notes',
+        // Zanonimizowana publiczna wersja — uploadowana przez master admin'a
+        // po weryfikacji oryginału. Wyświetlana na `/t/{slug}` jako social proof.
+        'public_file_path', 'public_file_size', 'public_file_mime',
+        'public_uploaded_at', 'public_uploaded_by_user_id',
     ];
 
     protected function casts(): array
@@ -37,7 +41,20 @@ class TransporterDocument extends TenantModel
             'verified_at' => 'datetime',
             'expiry_notified_at' => 'datetime',
             'file_size' => 'integer',
+            'public_file_size' => 'integer',
+            'public_uploaded_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Czy dokument ma wgraną zanonimizowaną wersję — gotową do publicznej
+     * ekspozycji. Status musi być `verified` (nie pokazujemy pending/rejected
+     * dokumentów nawet jeśli admin wgrał zaślepkę).
+     */
+    public function hasPublicVersion(): bool
+    {
+        return $this->status === self::STATUS_VERIFIED
+            && (string) ($this->public_file_path ?? '') !== '';
     }
 
     public function isExpired(): bool

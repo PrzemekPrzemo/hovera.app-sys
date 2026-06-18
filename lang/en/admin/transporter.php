@@ -73,10 +73,29 @@ return [
             'status' => 'Status',
             'filename' => 'File',
             'uploaded_at' => 'Uploaded',
+            'public' => 'Public',
         ],
         'action' => [
             'preview' => 'Preview',
             'download' => 'Download',
+            'upload_anonymized' => 'Upload anonymised version',
+            'remove_anonymized' => 'Remove public version',
+        ],
+        'upload_anonymized' => [
+            'modal_description' => 'The file (without PII) will appear on the public profile /t/{slug} as confirmation of the held document. Do not upload the original.',
+            'file_label' => 'Anonymised document (PDF / JPG / PNG, max 5 MB)',
+            'helper' => 'Remove from original: national ID number, home address, signatures, serial numbers. Keep: document type, expiry date, issuing authority.',
+        ],
+        'remove_anonymized' => [
+            'modal_description' => 'The public file will be deleted. The document will disappear from the public profile /t/{slug}.',
+        ],
+        'public' => [
+            'yes_tooltip' => 'Visible on the public profile.',
+            'no_tooltip' => 'No anonymised version — not publicly visible.',
+        ],
+        'notify' => [
+            'public_uploaded' => 'Public version uploaded — visible on /t/{slug}.',
+            'public_removed' => 'Public version removed.',
         ],
         'missing_table_title' => 'Tenant DB needs migration',
         'missing_table_body' => 'The "transporter_documents" table does not exist in database :db. This tenant was provisioned before the verification documents feature was introduced. Fix: run `php artisan migrate --path=database/migrations/tenant --database=tenant` for this tenant. Showing an empty documents list as a fallback.',

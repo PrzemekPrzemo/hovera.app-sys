@@ -13,6 +13,9 @@ return [
     'section_fleet' => 'Our fleet',
     'section_coverage' => 'Service area',
     'section_contact' => 'Contact',
+    'section_certificates' => 'Certificates and licenses',
+    'section_certificates_intro' => 'Documents reviewed and anonymised by the Hovera team.',
+    'cert_uploaded' => 'Updated: :date',
 
     'vehicle_capacity' => '{1} :count horse|[2,*] :count horses',
     'vehicle_year' => 'year :year',
