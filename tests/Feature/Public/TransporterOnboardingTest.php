@@ -106,11 +106,15 @@ class TransporterOnboardingTest extends TestCase
         $this->assertNotNull($tenant->terms_accepted_at);
     }
 
-    public function test_submit_sends_email_to_master_admins(): void
+    public function test_submit_queues_email_to_master_admins(): void
     {
+        // Mail jest ShouldQueue (PR #423-followup: synchroniczny SMTP send
+        // blokował submit do ~30s na slow SMTP → 504 z PHP-FPM pomimo że
+        // tenant był sprovisionowany). Queue worker (Plesk cron 1/min)
+        // dostarcza maila async. Sukces signupu = zapis w DB, nie e-mail.
         $this->post('/przewoznicy/dolacz', $this->validPayload());
 
-        Mail::assertSent(TransporterOnboardingSubmittedMail::class, function ($mail) {
+        Mail::assertQueued(TransporterOnboardingSubmittedMail::class, function ($mail) {
             return $mail->hasTo('master@hovera.app');
         });
     }
@@ -125,6 +129,7 @@ class TransporterOnboardingTest extends TestCase
         $response->assertRedirect(); // landing back to show with status
         $this->assertSame(0, Tenant::where('slug', 'test-firma')->count());
         Mail::assertNothingSent();
+        Mail::assertNothingQueued();
     }
 
     public function test_duplicate_slug_returns_validation_error(): void
