@@ -74,6 +74,10 @@ return [
             'filename' => 'File',
             'uploaded_at' => 'Uploaded',
         ],
+        'action' => [
+            'preview' => 'Preview',
+            'download' => 'Download',
+        ],
         'missing_table_title' => 'Tenant DB needs migration',
         'missing_table_body' => 'The "transporter_documents" table does not exist in database :db. This tenant was provisioned before the verification documents feature was introduced. Fix: run `php artisan migrate --path=database/migrations/tenant --database=tenant` for this tenant. Showing an empty documents list as a fallback.',
     ],

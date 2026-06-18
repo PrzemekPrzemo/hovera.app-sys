@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\ImpersonationController;
+use App\Http\Controllers\Admin\TransporterDocumentController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Invitations\AcceptInvitationController;
 use App\Http\Controllers\LocaleController;
@@ -51,6 +52,7 @@ use App\Http\Controllers\Tenant\BugReportController;
 use App\Http\Controllers\Tenant\ImportTemplateController;
 use App\Http\Controllers\Tenant\TenantSelectorController;
 use App\Http\Controllers\Transport\StripeConnectController;
+use App\Http\Middleware\EnsureMasterAdmin;
 use App\Http\Middleware\InitialiseTenantFromSession;
 use App\Tenancy\TenantManager;
 use Illuminate\Support\Facades\Route;
@@ -247,6 +249,26 @@ Route::middleware(['web', 'auth'])->prefix('impersonation')->name('impersonation
     Route::get('/start', [ImpersonationController::class, 'start'])->name('start');
     Route::post('/stop', [ImpersonationController::class, 'stop'])->name('stop');
 });
+
+/*
+ * Master admin transporter document download/preview.
+ *
+ * Filament relation manager (`TransporterDocumentsRelationManager`) linkuje
+ * tu w nowych kartach (preview) lub jako save-as (download). Endpoint
+ * audytuje każdy odczyt — sąd / RODO inspector żądania (dane firmowe są
+ * sensytywne).
+ *
+ * Tenant binduje się przez ULID (central.tenants.id), document jako
+ * string ID (per-tenant DB lookup w controllerze). Kolizja namespace'ów
+ * routera Laravel: nazwy obu routes prefixujemy `admin.transporter.document`.
+ */
+Route::middleware(['web', 'auth', EnsureMasterAdmin::class])
+    ->prefix(config('hovera.admin.path', 'admin').'/transporters/{tenant}/documents/{document}')
+    ->name('admin.transporter.document.')
+    ->group(function () {
+        Route::get('/preview', [TransporterDocumentController::class, 'preview'])->name('preview');
+        Route::get('/download', [TransporterDocumentController::class, 'download'])->name('download');
+    });
 
 /*
  * Central hovera billing — tenant owners pick a plan, Stripe Checkout
