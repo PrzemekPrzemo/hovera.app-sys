@@ -6,10 +6,18 @@ namespace App\Notifications;
 
 use App\Models\Central\UserInvitation;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class UserInvitationNotification extends Notification
+/**
+ * `ShouldQueue` — synchroniczny SMTP send blokował signup flow'y
+ * (transporter onboarding, team invites). SMTP handshake + body delivery
+ * to typowo 10-30s; mnożone przez liczbę zaproszonych = łatwe 504.
+ * Soft-fail pattern w `SendInvitation` zostaje — gdy queue dispatch
+ * sam padnie, invitation row jest w DB i admin może resend.
+ */
+class UserInvitationNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
