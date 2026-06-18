@@ -639,6 +639,19 @@ Route::middleware('web')
     ->name('public.transporter');
 
 /*
+ * Publiczne strumieniowanie zanonimizowanych dokumentów weryfikacyjnych —
+ * master admin wgrał wersję bez PII, transporter prezentuje ją na swoim
+ * publicznym profilu jako social proof. URL dostępny tylko gdy:
+ *   1. Tenant jest zweryfikowanym transporterem (isVerifiedTransporter)
+ *   2. Konkretny dokument ma status=verified AND public_file_path != NULL
+ * W przeciwnym wypadku 404. Patrz `TransporterProfileController::publicDocument`.
+ */
+Route::middleware('web')
+    ->get('/t/{slug}/dokumenty/{document}', [TransporterProfileController::class, 'publicDocument'])
+    ->where(['slug' => $slugRegex, 'document' => '[A-Za-z0-9]{26}'])
+    ->name('public.transporter.document');
+
+/*
  * Pre-rendered Open Graph image (1200x630 PNG) dla profilu transportera.
  * Linkowane w <meta property="og:image"> w profile.blade.php — kiedy
  * transporter wrzuca URL swojego profilu na FB/LinkedIn/X/Slack, unfurl

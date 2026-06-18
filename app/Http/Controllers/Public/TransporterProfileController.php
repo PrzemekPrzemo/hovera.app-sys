@@ -7,13 +7,17 @@ namespace App\Http\Controllers\Public;
 use App\Models\Central\Tenant;
 use App\Models\Central\TransportReview;
 use App\Models\Central\TransportServiceArea;
+use App\Models\Tenant\TransporterDocument;
 use App\Models\Tenant\Vehicle;
 use App\Tenancy\TenantManager;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Publiczny profil transportera pod /t/{slug}. Marketing landing — pokazuje
@@ -69,6 +73,15 @@ class TransporterProfileController extends Controller
             )
             : [];
 
+        // Zanonimizowane certyfikaty / dokumenty potwierdzające jakość obsługi.
+        // Master admin wgrywa wersję bez PII przez `/admin/transporters/.../edit`
+        // → relation manager → akcja "Wgraj zanonimizowaną wersję".
+        $publicDocuments = Cache::remember(
+            "public_transporter_documents:{$slug}",
+            now()->addMinutes(10),
+            fn () => $this->loadPublicDocuments($tenant),
+        );
+
         return response()->view('public.transport.profile', [
             'tenant' => $tenant,
             'primary_color' => $branding['primary_color'] ?? '#A8956B',
@@ -84,7 +97,54 @@ class TransporterProfileController extends Controller
             'service_areas' => $serviceAreas,
             'review_aggregate' => $reviewAggregate,
             'latest_reviews' => $latestReviews,
+            'public_documents' => $publicDocuments,
         ])->header('Cache-Control', 'public, max-age=60, s-maxage=300');
+    }
+
+    /**
+     * Strumieniowanie zanonimizowanej wersji dokumentu jako podgląd inline.
+     * Publiczny endpoint bez auth — kontrole bezpieczeństwa:
+     *   1. Tenant musi być isVerifiedTransporter (404 dla pozostałych)
+     *   2. Dokument musi mieć `hasPublicVersion()` — status=verified AND
+     *      `public_file_path != null`
+     *   3. Plik musi istnieć fizycznie na dysku (graceful 404 dla orphan'ów)
+     *
+     * Cache 1h na CDN — zanonimizowane PDFy nie zmieniają się często, a koszt
+     * stream'owania PDFa z storage'u przez PHP nie jest pomijalny przy ruchu.
+     */
+    public function publicDocument(string $slug, string $document): StreamedResponse|Response
+    {
+        $tenant = $this->resolveTenant($slug);
+        if (! $tenant) {
+            abort(404);
+        }
+
+        // Skip-if-same-tenant guard — mirror `TransporterDocumentController`.
+        // Pozwala testom feature presetować tenant przez reflection (SQLite)
+        // bez nadpisywania connection'a prawdziwym MySQL configiem.
+        $lookup = fn () => TransporterDocument::query()->find($document);
+        /** @var TransporterDocument|null $doc */
+        $doc = $this->tenants->current()?->id === $tenant->id
+            ? $lookup()
+            : $this->tenants->execute($tenant, $lookup);
+        if (! $doc || ! $doc->hasPublicVersion()) {
+            abort(404);
+        }
+
+        $disk = Storage::disk((string) config('transport.documents.disk', 'local'));
+        if (! $disk->exists((string) $doc->public_file_path)) {
+            abort(404);
+        }
+
+        $mime = $doc->public_file_mime ?: ($disk->mimeType($doc->public_file_path) ?: 'application/octet-stream');
+        $typeLabel = $doc->document_type?->label() ?? 'document';
+        $filename = Str::slug($tenant->slug.'_'.$typeLabel).'.'.(pathinfo($doc->public_file_path ?? '', PATHINFO_EXTENSION) ?: 'pdf');
+
+        return $disk->response($doc->public_file_path, $filename, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="'.addslashes($filename).'"',
+            'Cache-Control' => 'public, max-age=3600, s-maxage=3600',
+        ]);
     }
 
     /**
@@ -151,6 +211,48 @@ class TransporterProfileController extends Controller
                         ? (string) ($v->photos[0]['url'] ?? $v->photos[0] ?? '')
                         : null,
                 ])
+                ->all();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
+     * Zanonimizowane dokumenty z `hasPublicVersion() === true` — lista
+     * do sekcji "Certyfikaty i licencje" na profilu publicznym. Każdy
+     * dokument prezentowany jako kafelek z ikonką typu + linkiem do
+     * `public.transporter.document` (inline PDF/JPG/PNG).
+     *
+     * Defensive try/catch + nullable return — w testach feature bez
+     * tenant DB albo dla starych tenantów bez migracji `public_*` kolumn
+     * sekcja po prostu znika (nie crashujemy całego profilu).
+     *
+     * @return list<array{id:string, type_value:string, type_label:string, uploaded_at:?CarbonInterface}>
+     */
+    private function loadPublicDocuments(Tenant $tenant): array
+    {
+        if ($this->tenants->current()?->id !== $tenant->id) {
+            try {
+                $this->tenants->setCurrent($tenant);
+            } catch (\Throwable) {
+                return [];
+            }
+        }
+
+        try {
+            return TransporterDocument::query()
+                ->where('status', TransporterDocument::STATUS_VERIFIED)
+                ->whereNotNull('public_file_path')
+                ->orderBy('document_type')
+                ->get(['id', 'document_type', 'public_uploaded_at'])
+                ->map(fn (TransporterDocument $d): array => [
+                    'id' => (string) $d->id,
+                    'type_value' => $d->document_type?->value ?? '',
+                    'type_label' => $d->document_type?->label() ?? '',
+                    'uploaded_at' => $d->public_uploaded_at,
+                ])
+                ->filter(fn (array $row) => $row['type_value'] !== '')
+                ->values()
                 ->all();
         } catch (\Throwable) {
             return [];

@@ -19,6 +19,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Master admin widok dokumentów per-transporter. UWAGA: `TransporterDocument`
@@ -107,6 +108,17 @@ class TransporterDocumentsRelationManager extends RelationManager
                     ->label(__('admin/transporter.documents.column.uploaded_at'))
                     ->dateTime()
                     ->since(),
+                Tables\Columns\IconColumn::make('public_file_path')
+                    ->label(__('admin/transporter.documents.column.public'))
+                    ->boolean()
+                    ->getStateUsing(fn (TransporterDocument $r) => $r->hasPublicVersion())
+                    ->trueIcon('heroicon-o-globe-alt')
+                    ->falseIcon('heroicon-o-no-symbol')
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->tooltip(fn (TransporterDocument $r) => $r->hasPublicVersion()
+                        ? __('admin/transporter.documents.public.yes_tooltip')
+                        : __('admin/transporter.documents.public.no_tooltip')),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -137,6 +149,99 @@ class TransporterDocumentsRelationManager extends RelationManager
                         'tenant' => $tenant->id,
                         'document' => $r->id,
                     ])),
+                Tables\Actions\Action::make('upload_anonymized')
+                    ->label(__('admin/transporter.documents.action.upload_anonymized'))
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('primary')
+                    ->visible(fn (TransporterDocument $r) => $r->status === TransporterDocument::STATUS_VERIFIED)
+                    ->modalDescription(__('admin/transporter.documents.upload_anonymized.modal_description'))
+                    ->form([
+                        Forms\Components\FileUpload::make('public_file')
+                            ->label(__('admin/transporter.documents.upload_anonymized.file_label'))
+                            ->required()
+                            ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
+                            ->maxSize(5120) // 5MB — public profile, niech będzie lekkie
+                            ->disk((string) config('transport.documents.disk', 'local'))
+                            ->directory(fn () => 'transporter-docs/'.$tenant->id.'/public')
+                            ->preserveFilenames(false)
+                            ->helperText(__('admin/transporter.documents.upload_anonymized.helper')),
+                    ])
+                    ->action(function (TransporterDocument $r, array $data) use ($tenant) {
+                        $this->setTenantContext($tenant);
+                        $disk = Storage::disk((string) config('transport.documents.disk', 'local'));
+
+                        // Filament zapisał plik pod ścieżką w `public_file` —
+                        // może być string (single path) lub array (multi upload).
+                        $uploaded = is_array($data['public_file'])
+                            ? (string) reset($data['public_file'])
+                            : (string) $data['public_file'];
+
+                        // Wyciągamy meta bezpośrednio z dysku — UploadedFile
+                        // Filament już zwolnił (post-action).
+                        $size = $disk->size($uploaded);
+                        $mime = $disk->mimeType($uploaded) ?: 'application/octet-stream';
+
+                        // Stary zanonimizowany plik (jeśli był) usuwamy — admin
+                        // wgrał nową wersję, chcemy clean tracking.
+                        if (! empty($r->public_file_path) && $r->public_file_path !== $uploaded) {
+                            $disk->delete($r->public_file_path);
+                        }
+
+                        $r->forceFill([
+                            'public_file_path' => $uploaded,
+                            'public_file_size' => $size,
+                            'public_file_mime' => $mime,
+                            'public_uploaded_at' => now(),
+                            'public_uploaded_by_user_id' => Auth::id() !== null ? (string) Auth::id() : null,
+                        ])->save();
+
+                        app(MasterAuditLogger::class)->record(
+                            action: 'transporter_document.public_uploaded',
+                            targetType: 'TransporterDocument',
+                            targetId: (string) $r->id,
+                            tenantId: (string) $tenant->id,
+                            payload: ['type' => $r->document_type?->value, 'size' => $size],
+                        );
+
+                        Notification::make()
+                            ->success()
+                            ->title(__('admin/transporter.documents.notify.public_uploaded'))
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('remove_anonymized')
+                    ->label(__('admin/transporter.documents.action.remove_anonymized'))
+                    ->icon('heroicon-o-x-mark')
+                    ->color('danger')
+                    ->visible(fn (TransporterDocument $r) => ! empty($r->public_file_path))
+                    ->requiresConfirmation()
+                    ->modalDescription(__('admin/transporter.documents.remove_anonymized.modal_description'))
+                    ->action(function (TransporterDocument $r) use ($tenant) {
+                        $this->setTenantContext($tenant);
+                        if (! empty($r->public_file_path)) {
+                            Storage::disk((string) config('transport.documents.disk', 'local'))
+                                ->delete($r->public_file_path);
+                        }
+                        $r->forceFill([
+                            'public_file_path' => null,
+                            'public_file_size' => null,
+                            'public_file_mime' => null,
+                            'public_uploaded_at' => null,
+                            'public_uploaded_by_user_id' => null,
+                        ])->save();
+
+                        app(MasterAuditLogger::class)->record(
+                            action: 'transporter_document.public_removed',
+                            targetType: 'TransporterDocument',
+                            targetId: (string) $r->id,
+                            tenantId: (string) $tenant->id,
+                            payload: ['type' => $r->document_type?->value],
+                        );
+
+                        Notification::make()
+                            ->warning()
+                            ->title(__('admin/transporter.documents.notify.public_removed'))
+                            ->send();
+                    }),
                 Tables\Actions\Action::make('verify_doc')
                     ->label(__('transport/documents.admin.verify_doc'))
                     ->icon('heroicon-o-shield-check')

@@ -42,6 +42,13 @@
         .vehicle .meta { color: var(--muted); font-size: .88rem; margin-bottom: .5rem; }
         .badges { display: flex; flex-wrap: wrap; gap: .35rem; }
         .badge { display: inline-block; padding: .2rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 600; background: color-mix(in srgb, var(--primary) 15%, transparent); color: color-mix(in srgb, var(--primary) 80%, #000); }
+        .certificates { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+        .cert-card { display: flex; align-items: center; gap: .8rem; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: .85rem 1rem; text-decoration: none; color: inherit; transition: border-color .15s, transform .15s; }
+        .cert-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .cert-card .ico { flex: 0 0 36px; width: 36px; height: 36px; border-radius: 8px; background: color-mix(in srgb, var(--primary) 18%, #fff); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .cert-card .body { display: flex; flex-direction: column; min-width: 0; }
+        .cert-card .title { font-size: .92rem; font-weight: 600; color: #3D2E22; line-height: 1.25; }
+        .cert-card .meta { font-size: .76rem; color: var(--muted); margin-top: .15rem; }
         .voivodeships { display: flex; flex-wrap: wrap; gap: .4rem; }
         .voiv { display: inline-block; padding: .35rem .8rem; border-radius: 999px; font-size: .85rem; background: var(--card); border: 1px solid var(--border); color: #3D2E22; }
         .voiv.primary { background: color-mix(in srgb, var(--primary) 20%, #fff); border-color: var(--primary); color: #3D2E22; font-weight: 600; }
@@ -176,6 +183,30 @@
                                 @endif
                             </div>
                         </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
+    @if (! empty($public_documents))
+        <section class="section">
+            <div class="container">
+                <h2>{{ __('public/transporter_profile.section_certificates') }}</h2>
+                <p style="color: var(--muted); font-size: .9rem; margin: -.5rem 0 1rem;">
+                    {{ __('public/transporter_profile.section_certificates_intro') }}
+                </p>
+                <div class="certificates">
+                    @foreach ($public_documents as $doc)
+                        <a class="cert-card" href="{{ route('public.transporter.document', ['slug' => $tenant->slug, 'document' => $doc['id']]) }}" target="_blank" rel="noopener">
+                            <span class="ico" aria-hidden="true">📄</span>
+                            <span class="body">
+                                <span class="title">{{ $doc['type_label'] }}</span>
+                                @if (! empty($doc['uploaded_at']))
+                                    <span class="meta">{{ __('public/transporter_profile.cert_uploaded', ['date' => $doc['uploaded_at']->format('Y-m')]) }}</span>
+                                @endif
+                            </span>
+                        </a>
                     @endforeach
                 </div>
             </div>

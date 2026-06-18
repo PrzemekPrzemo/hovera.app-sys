@@ -13,6 +13,9 @@ return [
     'section_fleet' => 'Nasza flota',
     'section_coverage' => 'Obszar działania',
     'section_contact' => 'Kontakt',
+    'section_certificates' => 'Certyfikaty i licencje',
+    'section_certificates_intro' => 'Dokumenty potwierdzone i zanonimizowane przez zespół Hovera.',
+    'cert_uploaded' => 'Aktualizacja: :date',
 
     'vehicle_capacity' => '{1} :count koń|{2,3,4} :count konie|[5,*] :count koni',
     'vehicle_year' => 'rocznik :year',
