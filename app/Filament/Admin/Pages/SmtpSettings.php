@@ -84,6 +84,10 @@ class SmtpSettings extends Page implements HasForms
             'default_skip_tls_verify' => (bool) SystemSetting::getValue('mail.default.skip_tls_verify', false),
             'default_from_address' => SystemSetting::getValue('mail.default.from_address', config('mail.from.address')),
             'default_from_name' => SystemSetting::getValue('mail.default.from_name', config('mail.from.name')),
+            // Mailgun (alternatywa do SMTP — gdy `secret` jest ustawiony, wygrywa).
+            'mailgun_domain' => SystemSetting::getSecret('mail.mailgun.domain', '') ?? '',
+            'mailgun_secret' => '', // leave blank to keep
+            'mailgun_endpoint' => SystemSetting::getValue('mail.mailgun.endpoint', 'api.eu.mailgun.net'),
             // Transport mailer
             'transport_host' => SystemSetting::getSecret('mail.transport.host', '') ?? '',
             'transport_port' => SystemSetting::getValue('mail.transport.port', 587),
@@ -157,6 +161,38 @@ class SmtpSettings extends Page implements HasForms
                         Forms\Components\TextInput::make('default_from_name')
                             ->label(__('admin/smtp.form.label.from_name'))
                             ->placeholder('Hovera'),
+                    ]),
+
+                Forms\Components\Section::make(__('admin/smtp.form.section.mailgun'))
+                    ->description(__('admin/smtp.form.section.mailgun_description'))
+                    ->icon('heroicon-o-paper-airplane')
+                    ->collapsed(fn () => SystemSetting::getSecret('mail.mailgun.secret') === null)
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('mailgun_domain')
+                            ->label(__('admin/smtp.form.label.mailgun_domain'))
+                            ->placeholder('hovera.pl')
+                            ->helperText(__('admin/smtp.form.helper.mailgun_domain')),
+                        Forms\Components\Select::make('mailgun_endpoint')
+                            ->label(__('admin/smtp.form.label.mailgun_endpoint'))
+                            ->options([
+                                'api.eu.mailgun.net' => 'EU — api.eu.mailgun.net',
+                                'api.mailgun.net' => 'US — api.mailgun.net',
+                            ])
+                            ->default('api.eu.mailgun.net')
+                            ->helperText(__('admin/smtp.form.helper.mailgun_endpoint')),
+                        Forms\Components\TextInput::make('mailgun_secret')
+                            ->label(__('admin/smtp.form.label.mailgun_secret'))
+                            ->password()
+                            ->revealable()
+                            ->placeholder('key-***')
+                            ->helperText(__('admin/smtp.form.helper.password_leave_blank'))
+                            ->columnSpanFull(),
+                        Forms\Components\Placeholder::make('mailgun_status')
+                            ->label(__('admin/smtp.form.label.status'))
+                            ->content(fn () => SystemSetting::getSecret('mail.mailgun.secret')
+                                ? __('admin/smtp.form.status.mailgun_active')
+                                : __('admin/smtp.form.status.mailgun_inactive')),
                     ]),
 
                 Forms\Components\Section::make(__('admin/smtp.form.section.transport'))
@@ -245,6 +281,21 @@ class SmtpSettings extends Page implements HasForms
             );
         }
 
+        // Mailgun (API transport — alternatywa do SMTP). `secret` jest super-secret
+        // (API key), zapisujemy zawsze gdy wpisany; pusty = zachowaj poprzedni.
+        $mailgunDomain = trim((string) ($form['mailgun_domain'] ?? ''));
+        if ($mailgunDomain !== '') {
+            SystemSetting::setSecret('mail.mailgun.domain', $mailgunDomain);
+        }
+        $mailgunSecret = trim((string) ($form['mailgun_secret'] ?? ''));
+        if ($mailgunSecret !== '') {
+            SystemSetting::setSecret('mail.mailgun.secret', $mailgunSecret);
+        }
+        $mailgunEndpoint = trim((string) ($form['mailgun_endpoint'] ?? ''));
+        if ($mailgunEndpoint !== '') {
+            SystemSetting::setValue('mail.mailgun.endpoint', $mailgunEndpoint);
+        }
+
         Notification::make()
             ->title(__('admin/smtp.action.saved'))
             ->body(__('admin/smtp.action.saved_body'))
@@ -315,8 +366,12 @@ class SmtpSettings extends Page implements HasForms
         $effectiveFromAddress = (string) (config('mail.from.address') ?? '');
         $effectiveFromName = (string) (config('mail.from.name') ?? '');
 
+        $mailgunDomain = (string) (config('services.mailgun.domain') ?? '');
+        $mailgunEndpoint = (string) (config('services.mailgun.endpoint') ?? '');
+
         $statusBadge = match (true) {
             in_array($effectiveMailer, ['log', 'array'], true) => '<span class="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-800">'.e($effectiveMailer).' — '.e(__('admin/smtp.diagnostics.not_sending')).'</span>',
+            $effectiveMailer === 'mailgun' && $mailgunDomain !== '' => '<span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">mailgun → '.e($mailgunDomain).' ('.e($mailgunEndpoint).')</span>',
             $effectiveMailer === 'smtp' && $effectiveHost !== '' => '<span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">smtp → '.e($effectiveHost).'</span>',
             default => '<span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">'.e($effectiveMailer).' — '.e(__('admin/smtp.diagnostics.no_host')).'</span>',
         };
@@ -324,7 +379,7 @@ class SmtpSettings extends Page implements HasForms
         $rows = [
             [__('admin/smtp.diagnostics.effective_mailer'), $statusBadge],
             [__('admin/smtp.diagnostics.env_mailer'), '<code class="text-xs">'.e($envMailer).'</code>'],
-            [__('admin/smtp.diagnostics.override_active'), $hasSystemSettingHost
+            [__('admin/smtp.diagnostics.override_active'), ($hasSystemSettingHost || SystemSetting::getSecret('mail.mailgun.secret') !== null)
                 ? '<span class="text-emerald-700">✓ '.e(__('admin/smtp.diagnostics.override_yes')).'</span>'
                 : '<span class="text-gray-500">'.e(__('admin/smtp.diagnostics.override_no')).'</span>'],
             [__('admin/smtp.diagnostics.from'), $effectiveFromAddress !== ''

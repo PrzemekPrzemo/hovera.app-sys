@@ -10,8 +10,10 @@ return [
         'section' => [
             'diagnostics' => '🔬 Diagnostyka — aktywny mailer',
             'diagnostics_description' => 'Sprawdź czy konfiguracja SMTP faktycznie obowiązuje. Jeśli „aktywny mailer" pokazuje log/array — maile lądują w storage/logs/laravel.log zamiast wychodzić przez SMTP, mimo zapisanego konfigu.',
-            'default' => 'Mailer domyślny (master admin, password reset, notyfikacje)',
-            'default_description' => 'Używany do: password reset linkow, notyfikacji do master adminów, alertów systemowych, emaili do tenantów (np. weryfikacja firmy transportowej).',
+            'default' => 'Mailer domyślny SMTP (master admin, password reset, notyfikacje)',
+            'default_description' => 'Używany do: password reset linkow, notyfikacji do master adminów, alertów systemowych, emaili do tenantów (np. weryfikacja firmy transportowej). Klasyczny SMTP — Gmail, Postmark, własny serwer pocztowy.',
+            'mailgun' => 'Mailgun API (alternatywa do SMTP, EU region)',
+            'mailgun_description' => 'Mailgun API — szybsze i bardziej niezawodne niż SMTP, szczególnie przy większych wolumenach. Gdy `secret` jest ustawiony, Mailgun WYGRYWA nad konfiguracją SMTP powyżej. Wymaga zweryfikowanej domeny w panelu Mailgun (Sending → Domain settings → DNS — SPF + DKIM TXT).',
             'transport' => 'Mailer transport (oferty + dispatcher do kierowców)',
             'transport_description' => 'Dedykowany mailer dla emaili wychodzących z modułu transport — oferty do klientów, dispatcher do kierowców, prośby o recenzje. Osobne creds + osobny "From" żeby zachować reputację domeny niezależnie od mailera systemowego.',
             'test' => '🧪 Test wysyłki',
@@ -29,10 +31,15 @@ return [
             'status' => 'Status',
             'test_email' => 'Wyślij testowy email do',
             'effective_mailer' => 'Stan konfiguracji',
+            'mailgun_domain' => 'Mailgun domena (verified)',
+            'mailgun_secret' => 'Mailgun API key',
+            'mailgun_endpoint' => 'Region Mailgun',
         ],
         'helper' => [
             'host' => 'Np. smtp.gmail.com, smtp.sendgrid.net, smtp-relay.brevo.com',
-            'password_leave_blank' => 'Pozostaw puste żeby NIE zmieniać. Wpisanie nowego hasła nadpisze poprzednie.',
+            'password_leave_blank' => 'Pozostaw puste żeby NIE zmieniać. Wpisanie nowej wartości nadpisze poprzednią.',
+            'mailgun_domain' => 'Domena zweryfikowana w panelu Mailgun, np. `hovera.pl` lub subdomen `mg.hovera.pl`.',
+            'mailgun_endpoint' => 'EU (api.eu.mailgun.net) dla domen zarejestrowanych w regionie EU. US tylko gdy konto Mailgun jest amerykańskie.',
             'test_email' => 'Domyślnie Twój email master admina. Sprawdzi czy SMTP faktycznie wysyła.',
             'skip_tls_verify' => 'Włącz TYLKO jeśli widzisz "peer certificate CN did not match expected CN" — typowo gdy shared hosting (lh.pl, home.pl, nazwa.pl) serwuje wildcard cert na innej domenie. Wyłącza weryfikację certyfikatu TLS — downgrade ochrony MITM. Akceptowalne dla maili transactional, NIE używaj dla mailerów publicznych.',
         ],
@@ -42,6 +49,8 @@ return [
         'status' => [
             'configured' => '✓ Skonfigurowane (override .env)',
             'using_env' => '⚠ Używa wartości z .env (nie skonfigurowane w UI)',
+            'mailgun_active' => '✓ Mailgun aktywny — wszystkie emaile idą przez Mailgun API',
+            'mailgun_inactive' => '⚠ Mailgun nie skonfigurowany — system używa SMTP / .env',
         ],
     ],
 
