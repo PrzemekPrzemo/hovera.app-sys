@@ -120,7 +120,7 @@ run "$COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autolo
 # Stąd recursive chmod 775 + sticky bit (2755) na katalogach żeby nowe
 # pliki dziedziczyły group ownership. Chown używa HOVERA_VHOST_USER/GROUP
 # z scripts/detect-env.sh (Plesk) lub fallback www-data (VPS).
-log "→ Permissions storage + bootstrap/cache"
+log "→ Permissions storage + bootstrap/cache + vendor"
 HOVERA_VHOST_USER="${HOVERA_VHOST_USER:-www-data}"
 HOVERA_VHOST_GROUP="${HOVERA_VHOST_GROUP:-www-data}"
 
@@ -135,15 +135,27 @@ else
     CHOWN_CMD=""
 fi
 
+# `vendor/` dodajemy do chown'a (regression fix): wcześniej pierwszy
+# `composer install` uruchomiony jako root tworzył pliki z root ownership;
+# kolejny `hu` (composer install jako vhost user) failował na updateach
+# pakietów typu `Could not delete vendor/symfony/.../*.php`. Chown TUŻ
+# PRZED composer install gwarantuje że vendor/ jest w pełni writable
+# dla usera który uruchamia composer.
+CHOWN_TARGETS="storage bootstrap/cache"
+if [[ -d vendor ]]; then
+    CHOWN_TARGETS="$CHOWN_TARGETS vendor"
+fi
+
 if [[ -n "$CHOWN_CMD" ]]; then
-    if ! run "$CHOWN_CMD -R ${HOVERA_VHOST_USER}:${HOVERA_VHOST_GROUP} storage bootstrap/cache" 2>&1; then
+    if ! run "$CHOWN_CMD -R ${HOVERA_VHOST_USER}:${HOVERA_VHOST_GROUP} $CHOWN_TARGETS" 2>&1; then
         warn "chown failed — sprawdź czy uruchamiasz deploy jako root lub user z sudo NOPASSWD."
-        warn "Bez chown PHP-FPM nie zapisze do storage/. Manual fix:"
-        warn "  sudo chown -R ${HOVERA_VHOST_USER}:${HOVERA_VHOST_GROUP} storage bootstrap/cache"
+        warn "Bez chown PHP-FPM nie zapisze do storage/ i composer install może failować na vendor/."
+        warn "Manual fix:"
+        warn "  sudo chown -R ${HOVERA_VHOST_USER}:${HOVERA_VHOST_GROUP} $CHOWN_TARGETS"
     fi
 else
-    warn "Brak uprawnień do chown (nie root + brak sudo). Storage permissions mogą być błędne."
-    warn "Manual fix po deploy: sudo chown -R ${HOVERA_VHOST_USER}:${HOVERA_VHOST_GROUP} storage bootstrap/cache"
+    warn "Brak uprawnień do chown (nie root + brak sudo). Storage / vendor permissions mogą być błędne."
+    warn "Manual fix po deploy: sudo chown -R ${HOVERA_VHOST_USER}:${HOVERA_VHOST_GROUP} $CHOWN_TARGETS"
 fi
 
 run "chmod -R u+rwX,g+rwX,o+rX storage bootstrap/cache"
