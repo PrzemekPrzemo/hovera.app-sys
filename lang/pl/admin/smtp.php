@@ -34,12 +34,18 @@ return [
             'mailgun_domain' => 'Mailgun domena (verified)',
             'mailgun_secret' => 'Mailgun API key',
             'mailgun_endpoint' => 'Region Mailgun',
+            'mailgun_from_address' => 'Mailgun „From" — adres nadawcy',
+            'mailgun_from_name' => 'Mailgun „From" — nazwa nadawcy',
+            'reply_to_address' => 'Reply-To — adres na który mają trafiać odpowiedzi',
+            'reply_to_name' => 'Reply-To — nazwa',
         ],
         'helper' => [
             'host' => 'Np. smtp.gmail.com, smtp.sendgrid.net, smtp-relay.brevo.com',
             'password_leave_blank' => 'Pozostaw puste żeby NIE zmieniać. Wpisanie nowej wartości nadpisze poprzednią.',
             'mailgun_domain' => 'Domena zweryfikowana w panelu Mailgun, np. `hovera.pl` lub subdomen `mg.hovera.pl`.',
             'mailgun_endpoint' => 'EU (api.eu.mailgun.net) dla domen zarejestrowanych w regionie EU. US tylko gdy konto Mailgun jest amerykańskie.',
+            'mailgun_from_address' => 'MUSI być na verified domain z Mailgun panel\'a (np. noreply@hovera.pl gdy verified = hovera.pl). Inaczej Mailgun zwróci 401 Forbidden. Puste = fallback do „From email" z sekcji SMTP wyżej.',
+            'reply_to_address' => 'Adres skrzynki na którą trafiają odpowiedzi gdy klient kliknie „Reply" w mailu. Działa dla SMTP i Mailguna globalnie. Typowo `kontakt@hovera.pl` albo `support@hovera.pl`.',
             'test_email' => 'Domyślnie Twój email master admina. Sprawdzi czy SMTP faktycznie wysyła.',
             'skip_tls_verify' => 'Włącz TYLKO jeśli widzisz "peer certificate CN did not match expected CN" — typowo gdy shared hosting (lh.pl, home.pl, nazwa.pl) serwuje wildcard cert na innej domenie. Wyłącza weryfikację certyfikatu TLS — downgrade ochrony MITM. Akceptowalne dla maili transactional, NIE używaj dla mailerów publicznych.',
         ],
@@ -77,6 +83,9 @@ return [
         'no_host' => 'brak SMTP host',
         'log_mailer_warning' => 'Aktywny mailer to „:mailer" — to znaczy że emaile NIE wychodzą przez SMTP tylko lądują w logu (storage/logs/laravel.log) lub pamięci. Aby naprawić: zapisz konfigurację SMTP poniżej (Save), wtedy AppServiceProvider automatycznie przełączy mailer na „smtp" przy następnym requestzie.',
         'log_mailer_explanation' => 'Konfiguracja SMTP zapisana w UI NIE wystarczy jeśli aktywny mailer to log/array. W tej sytuacji: 1) Wypełnij host/port/username/password/from poniżej, 2) Kliknij „Zapisz konfigurację SMTP", 3) Odśwież tę stronę — diagnostyka powinna pokazać „smtp → <host>". 4) Potem kliknij „Wyślij test".',
+        'mailgun_from_mismatch_warning' => '⚠ From „@:from_domain" NIE zgadza się z verified Mailgun domain „:verified_domain". Mailgun ODRZUCI maila z błędem 401 Forbidden. Napraw: wpisz w polu „Mailgun From email" adres na verified domain (np. noreply@:verified_domain) i zapisz.',
+        'mailgun_401_from_mismatch' => '✗ From „@:from_domain" nie zgadza się z verified Mailgun domain „:verified_domain". To NAJCZĘSTSZA przyczyna 401 — adres nadawcy musi być na zweryfikowanej domenie.',
+        'mailgun_401_hint' => 'Inne przyczyny 401 Forbidden: (a) zły region — w panelu Mailgun domena jest US, a wybrałeś endpoint EU (lub vice versa), (b) skopiowana spacja na końcu API key, (c) używasz sandbox API key z production konta (lub vice versa).',
     ],
 
     'test_email' => [

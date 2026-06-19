@@ -84,10 +84,15 @@ class SmtpSettings extends Page implements HasForms
             'default_skip_tls_verify' => (bool) SystemSetting::getValue('mail.default.skip_tls_verify', false),
             'default_from_address' => SystemSetting::getValue('mail.default.from_address', config('mail.from.address')),
             'default_from_name' => SystemSetting::getValue('mail.default.from_name', config('mail.from.name')),
+            // Global reply-to (Mail::alwaysReplyTo) — działa dla wszystkich mailerów.
+            'reply_to_address' => SystemSetting::getValue('mail.default.reply_to_address', ''),
+            'reply_to_name' => SystemSetting::getValue('mail.default.reply_to_name', ''),
             // Mailgun (alternatywa do SMTP — gdy `secret` jest ustawiony, wygrywa).
             'mailgun_domain' => SystemSetting::getSecret('mail.mailgun.domain', '') ?? '',
             'mailgun_secret' => '', // leave blank to keep
             'mailgun_endpoint' => SystemSetting::getValue('mail.mailgun.endpoint', 'api.eu.mailgun.net'),
+            'mailgun_from_address' => SystemSetting::getValue('mail.mailgun.from_address', ''),
+            'mailgun_from_name' => SystemSetting::getValue('mail.mailgun.from_name', ''),
             // Transport mailer
             'transport_host' => SystemSetting::getSecret('mail.transport.host', '') ?? '',
             'transport_port' => SystemSetting::getValue('mail.transport.port', 587),
@@ -161,6 +166,14 @@ class SmtpSettings extends Page implements HasForms
                         Forms\Components\TextInput::make('default_from_name')
                             ->label(__('admin/smtp.form.label.from_name'))
                             ->placeholder('Hovera'),
+                        Forms\Components\TextInput::make('reply_to_address')
+                            ->label(__('admin/smtp.form.label.reply_to_address'))
+                            ->email()
+                            ->placeholder('kontakt@hovera.pl')
+                            ->helperText(__('admin/smtp.form.helper.reply_to_address')),
+                        Forms\Components\TextInput::make('reply_to_name')
+                            ->label(__('admin/smtp.form.label.reply_to_name'))
+                            ->placeholder('Hovera — Wsparcie'),
                     ]),
 
                 Forms\Components\Section::make(__('admin/smtp.form.section.mailgun'))
@@ -188,11 +201,20 @@ class SmtpSettings extends Page implements HasForms
                             ->placeholder('key-***')
                             ->helperText(__('admin/smtp.form.helper.password_leave_blank'))
                             ->columnSpanFull(),
+                        Forms\Components\TextInput::make('mailgun_from_address')
+                            ->label(__('admin/smtp.form.label.mailgun_from_address'))
+                            ->email()
+                            ->placeholder('noreply@hovera.pl')
+                            ->helperText(__('admin/smtp.form.helper.mailgun_from_address')),
+                        Forms\Components\TextInput::make('mailgun_from_name')
+                            ->label(__('admin/smtp.form.label.mailgun_from_name'))
+                            ->placeholder('Hovera'),
                         Forms\Components\Placeholder::make('mailgun_status')
                             ->label(__('admin/smtp.form.label.status'))
                             ->content(fn () => SystemSetting::getSecret('mail.mailgun.secret')
                                 ? __('admin/smtp.form.status.mailgun_active')
-                                : __('admin/smtp.form.status.mailgun_inactive')),
+                                : __('admin/smtp.form.status.mailgun_inactive'))
+                            ->columnSpanFull(),
                     ]),
 
                 Forms\Components\Section::make(__('admin/smtp.form.section.transport'))
@@ -295,6 +317,24 @@ class SmtpSettings extends Page implements HasForms
         if ($mailgunEndpoint !== '') {
             SystemSetting::setValue('mail.mailgun.endpoint', $mailgunEndpoint);
         }
+        // Mailgun-specific From — MUSI być na verified domain z Mailgun panel'a,
+        // inaczej API zwraca 401 Forbidden. Puste pole = fallback do default.from.
+        foreach (['from_address', 'from_name'] as $field) {
+            $value = trim((string) ($form["mailgun_{$field}"] ?? ''));
+            if ($value !== '') {
+                SystemSetting::setValue("mail.mailgun.{$field}", $value);
+            }
+        }
+
+        // Global Reply-To — Laravel `Mail::alwaysReplyTo` applied w
+        // AppServiceProvider, działa dla SMTP + Mailgun + transport mailera.
+        // Puste = nie ustawiamy global hook'a (mailables mogą mieć własne replyTo).
+        foreach (['reply_to_address', 'reply_to_name'] as $field) {
+            $value = trim((string) ($form[$field] ?? ''));
+            if ($value !== '') {
+                SystemSetting::setValue("mail.default.{$field}", $value);
+            }
+        }
 
         Notification::make()
             ->title(__('admin/smtp.action.saved'))
@@ -340,13 +380,56 @@ class SmtpSettings extends Page implements HasForms
                 ->success()
                 ->send();
         } catch (\Throwable $e) {
+            // 401 Forbidden z Mailguna ma typowo 3 przyczyny — pomagamy adminowi
+            // zdiagnozować zamiast pokazywać surowy "Forbidden" bez kontekstu.
+            $hint = $this->guessMailerErrorHint($e->getMessage(), $effectiveMailer);
             Notification::make()
                 ->title(__('admin/smtp.action.test_failed'))
-                ->body($e->getMessage())
+                ->body($e->getMessage().($hint !== '' ? "\n\n".$hint : ''))
                 ->danger()
                 ->persistent()
                 ->send();
         }
+    }
+
+    /**
+     * Heurystyka diagnostyczna dla typowych błędów wysyłki — pomaga master
+     * adminowi zlokalizować problem zamiast googlować surowy komunikat.
+     */
+    private function guessMailerErrorHint(string $errorMessage, string $effectiveMailer): string
+    {
+        $lower = strtolower($errorMessage);
+        if ($effectiveMailer !== 'mailgun') {
+            return '';
+        }
+        // 401 / 403 z Mailguna — 3 typowe przyczyny.
+        if (str_contains($lower, '401') || str_contains($lower, '403')
+            || str_contains($lower, 'forbidden') || str_contains($lower, 'unauthorized')) {
+            $fromDomain = $this->fromDomainOrNull();
+            $verifiedDomain = (string) (config('services.mailgun.domain') ?? '');
+            $details = [];
+            if ($fromDomain && $verifiedDomain && $fromDomain !== $verifiedDomain) {
+                $details[] = __('admin/smtp.diagnostics.mailgun_401_from_mismatch', [
+                    'from_domain' => $fromDomain,
+                    'verified_domain' => $verifiedDomain,
+                ]);
+            }
+            $details[] = __('admin/smtp.diagnostics.mailgun_401_hint');
+
+            return implode("\n", $details);
+        }
+
+        return '';
+    }
+
+    private function fromDomainOrNull(): ?string
+    {
+        $fromAddress = (string) (config('mail.from.address') ?? '');
+        if ($fromAddress === '' || ! str_contains($fromAddress, '@')) {
+            return null;
+        }
+
+        return strtolower(trim(substr(strrchr($fromAddress, '@'), 1)));
     }
 
     /**
@@ -400,6 +483,20 @@ class SmtpSettings extends Page implements HasForms
             $html .= '<div class="mt-3 rounded-md bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-900/30 dark:text-rose-200">'
                 .e(__('admin/smtp.diagnostics.log_mailer_explanation'))
                 .'</div>';
+        }
+
+        // Mailgun aktywny + From domain != verified domain → bardzo
+        // częsta przyczyna 401 Forbidden. Pokazujemy zanim user kliknie test.
+        if ($effectiveMailer === 'mailgun') {
+            $fromDomain = $this->fromDomainOrNull();
+            if ($fromDomain && $mailgunDomain !== '' && $fromDomain !== strtolower($mailgunDomain)) {
+                $html .= '<div class="mt-3 rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">'
+                    .e(__('admin/smtp.diagnostics.mailgun_from_mismatch_warning', [
+                        'from_domain' => $fromDomain,
+                        'verified_domain' => $mailgunDomain,
+                    ]))
+                    .'</div>';
+            }
         }
 
         return new HtmlString($html);
