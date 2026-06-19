@@ -16,6 +16,21 @@ return [
     |
     */
 
+    /*
+     * Mailgun — transactional mail dla całego systemu (signupy, fakturowanie,
+     * notyfikacje boarding, recenzje, etc.). Hovera używa regionu EU, więc
+     * endpoint default to `api.eu.mailgun.net` (US endpoint to `api.mailgun.net`).
+     * `domain` musi pasować do zweryfikowanej domeny w panelu Mailgun (np.
+     * `mg.hovera.pl` albo `hovera.pl` jeśli root DNS jest skonfigurowany).
+     * `scheme` (https/http) — domyślnie https, override tylko do testów lokalnych.
+     */
+    'mailgun' => [
+        'domain' => env('MAILGUN_DOMAIN'),
+        'secret' => env('MAILGUN_SECRET'),
+        'endpoint' => env('MAILGUN_ENDPOINT', 'api.eu.mailgun.net'),
+        'scheme' => env('MAILGUN_SCHEME', 'https'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],

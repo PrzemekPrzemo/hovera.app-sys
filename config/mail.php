@@ -51,6 +51,17 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        // Mailgun przez Symfony Mailer transport. Domain / secret / endpoint
+        // konfigurowane w `config/services.php` sekcja 'mailgun'. Hovera
+        // używa EU regionu — endpoint default `api.eu.mailgun.net`. Wymaga
+        // pakietów `symfony/mailgun-mailer` + `symfony/http-client`.
+        'mailgun' => [
+            'transport' => 'mailgun',
+            // 'client' => [
+            //     'timeout' => 5,
+            // ],
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
