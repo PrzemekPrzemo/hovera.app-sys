@@ -10,8 +10,10 @@ return [
         'section' => [
             'diagnostics' => '🔬 Diagnostics — active mailer',
             'diagnostics_description' => 'Verify SMTP config is actually in effect. If "active mailer" shows log/array — emails land in storage/logs/laravel.log instead of going out, despite a saved config.',
-            'default' => 'Default mailer (master admin, password reset, notifications)',
-            'default_description' => 'Used for: password reset links, master admin notifications, system alerts, tenant emails (e.g. transport company verification).',
+            'default' => 'Default SMTP mailer (master admin, password reset, notifications)',
+            'default_description' => 'Used for: password reset links, master admin notifications, system alerts, tenant emails (e.g. transport company verification). Classic SMTP — Gmail, Postmark, your own mail server.',
+            'mailgun' => 'Mailgun API (alternative to SMTP, EU region)',
+            'mailgun_description' => 'Mailgun API — faster and more reliable than SMTP, especially at higher volumes. When `secret` is set, Mailgun WINS over the SMTP config above. Requires a verified domain in the Mailgun panel (Sending → Domain settings → DNS — SPF + DKIM TXT records).',
             'transport' => 'Transport mailer (offers + dispatcher to drivers)',
             'transport_description' => 'Dedicated mailer for emails sent by the transport module — offers to customers, dispatcher to drivers, review requests. Separate credentials + separate "From" to keep domain reputation independent from the system mailer.',
             'test' => '🧪 Test send',
@@ -29,10 +31,15 @@ return [
             'status' => 'Status',
             'test_email' => 'Send test email to',
             'effective_mailer' => 'Configuration state',
+            'mailgun_domain' => 'Mailgun domain (verified)',
+            'mailgun_secret' => 'Mailgun API key',
+            'mailgun_endpoint' => 'Mailgun region',
         ],
         'helper' => [
             'host' => 'E.g. smtp.gmail.com, smtp.sendgrid.net, smtp-relay.brevo.com',
-            'password_leave_blank' => 'Leave empty to keep current password. Entering a new one overrides the previous.',
+            'password_leave_blank' => 'Leave empty to keep current value. Entering a new one overrides the previous.',
+            'mailgun_domain' => 'Domain verified in the Mailgun panel, e.g. `hovera.pl` or subdomain `mg.hovera.pl`.',
+            'mailgun_endpoint' => 'EU (api.eu.mailgun.net) for domains registered in the EU region. US only when the Mailgun account is US-based.',
             'test_email' => 'Defaults to your master admin email. Verifies SMTP actually sends.',
             'skip_tls_verify' => 'Enable ONLY if you see "peer certificate CN did not match expected CN" — typical when shared hosting (lh.pl, home.pl, nazwa.pl) serves a wildcard cert on a different domain. Disables TLS cert verification — downgrades MITM protection. Acceptable for transactional mail, do NOT use for public mailers.',
         ],
@@ -42,6 +49,8 @@ return [
         'status' => [
             'configured' => '✓ Configured (overrides .env)',
             'using_env' => '⚠ Using .env values (not configured in UI)',
+            'mailgun_active' => '✓ Mailgun active — all emails go through Mailgun API',
+            'mailgun_inactive' => '⚠ Mailgun not configured — system uses SMTP / .env',
         ],
     ],
 

@@ -245,6 +245,40 @@ class AppServiceProvider extends ServiceProvider
      */
     private function overrideMailConfigFromSystemSettings(): void
     {
+        // Mailgun (API transport) — preferowany nad SMTP gdy master admin
+        // skonfigurował creds w /admin/smtp-settings. Setting `mail.default
+        // = 'mailgun'` musi iść TYLKO gdy zarówno `secret` jak i `domain` są
+        // wpisane (oba wymagane przez symfony/mailgun-mailer transport).
+        $mailgunSecret = SystemSetting::getSecret('mail.mailgun.secret');
+        $mailgunDomain = SystemSetting::getSecret('mail.mailgun.domain');
+        if ($mailgunSecret !== null && $mailgunSecret !== ''
+            && $mailgunDomain !== null && $mailgunDomain !== '') {
+            config([
+                'mail.default' => 'mailgun',
+                'services.mailgun.domain' => $mailgunDomain,
+                'services.mailgun.secret' => $mailgunSecret,
+                'services.mailgun.endpoint' => SystemSetting::getValue('mail.mailgun.endpoint', 'api.eu.mailgun.net'),
+                'services.mailgun.scheme' => SystemSetting::getValue('mail.mailgun.scheme', 'https'),
+            ]);
+            // From address / name z mail.default.from_* — reużywamy żeby
+            // user nie musiał wpisywać dwa razy.
+            $fromAddress = SystemSetting::getValue('mail.default.from_address');
+            $fromName = SystemSetting::getValue('mail.default.from_name');
+            if ($fromAddress) {
+                config(['mail.from.address' => $fromAddress]);
+            }
+            if ($fromName) {
+                config(['mail.from.name' => $fromName]);
+            }
+
+            // Mailgun wygrywa — nie idziemy dalej do SMTP override'a.
+            // Transport mailer (osobne creds) nadal może być skonfigurowany,
+            // niżej.
+            $this->overrideTransportMailerFromSystemSettings();
+
+            return;
+        }
+
         // Default mailer (smtp) — master admin / password reset / system notifs
         $host = SystemSetting::getSecret('mail.default.host');
         if ($host !== null && $host !== '') {
@@ -278,29 +312,38 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        // Transport mailer (dedicated dla emaili wychodzących z modułu transport
-        // — oferty, dispatcher, recenzje). Osobna konfig żeby separacja
-        // reputacji domeny.
+        $this->overrideTransportMailerFromSystemSettings();
+    }
+
+    /**
+     * Transport mailer (dedicated dla emaili wychodzących z modułu transport —
+     * oferty, dispatcher, recenzje). Osobna konfig żeby separacja reputacji
+     * domeny. Wywoływane zarówno z SMTP path jak i z mailgun path (transport
+     * jest independent od default mailera).
+     */
+    private function overrideTransportMailerFromSystemSettings(): void
+    {
         $transportHost = SystemSetting::getSecret('mail.transport.host');
-        if ($transportHost !== null && $transportHost !== '') {
-            config([
-                'mail.mailers.transport.host' => $transportHost,
-                'mail.mailers.transport.port' => (int) SystemSetting::getValue('mail.transport.port', 587),
-                'mail.mailers.transport.username' => SystemSetting::getSecret('mail.transport.username'),
-                'mail.mailers.transport.password' => SystemSetting::getSecret('mail.transport.password'),
-                'mail.mailers.transport.encryption' => SystemSetting::getValue('mail.transport.encryption', 'tls') === 'null'
-                    ? null
-                    : SystemSetting::getValue('mail.transport.encryption', 'tls'),
-                'mail.mailers.transport.skip_tls_verify' => (bool) SystemSetting::getValue('mail.transport.skip_tls_verify', false),
-            ]);
-            $transportFromAddress = SystemSetting::getValue('mail.transport.from_address');
-            $transportFromName = SystemSetting::getValue('mail.transport.from_name');
-            if ($transportFromAddress) {
-                config(['mail.mailers.transport.from.address' => $transportFromAddress]);
-            }
-            if ($transportFromName) {
-                config(['mail.mailers.transport.from.name' => $transportFromName]);
-            }
+        if ($transportHost === null || $transportHost === '') {
+            return;
+        }
+        config([
+            'mail.mailers.transport.host' => $transportHost,
+            'mail.mailers.transport.port' => (int) SystemSetting::getValue('mail.transport.port', 587),
+            'mail.mailers.transport.username' => SystemSetting::getSecret('mail.transport.username'),
+            'mail.mailers.transport.password' => SystemSetting::getSecret('mail.transport.password'),
+            'mail.mailers.transport.encryption' => SystemSetting::getValue('mail.transport.encryption', 'tls') === 'null'
+                ? null
+                : SystemSetting::getValue('mail.transport.encryption', 'tls'),
+            'mail.mailers.transport.skip_tls_verify' => (bool) SystemSetting::getValue('mail.transport.skip_tls_verify', false),
+        ]);
+        $transportFromAddress = SystemSetting::getValue('mail.transport.from_address');
+        $transportFromName = SystemSetting::getValue('mail.transport.from_name');
+        if ($transportFromAddress) {
+            config(['mail.mailers.transport.from.address' => $transportFromAddress]);
+        }
+        if ($transportFromName) {
+            config(['mail.mailers.transport.from.name' => $transportFromName]);
         }
     }
 
