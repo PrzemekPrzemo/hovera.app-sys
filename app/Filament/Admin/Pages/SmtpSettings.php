@@ -13,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\HtmlString;
 
@@ -390,6 +391,93 @@ class SmtpSettings extends Page implements HasForms
                 ->persistent()
                 ->send();
         }
+    }
+
+    /**
+     * Direct check przeciwko Mailgun API — pomija Symfony mailer transport
+     * i pyta `GET /v4/domains/{domain}` z saved creds. Zwraca konkretną
+     * odpowiedź zamiast generycznego 401:
+     *   200 → "Połączenie OK. Domain state: active/unverified/disabled"
+     *   401 → "API key NIE pasuje do żadnego konta na tym endpointcie"
+     *   404 → "Konto OK, ale domena `:domain` nie istnieje (sprawdź region)"
+     *   network → "Nie można połączyć (hosting blokuje wychodzące HTTPS?)"
+     *
+     * Czyta z SystemSetting, NIE z form state — żeby user musiał najpierw
+     * zapisać Save (testujemy faktyczną żywą konfigurację, nie szkic).
+     */
+    public function checkMailgunConnection(): void
+    {
+        $domain = SystemSetting::getSecret('mail.mailgun.domain');
+        $secret = SystemSetting::getSecret('mail.mailgun.secret');
+        $endpoint = (string) SystemSetting::getValue('mail.mailgun.endpoint', 'api.eu.mailgun.net');
+
+        if (! $domain || ! $secret) {
+            Notification::make()
+                ->title(__('admin/smtp.action.check_mailgun_missing_creds_title'))
+                ->body(__('admin/smtp.action.check_mailgun_missing_creds_body'))
+                ->warning()
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        $url = "https://{$endpoint}/v4/domains/".rawurlencode($domain);
+
+        try {
+            $response = Http::withBasicAuth('api', $secret)
+                ->acceptJson()
+                ->timeout(15)
+                ->get($url);
+        } catch (\Throwable $e) {
+            Notification::make()
+                ->title(__('admin/smtp.action.check_mailgun_network_title'))
+                ->body(__('admin/smtp.action.check_mailgun_network_body', ['endpoint' => $endpoint, 'error' => $e->getMessage()]))
+                ->danger()
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        $body = trim((string) $response->body());
+
+        if ($response->successful()) {
+            $payload = $response->json();
+            $state = (string) (data_get($payload, 'domain.state') ?? 'unknown');
+            $type = (string) (data_get($payload, 'domain.type') ?? 'unknown');
+            $created = (string) (data_get($payload, 'domain.created_at') ?? '?');
+            Notification::make()
+                ->title(__('admin/smtp.action.check_mailgun_ok_title'))
+                ->body(__('admin/smtp.action.check_mailgun_ok_body', [
+                    'domain' => $domain,
+                    'state' => $state,
+                    'type' => $type,
+                    'created' => $created,
+                    'endpoint' => $endpoint,
+                ]))
+                ->success()
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        // 401/403/404 → konkretny komunikat z body Mailgun'a (np. "Invalid
+        // private key" / "domain not found").
+        $status = $response->status();
+        $hint = match (true) {
+            $status === 401 => __('admin/smtp.action.check_mailgun_401_hint', ['endpoint' => $endpoint]),
+            $status === 403 => __('admin/smtp.action.check_mailgun_403_hint'),
+            $status === 404 => __('admin/smtp.action.check_mailgun_404_hint', ['domain' => $domain, 'endpoint' => $endpoint]),
+            default => __('admin/smtp.action.check_mailgun_other_hint', ['status' => (string) $status]),
+        };
+        Notification::make()
+            ->title(__('admin/smtp.action.check_mailgun_failed_title', ['status' => (string) $status]))
+            ->body($hint."\n\n".__('admin/smtp.action.check_mailgun_response_body', ['body' => mb_substr($body, 0, 500)]))
+            ->danger()
+            ->persistent()
+            ->send();
     }
 
     /**
