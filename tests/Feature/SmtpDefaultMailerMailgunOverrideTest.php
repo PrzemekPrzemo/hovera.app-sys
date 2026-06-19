@@ -7,6 +7,8 @@ namespace Tests\Feature;
 use App\Models\Central\SystemSetting;
 use App\Providers\AppServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mime\Email;
 use Tests\TestCase;
 
 /**
@@ -85,6 +87,47 @@ class SmtpDefaultMailerMailgunOverrideTest extends TestCase
 
         $this->assertSame('noreply@hovera.pl', config('mail.from.address'));
         $this->assertSame('Hovera', config('mail.from.name'));
+    }
+
+    public function test_mailgun_specific_from_overrides_default(): void
+    {
+        // Master admin może mieć osobny From dla Mailguna (musi być na
+        // verified domain) różny od default.from_address (np. dla SMTP).
+        SystemSetting::setSecret('mail.mailgun.domain', 'hovera.pl');
+        SystemSetting::setSecret('mail.mailgun.secret', 'key-test-fake');
+        SystemSetting::setValue('mail.default.from_address', 'fallback@hovera.app');
+        SystemSetting::setValue('mail.mailgun.from_address', 'noreply@hovera.pl');
+        SystemSetting::setValue('mail.mailgun.from_name', 'Hovera Mailgun');
+
+        $this->invokeOverride();
+
+        $this->assertSame('noreply@hovera.pl', config('mail.from.address'));
+        $this->assertSame('Hovera Mailgun', config('mail.from.name'));
+    }
+
+    public function test_global_reply_to_is_applied(): void
+    {
+        // Global Reply-To powinno być ustawione przez Mail::alwaysReplyTo
+        // PRZED rozdzieleniem branchy (SMTP vs Mailgun) — działa dla obu.
+        // Testujemy przez ArrayTransport: każdy send'owany Symfony Message
+        // ląduje w kolekcji `messages()`, możemy odczytać header Reply-To.
+        SystemSetting::setValue('mail.default.reply_to_address', 'kontakt@hovera.pl');
+        SystemSetting::setValue('mail.default.reply_to_name', 'Hovera — Wsparcie');
+
+        config(['mail.default' => 'array']);
+        $this->invokeOverride();
+
+        Mail::raw('test', function ($m) {
+            $m->to('user@example.com')->subject('Test');
+        });
+
+        $messages = app('mail.manager')->mailer('array')->getSymfonyTransport()->messages();
+        $this->assertCount(1, $messages);
+        /** @var Email $mime */
+        $mime = $messages->first()->getOriginalMessage();
+        $replyToHeader = $mime->getReplyTo();
+        $this->assertNotEmpty($replyToHeader);
+        $this->assertSame('kontakt@hovera.pl', $replyToHeader[0]->getAddress());
     }
 
     public function test_smtp_path_still_works_when_mailgun_unset(): void

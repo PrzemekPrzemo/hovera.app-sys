@@ -245,6 +245,12 @@ class AppServiceProvider extends ServiceProvider
      */
     private function overrideMailConfigFromSystemSettings(): void
     {
+        // Global Reply-To — `Mail::alwaysReplyTo($address, $name)` applikuje się
+        // do wszystkich mailerów (SMTP / Mailgun / transport), bez względu na
+        // który gałąź override'a poniżej wejdzie. Robimy to PIERWSZE bo Mail
+        // facade musi mieć replyTo zarejestrowane przed pierwszym send'em.
+        $this->applyGlobalReplyToFromSystemSettings();
+
         // Mailgun (API transport) — preferowany nad SMTP gdy master admin
         // skonfigurował creds w /admin/smtp-settings. Setting `mail.default
         // = 'mailgun'` musi iść TYLKO gdy zarówno `secret` jak i `domain` są
@@ -260,10 +266,13 @@ class AppServiceProvider extends ServiceProvider
                 'services.mailgun.endpoint' => SystemSetting::getValue('mail.mailgun.endpoint', 'api.eu.mailgun.net'),
                 'services.mailgun.scheme' => SystemSetting::getValue('mail.mailgun.scheme', 'https'),
             ]);
-            // From address / name z mail.default.from_* — reużywamy żeby
-            // user nie musiał wpisywać dwa razy.
-            $fromAddress = SystemSetting::getValue('mail.default.from_address');
-            $fromName = SystemSetting::getValue('mail.default.from_name');
+            // From — preferujemy Mailgun-specific (musi być na verified domain
+            // żeby Mailgun nie zwrócił 401 Forbidden). Fallback do default.from_*
+            // gdy admin nie wpisał osobno.
+            $fromAddress = SystemSetting::getValue('mail.mailgun.from_address')
+                ?: SystemSetting::getValue('mail.default.from_address');
+            $fromName = SystemSetting::getValue('mail.mailgun.from_name')
+                ?: SystemSetting::getValue('mail.default.from_name');
             if ($fromAddress) {
                 config(['mail.from.address' => $fromAddress]);
             }
@@ -321,6 +330,21 @@ class AppServiceProvider extends ServiceProvider
      * domeny. Wywoływane zarówno z SMTP path jak i z mailgun path (transport
      * jest independent od default mailera).
      */
+    /**
+     * Globalny Reply-To dla wszystkich maili wychodzących (Mail::alwaysReplyTo).
+     * Mailable może override przez własne `replyTo()` — tu ustawiamy default.
+     * Działa identycznie dla SMTP, Mailgun i transport mailera.
+     */
+    private function applyGlobalReplyToFromSystemSettings(): void
+    {
+        $replyAddress = SystemSetting::getValue('mail.default.reply_to_address');
+        if (! $replyAddress) {
+            return;
+        }
+        $replyName = SystemSetting::getValue('mail.default.reply_to_name');
+        Mail::alwaysReplyTo($replyAddress, $replyName ?: null);
+    }
+
     private function overrideTransportMailerFromSystemSettings(): void
     {
         $transportHost = SystemSetting::getSecret('mail.transport.host');
