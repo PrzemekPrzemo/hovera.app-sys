@@ -96,6 +96,10 @@ class SmtpSettings extends Page implements HasForms
             'mailgun_endpoint' => SystemSetting::getValue('mail.mailgun.endpoint', 'api.eu.mailgun.net'),
             'mailgun_from_address' => SystemSetting::getValue('mail.mailgun.from_address', ''),
             'mailgun_from_name' => SystemSetting::getValue('mail.mailgun.from_name', ''),
+            // DKIM signing (opcjonalne — Mailgun już podpisuje samodzielnie).
+            'dkim_domain' => SystemSetting::getValue('mail.dkim.domain', ''),
+            'dkim_selector' => SystemSetting::getValue('mail.dkim.selector', ''),
+            'dkim_private_key' => '', // leave blank to keep
             // Transport mailer
             'transport_host' => SystemSetting::getSecret('mail.transport.host', '') ?? '',
             'transport_port' => SystemSetting::getValue('mail.transport.port', 587),
@@ -242,6 +246,34 @@ class SmtpSettings extends Page implements HasForms
                             ->columnSpanFull(),
                     ]),
 
+                Forms\Components\Section::make(__('admin/smtp.form.section.dkim'))
+                    ->description(__('admin/smtp.form.section.dkim_description'))
+                    ->icon('heroicon-o-key')
+                    ->collapsed(fn () => SystemSetting::getSecret('mail.dkim.private_key') === null)
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('dkim_domain')
+                            ->label(__('admin/smtp.form.label.dkim_domain'))
+                            ->placeholder('hovera.pl')
+                            ->helperText(__('admin/smtp.form.helper.dkim_domain')),
+                        Forms\Components\TextInput::make('dkim_selector')
+                            ->label(__('admin/smtp.form.label.dkim_selector'))
+                            ->placeholder('mailo')
+                            ->helperText(__('admin/smtp.form.helper.dkim_selector')),
+                        Forms\Components\Textarea::make('dkim_private_key')
+                            ->label(__('admin/smtp.form.label.dkim_private_key'))
+                            ->rows(8)
+                            ->placeholder("-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----")
+                            ->helperText(__('admin/smtp.form.helper.dkim_private_key'))
+                            ->columnSpanFull(),
+                        Forms\Components\Placeholder::make('dkim_status')
+                            ->label(__('admin/smtp.form.label.status'))
+                            ->content(fn () => SystemSetting::getSecret('mail.dkim.private_key')
+                                ? __('admin/smtp.form.status.dkim_active')
+                                : __('admin/smtp.form.status.dkim_inactive'))
+                            ->columnSpanFull(),
+                    ]),
+
                 Forms\Components\Section::make(__('admin/smtp.form.section.transport'))
                     ->description(__('admin/smtp.form.section.transport_description'))
                     ->icon('heroicon-o-truck')
@@ -364,6 +396,20 @@ class SmtpSettings extends Page implements HasForms
             if ($value !== '') {
                 SystemSetting::setValue("mail.default.{$field}", $value);
             }
+        }
+
+        // DKIM signing — opcjonalny per-app signing (Symfony DkimSigner hook
+        // w MessageSending event). Private key encrypted via setSecret.
+        // Domain + selector plain (publiczne info, byłby w DKIM-Signature header anyway).
+        foreach (['domain', 'selector'] as $field) {
+            $value = trim((string) ($form["dkim_{$field}"] ?? ''));
+            if ($value !== '') {
+                SystemSetting::setValue("mail.dkim.{$field}", $value);
+            }
+        }
+        $dkimKey = trim((string) ($form['dkim_private_key'] ?? ''));
+        if ($dkimKey !== '') {
+            SystemSetting::setSecret('mail.dkim.private_key', $dkimKey);
         }
 
         Notification::make()

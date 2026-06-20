@@ -27,7 +27,9 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
@@ -35,6 +37,8 @@ use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Mailer\Transport\Dsn;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransportFactory;
 use Symfony\Component\Mailer\Transport\Smtp\Stream\SocketStream;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Crypto\DkimSigner;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -245,12 +249,6 @@ class AppServiceProvider extends ServiceProvider
      */
     private function overrideMailConfigFromSystemSettings(): void
     {
-        // Global Reply-To — `Mail::alwaysReplyTo($address, $name)` applikuje się
-        // do wszystkich mailerów (SMTP / Mailgun / transport), bez względu na
-        // który gałąź override'a poniżej wejdzie. Robimy to PIERWSZE bo Mail
-        // facade musi mieć replyTo zarejestrowane przed pierwszym send'em.
-        $this->applyGlobalReplyToFromSystemSettings();
-
         // Explicit driver picker z `/admin/smtp-settings` — values:
         //   null/'' / 'auto' → automatyczna detekcja (Mailgun jeśli creds set,
         //                      else SMTP jeśli host set, else .env fallback)
@@ -262,7 +260,7 @@ class AppServiceProvider extends ServiceProvider
 
         if ($forcedDriver === 'log') {
             config(['mail.default' => 'log']);
-            $this->overrideTransportMailerFromSystemSettings();
+            $this->finalizeMailConfigFromSystemSettings();
 
             return;
         }
@@ -303,7 +301,7 @@ class AppServiceProvider extends ServiceProvider
             // Mailgun wygrywa — nie idziemy dalej do SMTP override'a.
             // Transport mailer (osobne creds) nadal może być skonfigurowany,
             // niżej.
-            $this->overrideTransportMailerFromSystemSettings();
+            $this->finalizeMailConfigFromSystemSettings();
 
             return;
         }
@@ -341,7 +339,7 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        $this->overrideTransportMailerFromSystemSettings();
+        $this->finalizeMailConfigFromSystemSettings();
     }
 
     /**
@@ -362,7 +360,97 @@ class AppServiceProvider extends ServiceProvider
             return;
         }
         $replyName = SystemSetting::getValue('mail.default.reply_to_name');
-        Mail::alwaysReplyTo($replyAddress, $replyName ?: null);
+
+        // Hook'ujemy MessageSending event zamiast Mail::alwaysReplyTo() —
+        // alwaysReplyTo wymagałoby resolve'a Mailer'a w boot(), co cache'uje
+        // instance z OLD configiem (env-based) zanim nasz config override
+        // poniżej zmieni `mail.default` na np. mailgun. Świeży send przez
+        // Mail::raw() użyłby DEFAULT'a z config'a (nowego, np. mailgun) — bez
+        // replyTo, bo replyTo było cached'owane na log mailerze.
+        // Event listener działa per-send, niezależny od cached'owanych Mailer instances.
+        Event::listen(
+            MessageSending::class,
+            function (MessageSending $event) use ($replyAddress, $replyName) {
+                // Nie nadpisujemy własnego replyTo z Mailable (np. transport module
+                // ma własne From/Reply-To do dispatcher'a) — tylko gdy mail nie ma jeszcze.
+                $existing = $event->message->getReplyTo();
+                if ($existing === []) {
+                    $event->message->replyTo(new Address(
+                        $replyAddress,
+                        $replyName ?: '',
+                    ));
+                }
+            },
+        );
+    }
+
+    /**
+     * Finalizuje konfigurację mailerów — wywoływane PO każdym branchu
+     * override'a (log/mailgun/smtp). Robi:
+     *   1. Override transport mailer'a z SystemSetting (osobny mailer dla
+     *      modułu transport, niezależny od default'a).
+     *   2. Global Reply-To (Mail::alwaysReplyTo) — musi być po config
+     *      override żeby trafić na świeży singleton.
+     *   3. DKIM signing — message-sending event listener który podpisuje
+     *      każdą wychodzącą wiadomość, jeśli admin wpisał DKIM keys.
+     */
+    private function finalizeMailConfigFromSystemSettings(): void
+    {
+        $this->overrideTransportMailerFromSystemSettings();
+        $this->applyGlobalReplyToFromSystemSettings();
+        $this->applyDkimSigningFromSystemSettings();
+    }
+
+    /**
+     * DKIM podpisywanie messages przez Symfony Mailer DkimSigner. Hooke
+     * się w MessageSending event, dodaje header DKIM-Signature do każdej
+     * wiadomości jeśli SystemSetting ma `mail.dkim.private_key`,
+     * `mail.dkim.domain` i `mail.dkim.selector`.
+     *
+     * Use case: Mailgun już podpisuje (ich klucz, ich serwer) — to NIE
+     * jest potrzebne dla Mailguna. Use case dla:
+     *   - SMTP relay bez DKIM (np. własny Postfix bez opendkim)
+     *   - Dual-signing (Mailgun + own signature)
+     */
+    private function applyDkimSigningFromSystemSettings(): void
+    {
+        $privateKey = SystemSetting::getSecret('mail.dkim.private_key');
+        $domain = SystemSetting::getValue('mail.dkim.domain');
+        $selector = SystemSetting::getValue('mail.dkim.selector');
+
+        if (! $privateKey || ! $domain || ! $selector) {
+            return;
+        }
+
+        Event::listen(
+            MessageSending::class,
+            function (MessageSending $event) use ($privateKey, $domain, $selector) {
+                try {
+                    $signer = new DkimSigner(
+                        $privateKey,
+                        (string) $domain,
+                        (string) $selector,
+                    );
+                    // DkimSigner::sign() returns a NEW Email z DKIM-Signature header.
+                    // Wyciągamy ten header i wstrzykujemy do oryginalnego message —
+                    // zachowuje wszystkie inne headers + recipients.
+                    $signed = $signer->sign($event->message);
+                    $dkimHeader = $signed->getHeaders()->get('DKIM-Signature');
+                    if ($dkimHeader !== null) {
+                        $event->message->getHeaders()->add($dkimHeader);
+                    }
+                } catch (\Throwable $e) {
+                    // Soft-fail — DKIM signing zaźle nie powinno crashować
+                    // całego wysyłania. Logujemy żeby admin zobaczył w
+                    // storage/logs/laravel.log.
+                    Log::warning('DKIM signing failed', [
+                        'error' => $e->getMessage(),
+                        'domain' => $domain,
+                        'selector' => $selector,
+                    ]);
+                }
+            },
+        );
     }
 
     private function overrideTransportMailerFromSystemSettings(): void
