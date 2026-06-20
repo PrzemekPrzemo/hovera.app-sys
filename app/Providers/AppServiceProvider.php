@@ -251,14 +251,34 @@ class AppServiceProvider extends ServiceProvider
         // facade musi mieć replyTo zarejestrowane przed pierwszym send'em.
         $this->applyGlobalReplyToFromSystemSettings();
 
-        // Mailgun (API transport) — preferowany nad SMTP gdy master admin
-        // skonfigurował creds w /admin/smtp-settings. Setting `mail.default
-        // = 'mailgun'` musi iść TYLKO gdy zarówno `secret` jak i `domain` są
-        // wpisane (oba wymagane przez symfony/mailgun-mailer transport).
+        // Explicit driver picker z `/admin/smtp-settings` — values:
+        //   null/'' / 'auto' → automatyczna detekcja (Mailgun jeśli creds set,
+        //                      else SMTP jeśli host set, else .env fallback)
+        //   'mailgun'        → wymusza Mailgun (musi mieć creds, inaczej fallback do .env)
+        //   'smtp'           → wymusza SMTP (musi mieć host, inaczej fallback do .env)
+        //   'log'            → wymusza driver `log` (storage/logs/laravel.log,
+        //                      maile NIE wychodzą — debug / maintenance window)
+        $forcedDriver = (string) (SystemSetting::getValue('mail.default.driver', '') ?? '');
+
+        if ($forcedDriver === 'log') {
+            config(['mail.default' => 'log']);
+            $this->overrideTransportMailerFromSystemSettings();
+
+            return;
+        }
+
+        // Mailgun (API transport) — używany gdy (a) master admin explicite
+        // wybrał `forced=mailgun`, ALBO (b) tryb auto i creds są skonfigurowane.
+        // W obu przypadkach Mailgun transport WYMAGA `secret` AND `domain`.
         $mailgunSecret = SystemSetting::getSecret('mail.mailgun.secret');
         $mailgunDomain = SystemSetting::getSecret('mail.mailgun.domain');
-        if ($mailgunSecret !== null && $mailgunSecret !== ''
-            && $mailgunDomain !== null && $mailgunDomain !== '') {
+        $mailgunCredsReady = $mailgunSecret !== null && $mailgunSecret !== ''
+            && $mailgunDomain !== null && $mailgunDomain !== '';
+        $useMailgun = $forcedDriver === 'mailgun'
+            ? $mailgunCredsReady // forced ale brak creds → fallback (logika niżej)
+            : ($forcedDriver !== 'smtp' && $mailgunCredsReady); // auto path
+
+        if ($useMailgun) {
             config([
                 'mail.default' => 'mailgun',
                 'services.mailgun.domain' => $mailgunDomain,
