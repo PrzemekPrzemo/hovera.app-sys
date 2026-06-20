@@ -76,6 +76,8 @@ class SmtpSettings extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
+            // Wybór drivera (auto / mailgun / smtp / log)
+            'default_driver' => (string) (SystemSetting::getValue('mail.default.driver', 'auto') ?: 'auto'),
             // Default mailer
             'default_host' => SystemSetting::getSecret('mail.default.host', '') ?? '',
             'default_port' => SystemSetting::getValue('mail.default.port', 587),
@@ -124,6 +126,28 @@ class SmtpSettings extends Page implements HasForms
                         Forms\Components\Placeholder::make('effective_mailer')
                             ->label(__('admin/smtp.form.label.effective_mailer'))
                             ->content(fn () => $this->renderEffectiveMailerDiagnostic()),
+                    ]),
+
+                Forms\Components\Section::make(__('admin/smtp.form.section.driver_picker'))
+                    ->description(__('admin/smtp.form.section.driver_picker_description'))
+                    ->icon('heroicon-o-arrows-right-left')
+                    ->schema([
+                        Forms\Components\Radio::make('default_driver')
+                            ->label(__('admin/smtp.form.label.default_driver'))
+                            ->options([
+                                'auto' => __('admin/smtp.form.driver.auto'),
+                                'mailgun' => __('admin/smtp.form.driver.mailgun'),
+                                'smtp' => __('admin/smtp.form.driver.smtp'),
+                                'log' => __('admin/smtp.form.driver.log'),
+                            ])
+                            ->descriptions([
+                                'auto' => __('admin/smtp.form.driver.auto_description'),
+                                'mailgun' => __('admin/smtp.form.driver.mailgun_description'),
+                                'smtp' => __('admin/smtp.form.driver.smtp_description'),
+                                'log' => __('admin/smtp.form.driver.log_description'),
+                            ])
+                            ->default('auto')
+                            ->required(),
                     ]),
 
                 Forms\Components\Section::make(__('admin/smtp.form.section.default'))
@@ -276,6 +300,11 @@ class SmtpSettings extends Page implements HasForms
     public function save(): void
     {
         $form = $this->form->getState();
+
+        // Wybór drivera — 'auto' resetuje do pustej wartości (czyli automatyczna
+        // detekcja w AppServiceProvider'ze). Pozostałe wartości wymuszają konkretny mailer.
+        $driver = trim((string) ($form['default_driver'] ?? 'auto'));
+        SystemSetting::setValue('mail.default.driver', $driver === 'auto' ? '' : $driver);
 
         foreach (['default', 'transport'] as $mailer) {
             // Secrets (host/username — sensitive ale nie super secret like password)
@@ -547,8 +576,15 @@ class SmtpSettings extends Page implements HasForms
             default => '<span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">'.e($effectiveMailer).' — '.e(__('admin/smtp.diagnostics.no_host')).'</span>',
         };
 
+        $forcedDriver = (string) (SystemSetting::getValue('mail.default.driver', '') ?? '');
+        $forcedDriverLabel = match ($forcedDriver) {
+            'mailgun', 'smtp', 'log' => '<code class="text-xs">'.e($forcedDriver).'</code>',
+            default => '<span class="text-gray-500">'.e(__('admin/smtp.diagnostics.driver_auto')).'</span>',
+        };
+
         $rows = [
             [__('admin/smtp.diagnostics.effective_mailer'), $statusBadge],
+            [__('admin/smtp.diagnostics.forced_driver'), $forcedDriverLabel],
             [__('admin/smtp.diagnostics.env_mailer'), '<code class="text-xs">'.e($envMailer).'</code>'],
             [__('admin/smtp.diagnostics.override_active'), ($hasSystemSettingHost || SystemSetting::getSecret('mail.mailgun.secret') !== null)
                 ? '<span class="text-emerald-700">✓ '.e(__('admin/smtp.diagnostics.override_yes')).'</span>'

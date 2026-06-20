@@ -10,6 +10,8 @@ return [
         'section' => [
             'diagnostics' => '🔬 Diagnostics — active mailer',
             'diagnostics_description' => 'Verify SMTP config is actually in effect. If "active mailer" shows log/array — emails land in storage/logs/laravel.log instead of going out, despite a saved config.',
+            'driver_picker' => '📮 Mailer selection',
+            'driver_picker_description' => 'Choose how outgoing emails are sent. "Auto" lets the system decide (Mailgun if configured, else SMTP, else .env). The other three FORCE a specific driver.',
             'default' => 'Default SMTP mailer (master admin, password reset, notifications)',
             'default_description' => 'Used for: password reset links, master admin notifications, system alerts, tenant emails (e.g. transport company verification). Classic SMTP — Gmail, Postmark, your own mail server.',
             'mailgun' => 'Mailgun API (alternative to SMTP, EU region)',
@@ -31,6 +33,7 @@ return [
             'status' => 'Status',
             'test_email' => 'Send test email to',
             'effective_mailer' => 'Configuration state',
+            'default_driver' => 'Send mode',
             'mailgun_domain' => 'Mailgun domain (verified)',
             'mailgun_secret' => 'Mailgun API key',
             'mailgun_endpoint' => 'Mailgun region',
@@ -51,6 +54,16 @@ return [
         ],
         'encryption' => [
             'none' => 'No encryption (not recommended)',
+        ],
+        'driver' => [
+            'auto' => 'Auto — system picks',
+            'auto_description' => 'Mailgun if a domain and API key are saved; else SMTP if a host is saved; else .env fallback. Default mode.',
+            'mailgun' => 'Mailgun API',
+            'mailgun_description' => 'Force Mailgun API. Requires a saved domain and API key in the "Mailgun API" section below. Without creds — falls back to .env.',
+            'smtp' => 'SMTP (classic)',
+            'smtp_description' => 'Force SMTP. Requires a saved host in the "Default SMTP mailer" section below. Without a host — falls back to .env.',
+            'log' => 'Log (storage/logs)',
+            'log_description' => 'Force the `log` driver — emails do NOT go out, they land in storage/logs/laravel.log. Use for debugging, maintenance windows, or when SMTP/Mailgun is down and you do not want a flood of exceptions.',
         ],
         'status' => [
             'configured' => '✓ Configured (overrides .env)',
@@ -86,6 +99,8 @@ return [
 
     'diagnostics' => [
         'effective_mailer' => 'Active mailer',
+        'forced_driver' => 'UI selection',
+        'driver_auto' => 'auto (system picks)',
         'env_mailer' => 'MAIL_MAILER (.env)',
         'override_active' => 'UI override',
         'override_yes' => 'active — UI overrides .env',

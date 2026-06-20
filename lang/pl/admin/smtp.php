@@ -10,6 +10,8 @@ return [
         'section' => [
             'diagnostics' => '🔬 Diagnostyka — aktywny mailer',
             'diagnostics_description' => 'Sprawdź czy konfiguracja SMTP faktycznie obowiązuje. Jeśli „aktywny mailer" pokazuje log/array — maile lądują w storage/logs/laravel.log zamiast wychodzić przez SMTP, mimo zapisanego konfigu.',
+            'driver_picker' => '📮 Wybór mailera',
+            'driver_picker_description' => 'Wybierz w jaki sposób mają iść wychodzące maile. „Automatyczny" oddaje decyzję systemowi (Mailgun jeśli skonfigurowany, inaczej SMTP, inaczej .env). Pozostałe trzy WYMUSZAJĄ konkretny driver.',
             'default' => 'Mailer domyślny SMTP (master admin, password reset, notyfikacje)',
             'default_description' => 'Używany do: password reset linkow, notyfikacji do master adminów, alertów systemowych, emaili do tenantów (np. weryfikacja firmy transportowej). Klasyczny SMTP — Gmail, Postmark, własny serwer pocztowy.',
             'mailgun' => 'Mailgun API (alternatywa do SMTP, EU region)',
@@ -31,6 +33,7 @@ return [
             'status' => 'Status',
             'test_email' => 'Wyślij testowy email do',
             'effective_mailer' => 'Stan konfiguracji',
+            'default_driver' => 'Tryb wysyłki',
             'mailgun_domain' => 'Mailgun domena (verified)',
             'mailgun_secret' => 'Mailgun API key',
             'mailgun_endpoint' => 'Region Mailgun',
@@ -51,6 +54,16 @@ return [
         ],
         'encryption' => [
             'none' => 'Bez szyfrowania (niezalecane)',
+        ],
+        'driver' => [
+            'auto' => 'Automatyczny — system wybiera',
+            'auto_description' => 'Mailgun jeśli zapisany domain + API key; inaczej SMTP jeśli zapisany host; inaczej fallback do .env. Domyślny tryb.',
+            'mailgun' => 'Mailgun API',
+            'mailgun_description' => 'Wymuszony Mailgun API. Wymaga zapisanej domeny i API key w sekcji „Mailgun API" poniżej. Bez creds — fallback do .env.',
+            'smtp' => 'SMTP (klasyczny)',
+            'smtp_description' => 'Wymuszony SMTP. Wymaga zapisanego hosta w sekcji „Mailer domyślny SMTP" poniżej. Bez hosta — fallback do .env.',
+            'log' => 'Log (storage/logs)',
+            'log_description' => 'Wymuszony driver `log` — maile NIE wychodzą, lądują w storage/logs/laravel.log. Używaj do debugu, maintenance window, albo gdy SMTP/Mailgun padł i nie chcesz powodzi exception\'ów.',
         ],
         'status' => [
             'configured' => '✓ Skonfigurowane (override .env)',
@@ -86,6 +99,8 @@ return [
 
     'diagnostics' => [
         'effective_mailer' => 'Aktywny mailer',
+        'forced_driver' => 'Wybór z UI',
+        'driver_auto' => 'auto (system wybiera)',
         'env_mailer' => 'MAIL_MAILER (.env)',
         'override_active' => 'Override z UI',
         'override_yes' => 'aktywny — UI nadpisuje .env',
