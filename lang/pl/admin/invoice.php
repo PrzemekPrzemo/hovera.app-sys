@@ -40,6 +40,7 @@ return [
     ],
 
     'action' => [
+        'download_pdf' => 'Pobierz PDF',
         'issue_manual' => 'Wystaw FV ręcznie',
         'send_p24_link' => 'Wyślij link P24',
         'p24_link_generated' => 'Link Przelewy24 wygenerowany',

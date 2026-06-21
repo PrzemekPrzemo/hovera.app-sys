@@ -72,6 +72,7 @@ return [
     ],
 
     'action' => [
+        'download_pdf' => 'Pobierz PDF',
         'issue' => [
             'label' => 'Wystaw',
             'success' => 'Faktura wystawiona',

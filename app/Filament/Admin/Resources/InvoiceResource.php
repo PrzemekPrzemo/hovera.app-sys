@@ -8,6 +8,7 @@ use App\Filament\Admin\Resources\InvoiceResource\Pages;
 use App\Models\Central\Invoice;
 use App\Models\Central\Tenant;
 use App\Services\Billing\Przelewy24Service;
+use App\Services\Invoicing\InvoicePdfGenerator;
 use App\Services\Ksef\CentralKsefService;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -156,6 +157,24 @@ class InvoiceResource extends Resource
             ])
             ->defaultSort('issued_at', 'desc')
             ->actions([
+                // PR I1 — pobierz PDF FV od Hovery (Sendormeco Holding sp. z o.o.)
+                // z config('hovera.legal'). Visible dla wszystkich Invoice'ów
+                // central — draft/open/paid/void wszystkie mają snapshot tenanta.
+                Tables\Actions\Action::make('download_pdf')
+                    ->label(__('admin/invoice.action.download_pdf'))
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->action(function (Invoice $record) {
+                        $pdfBytes = app(InvoicePdfGenerator::class)
+                            ->generateForCentral($record);
+                        $filename = 'Hovera_'.preg_replace('/[^A-Za-z0-9_-]/', '_', $record->number).'.pdf';
+
+                        return response()->streamDownload(
+                            fn () => print $pdfBytes,
+                            $filename,
+                            ['Content-Type' => 'application/pdf'],
+                        );
+                    }),
                 Tables\Actions\Action::make('send_p24_link')
                     ->label(__('admin/invoice.action.send_p24_link'))
                     ->icon('heroicon-o-link')
