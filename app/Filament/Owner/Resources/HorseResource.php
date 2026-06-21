@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Owner\Resources;
 
+use App\Domain\Horses\HorseOwnerStableAccessGate;
 use App\Domain\Horses\HorseRegistrySyncService;
 use App\Filament\Owner\Resources\HorseResource\Pages;
 use App\Models\Central\CentralHorseRegistry;
@@ -142,6 +143,7 @@ class HorseResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                self::viewBoardingDetailsAction(),
                 Tables\Actions\EditAction::make(),
                 self::connectToStableAction(),
                 Tables\Actions\DeleteAction::make(),
@@ -164,6 +166,34 @@ class HorseResource extends Resource
             'create' => Pages\CreateHorse::route('/create'),
             'edit' => Pages\EditHorse::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * "Szczegóły boardingu" — link do HorseDetail page'a (Faza 1 Owner ↔
+     * Stable view). Visible tylko gdy koń ma central_horse_id (registry
+     * sync zrobiony) i Auth user ma active boarding assignment dla tego
+     * konia. Pełny dostęp (timeline, photos, documents, care, messages)
+     * jest dalej dostępny przez podstronu z details'a.
+     */
+    private static function viewBoardingDetailsAction(): Action
+    {
+        return Action::make('view_boarding_details')
+            ->label(__('owner/horses.action.view_details.label'))
+            ->icon('heroicon-o-eye')
+            ->color('info')
+            ->visible(function (OwnerHorse $record) {
+                if ($record->central_horse_id === null) {
+                    return false;
+                }
+                $user = Auth::user();
+                if (! $user instanceof User) {
+                    return false;
+                }
+
+                return app(HorseOwnerStableAccessGate::class)
+                    ->tryAuthorize($user, $record->central_horse_id) !== null;
+            })
+            ->url(fn (OwnerHorse $record) => url('/owner/horses/'.$record->central_horse_id.'/details'));
     }
 
     /**
