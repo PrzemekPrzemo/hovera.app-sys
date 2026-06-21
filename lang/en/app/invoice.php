@@ -72,6 +72,7 @@ return [
     ],
 
     'action' => [
+        'download_pdf' => 'Download PDF',
         'issue' => [
             'label' => 'Issue',
             'success' => 'Invoice issued',

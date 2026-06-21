@@ -40,6 +40,7 @@ return [
     ],
 
     'action' => [
+        'download_pdf' => 'Download PDF',
         'issue_manual' => 'Issue invoice manually',
         'send_p24_link' => 'Send P24 link',
         'p24_link_generated' => 'Przelewy24 link generated',

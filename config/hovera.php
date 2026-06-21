@@ -152,6 +152,10 @@ return [
         'support_email' => env('HOVERA_LEGAL_SUPPORT_EMAIL', 'office@hovera.app'),
         'privacy_email' => env('HOVERA_LEGAL_PRIVACY_EMAIL', 'office@hovera.app'),
         'effective_date' => env('HOVERA_LEGAL_EFFECTIVE_DATE', '2026-05-18'),
+        // IBAN do FV wystawianych przez Hoverę (Sendormeco) — pojawia się na PDF.
+        // Żrodlo: konto firmowe Sendormeco w mBank/Santander/ING/etc.
+        'iban' => env('HOVERA_LEGAL_IBAN', ''),
+        'bank_name' => env('HOVERA_LEGAL_BANK_NAME', ''),
 
         // Wersja regulaminu zapisywana przy signupie do tenants.terms_version.
         // Przy każdej istotnej zmianie regulaminu inkrementuj (format YYYY-MM)

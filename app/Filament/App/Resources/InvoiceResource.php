@@ -17,6 +17,7 @@ use App\Models\Tenant\Client;
 use App\Models\Tenant\Invoice;
 use App\Models\Tenant\InvoiceItem;
 use App\Notifications\InvoiceIssuedClientNotification;
+use App\Services\Invoicing\InvoicePdfGenerator;
 use App\Services\Invoicing\InvoicePublicLink;
 use App\Services\Ksef\KsefClient;
 use App\Services\Portal\ClientMessageJournal;
@@ -299,6 +300,26 @@ class InvoiceResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
+                // PR I1 — pobierz PDF z brandingiem tenant'a (logo + primary_color
+                // ze settings). Visible dla wszystkich poza Draft (Draft jeszcze
+                // nie ma snapshot'u sprzedawcy → renderuje pusto).
+                Tables\Actions\Action::make('download_pdf')
+                    ->label(__('app/invoice.action.download_pdf'))
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->visible(fn (Invoice $r) => $r->status !== InvoiceStatus::Draft)
+                    ->action(function (Invoice $record) {
+                        $tenant = app(TenantManager::class)->current();
+                        $pdfBytes = app(InvoicePdfGenerator::class)
+                            ->generateForTenant($record, $tenant);
+                        $filename = 'FV_'.preg_replace('/[^A-Za-z0-9_-]/', '_', $record->number).'.pdf';
+
+                        return response()->streamDownload(
+                            fn () => print $pdfBytes,
+                            $filename,
+                            ['Content-Type' => 'application/pdf'],
+                        );
+                    }),
                 Tables\Actions\Action::make('issue')
                     ->label(__('app/invoice.action.issue.label'))
                     ->icon('heroicon-m-paper-airplane')
