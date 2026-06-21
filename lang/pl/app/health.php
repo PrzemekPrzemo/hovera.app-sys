@@ -55,4 +55,16 @@ return [
             'due_30' => 'Następny w 30 dni',
         ],
     ],
+
+    'bulk' => [
+        'batch_complete' => [
+            'label' => 'Zarejestruj wykonanie (zbiorczo)',
+            'modal_heading' => 'Wpisz wspólne dane dla wszystkich wybranych zabiegów',
+            'modal_description' => 'Dla każdego wybranego wpisu utworzymy nowy follow-up HealthRecord z poniższymi polami (data, opis, specjalista, następny termin, koszt). Stare wpisy pozostaną nienaruszone — to nowa historia wykonania.',
+            'next_due_helper' => 'Wspólny dla wszystkich koni. Opcjonalny — możesz zostawić puste i ustawić osobno potem.',
+            'cost_per_horse' => 'Koszt jednostkowy (per koń)',
+            'success_title' => 'Zarejestrowano wykonanie zbiorczo',
+            'success_body' => 'Utworzono :count nowych wpisów zdrowotnych. Lista pokazuje teraz wpisy dla wszystkich koni.',
+        ],
+    ],
 ];

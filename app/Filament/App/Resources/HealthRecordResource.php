@@ -12,14 +12,17 @@ use App\Models\Tenant\HealthRecord;
 use App\Models\Tenant\Horse;
 use App\Models\Tenant\Specialist;
 use App\Models\Tenant\TreatmentTemplate;
+use App\Services\Health\BatchRegisterHealthCompletion;
 use App\Services\Tenancy\TenantRoleGate;
 use App\Services\TenantAuditLogger;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Carbon;
@@ -192,6 +195,65 @@ class HealthRecordResource extends Resource
                 Tables\Actions\EditAction::make()->after(self::auditCallback('health.update')),
                 Tables\Actions\DeleteAction::make()->after(self::auditCallback('health.delete')),
                 Tables\Actions\RestoreAction::make()->after(self::auditCallback('health.restore')),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    // PR D — batch-register-completion. Typowy dzień weterynarii:
+                    // vet szczepi 8 koni preparatem X. Selektujesz 8 nadchodzących
+                    // wpisów (`overdue` lub `due_30` filter), klikasz tę akcję,
+                    // wpisujesz wspólne pola (data + summary + specialist + next_due),
+                    // service tworzy 8 nowych follow-up wpisów. Original'y zostają.
+                    Tables\Actions\BulkAction::make('batch_register_completion')
+                        ->label(__('app/health.bulk.batch_complete.label'))
+                        ->icon('heroicon-o-check-badge')
+                        ->color('success')
+                        ->visible(fn () => self::canWriteClinical())
+                        ->modalHeading(__('app/health.bulk.batch_complete.modal_heading'))
+                        ->modalDescription(__('app/health.bulk.batch_complete.modal_description'))
+                        ->form([
+                            Forms\Components\DateTimePicker::make('performed_at')
+                                ->label(__('app/health.form.label.performed_at'))
+                                ->seconds(false)
+                                ->required()
+                                ->default(now()),
+                            Forms\Components\Select::make('specialist_id')
+                                ->label(__('app/health.form.label.specialist'))
+                                ->options(fn () => Specialist::query()
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id'))
+                                ->searchable()
+                                ->placeholder(__('app/health.form.label.specialist_placeholder')),
+                            Forms\Components\TextInput::make('performed_by')
+                                ->label(__('app/health.form.label.performed_by'))
+                                ->placeholder(__('app/health.form.label.performed_by_placeholder'))
+                                ->maxLength(255),
+                            Forms\Components\TextInput::make('summary')
+                                ->label(__('app/health.form.label.summary'))
+                                ->required()
+                                ->maxLength(255)
+                                ->placeholder(__('app/health.form.label.summary_placeholder')),
+                            Forms\Components\DatePicker::make('next_due_at')
+                                ->label(__('app/health.form.label.next_due_at'))
+                                ->helperText(__('app/health.bulk.batch_complete.next_due_helper')),
+                            PriceInput::make('cost_cents', __('app/health.bulk.batch_complete.cost_per_horse')),
+                        ])
+                        ->action(function (EloquentCollection $records, array $data) {
+                            $result = app(BatchRegisterHealthCompletion::class)->execute(
+                                collect($records),
+                                $data,
+                            );
+
+                            Notification::make()
+                                ->success()
+                                ->title(__('app/health.bulk.batch_complete.success_title'))
+                                ->body(__('app/health.bulk.batch_complete.success_body', [
+                                    'count' => $result['created_count'],
+                                ]))
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                ]),
             ]);
     }
 
