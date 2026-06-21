@@ -26,6 +26,8 @@ class Invoice extends TenantModel
         'currency', 'exchange_rate', 'exchange_rate_date', 'exchange_rate_source',
         'subtotal_cents', 'vat_cents', 'total_cents',
         'ksef_status', 'ksef_reference', 'ksef_sent_at',
+        'ksef_reference_number', 'ksef_submitted_at', 'ksef_accepted_at',
+        'ksef_xml', 'ksef_error_payload', 'ksef_environment',
         'notes', 'metadata',
     ];
 
@@ -40,6 +42,9 @@ class Invoice extends TenantModel
             'paid_at' => 'datetime',
             'email_sent_at' => 'datetime',
             'ksef_sent_at' => 'datetime',
+            'ksef_submitted_at' => 'datetime',
+            'ksef_accepted_at' => 'datetime',
+            'ksef_error_payload' => 'array',
             'subtotal_cents' => 'integer',
             'vat_cents' => 'integer',
             'total_cents' => 'integer',
