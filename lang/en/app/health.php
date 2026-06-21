@@ -55,4 +55,16 @@ return [
             'due_30' => 'Due within 30 days',
         ],
     ],
+
+    'bulk' => [
+        'batch_complete' => [
+            'label' => 'Register completion (bulk)',
+            'modal_heading' => 'Enter common data for all selected treatments',
+            'modal_description' => 'For each selected record we will create a new follow-up HealthRecord with the fields below (date, summary, specialist, next due, cost). Original records remain untouched — this is a new execution history.',
+            'next_due_helper' => 'Common for all horses. Optional — you can leave empty and set individually later.',
+            'cost_per_horse' => 'Unit cost (per horse)',
+            'success_title' => 'Bulk completion registered',
+            'success_body' => ':count new health records created. The list now shows entries for all horses.',
+        ],
+    ],
 ];
