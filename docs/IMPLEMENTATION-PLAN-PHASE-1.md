@@ -4,6 +4,117 @@
 > Data: 2026-06-21.
 > Założenie: ~2-3 tygodnie pracy, sekwencja po jednym PR na PR-y backend-heavy, równolegle docs/UI.
 
+## 📊 Status implementacji (zaktualizowano 2026-06-21 wieczorem)
+
+Po pełnej implementacji większości plan'u oraz investigation pre-existing infrastruktury:
+
+| PR | Plan effort | Status | Komentarz |
+|---|---|---|---|
+| **PR D** — Batch health | 1 dzień | ✅ Merged (#437) | `BatchRegisterHealthCompletion` service + tests |
+| **PR I1** — PDF templates | 6h | ✅ Merged (#438) | 2 templaty: tenant + Sendormeco/Hovera |
+| **PR I2** — Calculator extra-horse-fee | 2h | ✅ Already existed | `horses_count` + `extra_horse_fee_default` w `TransportSettings` |
+| **PR O1** — Notifications hub | 4h | ✅ Merged (#439) | `NotificationResource` z scope query, badge, mark-as-read |
+| **PR O2** — Owner HorseResource part 1 | 1-2 dni | ✅ Merged (#440) | Standalone Pages already existed; PR dodał link z resource list |
+| **PR O3** — Owner HorseResource part 2 | 2 dni | ✅ Already existed | `HorseTimeline` + `HorseCare` + `HorseMessages` standalone Pages |
+| **PR S1** — Bulk boarding invoice | 1 dzień | ✅ Merged (#441) | `GenerateBulkBoardingInvoices` + `BulkInvoicing` Page existed; PR dodał testy (11) |
+| **PR O4** — Owner wallet 3 providery | 3 dni | ✅ Already existed | `OwnerInvoicePaymentService` z multi-provider routing via `InitiatePayment` action |
+| **PR I3** — KSeF prod + wszystkie docs | 3-4 dni | ⚠️ Częściowo (patrz niżej) | Cert upload + auth done; **send/poll + ZAL/UPR/RR brakuje** |
+| **PR O5** — Komunikator 4-kanałowy | 5-7 dni | ⚠️ Tylko Channel A | A (stable↔owner per-horse) ~85% done; **B/C/D = 0%** |
+
+**Reality**: ~80% planowanego scope było już dostarczone przed sesją (Fazy 1-5 z OWNER-STABLE-ROADMAP, Faza 3 PR 3.2 auto-billing, OwnerInvoicePaymentService, BulkInvoicing). Plan był pisany bez pełnego inwentarza istniejącej infrastruktury.
+
+### Realne pozostałe gaps
+
+#### PR I3 — KSeF (faktyczny remaining: 5-7 dni)
+
+**Done**:
+- `KsefClient::authenticate()` cert-based auth flow (XAdES-BES signed AuthTokenRequest)
+- `KsefCertificateService` — PFX + PEM cert parsing
+- `KsefSigningService` — XAdES-BES signing
+- `KsefInvoiceXmlBuilder` — FA(3) XML dla FV/KOR/PRO
+- `KsefSettings` Filament page — per-tenant cert upload, encrypted storage, test/demo/prod selector
+- `TransporterKsefService` — pełny submit/poll flow (token-based) dla `TransportInvoice`
+- `KsefPollSubmittedInvoicesCommand` — scheduled polling dla transport invoices
+
+**Missing**:
+1. **`TenantKsefSubmissionService`** dla regular `Invoice` — ~2-3 dni
+   - Migration: extend `invoices` table z `ksef_reference_number`, `ksef_submitted_at`, `ksef_accepted_at`, `ksef_xml`, `ksef_error_payload`, `ksef_environment` columns
+   - **Krypto challenge**: cert-based init session wymaga embedded AES-256 key (RSA-OAEP wrapped MF public key) w signed AuthTokenRequest. Aktualny `KsefSigningService::buildAuthTokenRequest()` NIE generuje AES key. Wymaga implementacji KSeF protocol §3.2 ([spec](https://www.podatki.gov.pl/ksef/specyfikacja-techniczna/)). Bez referencji do działającej implementacji ryzyko silent crypto bugs.
+   - Submit button + status polling job + scheduled command
+2. **ZAL/UPR/RR document types** — ~2 dni + decyzje domain
+   - `InvoiceKind` enum: dodać `Zal`, `Upr`, `Rr` cases (zaktualizować 12 plików z match() statements)
+   - **ZAL** wymaga: `advance_payment_amount_cents` field na Invoice + `<NumerZaliczki>`, `<KwotyZaliczek>` XML elementy + link do final invoice
+   - **UPR** wymaga: validation rule "total ≤450 PLN brutto" + opcjonalność `buyer_nip`
+   - **RR** wymaga: osobny FA_RR XML builder (inny schema namespace niż FA(3))
+3. **JPK_FA(3) export** — ~1 dzień
+   - `JpkFa3Exporter::export(int $year, int $quarter): string`
+   - Console command `ksef:export-jpk-fa3`
+   - Admin Filament page z download button
+
+**Blocking decisions przed implementacją**:
+- ZAL: jakie fields backstop'ują "kwoty zaliczek" — pojedyncza, czy lista? Link 1:1 do final FV czy N:1?
+- UPR: validation hard-fail (blokuje issue) czy soft-warn?
+- RR: pełna implementacja czy defer'ujemy do Phase 2 (niska częstotliwość użycia)?
+- Reference implementation: jest dostęp do Billu-System code? Bez tego implementacja KSeF protocol §3.2 = guesswork.
+
+#### PR O5 — Komunikator (faktyczny remaining: 7-10 dni)
+
+**Done (Channel A — stable ↔ owner per-horse, ~85%)**:
+- `HorseMessage` model (tenant DB) z direction enum (from_stable/from_client), read receipts
+- `app/Filament/Owner/Pages/HorseMessages.php` — compose form, thread view, file upload (10 files / 25 MB)
+- `app/Filament/App/Resources/HorseResource/RelationManagers/MessagesRelationManager.php` — stable-side tab
+- `app/Domain/Messages/Owner/OwnerMessagesService.php` — listForHorse + send + markRead + unreadCount
+- `OwnerSentMessageToStableNotification` (DB + mail)
+- Tests: 5 plików, 500+ linii (HorseMessagesPage, OwnerMessagesService, OwnerMessagesApi, HorseMessageAttachmentStorage)
+
+**Missing**:
+1. **Channel B — stable ↔ vet external (magic-link)** — ~2-3 dni
+   - Nowa `ExternalSpecialist` table (central DB)
+   - `SpecialistMagicLink` token system + email flow
+   - `/specialist` Filament panel (`SpecialistPanelProvider`)
+   - Specialist-scoped messages resource
+2. **Channel C — internal team channels (Slack-like)** — ~2-3 dni
+   - `InternalChannel` + `InternalChannelMember` tables (central DB)
+   - Auto-create 3 channels per stable on provision: `#general`, `#weterynaria`, `#transport`
+   - Multi-member chat UI z @mention
+3. **Channel D — cross-tenant owner ↔ vet** — ~3-4 dni (wymaga B done)
+   - Unified `MessageThread` model w central DB
+   - Owner UI: `/owner/specialists` resource (invite vet by email)
+   - Specialist panel: inbox z thread'ami od ownerów
+4. **Architektura decyzja**: Refaktor Channel A do central DB (jak B/C/D) czy zostawić w tenant DB osobno?
+   - Refaktor: +2-3 dni, ale unified UX
+   - Pozostawienie: szybciej, ale fragmentacja message storage
+
+**Blocking decisions**:
+- Auto-channels (C): kanały #general/#weterynaria/#transport per provision, czy admin tworzy?
+- Specialist whitelist (B/D): open invite (any email), czy curated lista veterynarii?
+- Notification cadence (C): per-message email czy daily digest?
+- Storage: refactor A do central, czy parallel systems?
+
+### Total remaining real work
+
+| | Plan estimate | Real remaining |
+|---|---|---|
+| PR I3 | 3-4 dni | **5-7 dni** (z crypto risk) |
+| PR O5 | 5-7 dni | **7-10 dni** (z decyzjami) |
+| **TOTAL** | 8-11 dni | **12-17 dni** |
+
+Reszta plan'u (PR D, I1, I2, O1, O2, O3, S1, O4) jest **DONE** — ~14 dni estimated effort dostarczone w ciągu ~1 dnia sesji bo większość była pre-existing infrastructure.
+
+### Rekomendacja do dalszych prac
+
+1. **Najpierw**: zebrać decyzje domain dla I3 (ZAL/UPR/RR fields + Billu-System reference access) + O5 (architektura channels). ~1 godzina Q&A.
+2. **Potem PR I3a**: `TenantKsefSubmissionService` + migration + UI (najmniej crypto risky — kopia transport pattern). 2-3 dni.
+3. **Potem PR I3b**: ZAL/UPR/RR po decyzjach domain. 2 dni.
+4. **Potem PR I3c**: JPK_FA(3) exporter. 1 dzień.
+5. **Potem PR O5a**: Channel B (vet magic-link). 2-3 dni.
+6. **Potem PR O5b**: Channel C (internal channels). 2-3 dni.
+7. **Potem PR O5c**: Channel D (cross-tenant). 3-4 dni.
+
+**Sumarycznie**: 12-17 dni = 3-4 tygodnie real work przy poprawnych decyzjach.
+
+---
+
 ## ⚠️ ZAKTUALIZOWANE 2026-06-21 po decyzjach user'a
 
 Po sesji decyzyjnej rozmiar Phase 1 **urósł z 3 do ~5 tygodni** ze względu na:
