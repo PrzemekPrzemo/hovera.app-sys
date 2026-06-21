@@ -149,6 +149,7 @@ return [
         'fv' => 'Faktura VAT',
         'fv_proforma' => 'Faktura Proforma',
         'fv_korekta' => 'Faktura Korygująca',
+        'fv_uproszczona' => 'Faktura Uproszczona',
     ],
 
     'invoice_status' => [

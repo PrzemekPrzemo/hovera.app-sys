@@ -129,6 +129,7 @@ class KsefInvoiceXmlBuilder
         $rodzajFaktury = match ($kind) {
             'fv_korekta' => 'KOR',
             'fv_proforma' => 'PRO',
+            'fv_uproszczona' => 'UPR',
             default => 'VAT',
         };
 

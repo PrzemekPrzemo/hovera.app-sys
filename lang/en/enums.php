@@ -149,6 +149,7 @@ return [
         'fv' => 'VAT invoice',
         'fv_proforma' => 'Proforma invoice',
         'fv_korekta' => 'Corrective invoice',
+        'fv_uproszczona' => 'Simplified invoice',
     ],
 
     'invoice_status' => [

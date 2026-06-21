@@ -9,6 +9,7 @@ enum InvoiceKind: string
     case Fv = 'fv';                  // Faktura VAT (regular)
     case FvProforma = 'fv_proforma'; // Faktura proforma (offer, not accounting)
     case FvKorekta = 'fv_korekta';   // Faktura korygująca (correction)
+    case FvUproszczona = 'fv_uproszczona'; // Faktura uproszczona (≤450 PLN brutto, art. 106e ust. 5 pkt 3)
 
     public function label(): string
     {
@@ -21,6 +22,7 @@ enum InvoiceKind: string
             self::Fv => 'FV',
             self::FvProforma => 'PRO',
             self::FvKorekta => 'KOR',
+            self::FvUproszczona => 'UPR',
         };
     }
 

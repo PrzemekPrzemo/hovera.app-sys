@@ -211,6 +211,7 @@ class JpkFa3Exporter
         $rodzajFaktury = match ($kind) {
             'fv_korekta' => 'KOREKTA',
             'fv_proforma' => 'POZ',
+            'fv_uproszczona' => 'UPROSZCZONA',
             default => 'VAT',
         };
 
