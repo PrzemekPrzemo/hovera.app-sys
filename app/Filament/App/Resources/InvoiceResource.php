@@ -264,6 +264,7 @@ class InvoiceResource extends Resource
                         'primary' => InvoiceKind::Fv->value,
                         'gray' => InvoiceKind::FvProforma->value,
                         'warning' => InvoiceKind::FvKorekta->value,
+                        'info' => InvoiceKind::FvUproszczona->value,
                     ]),
                 Tables\Columns\TextColumn::make('issued_at')
                     ->label(__('app/invoice.table.column.issued_at'))->date()->placeholder('—')->sortable(),
