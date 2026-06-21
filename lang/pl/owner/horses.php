@@ -51,6 +51,9 @@ return [
 
     'action' => [
         'order_transport' => 'Zamów transport tego konia',
+        'view_details' => [
+            'label' => 'Szczegóły boardingu',
+        ],
         'connect' => [
             'label' => 'Połącz ze stajnią',
             'stable_label' => 'Stajnia',

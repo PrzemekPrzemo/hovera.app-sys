@@ -51,6 +51,9 @@ return [
 
     'action' => [
         'order_transport' => 'Order transport for this horse',
+        'view_details' => [
+            'label' => 'Boarding details',
+        ],
         'connect' => [
             'label' => 'Link to stable',
             'stable_label' => 'Stable',
