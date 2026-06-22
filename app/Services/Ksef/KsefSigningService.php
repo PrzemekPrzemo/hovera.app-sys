@@ -34,18 +34,42 @@ class KsefSigningService
 
     /**
      * Buduje surowy AuthTokenRequest XML — bez podpisu.
+     *
+     * Opcjonalnie embeduje `<EncryptionKey>` blok z wrapped AES-256 kluczem
+     * (RSA-OAEP wrap przez MF public key). Bez tego cert-based session
+     * init NIE wystarcza do wysyłki faktur — invoice/Send wymaga AES
+     * encryption tym samym kluczem, który MF zna z embedded key w
+     * podpisanym AuthTokenRequest.
+     *
+     * Caller (zwykle `KsefClient::authenticate`):
+     *   1. Generuje ephemeral AES-256 (random_bytes(32))
+     *   2. Wrap'uje przez RSA-OAEP z MF public key
+     *   3. Przekazuje base64 wrapped key tutaj
+     *   4. Trzyma raw AES key w cache razem z sessionToken żeby móc
+     *      potem wywołać `KsefHttpClient::sendInvoice(token, aesKey, xml)`
+     *
+     * Patrz KSeF spec §3.2 (https://www.podatki.gov.pl/ksef/specyfikacja-techniczna/).
      */
     public function buildAuthTokenRequest(
         string $challenge,
         string $contextNip,
         string $identifierType = 'certificateSubject',
+        ?string $wrappedAesKeyBase64 = null,
     ): string {
+        $encryptionKeyBlock = '';
+        if ($wrappedAesKeyBase64 !== null && $wrappedAesKeyBase64 !== '') {
+            $encryptionKeyBlock = '<EncryptionKey>'
+                .htmlspecialchars($wrappedAesKeyBase64, ENT_XML1)
+                .'</EncryptionKey>';
+        }
+
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'
             .'<AuthTokenRequest xmlns="'.self::NS_AUTH.'"'
             .' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
             .'<Challenge>'.htmlspecialchars($challenge, ENT_XML1).'</Challenge>'
             .'<ContextIdentifier><Nip>'.htmlspecialchars($contextNip, ENT_XML1).'</Nip></ContextIdentifier>'
             .'<SubjectIdentifierType>'.htmlspecialchars($identifierType, ENT_XML1).'</SubjectIdentifierType>'
+            .$encryptionKeyBlock
             .'</AuthTokenRequest>';
 
         return $xml;
