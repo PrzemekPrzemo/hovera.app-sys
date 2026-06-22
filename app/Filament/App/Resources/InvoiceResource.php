@@ -20,6 +20,7 @@ use App\Notifications\InvoiceIssuedClientNotification;
 use App\Services\Invoicing\InvoicePdfGenerator;
 use App\Services\Invoicing\InvoicePublicLink;
 use App\Services\Ksef\KsefClient;
+use App\Services\Ksef\TenantKsefSubmissionService;
 use App\Services\Portal\ClientMessageJournal;
 use App\Services\Tenancy\TenantRoleGate;
 use App\Tenancy\TenantManager;
@@ -368,34 +369,72 @@ class InvoiceResource extends Resource
                             return false;
                         }
 
-                        return $r->status->isPosted() && $r->ksef_status === null;
+                        // Visible gdy posted (issued/paid/overdue) i jeszcze
+                        // nie wysłany ALBO poprzedni submit zakończył się
+                        // 'error' (user chce retry). Po 'submitted'/'accepted'
+                        // używamy separate refresh button.
+                        $unsentStates = [null, 'error'];
+
+                        return $r->status->isPosted() && in_array($r->ksef_status, $unsentStates, true);
                     })
                     ->requiresConfirmation()
                     ->modalDescription(__('app/invoice.action.ksef.modal_description'))
                     ->action(function (Invoice $record) {
-                        $tenant = app(TenantManager::class)->current();
-                        try {
-                            // PR 4: zatwierdzamy auth + budowanie XML.
-                            // Pełen invoice send (RSA-OAEP wrap + AES-256-CBC
-                            // + multi-doc batch) trafi w PR 4b.
-                            app(KsefClient::class)->authenticate($tenant);
-                            $record->forceFill([
-                                'ksef_status' => 'sent',
-                                'ksef_sent_at' => now(),
-                            ])->save();
+                        $result = app(TenantKsefSubmissionService::class)->submit($record);
+
+                        if ($result->isSuccess()) {
                             Notification::make()
-                                ->title(__('app/invoice.action.ksef.auth_success_title'))
-                                ->body(__('app/invoice.action.ksef.auth_success_body'))
+                                ->title(__('app/invoice.action.ksef.submit_success_title'))
+                                ->body(__('app/invoice.action.ksef.submit_success_body', [
+                                    'reference' => (string) $result->referenceNumber,
+                                ]))
                                 ->success()
                                 ->send();
-                        } catch (\Throwable $e) {
-                            $record->forceFill(['ksef_status' => 'rejected'])->save();
-                            Notification::make()
-                                ->title(__('app/invoice.action.ksef.failure_title'))
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
+
+                            return;
                         }
+
+                        Notification::make()
+                            ->title(__('app/invoice.action.ksef.failure_title'))
+                            ->body((string) $result->errorMessage)
+                            ->danger()
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('ksef_refresh')
+                    ->label(__('app/invoice.action.ksef_refresh.label'))
+                    ->icon('heroicon-m-arrow-path')
+                    ->color('info')
+                    ->visible(function (Invoice $r) {
+                        $tenant = app(TenantManager::class)->current();
+                        if (! $tenant || ! app(KsefClient::class)->isReady($tenant)) {
+                            return false;
+                        }
+
+                        // Visible tylko gdy faktura czeka na async processing
+                        // MF — po accepted/rejected nie ma sensu pollować.
+                        return $r->ksef_status === TenantKsefSubmissionService::STATUS_SUBMITTED;
+                    })
+                    ->action(function (Invoice $record) {
+                        $result = app(TenantKsefSubmissionService::class)->refreshStatus($record);
+
+                        $title = match ($result->status) {
+                            TenantKsefSubmissionService::STATUS_ACCEPTED => __('app/invoice.action.ksef_refresh.accepted'),
+                            TenantKsefSubmissionService::STATUS_REJECTED => __('app/invoice.action.ksef_refresh.rejected'),
+                            TenantKsefSubmissionService::STATUS_ERROR => __('app/invoice.action.ksef_refresh.error'),
+                            default => __('app/invoice.action.ksef_refresh.still_pending'),
+                        };
+
+                        $notif = Notification::make()->title($title);
+                        if ($result->errorMessage !== null) {
+                            $notif->body($result->errorMessage);
+                        }
+
+                        match ($result->status) {
+                            TenantKsefSubmissionService::STATUS_ACCEPTED => $notif->success()->send(),
+                            TenantKsefSubmissionService::STATUS_REJECTED,
+                            TenantKsefSubmissionService::STATUS_ERROR => $notif->danger()->send(),
+                            default => $notif->info()->send(),
+                        };
                     }),
                 Tables\Actions\Action::make('email')
                     ->label(__('app/invoice.action.email.label'))
