@@ -26,6 +26,7 @@ class ScheduleRegistrationTest extends TestCase
         'transport:dispatch-review-invites',
         'transporter:docs-expiry-notify',
         'transport:ksef:poll-submitted',
+        'ksef:poll-tenant-invoices',
         'transport:expire-featured',
         'transport:scrape-fuel',
         'health-records:remind-due',
