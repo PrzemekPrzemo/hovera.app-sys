@@ -151,6 +151,7 @@ return [
         'fv_korekta' => 'Faktura Korygująca',
         'fv_uproszczona' => 'Faktura Uproszczona',
         'fv_zaliczkowa' => 'Faktura Zaliczkowa',
+        'fv_rr' => 'Faktura RR (rolnicza)',
     ],
 
     'invoice_status' => [

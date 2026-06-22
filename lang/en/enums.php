@@ -151,6 +151,7 @@ return [
         'fv_korekta' => 'Corrective invoice',
         'fv_uproszczona' => 'Simplified invoice',
         'fv_zaliczkowa' => 'Advance payment invoice',
+        'fv_rr' => 'Agricultural (RR) invoice',
     ],
 
     'invoice_status' => [

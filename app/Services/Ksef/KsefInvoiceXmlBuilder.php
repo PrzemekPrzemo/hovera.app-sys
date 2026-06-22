@@ -126,11 +126,21 @@ class KsefInvoiceXmlBuilder
     private function summaryXml(Invoice $invoice): string
     {
         $kind = (string) ($invoice->kind?->value ?? 'fv');
+        // UWAGA: FvRr (faktura rolnicza) używa **innego** schematu — FA_RR
+        // (`http://crd.gov.pl/wzor/2022/05/20/12649/`). Trafiona tu przez
+        // ten builder XML faktura RR będzie technicznie wadliwa — MF
+        // odrzuci payload na walidacji schematu. Pełna implementacja FA_RR
+        // wymaga osobnej klasy `KsefRrInvoiceXmlBuilder` z innym root
+        // namespace + strukturą podmiotów (RolnikRyczaltowy zamiast
+        // standardowych Podmiot1/Podmiot2). Mapowanie tu jest scaffoldem
+        // żeby enum nie wybuchał — caller powinien wybrać prawidłowy
+        // builder na podstawie InvoiceKind.
         $rodzajFaktury = match ($kind) {
             'fv_korekta' => 'KOR',
             'fv_proforma' => 'PRO',
             'fv_uproszczona' => 'UPR',
             'fv_zaliczkowa' => 'ZAL',
+            'fv_rr' => 'RR',
             default => 'VAT',
         };
 
