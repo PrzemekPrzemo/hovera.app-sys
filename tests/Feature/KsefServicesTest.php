@@ -20,6 +20,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -266,6 +267,88 @@ class KsefServicesTest extends TestCase
         app(KsefClient::class)->authenticate($this->tenant);
     }
 
+    public function test_signing_service_builds_auth_token_request_with_embedded_encryption_key(): void
+    {
+        $wrappedAesKeyBase64 = base64_encode('FAKE_RSA_WRAPPED_AES_KEY_'.str_repeat('X', 200));
+
+        $xml = app(KsefSigningService::class)->buildAuthTokenRequest(
+            'challenge-abc-123',
+            '5260250274',
+            'certificateSubject',
+            $wrappedAesKeyBase64,
+        );
+
+        $this->assertStringContainsString('<EncryptionKey>'.$wrappedAesKeyBase64.'</EncryptionKey>', $xml);
+        // Bez aes key — backwards compat — pole opcjonalne, nie zawsze obecne
+        $xmlWithout = app(KsefSigningService::class)->buildAuthTokenRequest(
+            'challenge-xyz',
+            '5260250274',
+        );
+        $this->assertStringNotContainsString('<EncryptionKey>', $xmlWithout);
+    }
+
+    public function test_ksef_client_authenticate_with_encryption_key_returns_aes_key(): void
+    {
+        $this->configureKsefCert($this->tenant);
+        $this->configureMfPublicKey();
+
+        Http::fake([
+            'ksef-test.mf.gov.pl/api/online/Session/AuthorisationChallenge*' => Http::response([
+                'challenge' => 'svr-challenge-xyz',
+                'timestamp' => '2026-05-15T12:00:00Z',
+            ], 200),
+            'ksef-test.mf.gov.pl/api/online/Session/InitSigned*' => Http::response([
+                'sessionToken' => ['token' => 'SESSION-TOKEN-WITH-KEY-456'],
+            ], 200),
+        ]);
+
+        $result = app(KsefClient::class)->authenticateWithEncryptionKey($this->tenant->fresh());
+
+        $this->assertSame('SESSION-TOKEN-WITH-KEY-456', $result['session_token']);
+        $this->assertSame(32, strlen($result['aes_key']));
+
+        Http::assertSent(function ($request) {
+            if (! str_contains((string) $request->url(), '/InitSigned')) {
+                return true;
+            }
+
+            // POST'owany podpisany XML musi zawierać <EncryptionKey> blok
+            // — bez tego MF nie odbiera klucza i wysyłka faktur nie zadziała.
+            return str_contains((string) $request->body(), '<EncryptionKey>');
+        });
+    }
+
+    public function test_ksef_client_authenticate_with_encryption_key_fails_when_mf_public_key_missing(): void
+    {
+        $this->configureKsefCert($this->tenant);
+        // brak configureMfPublicKey() — symuluje stan przed bootstrap'em
+
+        // Reset wszelkich cached PEM'ów
+        Storage::fake('local');
+        config()->set('services.ksef.public_key.test_pem', null);
+        config()->set('services.ksef.public_key_disk', 'local');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageMatches('/public key brak/');
+
+        app(KsefClient::class)->authenticateWithEncryptionKey($this->tenant->fresh());
+    }
+
+    private function configureMfPublicKey(): void
+    {
+        // Generujemy stabilną RSA key pair dla "MF environment public key"
+        // — w prawdziwym deploymencie MF dostarcza ten klucz, my tylko
+        // wrapujemy nim AES key. W testach wystarczy że format PEM jest
+        // poprawny i openssl_public_encrypt nie wybucha.
+        $resource = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+        $details = openssl_pkey_get_details($resource);
+        $publicPem = (string) $details['key'];
+
+        Storage::fake('local');
+        Storage::disk('local')->put('ksef/public-key-test.pem', $publicPem);
+        config()->set('services.ksef.public_key_disk', 'local');
+    }
+
     /**
      * Generuje minimal self-signed PFX + PEM pair z NIP w Subject —
      * używamy w testach żeby nie zależeć od żadnego external file.
@@ -415,6 +498,8 @@ class KsefServicesTest extends TestCase
             $t->string('kind', 32);
             $t->string('status', 32);
             $t->string('client_id', 26);
+            $t->string('corrects_invoice_id', 26)->nullable();
+            $t->string('final_invoice_id', 26)->nullable()->index();
             $t->string('seller_name');
             $t->string('seller_nip', 16)->nullable();
             $t->string('seller_address')->nullable();

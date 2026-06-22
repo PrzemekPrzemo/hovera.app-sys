@@ -10,6 +10,7 @@ use App\Services\TenantAuditLogger;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Wysoko-poziomowy klient KSeF API. Łączy:
@@ -68,8 +69,59 @@ class KsefClient
      *
      * Cache nie używamy — KSeF tokeny są krótko-żyjące i powiązane z
      * konkretną sesją, lepiej dostać świeży za każdym razem.
+     *
+     * Auth-only wariant — sessionToken otrzymany tym flow NIE służy do
+     * wysyłki faktur (Invoice/Send wymaga AES encryption key, którego
+     * tu nie negocjujemy). Use case: weryfikacja konfiguracji (`InvoiceResource::ksef`
+     * action). Dla pełnego send/poll flow użyj `authenticateWithEncryptionKey`.
      */
     public function authenticate(Tenant $tenant): string
+    {
+        $result = $this->doAuthenticate($tenant, wrappedAesKeyBase64: null);
+
+        return $result['session_token'];
+    }
+
+    /**
+     * Pełny cert-based flow z embedded encryption key. Wymagane gdy
+     * caller potrzebuje WYSŁAĆ faktury (Invoice/Send szyfruje payload
+     * AES-256-CBC tym samym kluczem, który embedujemy tutaj w
+     * `<EncryptionKey>` block podpisanego AuthTokenRequest).
+     *
+     * Per KSeF spec §3.2:
+     *   1. Generujemy ephemeral AES-256-CBC key (32B random)
+     *   2. Wrap'ujemy przez RSA-OAEP z MF public key
+     *   3. Embedujemy base64 wrapped key w AuthTokenRequest XML
+     *   4. Podpisujemy całość XAdES-BES tenant'a cert'em
+     *   5. POST signed → MF zwraca sessionToken
+     *   6. Caller trzyma {sessionToken, aesKey} razem do wysyłania faktur
+     *
+     * AES key NIE jest persistowany — zostaje w pamięci procesu /
+     * w cache (KsefSessionManager dla cert flow będzie follow-up).
+     *
+     * @return array{session_token: string, aes_key: string}
+     */
+    public function authenticateWithEncryptionKey(Tenant $tenant): array
+    {
+        $aesKey = random_bytes(32);
+        $wrappedAesKeyBase64 = $this->wrapAesKey($tenant, $aesKey);
+
+        $result = $this->doAuthenticate($tenant, $wrappedAesKeyBase64);
+
+        return [
+            'session_token' => $result['session_token'],
+            'aes_key' => $aesKey,
+        ];
+    }
+
+    /**
+     * Wewnętrzny helper z gołą logiką handshake'a. `$wrappedAesKeyBase64`
+     * null = auth-only (sessionToken bez send capability), wartość =
+     * pełen send-ready flow z embedded encryption key.
+     *
+     * @return array{session_token: string}
+     */
+    private function doAuthenticate(Tenant $tenant, ?string $wrappedAesKeyBase64): array
     {
         if (! $this->isReady($tenant)) {
             throw new \RuntimeException('Stajnia nie ma skonfigurowanego KSeF (cert + NIP).');
@@ -95,11 +147,12 @@ class KsefClient
             throw new \RuntimeException('KSeF challenge empty.');
         }
 
-        // 2. Build + sign AuthTokenRequest
+        // 2. Build + sign AuthTokenRequest (opcjonalnie z EncryptionKey).
         $authXml = $this->signer->buildAuthTokenRequest(
             $challenge,
             $this->contextNip($tenant),
             (string) (data_get($tenant->settings, 'ksef.identifier_type') ?? 'certificateSubject'),
+            $wrappedAesKeyBase64,
         );
         $signedXml = $this->signWith($tenant, $authXml);
 
@@ -121,9 +174,61 @@ class KsefClient
 
         $this->audit->record('ksef.authenticated', 'Tenant', (string) $tenant->id, [
             'env' => (string) (data_get($tenant->settings, 'ksef.env') ?? 'test'),
+            'with_encryption_key' => $wrappedAesKeyBase64 !== null,
         ]);
 
-        return $sessionToken;
+        return ['session_token' => $sessionToken];
+    }
+
+    /**
+     * RSA-OAEP wrap of an AES-256 key with MF environment public key.
+     * MF dostarcza klucze publiczne per environment (test/demo/prod) —
+     * trzymamy je w `storage/app/ksef/public-key-{env}.pem` (te same
+     * pliki, których używa transport `KsefHttpClient::getPublicKey`).
+     *
+     * @return string base64-encoded wrapped key (gotowy do XML).
+     */
+    private function wrapAesKey(Tenant $tenant, string $aesKey): string
+    {
+        $env = (string) (data_get($tenant->settings, 'ksef.env') ?? 'test');
+        $disk = Storage::disk((string) config('services.ksef.public_key_disk', 'local'));
+        $relativePath = 'ksef/public-key-'.$env.'.pem';
+
+        $pem = null;
+        if ($disk->exists($relativePath)) {
+            $pem = (string) $disk->get($relativePath);
+        }
+        if ($pem === null || ! str_contains($pem, 'BEGIN PUBLIC KEY')) {
+            // Fallback do konfiguracji env (services.ksef.public_key.{env}_pem)
+            // — analogicznie do transport flow.
+            $configured = (string) (config('services.ksef.public_key.'.$env.'_pem') ?? '');
+            if ($configured !== '' && str_contains($configured, 'BEGIN PUBLIC KEY')) {
+                $disk->put($relativePath, $configured);
+                $pem = $configured;
+            }
+        }
+
+        if ($pem === null) {
+            throw new \RuntimeException(
+                'KSeF MF public key brak — wgraj klucz publiczny MF '
+                .'do storage/app/'.$relativePath
+                .' lub ustaw KSEF_PUBLIC_KEY_'.strtoupper($env).'_PEM. '
+                .'Klucz dostępny w https://www.gov.pl/web/kas/krajowy-system-e-faktur',
+            );
+        }
+
+        $publicKey = openssl_pkey_get_public($pem);
+        if ($publicKey === false) {
+            throw new \RuntimeException('Invalid KSeF MF public key PEM (storage/app/'.$relativePath.').');
+        }
+
+        $wrapped = '';
+        $ok = openssl_public_encrypt($aesKey, $wrapped, $publicKey, OPENSSL_PKCS1_OAEP_PADDING);
+        if (! $ok) {
+            throw new \RuntimeException('RSA-OAEP wrap of AES key failed (openssl_public_encrypt returned false).');
+        }
+
+        return base64_encode($wrapped);
     }
 
     /**
