@@ -266,6 +266,7 @@ class InvoiceResource extends Resource
                         'warning' => InvoiceKind::FvKorekta->value,
                         'info' => InvoiceKind::FvUproszczona->value,
                         'success' => InvoiceKind::FvZaliczkowa->value,
+                        'danger' => InvoiceKind::FvRr->value,
                     ]),
                 Tables\Columns\TextColumn::make('issued_at')
                     ->label(__('app/invoice.table.column.issued_at'))->date()->placeholder('—')->sortable(),

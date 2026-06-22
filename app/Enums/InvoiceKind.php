@@ -11,6 +11,7 @@ enum InvoiceKind: string
     case FvKorekta = 'fv_korekta';   // Faktura korygująca (correction)
     case FvUproszczona = 'fv_uproszczona'; // Faktura uproszczona (≤450 PLN brutto, art. 106e ust. 5 pkt 3)
     case FvZaliczkowa = 'fv_zaliczkowa'; // Faktura zaliczkowa (advance payment — multi 1:N do final FV)
+    case FvRr = 'fv_rr';             // Faktura RR — rolnicza (art. 116 ustawy o VAT, dla rolników ryczałtowych)
 
     public function label(): string
     {
@@ -25,6 +26,7 @@ enum InvoiceKind: string
             self::FvKorekta => 'KOR',
             self::FvUproszczona => 'UPR',
             self::FvZaliczkowa => 'ZAL',
+            self::FvRr => 'RR',
         };
     }
 
