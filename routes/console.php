@@ -132,3 +132,11 @@ Schedule::job(new ChargeRecurringPayUSubscriptionsJob)
     ->timezone('Europe/Warsaw')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Cleanup expired/used specialist magic links — daily 03:00 Warsaw.
+// Bez `withoutOverlapping` bo DELETE jest atomic — dwie równoczesne
+// instancje skończą z tym samym wynikiem.
+Schedule::command('specialists:prune-magic-links')
+    ->dailyAt('03:00')
+    ->timezone('Europe/Warsaw')
+    ->onOneServer();
