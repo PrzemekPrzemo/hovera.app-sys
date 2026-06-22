@@ -204,6 +204,147 @@ class TenantKsefSubmissionService
     }
 
     /**
+     * Sprawdź status wcześniej wysłanej faktury w KSeF. Używane przez UI
+     * ("Odśwież status") oraz przez scheduled command (`ksef:poll-tenant-
+     * invoices` — follow-up) co N minut dla wierszy w stanie 'submitted'.
+     *
+     * Wymaga że invoice ma `ksef_reference_number` ustawiony (czyli był
+     * wcześniej submit'owany). Bez tego nie ma czego pollować.
+     *
+     * Mapowanie ProcessingCode MF (per dokumentacja KSeF API):
+     *   - 100 (waiting), 110 (in progress), 300/305/315 (pending) → still 'submitted'
+     *   - 200 (accepted z numerem KSeF) → 'accepted' + ksef_accepted_at
+     *   - 4xx (merytoryczne błędy: zły NIP, brak P_15, etc.) → 'rejected'
+     *   - 5xx (techniczne błędy po stronie MF) → 'error'
+     */
+    public function refreshStatus(Invoice $invoice): TenantKsefStatusResult
+    {
+        $tenant = $this->tenants->current();
+        if ($tenant === null) {
+            return TenantKsefStatusResult::error('No active tenant context.', []);
+        }
+
+        if (! $this->authClient->isReady($tenant)) {
+            return TenantKsefStatusResult::error(
+                'KSeF nie jest skonfigurowany — wgraj cert + NIP w /app/ksef-settings.',
+                ['reason' => 'not_configured'],
+            );
+        }
+
+        $reference = (string) ($invoice->ksef_reference_number ?? $invoice->ksef_reference ?? '');
+        if ($reference === '') {
+            return TenantKsefStatusResult::error('No reference number on invoice — nigdy nie został submit\'owany.', []);
+        }
+
+        // Polling też wymaga session token, ale NIE potrzebuje AES key
+        // (Status endpoint nie szyfruje request body). Używamy auth-only
+        // żeby uniknąć zbędnego embedded encryption key.
+        try {
+            $sessionToken = $this->authClient->authenticate($tenant);
+        } catch (Throwable $e) {
+            $this->logError($invoice, 'refresh_status_auth_failed', ['error' => $e->getMessage()]);
+
+            return TenantKsefStatusResult::error(
+                'KSeF auth (refresh status) failed: '.$this->cleanErrorMessage($e->getMessage()),
+                [
+                    'exception' => get_class($e),
+                    'message' => $this->cleanErrorMessage($e->getMessage()),
+                ],
+            );
+        }
+
+        $environment = $this->environment($tenant);
+        try {
+            $status = $this->httpClient->getInvoiceStatus(
+                environment: $environment,
+                sessionToken: $sessionToken,
+                invoiceElementReference: $reference,
+            );
+        } catch (KsefApiException $e) {
+            $invoice->forceFill([
+                'ksef_status' => self::STATUS_ERROR,
+                'ksef_error_payload' => $e->payload,
+            ])->save();
+
+            return TenantKsefStatusResult::error('KSeF HTTP '.$e->httpStatus, $e->payload);
+        } catch (Throwable $e) {
+            $this->logError($invoice, 'refresh_status_exception', ['error' => $e->getMessage()]);
+
+            return TenantKsefStatusResult::error(
+                'KSeF status call failed: '.$this->cleanErrorMessage($e->getMessage()),
+                ['exception' => get_class($e), 'message' => $this->cleanErrorMessage($e->getMessage())],
+            );
+        }
+
+        return $this->mapStatusResponse($invoice, $reference, $status);
+    }
+
+    /**
+     * Mapuje odpowiedź KSeF /Invoice/Status na lokalny status enum
+     * i persistuje na invoice.
+     *
+     * @param  array{processing_code: string, processing_description: string, ksef_reference_number: ?string, raw_body: array<string,mixed>, http_status: int}  $status
+     */
+    private function mapStatusResponse(Invoice $invoice, string $reference, array $status): TenantKsefStatusResult
+    {
+        $code = $status['processing_code'];
+        $desc = $status['processing_description'];
+        $payload = [
+            'status' => $status['http_status'],
+            'body' => $status['raw_body'],
+            'received_at' => now()->toIso8601String(),
+        ];
+
+        // 200 = accepted (z numerem KSeF)
+        if ($code === '200') {
+            $invoice->forceFill([
+                'ksef_status' => self::STATUS_ACCEPTED,
+                'ksef_accepted_at' => now(),
+                'ksef_reference_number' => $status['ksef_reference_number'] ?? $reference,
+                'ksef_error_payload' => null,
+            ])->save();
+
+            $this->audit->record('invoice.ksef_accepted', 'Invoice', (string) $invoice->id, [
+                'number' => $invoice->number,
+                'reference_number' => $reference,
+            ]);
+
+            return TenantKsefStatusResult::accepted($reference);
+        }
+
+        // 100/110/300/305/315 = pending — wciąż submitted, MF jeszcze procesuje
+        if (in_array($code, ['100', '110', '300', '305', '315'], true)) {
+            return TenantKsefStatusResult::pending($reference);
+        }
+
+        $intCode = (int) $code;
+
+        // 5xx = error techniczny po stronie MF
+        if ($intCode >= 500 && $intCode < 600) {
+            $invoice->forceFill([
+                'ksef_status' => self::STATUS_ERROR,
+                'ksef_error_payload' => $payload,
+            ])->save();
+
+            return TenantKsefStatusResult::error('KSeF processing error '.$code, $payload);
+        }
+
+        // 4xx i inne = rejection
+        $invoice->forceFill([
+            'ksef_status' => self::STATUS_REJECTED,
+            'ksef_error_payload' => $payload,
+        ])->save();
+
+        $this->audit->record('invoice.ksef_rejected', 'Invoice', (string) $invoice->id, [
+            'number' => $invoice->number,
+            'reference_number' => $reference,
+            'processing_code' => $code,
+        ]);
+
+        return TenantKsefStatusResult::rejected($desc !== '' ? $desc : 'KSeF rejected', $payload, $reference);
+    }
+
+    /**
      * @param  array<string,mixed>  $context
      */
     private function logError(Invoice $invoice, string $event, array $context): void

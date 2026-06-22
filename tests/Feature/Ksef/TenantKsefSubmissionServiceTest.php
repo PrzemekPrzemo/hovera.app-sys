@@ -266,6 +266,158 @@ class TenantKsefSubmissionServiceTest extends TestCase
         $this->assertStringContainsString('<P_2>'.$invoice->number.'</P_2>', (string) $invoice->ksef_xml);
     }
 
+    public function test_refresh_status_returns_error_when_invoice_has_no_reference(): void
+    {
+        $this->configureKsefCert($this->tenant);
+        $this->configureMfPublicKey();
+        $this->tenant->refresh();
+
+        $invoice = $this->makeIssuedInvoice();
+        // No ksef_reference_number set
+
+        $result = app(TenantKsefSubmissionService::class)->refreshStatus($invoice);
+
+        $this->assertSame(TenantKsefSubmissionService::STATUS_ERROR, $result->status);
+        $this->assertStringContainsString('No reference', (string) $result->errorMessage);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_refresh_status_marks_accepted_on_processing_code_200(): void
+    {
+        $this->configureKsefCert($this->tenant);
+        $this->configureMfPublicKey();
+        $this->tenant->refresh();
+
+        Http::fake([
+            'ksef-test.mf.gov.pl/api/online/Session/AuthorisationChallenge*' => Http::response([
+                'challenge' => 'svr', 'timestamp' => '2026-05-15T12:00:00Z',
+            ], 200),
+            'ksef-test.mf.gov.pl/api/online/Session/InitSigned*' => Http::response([
+                'sessionToken' => ['token' => 'TKN'],
+            ], 200),
+            'ksef-test.mf.gov.pl/api/online/Invoice/Status/*' => Http::response([
+                'processingCode' => 200,
+                'processingDescription' => 'Przetworzono poprawnie',
+                'ksefReferenceNumber' => '20260515-AB12-CD34',
+            ], 200),
+        ]);
+
+        $invoice = $this->makeSubmittedInvoice('MF-REF-123');
+
+        $result = app(TenantKsefSubmissionService::class)->refreshStatus($invoice);
+
+        $this->assertSame(TenantKsefSubmissionService::STATUS_ACCEPTED, $result->status);
+
+        $invoice->refresh();
+        $this->assertSame(TenantKsefSubmissionService::STATUS_ACCEPTED, $invoice->ksef_status);
+        $this->assertNotNull($invoice->ksef_accepted_at);
+        $this->assertSame('20260515-AB12-CD34', $invoice->ksef_reference_number);
+    }
+
+    public function test_refresh_status_stays_submitted_on_processing_code_100(): void
+    {
+        $this->configureKsefCert($this->tenant);
+        $this->configureMfPublicKey();
+        $this->tenant->refresh();
+
+        Http::fake([
+            'ksef-test.mf.gov.pl/api/online/Session/AuthorisationChallenge*' => Http::response([
+                'challenge' => 'svr', 'timestamp' => '2026-05-15T12:00:00Z',
+            ], 200),
+            'ksef-test.mf.gov.pl/api/online/Session/InitSigned*' => Http::response([
+                'sessionToken' => ['token' => 'TKN'],
+            ], 200),
+            'ksef-test.mf.gov.pl/api/online/Invoice/Status/*' => Http::response([
+                'processingCode' => 100,
+                'processingDescription' => 'Oczekuje',
+            ], 200),
+        ]);
+
+        $invoice = $this->makeSubmittedInvoice('MF-REF-PENDING');
+
+        $result = app(TenantKsefSubmissionService::class)->refreshStatus($invoice);
+
+        // Result jest pending (status=submitted), invoice nie zmienia state
+        $this->assertSame(TenantKsefSubmissionService::STATUS_SUBMITTED, $result->status);
+
+        $invoice->refresh();
+        $this->assertSame(TenantKsefSubmissionService::STATUS_SUBMITTED, $invoice->ksef_status);
+        $this->assertNull($invoice->ksef_accepted_at);
+    }
+
+    public function test_refresh_status_marks_rejected_on_processing_code_4xx(): void
+    {
+        $this->configureKsefCert($this->tenant);
+        $this->configureMfPublicKey();
+        $this->tenant->refresh();
+
+        Http::fake([
+            'ksef-test.mf.gov.pl/api/online/Session/AuthorisationChallenge*' => Http::response([
+                'challenge' => 'svr', 'timestamp' => '2026-05-15T12:00:00Z',
+            ], 200),
+            'ksef-test.mf.gov.pl/api/online/Session/InitSigned*' => Http::response([
+                'sessionToken' => ['token' => 'TKN'],
+            ], 200),
+            'ksef-test.mf.gov.pl/api/online/Invoice/Status/*' => Http::response([
+                'processingCode' => 400,
+                'processingDescription' => 'Brak NIP nabywcy',
+            ], 200),
+        ]);
+
+        $invoice = $this->makeSubmittedInvoice('MF-REF-REJECT');
+
+        $result = app(TenantKsefSubmissionService::class)->refreshStatus($invoice);
+
+        $this->assertSame(TenantKsefSubmissionService::STATUS_REJECTED, $result->status);
+        $this->assertStringContainsString('Brak NIP', (string) $result->errorMessage);
+
+        $invoice->refresh();
+        $this->assertSame(TenantKsefSubmissionService::STATUS_REJECTED, $invoice->ksef_status);
+        $this->assertNotNull($invoice->ksef_error_payload);
+    }
+
+    public function test_refresh_status_marks_error_on_processing_code_5xx(): void
+    {
+        $this->configureKsefCert($this->tenant);
+        $this->configureMfPublicKey();
+        $this->tenant->refresh();
+
+        Http::fake([
+            'ksef-test.mf.gov.pl/api/online/Session/AuthorisationChallenge*' => Http::response([
+                'challenge' => 'svr', 'timestamp' => '2026-05-15T12:00:00Z',
+            ], 200),
+            'ksef-test.mf.gov.pl/api/online/Session/InitSigned*' => Http::response([
+                'sessionToken' => ['token' => 'TKN'],
+            ], 200),
+            'ksef-test.mf.gov.pl/api/online/Invoice/Status/*' => Http::response([
+                'processingCode' => 500,
+                'processingDescription' => 'Internal error',
+            ], 200),
+        ]);
+
+        $invoice = $this->makeSubmittedInvoice('MF-REF-ERR');
+
+        $result = app(TenantKsefSubmissionService::class)->refreshStatus($invoice);
+
+        $this->assertSame(TenantKsefSubmissionService::STATUS_ERROR, $result->status);
+
+        $invoice->refresh();
+        $this->assertSame(TenantKsefSubmissionService::STATUS_ERROR, $invoice->ksef_status);
+    }
+
+    private function makeSubmittedInvoice(string $reference): Invoice
+    {
+        $invoice = $this->makeIssuedInvoice();
+        $invoice->forceFill([
+            'ksef_status' => TenantKsefSubmissionService::STATUS_SUBMITTED,
+            'ksef_reference_number' => $reference,
+            'ksef_submitted_at' => now()->subMinutes(10),
+        ])->save();
+
+        return $invoice->refresh();
+    }
+
     // ---- HELPERS (skopiowane z KsefServicesTest pattern) ----
 
     private function configureKsefCert(Tenant $tenant): void
