@@ -49,4 +49,37 @@ return [
         'has_account_yes' => 'Tak',
         'has_account_no' => '—',
     ],
+
+    'specialty' => [
+        'vet' => 'Weterynarz',
+        'farrier' => 'Kowal',
+        'groomer' => 'Groomer',
+        'dietetyk' => 'Dietetyk',
+        'other' => 'Inny',
+    ],
+
+    'action' => [
+        'create' => [
+            'label' => 'Dodaj kontakt lokalny',
+        ],
+        'invite' => [
+            'label' => 'Zaproś weterynarza',
+            'email' => 'E-mail weterynarza',
+            'display_name' => 'Imię i nazwisko',
+            'display_name_placeholder' => 'dr Anna Kowalska',
+            'specialty' => 'Specjalność',
+            'modal_heading' => 'Zaproś specjalistę do Hovery',
+            'modal_description' => 'System wyśle 7-dniowy link aktywacyjny na podany e-mail. Po ustawieniu hasła specjalista dostanie dostęp do swojego panelu w Hoverze. Konto wymaga weryfikacji przez zespół Hovery zanim pojawi się oznaczenie „zweryfikowane".',
+            'submit' => 'Wyślij zaproszenie',
+            'no_tenant' => 'Brak kontekstu stajni — odśwież stronę i spróbuj ponownie.',
+            'notify' => [
+                'created_title' => 'Zaproszenie wysłane',
+                'created_body' => 'Specjalista (:email) otrzyma e-mail z linkiem aktywacyjnym (7 dni).',
+                'reissued_title' => 'Nowy link aktywacyjny wysłany',
+                'reissued_body' => 'Specjalista (:email) miał już konto bez ustawionego hasła — wysłaliśmy świeży link.',
+                'already_setup_title' => 'Specjalista ma już aktywne konto',
+                'already_setup_body' => ':email jest już zarejestrowany — nie wysyłamy ponownie zaproszenia. Aby dodać go do swojej stajni, użyj dedykowanej akcji (w przyszłości).',
+            ],
+        ],
+    ],
 ];
