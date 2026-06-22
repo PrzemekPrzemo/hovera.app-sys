@@ -67,6 +67,16 @@ Schedule::command('transport:ksef:poll-submitted')
     ->withoutOverlapping(30)
     ->onOneServer();
 
+// Parallel poller for regular tenant invoices (PR I3). Offset 15 min od
+// transport pollera żeby nie pakować całego ruchu KSeF API w te same
+// minuty (06:15/06:45/07:15 ... zamiast 06:00/06:30).
+Schedule::command('ksef:poll-tenant-invoices')
+    ->everyThirtyMinutes()
+    ->between('06:15', '22:15')
+    ->timezone('Europe/Warsaw')
+    ->withoutOverlapping(30)
+    ->onOneServer();
+
 // Sponsored placements — daily o 02:00 czyści `is_featured=false` dla
 // tenantów których `featured_until` już minął. Real-time sort honoruje
 // expired w `TransporterRankingService`, ale flagę boolean czyścimy
