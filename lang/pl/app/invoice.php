@@ -86,10 +86,19 @@ return [
         ],
         'ksef' => [
             'label' => 'Wyślij do KSeF',
-            'modal_description' => 'Faktura zostanie podpisana certyfikatem stajni i wysłana do KSeF.',
+            'modal_description' => 'Faktura zostanie podpisana certyfikatem stajni i wysłana do KSeF. MF przetwarza asynchronicznie — sprawdź status przyciskiem "Odśwież status".',
             'auth_success_title' => 'KSeF: uwierzytelnienie udane',
             'auth_success_body' => 'Wysyłka treści faktury w przygotowaniu (PR 4b).',
+            'submit_success_title' => 'KSeF: faktura wysłana',
+            'submit_success_body' => 'MF przetwarza fakturę asynchronicznie. Ref: :reference. Status można sprawdzić odświeżeniem.',
             'failure_title' => 'KSeF: błąd',
+        ],
+        'ksef_refresh' => [
+            'label' => 'Odśwież status KSeF',
+            'accepted' => 'KSeF: faktura zaakceptowana ✓',
+            'rejected' => 'KSeF: faktura odrzucona',
+            'error' => 'KSeF: błąd techniczny',
+            'still_pending' => 'KSeF: nadal przetwarzane przez MF',
         ],
         'email' => [
             'label' => 'Wyślij na e-mail',

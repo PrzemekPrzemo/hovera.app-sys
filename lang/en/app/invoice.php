@@ -86,10 +86,19 @@ return [
         ],
         'ksef' => [
             'label' => 'Send to KSeF',
-            'modal_description' => 'The invoice will be signed with the stable certificate and sent to KSeF.',
+            'modal_description' => 'The invoice will be signed with the tenant certificate and sent to KSeF. MF processes asynchronously — check status via "Refresh status".',
             'auth_success_title' => 'KSeF: authentication succeeded',
             'auth_success_body' => 'Invoice payload upload coming up (PR 4b).',
+            'submit_success_title' => 'KSeF: invoice submitted',
+            'submit_success_body' => 'MF is processing asynchronously. Ref: :reference. Status can be polled via refresh.',
             'failure_title' => 'KSeF: error',
+        ],
+        'ksef_refresh' => [
+            'label' => 'Refresh KSeF status',
+            'accepted' => 'KSeF: invoice accepted ✓',
+            'rejected' => 'KSeF: invoice rejected',
+            'error' => 'KSeF: technical error',
+            'still_pending' => 'KSeF: still processing at MF',
         ],
         'email' => [
             'label' => 'Send by email',
