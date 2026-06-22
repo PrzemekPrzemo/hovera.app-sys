@@ -65,6 +65,7 @@ class TenantKsefSubmissionService
         private readonly KsefClient $authClient,
         private readonly KsefHttpClient $httpClient,
         private readonly KsefInvoiceXmlBuilder $xmlBuilder,
+        private readonly KsefRrInvoiceXmlBuilder $rrXmlBuilder,
     ) {}
 
     /**
@@ -91,9 +92,10 @@ class TenantKsefSubmissionService
         }
 
         // Buduj XML zanim wykonamy handshake — jeśli wpadnie krypto exception
-        // mamy mniej rzeczy do cleanup'u.
+        // mamy mniej rzeczy do cleanup'u. Router: FvRr → FA_RR builder
+        // (osobna schema), reszta → FA(3) builder.
         try {
-            $xml = $this->xmlBuilder->build($invoice);
+            $xml = $this->buildXmlForKind($invoice);
         } catch (Throwable $e) {
             $this->logError($invoice, 'xml_build_failed', ['error' => $e->getMessage()]);
 
@@ -353,6 +355,19 @@ class TenantKsefSubmissionService
             'invoice_id' => $invoice->id,
             'invoice_number' => $invoice->number,
         ]));
+    }
+
+    /**
+     * Router: wybiera builder XML na podstawie InvoiceKind. FvRr używa
+     * osobnej schemy FA_RR (rolnik ryczałtowy), reszta FA(3).
+     */
+    private function buildXmlForKind(Invoice $invoice): string
+    {
+        $kindValue = $invoice->kind?->value ?? (is_string($invoice->kind) ? $invoice->kind : 'fv');
+
+        return $kindValue === 'fv_rr'
+            ? $this->rrXmlBuilder->build($invoice)
+            : $this->xmlBuilder->build($invoice);
     }
 
     private function environment(?Tenant $tenant): string
