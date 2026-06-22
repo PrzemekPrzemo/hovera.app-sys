@@ -150,6 +150,7 @@ return [
         'fv_proforma' => 'Faktura Proforma',
         'fv_korekta' => 'Faktura Korygująca',
         'fv_uproszczona' => 'Faktura Uproszczona',
+        'fv_zaliczkowa' => 'Faktura Zaliczkowa',
     ],
 
     'invoice_status' => [

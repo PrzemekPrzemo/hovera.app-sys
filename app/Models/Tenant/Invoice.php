@@ -19,7 +19,7 @@ class Invoice extends TenantModel
 
     protected $fillable = [
         'number', 'kind', 'status',
-        'client_id', 'related_payment_id', 'related_pass_id', 'corrects_invoice_id',
+        'client_id', 'related_payment_id', 'related_pass_id', 'corrects_invoice_id', 'final_invoice_id',
         'seller_name', 'seller_nip', 'seller_address', 'seller_postal_code', 'seller_city', 'seller_country',
         'buyer_name', 'buyer_nip', 'buyer_address', 'buyer_postal_code', 'buyer_city', 'buyer_country', 'buyer_type',
         'issued_at', 'sale_date', 'due_at', 'paid_at', 'email_sent_at',
@@ -90,6 +90,27 @@ class Invoice extends TenantModel
     public function corrections(): HasMany
     {
         return $this->hasMany(self::class, 'corrects_invoice_id');
+    }
+
+    /**
+     * Faktura końcowa, którą ta zaliczkowa (ZAL) rozlicza. NULL gdy
+     * ZAL została wystawiona ale jeszcze nie powiązana z final FV.
+     * Patrz `InvoiceKind::FvZaliczkowa` + KsefInvoiceXmlBuilder
+     * `<DaneFaZaliczkowej>` references.
+     */
+    public function finalInvoice(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'final_invoice_id');
+    }
+
+    /**
+     * Faktury zaliczkowe (ZAL) rozliczone tą fakturą końcową. Final FV
+     * iteruje po nich gdy buduje XML KSeF (każda ZAL daje jeden
+     * `<DaneFaZaliczkowej>` blok z numerem + data + kwota brutto).
+     */
+    public function advances(): HasMany
+    {
+        return $this->hasMany(self::class, 'final_invoice_id');
     }
 
     public function scopeIssued(Builder $query): Builder

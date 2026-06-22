@@ -150,6 +150,7 @@ return [
         'fv_proforma' => 'Proforma invoice',
         'fv_korekta' => 'Corrective invoice',
         'fv_uproszczona' => 'Simplified invoice',
+        'fv_zaliczkowa' => 'Advance payment invoice',
     ],
 
     'invoice_status' => [

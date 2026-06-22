@@ -212,6 +212,7 @@ class JpkFa3Exporter
             'fv_korekta' => 'KOREKTA',
             'fv_proforma' => 'POZ',
             'fv_uproszczona' => 'UPROSZCZONA',
+            'fv_zaliczkowa' => 'ZAL',
             default => 'VAT',
         };
 
