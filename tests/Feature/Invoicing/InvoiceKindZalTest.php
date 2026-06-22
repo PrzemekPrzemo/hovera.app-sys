@@ -20,17 +20,21 @@ use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * PR I3 — `InvoiceKind::FvUproszczona` (UPR) — faktura uproszczona dla
- * sprzedaży ≤450 PLN brutto (art. 106e ust. 5 pkt 3 ustawy o VAT). Bez
- * automatycznej walidacji limitu (decyzja user'a — operator wie co robi).
+ * PR I3 — `InvoiceKind::FvZaliczkowa` (ZAL, faktura zaliczkowa). Multi
+ * 1:N relacja do final FV — `final_invoice_id` na ZAL wskazuje fakturę
+ * końcową rozliczającą wszystkie powiązane zaliczki.
  *
  * Pokrywa:
- *   - enum case + shortLabel
- *   - i18n labels (pl + en)
- *   - KsefInvoiceXmlBuilder RodzajFaktury='UPR'
- *   - JpkFa3Exporter RodzajFaktury='UPROSZCZONA' (JPK używa pełnych nazw)
+ *   - enum case + value + shortLabel
+ *   - i18n (pl + en)
+ *   - migration: final_invoice_id column + index
+ *   - Invoice model relations: finalInvoice() + advances()
+ *   - KsefInvoiceXmlBuilder:
+ *     - ZAL → RodzajFaktury=ZAL
+ *     - Final FV (lub KOR) → <DaneFaZaliczkowej> per linked advance
+ *   - JpkFa3Exporter: RodzajFaktury=ZAL
  */
-class InvoiceKindUprTest extends TestCase
+class InvoiceKindZalTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -42,7 +46,7 @@ class InvoiceKindUprTest extends TestCase
     {
         parent::setUp();
 
-        $this->stableDbPath = tempnam(sys_get_temp_dir(), 'hovera_upr_').'.sqlite';
+        $this->stableDbPath = tempnam(sys_get_temp_dir(), 'hovera_zal_').'.sqlite';
         touch($this->stableDbPath);
 
         config()->set('database.connections.tenant', [
@@ -87,90 +91,150 @@ class InvoiceKindUprTest extends TestCase
 
     public function test_enum_case_value_and_short_label(): void
     {
-        $this->assertSame('fv_uproszczona', InvoiceKind::FvUproszczona->value);
-        $this->assertSame('UPR', InvoiceKind::FvUproszczona->shortLabel());
+        $this->assertSame('fv_zaliczkowa', InvoiceKind::FvZaliczkowa->value);
+        $this->assertSame('ZAL', InvoiceKind::FvZaliczkowa->shortLabel());
+        $this->assertCount(5, InvoiceKind::options());
     }
 
-    public function test_enum_label_is_translated(): void
+    public function test_enum_label_translated_pl_en(): void
     {
         $this->app->setLocale('pl');
-        $this->assertSame('Faktura Uproszczona', InvoiceKind::FvUproszczona->label());
+        $this->assertSame('Faktura Zaliczkowa', InvoiceKind::FvZaliczkowa->label());
 
         $this->app->setLocale('en');
-        $this->assertSame('Simplified invoice', InvoiceKind::FvUproszczona->label());
+        $this->assertSame('Advance payment invoice', InvoiceKind::FvZaliczkowa->label());
     }
 
-    public function test_enum_options_includes_upr(): void
+    public function test_final_invoice_id_column_exists(): void
     {
-        $options = InvoiceKind::options();
-
-        $this->assertArrayHasKey('fv_uproszczona', $options);
-        $this->assertGreaterThanOrEqual(4, count($options));
+        $columns = Schema::connection('tenant')->getColumnListing('invoices');
+        $this->assertContains('final_invoice_id', $columns);
     }
 
-    public function test_ksef_invoice_xml_builder_emits_upr_rodzaj_faktury(): void
+    public function test_invoice_relations_link_advances_to_final(): void
     {
-        $invoice = $this->makeIssuedInvoice(InvoiceKind::FvUproszczona);
+        $finalId = $this->seedInvoice('FV/2026/06/100', InvoiceKind::Fv, 300000);
+        $advance1Id = $this->seedInvoice('ZAL/2026/05/001', InvoiceKind::FvZaliczkowa, 100000, finalInvoiceId: $finalId);
+        $advance2Id = $this->seedInvoice('ZAL/2026/05/002', InvoiceKind::FvZaliczkowa, 200000, finalInvoiceId: $finalId);
 
-        $xml = app(KsefInvoiceXmlBuilder::class)->build($invoice);
+        $final = Invoice::with('advances')->find($finalId);
+        $this->assertCount(2, $final->advances);
+        $this->assertEqualsCanonicalizing(
+            [$advance1Id, $advance2Id],
+            $final->advances->pluck('id')->all()
+        );
 
-        $this->assertStringContainsString('<RodzajFaktury>UPR</RodzajFaktury>', $xml);
-        // UPR używa tego samego FA(3) form code jak VAT (różni się tylko RodzajFaktury)
+        $advance1 = Invoice::with('finalInvoice')->find($advance1Id);
+        $this->assertSame($finalId, $advance1->finalInvoice->id);
+    }
+
+    public function test_zal_invoice_emits_zal_rodzaj_faktury(): void
+    {
+        $zalId = $this->seedInvoice('ZAL/2026/05/001', InvoiceKind::FvZaliczkowa, 100000);
+        $zal = Invoice::with('items')->find($zalId);
+
+        $xml = app(KsefInvoiceXmlBuilder::class)->build($zal);
+
+        $this->assertStringContainsString('<RodzajFaktury>ZAL</RodzajFaktury>', $xml);
+        // ZAL używa tej samej FA(3) schemy co regular VAT — tylko RodzajFaktury się różni
         $this->assertStringContainsString('<KodFormularza kodSystemowy="FA (3)" wersjaSchemy="1-0E">FA</KodFormularza>', $xml);
     }
 
-    public function test_jpk_fa3_exporter_emits_uproszczona_rodzaj_faktury(): void
+    public function test_final_invoice_emits_dane_fa_zaliczkowej_per_advance(): void
     {
-        $this->makeIssuedInvoice(InvoiceKind::FvUproszczona, issuedAt: '2026-05-15');
+        $finalId = $this->seedInvoice('FV/2026/06/100', InvoiceKind::Fv, 300000, issuedAt: '2026-06-10');
+        $this->seedInvoice('ZAL/2026/05/001', InvoiceKind::FvZaliczkowa, 100000, finalInvoiceId: $finalId, issuedAt: '2026-05-15');
+        $this->seedInvoice('ZAL/2026/05/002', InvoiceKind::FvZaliczkowa, 200000, finalInvoiceId: $finalId, issuedAt: '2026-05-20');
+
+        $final = Invoice::with(['items', 'advances'])->find($finalId);
+
+        $xml = app(KsefInvoiceXmlBuilder::class)->build($final);
+
+        // Final FV ma RodzajFaktury=VAT (regular)
+        $this->assertStringContainsString('<RodzajFaktury>VAT</RodzajFaktury>', $xml);
+
+        // Dwie referencje do zaliczek
+        $this->assertSame(2, substr_count($xml, '<DaneFaZaliczkowej>'));
+        $this->assertStringContainsString('<NrFaZaliczkowej>ZAL/2026/05/001</NrFaZaliczkowej>', $xml);
+        $this->assertStringContainsString('<DataWystFaZaliczkowej>2026-05-15</DataWystFaZaliczkowej>', $xml);
+        $this->assertStringContainsString('<KwotaZaliczki>1000.00</KwotaZaliczki>', $xml);
+        $this->assertStringContainsString('<NrFaZaliczkowej>ZAL/2026/05/002</NrFaZaliczkowej>', $xml);
+        $this->assertStringContainsString('<DataWystFaZaliczkowej>2026-05-20</DataWystFaZaliczkowej>', $xml);
+        $this->assertStringContainsString('<KwotaZaliczki>2000.00</KwotaZaliczki>', $xml);
+    }
+
+    public function test_final_invoice_without_advances_omits_zaliczkowa_block(): void
+    {
+        $finalId = $this->seedInvoice('FV/2026/06/200', InvoiceKind::Fv, 100000);
+        $final = Invoice::with(['items', 'advances'])->find($finalId);
+
+        $xml = app(KsefInvoiceXmlBuilder::class)->build($final);
+
+        $this->assertStringNotContainsString('<DaneFaZaliczkowej>', $xml);
+    }
+
+    public function test_jpk_fa3_emits_zal_for_advance_payment_invoice(): void
+    {
+        $this->seedInvoice('ZAL/2026/05/001', InvoiceKind::FvZaliczkowa, 100000, issuedAt: '2026-05-15');
 
         $xml = app(JpkFa3Exporter::class)->exportQuarter($this->stableTenant, 2026, 2);
 
-        // JPK używa pełnych nazw, KSeF FA(3) używa skrótów
-        $this->assertStringContainsString('<RodzajFaktury>UPROSZCZONA</RodzajFaktury>', $xml);
+        $this->assertStringContainsString('<RodzajFaktury>ZAL</RodzajFaktury>', $xml);
     }
 
     public function test_existing_kinds_still_map_correctly(): void
     {
-        // Regression — sprawdzamy że dodanie UPR nie zmieniło istniejących mapowań.
-        $fv = $this->makeIssuedInvoice(InvoiceKind::Fv);
-        $korekta = $this->makeIssuedInvoice(InvoiceKind::FvKorekta);
-        $proforma = $this->makeIssuedInvoice(InvoiceKind::FvProforma);
+        $fvId = $this->seedInvoice('FV/001', InvoiceKind::Fv, 100000);
+        $korId = $this->seedInvoice('KOR/001', InvoiceKind::FvKorekta, 50000);
+        $proId = $this->seedInvoice('PRO/001', InvoiceKind::FvProforma, 80000);
+        $uprId = $this->seedInvoice('UPR/001', InvoiceKind::FvUproszczona, 40000);
 
         $builder = app(KsefInvoiceXmlBuilder::class);
 
-        $this->assertStringContainsString('<RodzajFaktury>VAT</RodzajFaktury>', $builder->build($fv));
-        $this->assertStringContainsString('<RodzajFaktury>KOR</RodzajFaktury>', $builder->build($korekta));
-        $this->assertStringContainsString('<RodzajFaktury>PRO</RodzajFaktury>', $builder->build($proforma));
+        $this->assertStringContainsString('<RodzajFaktury>VAT</RodzajFaktury>', $builder->build(Invoice::with(['items', 'advances'])->find($fvId)));
+        $this->assertStringContainsString('<RodzajFaktury>KOR</RodzajFaktury>', $builder->build(Invoice::with(['items', 'advances'])->find($korId)));
+        $this->assertStringContainsString('<RodzajFaktury>PRO</RodzajFaktury>', $builder->build(Invoice::with(['items', 'advances'])->find($proId)));
+        $this->assertStringContainsString('<RodzajFaktury>UPR</RodzajFaktury>', $builder->build(Invoice::with(['items', 'advances'])->find($uprId)));
     }
+
+    // ---- HELPERS ----
 
     private function makeStableTenant(): Tenant
     {
         $u = uniqid();
 
         return Tenant::create([
-            'slug' => 'upr-st-'.$u,
-            'name' => 'UPR Stable '.$u,
-            'legal_name' => 'UPR Stable '.$u.' sp. z o.o.',
+            'slug' => 'zal-st-'.$u,
+            'name' => 'ZAL Stable '.$u,
+            'legal_name' => 'ZAL Stable '.$u.' sp. z o.o.',
             'tax_id' => '5252866457',
             'type' => TenantType::Stable,
-            'db_name' => 'upr_st_'.$u,
-            'db_username' => 'upr_st_'.substr($u, -8),
+            'db_name' => 'zal_st_'.$u,
+            'db_username' => 'zal_st_'.substr($u, -8),
             'db_password_encrypted' => Crypt::encryptString('x'),
             'status' => 'active',
             'settings' => [],
         ]);
     }
 
-    private function makeIssuedInvoice(InvoiceKind $kind, string $issuedAt = '2026-05-15'): Invoice
-    {
+    private function seedInvoice(
+        string $number,
+        InvoiceKind $kind,
+        int $totalCents,
+        ?string $finalInvoiceId = null,
+        string $issuedAt = '2026-05-15',
+    ): string {
         $invoiceId = (string) Str::ulid();
+        $net = (int) round($totalCents / 1.23);
+        $vat = $totalCents - $net;
 
         DB::connection('tenant')->table('invoices')->insert([
             'id' => $invoiceId,
-            'number' => $kind->shortLabel().'/2026/05/'.substr($invoiceId, -4),
+            'number' => $number,
             'kind' => $kind->value,
             'status' => InvoiceStatus::Issued->value,
             'client_id' => (string) Str::ulid(),
+            'final_invoice_id' => $finalInvoiceId,
             'seller_name' => 'Seller sp. z o.o.',
             'seller_nip' => '5252866457',
             'buyer_name' => 'Buyer',
@@ -178,9 +242,9 @@ class InvoiceKindUprTest extends TestCase
             'issued_at' => $issuedAt,
             'sale_date' => $issuedAt,
             'currency' => 'PLN',
-            'subtotal_cents' => 30000,
-            'vat_cents' => 6900,
-            'total_cents' => 36900,
+            'subtotal_cents' => $net,
+            'vat_cents' => $vat,
+            'total_cents' => $totalCents,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -192,16 +256,16 @@ class InvoiceKindUprTest extends TestCase
             'name' => 'Usługa',
             'unit' => 'szt.',
             'quantity' => 1,
-            'unit_price_cents' => 30000,
-            'net_cents' => 30000,
-            'vat_cents' => 6900,
-            'total_cents' => 36900,
+            'unit_price_cents' => $net,
+            'net_cents' => $net,
+            'vat_cents' => $vat,
+            'total_cents' => $totalCents,
             'vat_rate' => '23',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        return Invoice::with('items')->find($invoiceId);
+        return $invoiceId;
     }
 
     private function setUpStableSchema(): void

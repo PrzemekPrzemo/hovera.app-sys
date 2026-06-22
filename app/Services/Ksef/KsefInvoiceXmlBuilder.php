@@ -130,6 +130,7 @@ class KsefInvoiceXmlBuilder
             'fv_korekta' => 'KOR',
             'fv_proforma' => 'PRO',
             'fv_uproszczona' => 'UPR',
+            'fv_zaliczkowa' => 'ZAL',
             default => 'VAT',
         };
 
@@ -148,6 +149,26 @@ class KsefInvoiceXmlBuilder
                     .'<NrFaKorygowanej>'.$origNumber.'</NrFaKorygowanej>'
                     .'<DataWystFaKorygowanej>'.$origIssued.'</DataWystFaKorygowanej>'
                     .'</DaneFaKorygowanej>';
+            }
+        }
+
+        // Final FV rozliczająca zaliczki musi zawierać `<DaneFaZaliczkowej>`
+        // dla każdej powiązanej ZAL (advances() relation). KSeF FA(3)
+        // wymaga numer + data wystawienia + kwota brutto każdej zaliczki —
+        // urząd sprawdza czy suma zaliczek + final = całkowita wartość usługi.
+        $advancesRefXml = '';
+        if ($kind === 'fv' || $kind === 'fv_korekta') {
+            $invoice->loadMissing('advances');
+            foreach ($invoice->advances as $advance) {
+                $advNumber = htmlspecialchars((string) $advance->number, ENT_XML1);
+                $advIssued = $advance->issued_at?->format('Y-m-d')
+                    ?? $invoice->issued_at?->format('Y-m-d')
+                    ?? date('Y-m-d');
+                $advancesRefXml .= '<DaneFaZaliczkowej>'
+                    .'<NrFaZaliczkowej>'.$advNumber.'</NrFaZaliczkowej>'
+                    .'<DataWystFaZaliczkowej>'.$advIssued.'</DataWystFaZaliczkowej>'
+                    .'<KwotaZaliczki>'.$this->cents((int) $advance->total_cents).'</KwotaZaliczki>'
+                    .'</DaneFaZaliczkowej>';
             }
         }
 
@@ -170,6 +191,7 @@ class KsefInvoiceXmlBuilder
             .'<P_15>'.$this->cents($invoice->total_cents).'</P_15>'        // suma brutto
             .'<RodzajFaktury>'.$rodzajFaktury.'</RodzajFaktury>'
             .$correctionRefXml
+            .$advancesRefXml
             .'</Fa>';
     }
 
