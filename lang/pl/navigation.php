@@ -6,6 +6,7 @@ return [
     // Admin panel groups
     'group' => [
         'stables' => 'Stajnie',
+        'users' => 'Użytkownicy',
         'transport_admin' => 'Transport',
         'configuration' => 'Konfiguracja',
         'finances' => 'Finanse',
