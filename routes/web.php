@@ -47,6 +47,7 @@ use App\Http\Controllers\Public\TransportLandingController;
 use App\Http\Controllers\Public\TransportLeadPortalController;
 use App\Http\Controllers\Public\TransportMarketplaceController;
 use App\Http\Controllers\Public\TransportReviewController;
+use App\Http\Controllers\Specialist\SetupController;
 use App\Http\Controllers\Tenant\BillingController;
 use App\Http\Controllers\Tenant\BugReportController;
 use App\Http\Controllers\Tenant\ImportTemplateController;
@@ -836,3 +837,25 @@ Route::middleware('web')
 Route::middleware(['web', 'auth', 'throttle:10,1'])
     ->get('/owner/invoices/export.csv', InvoiceCsvExportController::class)
     ->name('owner.invoices.export-csv');
+
+/*
+ * Specialist setup flow (PR O5 Channel B) — external vet / farrier
+ * przyjmuje invite z magic link, ustawia hasło. Throttle defensywne
+ * (brute force tokena w 256-bit window jest niemożliwy w 7d, ale
+ * limit chroni przed DoS na endpoint).
+ */
+Route::middleware(['web', 'throttle:20,1'])
+    ->prefix('/specialist/setup')
+    ->name('specialist.setup.')
+    ->group(function () {
+        Route::get('/invalid', [SetupController::class, 'invalid'])
+            ->name('invalid');
+        Route::get('/completed', [SetupController::class, 'completed'])
+            ->name('completed');
+        Route::get('/{token}', [SetupController::class, 'show'])
+            ->where('token', '[a-f0-9]{64}')
+            ->name('show');
+        Route::post('/{token}', [SetupController::class, 'store'])
+            ->where('token', '[a-f0-9]{64}')
+            ->name('store');
+    });
