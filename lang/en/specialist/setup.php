@@ -29,6 +29,7 @@ return [
     'completed' => [
         'title' => 'Account activated',
         'heading' => 'Account activated ✓',
-        'body' => 'Your password has been set. We are waiting for account verification by the Hovera team — once done, you will receive an email with a link to the specialist panel. Verification time: usually within 24 business hours.',
+        'body' => 'Your password has been set — you can now log in to the specialist panel. Your account is still pending verification by the Hovera team (usually within 24 business hours); until then stables see an "unverified" badge next to your name.',
+        'login_cta' => 'Go to login',
     ],
 ];

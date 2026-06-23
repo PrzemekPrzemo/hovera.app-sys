@@ -6,6 +6,7 @@ use App\Providers\AppServiceProvider;
 use App\Providers\Filament\AdminPanelProvider;
 use App\Providers\Filament\AppPanelProvider;
 use App\Providers\Filament\OwnerPanelProvider;
+use App\Providers\Filament\SpecialistPanelProvider;
 use App\Providers\Filament\TransportPanelProvider;
 use App\Providers\TenancyServiceProvider;
 
@@ -15,5 +16,6 @@ return [
     AppPanelProvider::class,
     TransportPanelProvider::class,
     OwnerPanelProvider::class,
+    SpecialistPanelProvider::class,
     TenancyServiceProvider::class,
 ];

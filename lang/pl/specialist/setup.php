@@ -29,6 +29,7 @@ return [
     'completed' => [
         'title' => 'Konto aktywowane',
         'heading' => 'Konto aktywowane ✓',
-        'body' => 'Hasło zostało ustawione. Czekamy na weryfikację konta przez zespół Hovery — po niej dostaniesz e-mail z linkiem do panelu specjalisty. Termin weryfikacji: zwykle do 24 godzin roboczych.',
+        'body' => 'Hasło zostało ustawione — możesz już zalogować się do panelu specjalisty. Twoje konto czeka jeszcze na weryfikację przez zespół Hovery (zwykle do 24 godzin roboczych); do tego czasu stajnie widzą przy Tobie oznaczenie „niezweryfikowany".',
+        'login_cta' => 'Przejdź do logowania',
     ],
 ];

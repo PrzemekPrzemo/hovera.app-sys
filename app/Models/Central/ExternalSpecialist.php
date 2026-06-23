@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Models\Central;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -42,7 +46,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $created_by_user_id
  * @property array<string,mixed>|null $metadata
  */
-class ExternalSpecialist extends Model
+class ExternalSpecialist extends Model implements AuthenticatableContract, FilamentUser, HasName
 {
     use HasFactory;
     use HasUlids;
@@ -139,5 +143,28 @@ class ExternalSpecialist extends Model
     public function routeNotificationForMail(): string
     {
         return $this->email;
+    }
+
+    /**
+     * Filament Specialist panel gate (PR O5 Channel B — SpecialistPanelProvider).
+     *
+     * Specjalista wchodzi do panelu `specialist` tylko po dokończeniu setup'u
+     * (hasło ustawione + email verified — patrz `hasCompletedSetup`). Master-admin
+     * verification (`verified_at`) NIE jest wymagana do logowania — niezweryfikowany
+     * vet i tak widzi swój panel, a UI thread'ów pokazuje "unverified" badge
+     * (per captured decisions §3, hybrid invite).
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $panel->getId() === 'specialist' && $this->has_completed_setup;
+    }
+
+    /**
+     * Nazwa wyświetlana w Filament (user menu, AccountWidget). Model nie ma
+     * kolumny `name` — używamy `display_name`.
+     */
+    public function getFilamentName(): string
+    {
+        return $this->display_name;
     }
 }

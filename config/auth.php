@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Central\ExternalSpecialist;
 use App\Models\User;
 
 return [
@@ -44,6 +45,14 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Filament Specialist panel (PR O5 Channel B). External vet/farrier
+        // loguje się osobnym guardem — to NIE jest tenant user ani central
+        // master-admin, tylko cross-tenant ExternalSpecialist identity.
+        'specialist' => [
+            'driver' => 'session',
+            'provider' => 'external_specialists',
+        ],
     ],
 
     /*
@@ -67,6 +76,13 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        // ExternalSpecialist żyje w central DB (cross-tenant identity).
+        // Auth subject dla guardu `specialist` / Filament Specialist panel.
+        'external_specialists' => [
+            'driver' => 'eloquent',
+            'model' => ExternalSpecialist::class,
         ],
 
         // 'users' => [
