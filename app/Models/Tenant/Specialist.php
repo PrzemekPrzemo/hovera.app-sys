@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Tenant;
 
+use App\Models\Central\ExternalSpecialist;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -26,7 +28,7 @@ class Specialist extends TenantModel
     public const TYPE_FARRIER = 'farrier';
 
     protected $fillable = [
-        'type', 'central_user_id', 'name', 'email', 'phone',
+        'type', 'central_user_id', 'external_specialist_id', 'name', 'email', 'phone',
         'color', 'notes', 'is_active', 'sort_order',
     ];
 
@@ -50,6 +52,25 @@ class Specialist extends TenantModel
     public function activities(): HasMany
     {
         return $this->hasMany(StableActivity::class);
+    }
+
+    /**
+     * Cross-tenant tożsamość specjalisty w central DB (gdy ten lokalny
+     * kontakt został powiązany z zarejestrowanym kontem Hovera — patrz
+     * autolink w SpecialistResource). `null` dla zwykłych kontaktów
+     * zewnętrznych bez konta.
+     *
+     * BelongsTo działa cross-connection — Eloquent użyje połączenia
+     * `central` zdefiniowanego na ExternalSpecialist.
+     */
+    public function externalSpecialist(): BelongsTo
+    {
+        return $this->belongsTo(ExternalSpecialist::class, 'external_specialist_id');
+    }
+
+    public function isLinkedToExternalSpecialist(): bool
+    {
+        return $this->external_specialist_id !== null;
     }
 
     public function scopeVets(Builder $query): Builder

@@ -25,12 +25,19 @@ return [
             'color' => 'Kolor w kalendarzu',
             'central_user' => 'Powiąż z pracownikiem',
             'central_user_placeholder' => '— bez konta —',
+            'external_link' => 'Konto specjalisty w Hoverze',
             'is_active' => 'Aktywny',
             'sort_order' => 'Kolejność',
             'notes' => 'Notatki',
         ],
         'helper' => [
             'central_user' => 'Lista zawiera tylko aktywnych członków stajni. Wybór tutaj umożliwia później widok "Moje zadania" dla zalogowanego specjalisty.',
+        ],
+        'external_link' => [
+            'empty' => 'Podaj e-mail, aby sprawdzić powiązanie z kontem Hovera.',
+            'none' => 'Kontakt zewnętrzny (brak konta w Hoverze)',
+            'verified' => 'Zweryfikowany specjalista Hovera',
+            'unverified' => 'Specjalista Hovera (niezweryfikowany)',
         ],
     ],
 

@@ -6,6 +6,7 @@ namespace App\Filament\App\Resources;
 
 use App\Filament\App\Resources\SpecialistResource\Pages;
 use App\Filament\Concerns\RestrictedByTenantRole;
+use App\Models\Central\ExternalSpecialist;
 use App\Models\Central\TenantMembership;
 use App\Models\Tenant\Specialist;
 use App\Services\Tenancy\TenantRoleGate;
@@ -17,6 +18,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
 
 class SpecialistResource extends Resource
 {
@@ -99,6 +102,56 @@ class SpecialistResource extends Resource
             ->all();
     }
 
+    /**
+     * Szuka zarejestrowanego ExternalSpecialist po e-mailu i zwraca jego ID
+     * (do zapisania w `external_specialist_id`). `null` gdy brak e-maila lub
+     * dopasowania. Query po central connection — model ma własne $connection.
+     */
+    private static function resolveExternalSpecialistId(?string $email): ?string
+    {
+        if (blank($email)) {
+            return null;
+        }
+
+        return ExternalSpecialist::query()
+            ->where('email', $email)
+            ->value('id');
+    }
+
+    /**
+     * Badge statusu powiązania pod polem e-mail:
+     *   - brak e-maila → cicha podpowiedź
+     *   - e-mail bez dopasowania → "kontakt zewnętrzny" (gray)
+     *   - dopasowanie zweryfikowane przez Hovera-admin → success
+     *   - dopasowanie niezweryfikowane → warning (per captured decisions §3)
+     */
+    private static function externalLinkBadge(?string $email): HtmlString
+    {
+        if (blank($email)) {
+            return new HtmlString(
+                '<span class="text-sm text-gray-500">'.e(__('app/specialist.form.external_link.empty')).'</span>'
+            );
+        }
+
+        $specialist = ExternalSpecialist::query()->where('email', $email)->first();
+
+        if ($specialist === null) {
+            return self::badge('gray', __('app/specialist.form.external_link.none'));
+        }
+
+        return $specialist->is_verified
+            ? self::badge('success', __('app/specialist.form.external_link.verified'))
+            : self::badge('warning', __('app/specialist.form.external_link.unverified'));
+    }
+
+    private static function badge(string $color, string $label): HtmlString
+    {
+        return new HtmlString(Blade::render(
+            '<x-filament::badge :color="$color">{{ $label }}</x-filament::badge>',
+            ['color' => $color, 'label' => $label],
+        ));
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -112,7 +165,21 @@ class SpecialistResource extends Resource
                     Forms\Components\TextInput::make('name')
                         ->label(__('app/specialist.form.label.name'))
                         ->required()->maxLength(255),
-                    Forms\Components\TextInput::make('email')->email()->maxLength(255),
+                    Forms\Components\TextInput::make('email')->email()->maxLength(255)
+                        // Autolink (epic 1.2): gdy e-mail pasuje do zarejestrowanego
+                        // ExternalSpecialist, powiązujemy lokalny kontakt z jego
+                        // cross-tenant tożsamością i pokazujemy badge poniżej.
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (?string $state, Forms\Set $set): void {
+                            $set('external_specialist_id', self::resolveExternalSpecialistId($state));
+                        }),
+                    // Wypełniane automatycznie przez autolink — niewidoczne dla usera,
+                    // ale persistowane na modelu.
+                    Forms\Components\Hidden::make('external_specialist_id'),
+                    Forms\Components\Placeholder::make('external_specialist_status')
+                        ->label(__('app/specialist.form.label.external_link'))
+                        ->content(fn (Forms\Get $get): HtmlString => self::externalLinkBadge($get('email')))
+                        ->columnSpanFull(),
                     Forms\Components\TextInput::make('phone')
                         ->label(__('app/specialist.form.label.phone'))
                         ->tel()->maxLength(40),
