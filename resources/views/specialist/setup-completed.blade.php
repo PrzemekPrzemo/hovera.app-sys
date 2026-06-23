@@ -9,12 +9,15 @@
         .container { max-width: 480px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 2rem; text-align: center; }
         h1 { color: #10b981; margin: 0 0 .5rem; font-size: 1.5rem; }
         p { color: #4b5563; line-height: 1.5; }
+        .cta { display: inline-block; margin-top: 1.5rem; padding: .65rem 1.5rem; background: #A8956B; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600; }
+        .cta:hover { background: #8b7766; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>{{ __('specialist/setup.completed.heading') }}</h1>
         <p>{{ __('specialist/setup.completed.body') }}</p>
+        <a class="cta" href="{{ route('filament.specialist.auth.login') }}">{{ __('specialist/setup.completed.login_cta') }}</a>
     </div>
 </body>
 </html>
