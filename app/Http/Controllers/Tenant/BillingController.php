@@ -33,10 +33,15 @@ use Illuminate\Support\Facades\Log;
 class BillingController extends Controller
 {
     public function __construct(
-        private readonly StripeBillingService $billing,
         private readonly PayUService $payu,
         private readonly TenantManager $tenants,
     ) {}
+
+    // StripeBillingService NIE jest wstrzykiwany w konstruktorze celowo: jego
+    // singleton rzuca, gdy STRIPE_SECRET jest pusty, co wywaliłoby CAŁĄ stronę
+    // /app/billing (nawet `show()` i flow PayU, które Stripe'a nie używają).
+    // Rozwiązujemy go leniwie tylko w akcjach Stripe'owych (checkout/portal),
+    // gdzie istniejący try/catch zamienia brak konfiguracji w przyjazny błąd.
 
     public function show(Request $request): ViewContract|RedirectResponse|Renderable
     {
@@ -222,7 +227,7 @@ class BillingController extends Controller
         }
 
         try {
-            $url = $this->billing->createCheckoutSession($tenant, $plan, $data['period']);
+            $url = app(StripeBillingService::class)->createCheckoutSession($tenant, $plan, $data['period']);
         } catch (\Throwable $e) {
             Log::error('Stripe checkout creation failed', [
                 'tenant_id' => $tenant->id,
@@ -271,7 +276,7 @@ class BillingController extends Controller
         $this->authorizeAdmin($tenant);
 
         try {
-            $url = $this->billing->createPortalSession($tenant);
+            $url = app(StripeBillingService::class)->createPortalSession($tenant);
         } catch (\Throwable $e) {
             Log::error('Stripe portal creation failed', [
                 'tenant_id' => $tenant->id,

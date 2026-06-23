@@ -75,6 +75,39 @@ class BillingControllerTest extends TestCase
             ->assertSee('Stable');
     }
 
+    /**
+     * Regression: gdy STRIPE_SECRET jest pusty (np. tenant na PayU, albo
+     * środowisko bez Stripe'a), strona /app/billing musi się otworzyć
+     * normalnie — Stripe rozwiązujemy leniwie tylko w checkout/portal.
+     * Wcześniej konstruktor wstrzykiwał StripeBillingService, którego
+     * singleton rzucał → cała strona 500.
+     */
+    public function test_show_renders_when_stripe_secret_is_empty(): void
+    {
+        // NIE mockujemy StripeBillingService — chcemy realny singleton.
+        config()->set('services.stripe.secret', '');
+
+        Plan::create([
+            'code' => 'stable',
+            'name' => 'Stable',
+            'currency' => 'PLN',
+            'price_monthly_cents' => 24900,
+            'price_yearly_cents' => 269000,
+            'is_active' => true,
+            'is_public' => true,
+            'sort_order' => 30,
+            'features' => ['bullet_1' => 'Wszystko z Solo'],
+        ]);
+
+        [$user, $tenant] = $this->makeOwner();
+
+        $this->actingAs($user)
+            ->withSession(['current_tenant_id' => $tenant->id])
+            ->get('/app/billing')
+            ->assertOk()
+            ->assertSee($tenant->name);
+    }
+
     public function test_webhook_idempotent_on_duplicate_event_id(): void
     {
         // Pre-seed a row that simulates a previously processed webhook.
