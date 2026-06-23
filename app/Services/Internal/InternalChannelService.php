@@ -95,6 +95,48 @@ class InternalChannelService
     }
 
     /**
+     * Dodaje do kanału wszystkich aktywnych członków stajni (używane przy
+     * tworzeniu kanału przez admina).
+     */
+    public function addAllActiveMembers(InternalChannel $channel): void
+    {
+        $this->addMembers($channel, $this->activeMemberIds());
+    }
+
+    /**
+     * Oznacza kanał jako przeczytany dla danego usera (bumpuje last_read_at).
+     */
+    public function markChannelRead(InternalChannel $channel, string $userId): void
+    {
+        InternalChannelMember::query()
+            ->where('channel_id', $channel->id)
+            ->where('user_id', $userId)
+            ->update(['last_read_at' => now()]);
+    }
+
+    /**
+     * Liczba nieprzeczytanych wiadomości w kanale dla danego usera (po
+     * last_read_at, z pominięciem własnych).
+     */
+    public function unreadCount(InternalChannel $channel, string $userId): int
+    {
+        $member = InternalChannelMember::query()
+            ->where('channel_id', $channel->id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($member === null) {
+            return 0;
+        }
+
+        return InternalMessage::query()
+            ->where('channel_id', $channel->id)
+            ->where('author_user_id', '!=', $userId)
+            ->when($member->last_read_at !== null, fn ($q) => $q->where('created_at', '>', $member->last_read_at))
+            ->count();
+    }
+
+    /**
      * Publikuje wiadomość w kanale, wyłuskując @mention z treści.
      *
      * @param array<int,array<string,mixed>> $attachments

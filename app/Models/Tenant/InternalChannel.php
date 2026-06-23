@@ -45,7 +45,7 @@ class InternalChannel extends TenantModel
 
     public function messages(): HasMany
     {
-        return $this->hasMany(InternalMessage::class, 'channel_id');
+        return $this->hasMany(InternalMessage::class, 'channel_id')->orderBy('created_at');
     }
 
     /** @param Builder<InternalChannel> $query */
