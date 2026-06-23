@@ -76,16 +76,20 @@ class BillingControllerTest extends TestCase
     }
 
     /**
-     * Regression: gdy STRIPE_SECRET jest pusty (np. tenant na PayU, albo
-     * środowisko bez Stripe'a), strona /app/billing musi się otworzyć
-     * normalnie — Stripe rozwiązujemy leniwie tylko w checkout/portal.
-     * Wcześniej konstruktor wstrzykiwał StripeBillingService, którego
-     * singleton rzucał → cała strona 500.
+     * Regression: strona /app/billing (show) NIE może resolvować ani
+     * StripeBillingService, ani PayUService — ich singletony rzucają gdy
+     * brak konfiguracji (puste STRIPE_SECRET / PAYU_POS_ID), co wcześniej
+     * (przez constructor injection) wywalało CAŁĄ stronę na 500. Bindujemy
+     * oba na rzucające closure'y; jeśli kontroler je dotknie → test padnie.
      */
-    public function test_show_renders_when_stripe_secret_is_empty(): void
+    public function test_show_renders_without_resolving_payment_services(): void
     {
-        // NIE mockujemy StripeBillingService — chcemy realny singleton.
-        config()->set('services.stripe.secret', '');
+        $this->app->bind(StripeBillingService::class, function () {
+            throw new \RuntimeException('Stripe not configured');
+        });
+        $this->app->bind(PayUService::class, function () {
+            throw new \RuntimeException('PayU not configured');
+        });
 
         Plan::create([
             'code' => 'stable',

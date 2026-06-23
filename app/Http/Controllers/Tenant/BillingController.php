@@ -33,15 +33,16 @@ use Illuminate\Support\Facades\Log;
 class BillingController extends Controller
 {
     public function __construct(
-        private readonly PayUService $payu,
         private readonly TenantManager $tenants,
     ) {}
 
-    // StripeBillingService NIE jest wstrzykiwany w konstruktorze celowo: jego
-    // singleton rzuca, gdy STRIPE_SECRET jest pusty, co wywaliłoby CAŁĄ stronę
-    // /app/billing (nawet `show()` i flow PayU, które Stripe'a nie używają).
-    // Rozwiązujemy go leniwie tylko w akcjach Stripe'owych (checkout/portal),
-    // gdzie istniejący try/catch zamienia brak konfiguracji w przyjazny błąd.
+    // Ani StripeBillingService, ani PayUService NIE są wstrzykiwane w
+    // konstruktorze celowo: ich singletony rzucają, gdy brak konfiguracji
+    // (puste STRIPE_SECRET / PAYU_POS_ID), co wywaliłoby CAŁĄ stronę
+    // /app/billing — nawet `show()`, który płatności w ogóle nie dotyka.
+    // Rozwiązujemy je leniwie tylko w akcjach, które ich używają
+    // (checkout/portal/payuCheckout), gdzie istniejący try/catch zamienia
+    // brak konfiguracji w przyjazny błąd zamiast 500.
 
     public function show(Request $request): ViewContract|RedirectResponse|Renderable
     {
@@ -149,7 +150,7 @@ class BillingController extends Controller
                 'due_at' => now()->addDays(14),
             ]);
 
-            $url = $this->payu->createRecurringSetup($invoice, $subscription);
+            $url = app(PayUService::class)->createRecurringSetup($invoice, $subscription);
         } catch (\Throwable $e) {
             Log::error('PayU recurring setup failed', [
                 'tenant_id' => $tenant->id,
