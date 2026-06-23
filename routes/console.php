@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Jobs\Billing\ChargeRecurringPayUSubscriptionsJob;
+use App\Jobs\Internal\SendDailyDigestJob;
 use App\Jobs\Owner\GenerateMonthlyBoardingInvoicesJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -139,4 +140,13 @@ Schedule::job(new ChargeRecurringPayUSubscriptionsJob)
 Schedule::command('specialists:prune-magic-links')
     ->dailyAt('03:00')
     ->timezone('Europe/Warsaw')
+    ->onOneServer();
+
+// Channel C internal channels — dzienny digest nieprzeczytanych wiadomości
+// o 08:00 Warsaw. Job iteruje stajnie, agreguje per-user unread z 24h i
+// pomija userów z 0 unread (per captured decisions §4).
+Schedule::job(new SendDailyDigestJob)
+    ->dailyAt('08:00')
+    ->timezone('Europe/Warsaw')
+    ->withoutOverlapping()
     ->onOneServer();

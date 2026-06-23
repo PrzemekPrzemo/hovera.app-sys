@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\App\Pages;
 
+use App\Services\Internal\InternalChannelService;
 use App\Tenancy\TenantManager;
 use Filament\Actions\Action;
 use Filament\Forms;
@@ -167,6 +168,11 @@ class OnboardingWizard extends Page implements HasForms
     {
         $tenant = app(TenantManager::class)->tenantOrFail();
         $tenant->markOnboardingFinished('completed');
+
+        // Channel C (epic 2): seedujemy domyślne kanały komunikacji stajni
+        // (#general/#weterynaria/#transport). Idempotentne — bezpieczne gdy
+        // user wróci do wizarda. Jesteśmy już w kontekście tenanta.
+        app(InternalChannelService::class)->ensureDefaultsFor();
 
         Notification::make()
             ->title(__('app/onboarding.notify.completed_title'))
