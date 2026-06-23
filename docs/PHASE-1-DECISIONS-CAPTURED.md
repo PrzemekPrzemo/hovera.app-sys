@@ -1,5 +1,83 @@
 # Phase 1 — Captured Decisions for Resume
 
+> Data: 2026-06-22 (updated po session continuation 2026-06-23)
+> Sesja: 31 PRs delivered (#437-#461). KSeF send/poll + FA_VAT_RR + Channel B foundation kompletne. Pozostałe pieces wymagają dedykowanej sesji per piece (Filament panel, message threading).
+
+## Update 2026-06-23 — Channel B foundation + KSeF complete
+
+**Session 2 added** (#449-#461):
+
+KSeF send/poll epic — kompletny end-to-end:
+- PR #449 — decisions doc captured
+- PR #450 — KSeF cert-flow z embedded AES key (RSA-OAEP wrapped)
+- PR #451 — TenantKsefSubmissionService::submit (full FA(3) send)
+- PR #452 — TenantKsefSubmissionService::refreshStatus (status polling)
+- PR #453 — KsefPollTenantInvoicesCommand (scheduled cron 06:15-22:15 Warsaw)
+- PR #454 — InvoiceResource UI: full send + manual refresh
+- PR #455 — KsefRrInvoiceXmlBuilder (FA_VAT_RR — faktura rolnicza, spec verified vs Billu-System)
+
+PR O5 Channel B foundation — vet/farrier magic-link auth:
+- PR #456 — ExternalSpecialist + SpecialistMagicLink models
+- PR #457 — SpecialistInviteService + invitation mail
+- PR #458 — Setup controller (/specialist/setup/{token}) + Blade views
+- PR #459 — Stable Filament action "Zaproś weterynarza"
+- PR #460 — Master-admin verify action (PWZ check)
+- PR #461 — Prune magic-links cron
+
+**Tests added session 2**: ~100 nowych testów (KSeF 51, Specialist 42).
+
+### Status remaining work
+
+| Epic | Status |
+|---|---|
+| **KSeF send/poll** | ✅ DONE end-to-end |
+| **FA_VAT_RR (faktura rolnicza)** | ✅ DONE — spec verified |
+| **JPK_FA(3) export** | ✅ DONE (CLI + admin page) |
+| **O5 Channel A (stable ↔ owner)** | ✅ Pre-existing (Faza 5 OWNER-STABLE) |
+| **O5 Channel B foundation** | ✅ DONE — models, invite, setup, verify, prune |
+| **O5 Channel B panel + threads** | 🟡 Pending — needs dedicated session |
+| **O5 Channel C internal channels** | 🟡 Pending — needs dedicated session |
+| **O5 Channel D owner ↔ vet** | 🔴 Blocked on Channel B panel |
+
+### Channel B remaining (do dokończenia)
+
+| Step | Effort | Dependencies |
+|---|---|---|
+| `SpecialistPanelProvider` (Filament panel + auth guard `specialist`) | ~2h | None |
+| Add-to-local Specialist autolink po setup'ie | ~30 min | None |
+| `SpecialistThread` + `SpecialistMessage` models | ~1h | None |
+| Channel B UI w stable panel (compose, thread view) | ~2h | Models done |
+| Channel B UI w specialist panel (inbox, reply) | ~2h | Panel provider done |
+
+**Total Channel B finish**: ~7-8h focused work.
+
+### Channel C — independent of B
+
+Per captured decisions: hybrid 3 auto-created (#general/#weterynaria/#transport) + admin add. Daily digest 08:00 Europe/Warsaw, skip empty.
+
+| Step | Effort |
+|---|---|
+| Migrations: `internal_channels`, `internal_channel_members`, `internal_messages` | ~30 min |
+| Models + relations | ~30 min |
+| Auto-create hook on tenant onboarding | ~30 min |
+| Filament UI (channel list + Slack-like thread view) | ~2h |
+| `@mention` autocompletion via Livewire | ~1h |
+| `SendDailyDigestJob` + scheduling | ~1h |
+
+**Total Channel C**: ~5-6h focused work.
+
+### Channel D — blocked on B panel
+
+Owner UI `/owner/specialists` (invite vet by email) + Specialist sees owner threads. ~3-4h focused work after B panel done.
+
+## Total remaining
+
+Po sesji 2: **15-20h** dedicated work (Channel B finish + C + D). Realistycznie 3-4 oddzielne sesje fokusowane per epic.
+
+---
+
+## Original document (preserved below for reference)
+
 > Data: 2026-06-22
 > Sesja: 14 PRs delivered (#437-#448). Pozostałe blocked items mają teraz answered decyzje — dokument ten kompletuje input do fresh resume session.
 
