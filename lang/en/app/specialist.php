@@ -25,12 +25,19 @@ return [
             'color' => 'Calendar color',
             'central_user' => 'Link to employee',
             'central_user_placeholder' => '— no account —',
+            'external_link' => 'Specialist Hovera account',
             'is_active' => 'Active',
             'sort_order' => 'Order',
             'notes' => 'Notes',
         ],
         'helper' => [
             'central_user' => 'Lists only active stable members. Picking here enables a "My tasks" view for the signed-in specialist later.',
+        ],
+        'external_link' => [
+            'empty' => 'Enter an email to check the link to a Hovera account.',
+            'none' => 'External contact (no Hovera account)',
+            'verified' => 'Verified Hovera specialist',
+            'unverified' => 'Hovera specialist (unverified)',
         ],
     ],
 
