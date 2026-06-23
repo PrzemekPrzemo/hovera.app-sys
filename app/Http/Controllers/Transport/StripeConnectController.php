@@ -33,16 +33,21 @@ use Illuminate\Support\Facades\Log;
 class StripeConnectController extends Controller
 {
     public function __construct(
-        private readonly TransporterStripeConnectService $service,
         private readonly TenantManager $tenants,
     ) {}
+
+    // TransporterStripeConnectService NIE jest wstrzykiwany w konstruktorze
+    // celowo: jego singleton rzuca, gdy STRIPE_SECRET jest pusty, co
+    // wywaliłoby KAŻDĄ z tych tras na 500 zanim zadziała try/catch w akcji.
+    // Rozwiązujemy go leniwie w akcjach (wszystkie mają try/catch → przyjazna
+    // notyfikacja + redirect zamiast 500).
 
     public function onboard(Request $request): RedirectResponse
     {
         $tenant = $this->guard($request);
 
         try {
-            $url = $this->service->generateOnboardingLink(
+            $url = app(TransporterStripeConnectService::class)->generateOnboardingLink(
                 tenant: $tenant,
                 returnUrl: url('/transport/stripe/connect/return'),
                 refreshUrl: url('/transport/stripe/connect/onboard'),
@@ -71,7 +76,7 @@ class StripeConnectController extends Controller
         $tenant = $this->guard($request);
 
         try {
-            $this->service->syncAccountStatus($tenant);
+            app(TransporterStripeConnectService::class)->syncAccountStatus($tenant);
             $tenant->refresh();
         } catch (\Throwable $e) {
             Log::error('Stripe Connect status sync after return failed', [
@@ -114,7 +119,7 @@ class StripeConnectController extends Controller
         $tenant = $this->guard($request);
 
         try {
-            $this->service->syncAccountStatus($tenant);
+            app(TransporterStripeConnectService::class)->syncAccountStatus($tenant);
         } catch (\Throwable $e) {
             Notification::make()
                 ->danger()
@@ -141,7 +146,7 @@ class StripeConnectController extends Controller
         $tenant = $this->guard($request);
 
         try {
-            $url = $this->service->createDashboardLoginLink($tenant);
+            $url = app(TransporterStripeConnectService::class)->createDashboardLoginLink($tenant);
         } catch (\Throwable $e) {
             Notification::make()
                 ->danger()
