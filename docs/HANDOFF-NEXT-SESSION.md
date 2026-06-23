@@ -1,7 +1,30 @@
 # Hovera — Handoff dla następnej sesji
 
-> Data: 2026-06-23 (post-session continuation, 31 PRów merged)
-> Status: Phase 1 ukończony 100%, Channel B foundation 6/6, pozostała Channel B core + C + D
+> Data: 2026-06-23 (sesja 3 — O5 messaging epics)
+> Status: Phase 1 100%, Channel B 100% (panel+threading+UI), Channel C backend+digest (UI live-chat deferred), Channel D 100%
+
+## 0. Stan po sesji 3 (O5 messaging)
+
+Zrealizowane i wypchnięte (PR #465 merged + kolejna gałąź `claude/funny-thompson-0r1wc9`):
+
+- **Epic 1.1** SpecialistPanelProvider — panel `/specialist` + guard `specialist` + login (merged #465)
+- **Epic 1.2** autolink `Specialist` ↔ `ExternalSpecialist` po e-mailu + badge (merged #465)
+- **Epic 1.3** `SpecialistThread`/`SpecialistMessage` models (central) (merged #465)
+- **Epic 2** Channel C internal channels **backend** + daily digest job (08:00 Warsaw) (merged #465)
+- **Epic 1.4/1.5** Channel B messaging UI — stable `SpecialistThreadResource` + specialist `ThreadResource`
+  + `SpecialistMessagingService` + `NewSpecialistMessageNotification` (na gałęzi, czeka na PR)
+- **Epic 3** Channel D owner↔vet — central models + `OwnerSpecialistMessagingService` + owner panel
+  `SpecialistThreadResource` (invite reuse) + specialist panel `OwnerThreadResource` (na gałęzi, czeka na PR)
+
+### Pozostało (jedyny niedokończony kawałek)
+
+- **Channel C live UI**: `App\Filament\App\Resources\InternalChannelResource` + per-channel chat
+  (Livewire) + `@mention` autocomplete dropdown. Backend gotowy i otestowany — brakuje warstwy UI.
+  Wzór: `SpecialistThreadResource` (infolist wiadomości + akcja post). `postMessage()` już ekstrahuje
+  @mention server-side, autocomplete to tylko JS-nicety.
+
+---
+
 
 ## 1. Stan kończący tej sesji
 
