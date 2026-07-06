@@ -1,5 +1,11 @@
 # Owner ↔ Stable shared view — roadmap
 
+> ⚠️ **NIEAKTUALNE (2026-07-05):** większość checklist poniżej (Faza 1-6, w tym C.4-C.7, notyfikacje,
+> upload zdjęć/dokumentów, timeline, pełny widok konia) jest już zaimplementowana — zweryfikowane
+> bezpośrednio w kodzie. Zobacz `docs/CURRENT-STATUS.md` po aktualny, zweryfikowany stan. Realnie
+> otwarte zostały tylko: E.5 (flaga "wymaga podpisu"), flow zatwierdzania zmian wrażliwych pól, digest
+> mailowy wiadomości. Nie planuj pracy na podstawie samych checklist poniżej bez weryfikacji w kodzie.
+
 > Pełna implementacja: właściciel konia (`tenant.type=horse_owner`) widzi w panelu `/owner` wszystkie dane swojego konia, historię działań stajni, rozliczenia z pensjonatem oraz prowadzi komunikację z stajnią (wiadomości + wymiana plików/zdjęć).
 >
 > Kontynuacja po zamknięciu 🟢 Calculator live UX (sprint maj 2026). Ten plik trzyma plan wdrożenia — każda faza = osobny PR (lub kilka), każda fazą zamykana w osobnej sesji żeby context był czysty.

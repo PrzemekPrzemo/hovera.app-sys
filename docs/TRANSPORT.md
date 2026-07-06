@@ -1,5 +1,14 @@
 # Hovera — Moduł Transportu Koni
 
+> ⚠️ **NIEAKTUALNE (2026-07-05):** wersja stempla (v2.0/v2.2, "po PR #211-#228") nie była aktualizowana
+> od ponad miesiąca — najnowsze zmerdżowane PR-y (#468-470, hotfix Stripe Connect 500) w ogóle nie są
+> tu wspomniane. Sekcja §14 ("Co dalej") jest sprzeczna z sekcjami §13/§15 — np. Stripe Connect Express
+> i Reviews są w §14 opisane jako niezrobione, a w §15.6/§13.6 jako gotowe. Numeracja §13.3-13.6 i
+> "§15.2-15.6" nakłada się (artefakt niesprzątniętego merge). Zweryfikowane bezpośrednio w kodzie
+> (2026-07-05): `extra_horse_fee` w kalkulatorze — gotowe; kreator Stripe Product/Price w `PlanResource`
+> — gotowy; `LegacyPlanMigrator` — gotowy. Zobacz `docs/CURRENT-STATUS.md`. Zweryfikuj każdą inną
+> pozycję (refund/dispute UI, KSeF korekty, płatności wieloetapowe) w kodzie przed planowaniem pracy.
+
 > Stan: maj 2026 · faza 1–8 wdrożone (GA-ready) + post-MVP batch 1
 > i faza 9 (płatności). Dokument jest aktualizowany na bieżąco po każdym merge'u.
 >
@@ -897,7 +906,6 @@ sign generation, register HTTP fake, webhook idempotency, amount
 mismatch rejection.
 
 ### 13.3 `TenantResource` (audience filter)
-### 15.2 `TenantResource` (audience filter)
 
 Bazowa lista wszystkich tenantów (stajnie + transporterzy) z filtrem
 `type` w toolbarze — kliknięcie filtra przełącza widok między „stajnie"
@@ -1505,7 +1513,7 @@ Każdy krok activates tylko gdy poprzedni nie zadziałał. Stripe Connect failur
   `stripe_connect_account_id IS NOT NULL` — przydatne gdy transporter
   zgłasza „dokończyłem KYC, ale Hovera widzi pending".
 
-### 15.6 Przelewy24 — alternatywa Stripe Payment Link (per-transporter quote autopay)
+### 15.7 Przelewy24 — alternatywa Stripe Payment Link (per-transporter quote autopay)
 
 **Status:** ✅ wdrożone w gałęzi `claude/transport-przelewy24-onetime`.
 

@@ -1,5 +1,10 @@
 # Hovera — Plan wdrożenia Phase 1 (top 10 priorytetów z WOW-PLAN-V2)
 
+> ⚠️ **NIEAKTUALNE (2026-07-05):** ten dokument szacował KSeF submit i Channel B/C/D messaging jako
+> "12-17 dni pozostało" — w rzeczywistości wszystko zostało domknięte w ciągu kolejnych 2 dni (PR
+> #449-467). Phase 1 jest w całości ukończona. Zobacz `docs/CURRENT-STATUS.md` i
+> `docs/PHASE-1-DECISIONS-CAPTURED.md` (nowszy, ale też sprawdź krzyżowo z CURRENT-STATUS.md).
+
 > Powiązany z: `docs/WOW-PLAN-V2.md` (analiza per-tenant).
 > Data: 2026-06-21.
 > Założenie: ~2-3 tygodnie pracy, sekwencja po jednym PR na PR-y backend-heavy, równolegle docs/UI.

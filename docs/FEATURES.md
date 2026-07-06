@@ -1,5 +1,10 @@
 # Hovera — funkcjonalności dla właścicieli stajni
 
+> ⚠️ **NIEAKTUALNE (2026-07-05):** snapshot sprzed PR #34 (!) — sekcja 14 "czego Hovera NIE robi
+> jeszcze" i sekcja 15 (rekomendacje) są w dużej mierze zdezaktualizowane: KSeF full submit,
+> PDF faktur, O5 messaging, panel transportera i wiele innych z listy "brakuje" już istnieje.
+> Zobacz `docs/CURRENT-STATUS.md` po aktualny stan przed użyciem tego dokumentu do onboardingu/sprzedaży.
+
 > Stan: maj 2026 · 333 testy ✅ · 35 zmergowanych PR-ów
 >
 > Ten dokument opisuje **co Hovera już dostarcza** (gotowe do wdrożenia) z punktu widzenia właściciela / managera stajni. Służy do (a) szybkiego onboardingu nowego klienta, (b) planowania kolejnych wdrożeń, (c) rozmowy sprzedażowej.
