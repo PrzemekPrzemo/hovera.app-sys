@@ -30,6 +30,7 @@
         <env name="DB_CENTRAL_DRIVER" value="sqlite"/>
         <env name="DB_CENTRAL_DATABASE" value=":memory:"/>
         <env name="HOVERA_ADMIN_REQUIRE_2FA" value="false"/>
+        <env name="HOVERA_PREVENT_LAZY_LOADING" value="true"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

@@ -1,5 +1,11 @@
 # Hovera — Roadmap rozszerzeń
 
+> ⚠️ **NIEAKTUALNE (2026-07-05):** nie wspomina w ogóle o KSeF submit, O5 messaging (Channel A-D) ani
+> module transportera — wszystkie zmergowane dawno po ostatniej edycji tego pliku. Zobacz
+> `docs/CURRENT-STATUS.md` po aktualny stan. Sekcja "Future ideas" poniżej wciąż może być użyteczna
+> jako lista niezdecydowanych pomysłów, ale nic z sekcji "zrobione" nie powinno być traktowane jako
+> kompletna lista — jest krótsza niż faktyczny stan.
+
 > Stan: maj 2026 · uzupełniany na bieżąco
 >
 > Ten dokument trzyma kierunek rozwoju produktu poza tym, co jest już w `FEATURES.md`. Każda pozycja jest świadomą decyzją produktową — można ją wyciąć / przesunąć, ale jeśli wchodzi do realizacji, opis tutaj służy jako spec.

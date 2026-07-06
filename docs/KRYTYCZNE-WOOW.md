@@ -1,5 +1,11 @@
 # Hovera — Krytyczne „WOOW" (audyt po sesji O5 messaging)
 
+> ⚠️ **CZĘŚCIOWO NIEAKTUALNE (2026-07-05):** punkt #1 rekomendacji ("owner 1-click BLIK pay") był już
+> nieaktualny w dniu napisania tego dokumentu — przycisk "Zapłać" (przekierowanie na hosted checkout
+> stajni, P24/PayU/Stripe) został zmergowany 2026-06-15 w PR #421, czyli 8 dni przed tym audytem.
+> Prawdziwy pozostały gap to tylko *inline* płatność bez opuszczania panelu (nie brak BLIK-a jako
+> takiego — P24/PayU już go oferują na hosted checkout). Zobacz `docs/CURRENT-STATUS.md`.
+
 > Data: 2026-06-23
 > Kontekst: audyt względem `docs/WOW-PLAN-V2.md` (z 2026-06-20) PO domknięciu epików O5
 > (Channel B/C/D messaging, KSeF submit, panel specjalisty).

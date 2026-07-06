@@ -1,5 +1,11 @@
 # Marketplace + Calculator parity — roadmap kontynuacji
 
+> ⚠️ **NIEAKTUALNE (2026-07-05):** nie zaktualizowane po sesji PR #363-369 (2026-05-21, linking workflow)
+> ani po późniejszych sesjach. Owner-panel content (PR 6: HorseResource/TransportOrderResource/mini-
+> kalkulator), extra-horse-fee calculator parity, i cross-tenant linking (PR 4/5) są już zaimplementowane
+> — zweryfikowane w kodzie. Zobacz `docs/CURRENT-STATUS.md`. Zweryfikuj w kodzie każdą pozycję poniżej
+> przed zaplanowaniem pracy — nie ufaj samym checklistom.
+
 > Stan: maj 2026 — po ukończeniu PR #297-#300 (HorseOwner foundation + landing redesign)
 >
 > Ten plik trzyma listę otwartych zadań po deep-dive sesji marketplace'u + analizy TransportKoni-Kalkulator. Każda pozycja powinna być **osobnym PR-em w osobnej sesji** (jeden chunk per session żeby context był czysty). Kolejność niżej = rekomendowana kolejność wykonania.

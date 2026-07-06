@@ -69,6 +69,7 @@ class OwnerMessagesService
             }
 
             $messages = HorseMessage::query()
+                ->with('client')
                 ->where('horse_id', $horse->id)
                 ->where('client_id', $client->id)
                 ->orderBy('sent_at')

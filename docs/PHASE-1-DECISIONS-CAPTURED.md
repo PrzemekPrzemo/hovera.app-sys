@@ -1,5 +1,9 @@
 # Phase 1 — Captured Decisions for Resume
 
+> ⚠️ **NIEAKTUALNE (2026-07-05):** Channel C i D, opisane tu jako 🟡/🔴 pending, zostały w
+> rzeczywistości domknięte tego samego dnia (PR #467, Channel C live UI) i krótko po (Channel D).
+> Phase 1 (KSeF + Channel A-D + Specialist panel) jest w całości ukończona. Zobacz `docs/CURRENT-STATUS.md`.
+
 > Data: 2026-06-22 (updated po session continuation 2026-06-23)
 > Sesja: 31 PRs delivered (#437-#461). KSeF send/poll + FA_VAT_RR + Channel B foundation kompletne. Pozostałe pieces wymagają dedykowanej sesji per piece (Filament panel, message threading).
 
