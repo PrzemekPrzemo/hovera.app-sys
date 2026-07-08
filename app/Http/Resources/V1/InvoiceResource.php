@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\V1;
 
+use App\Services\Invoicing\InvoicePdfStorageService;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class InvoiceResource extends JsonResource
@@ -19,7 +20,16 @@ class InvoiceResource extends JsonResource
             'ksef_status' => $this->ksef_status ?? null,
             'ksef_reference_number' => $this->ksef_reference_number ?? null,
             'ksef_environment' => $this->ksef_environment ?? null,
-            'pdf_url' => $this->pdf_path ? route('api.v1.invoices.pdf', $this->id) : null,
+            // The PDF is generated lazily on first hit of the /pdf endpoint
+            // (InvoicePdfStorageService::ensureStored), so `pdf_path` being
+            // unset locally does NOT mean the PDF is unavailable — it means
+            // it hasn't been fetched yet. Gate the link on the retention
+            // window itself, not on whether we've already cached a copy,
+            // otherwise the link would never appear for an invoice nobody
+            // has opened before.
+            'pdf_url' => app(InvoicePdfStorageService::class)->isWithinRetention($this->resource)
+                ? route('api.v1.invoices.pdf', $this->id)
+                : null,
             'issued_at' => optional($this->issued_at ?? null)?->toIso8601String(),
             'due_at' => optional($this->due_at ?? null)?->toIso8601String(),
             'paid_at' => optional($this->paid_at ?? null)?->toIso8601String(),
