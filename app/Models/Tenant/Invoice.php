@@ -29,6 +29,7 @@ class Invoice extends TenantModel
         'ksef_reference_number', 'ksef_submitted_at', 'ksef_accepted_at',
         'ksef_xml', 'ksef_error_payload', 'ksef_environment',
         'notes', 'metadata',
+        'pdf_disk', 'pdf_path', 'pdf_generated_at',
     ];
 
     protected function casts(): array
@@ -51,6 +52,7 @@ class Invoice extends TenantModel
             'exchange_rate' => 'decimal:6',
             'exchange_rate_date' => 'date',
             'metadata' => 'array',
+            'pdf_generated_at' => 'datetime',
         ];
     }
 
