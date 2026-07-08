@@ -150,3 +150,15 @@ Schedule::job(new SendDailyDigestJob)
     ->timezone('Europe/Warsaw')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Invoice PDF retention cleanup — codziennie 03:15 Warsaw (obok innych
+// nocnych porządków, offset od 03:00 magic-links prune żeby nie nakładać
+// się w tej samej minucie). Usuwa lokalnie hostowane PDF faktur, których
+// retencja (rok wystawienia + 1 miesiąc grace) już minęła — klient trafia
+// wtedy do KSeF zamiast do lokalnego pliku. Patrz docs/API.md +
+// InvoicePdfStorageService.
+Schedule::command('invoices:prune-expired-pdfs')
+    ->dailyAt('03:15')
+    ->timezone('Europe/Warsaw')
+    ->withoutOverlapping()
+    ->onOneServer();

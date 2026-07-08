@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Resources\V1\InvoiceResource;
 use App\Models\Tenant\Invoice;
+use App\Services\Invoicing\InvoicePdfStorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -38,25 +39,35 @@ class InvoiceController
         return new JsonResponse((new InvoiceResource($invoice))->resolve(request()));
     }
 
-    public function pdf(string $id): StreamedResponse|JsonResponse
+    /**
+     * Serves the hosted invoice PDF while it's within the local retention
+     * window (issued year + 1 month grace — see `InvoicePdfStorageService`).
+     * Past that window we no longer host the file; the response instead
+     * points the client at KSeF, where every submitted invoice has a
+     * permanent record.
+     */
+    public function pdf(string $id, InvoicePdfStorageService $pdfStorage): StreamedResponse|JsonResponse
     {
         $invoice = Invoice::query()->findOrFail($id);
 
-        $path = $invoice->pdf_path ?? $invoice->pdf_url;
-        if (! $path) {
-            return new JsonResponse(['error' => ['code' => 'pdf_unavailable']], 404);
+        $available = false;
+        try {
+            $available = $pdfStorage->ensureStored($invoice);
+        } catch (\Throwable $e) {
+            report($e);
         }
 
-        // pdf_url may be a public CDN URL — just redirect.
-        if (str_starts_with((string) $path, 'http')) {
-            return new JsonResponse(['url' => $path]);
+        if ($available) {
+            return Storage::disk((string) $invoice->pdf_disk)
+                ->response((string) $invoice->pdf_path, sprintf('invoice-%s.pdf', $invoice->number ?? $invoice->id));
         }
 
-        $disk = Storage::disk(config('filesystems.default'));
-        if (! $disk->exists($path)) {
-            return new JsonResponse(['error' => ['code' => 'pdf_missing']], 404);
-        }
-
-        return $disk->response($path, sprintf('invoice-%s.pdf', $invoice->number ?? $invoice->id));
+        return new JsonResponse([
+            'error' => [
+                'code' => 'pdf_no_longer_hosted',
+                'message' => 'hovera.app no longer hosts this invoice PDF locally; redownload it from KSeF.',
+            ],
+            ...$pdfStorage->ksefRedirectPayload($invoice),
+        ], 410);
     }
 }
