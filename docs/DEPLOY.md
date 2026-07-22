@@ -1,6 +1,91 @@
 # Hovera — wdrożenie
 
-## Najszybsza droga: bootstrap script
+## Coolify (Hetzner) — docelowa ścieżka wdrożenia
+
+> Reszta tego dokumentu (sekcje poniżej) opisuje wdrożenie na Plesku — trzymane jako
+> fallback/referencja podczas okna migracyjnego (patrz krok 8 niżej). Nowe wdrożenia
+> powinny iść przez Coolify.
+
+Repo zawiera gotowy `Dockerfile` (multi-stage: `vendor` → `assets` → `runtime` → `web`)
+i `docker-compose.yml` z pięcioma serwisami:
+
+| Serwis | Co robi |
+|---|---|
+| `web` | nginx, serwuje `public/`, proxy `.php` do `php:9000` |
+| `php` | PHP-FPM — jedyny serwis, który przy starcie robi `migrate --force` + `tenants:migrate` + cache rebuild (patrz `docker/entrypoint.sh`, `CONTAINER_ROLE=web`) |
+| `queue` | `php artisan queue:work --tries=3 --max-time=3600`, restart zawsze — zastępuje Pleskowy cron-tryb kolejki |
+| `scheduler` | `php artisan schedule:work` — długo działający proces, zastępuje `* * * * * schedule:run`, **nie wymaga systemowego crona** |
+| `mysql` | `mysql:8.4` z wolumenem `mysql_data`; `docker/mysql-init/01-provisioner.sh` tworzy usera `hovera_provisioner` z grantami z sekcji 1.5.B niżej, automatycznie przy pierwszym starcie |
+
+### Wymagane zmienne środowiskowe (poza standardowym `.env.example`)
+
+W środowisku Coolify **nadpisz** te zmienne z `.env.example` (Plesk-owe `127.0.0.1` nie
+działają wewnątrz sieci Docker — usługi widzą się po nazwie serwisu):
+
+```env
+DB_CENTRAL_HOST=mysql
+DB_TENANT_HOST=mysql
+DB_PROVISIONER_HOST=mysql
+HOVERA_TENANT_DB_HOST=mysql
+
+# Tylko dla kontenera mysql (root superuser, jednorazowo przy pierwszym boot,
+# do utworzenia hovera_provisioner) — patrz .env.example.
+DB_ROOT_PASSWORD=<silne-hasło>
+
+# Storage: migracja na Hetzner Object Storage (S3-compatible)
+FILESYSTEM_DISK=s3
+AWS_ACCESS_KEY_ID=<z panelu Hetzner Object Storage>
+AWS_SECRET_ACCESS_KEY=<z panelu Hetzner Object Storage>
+AWS_DEFAULT_REGION=fsn1                     # albo hel1/nbg1 — region bucketu
+AWS_BUCKET=<nazwa-bucketu>
+AWS_ENDPOINT=https://fsn1.your-objectstorage.com
+AWS_USE_PATH_STYLE_ENDPOINT=true
+
+# Logi do stdout/stderr — Coolify/Docker je zbiera centralnie, plik
+# storage/logs/laravel.log w efemerycznym kontenerze i tak zniknie po restarcie.
+LOG_CHANNEL=stderr
+```
+
+**`APP_KEY` musi być przeniesiony z obecnej produkcji Plesk, NIE wygenerowany na nowo** —
+szyfruje sesje i dane tenant DB credentials w bazie; nowy klucz unieważni wszystko
+zaszyfrowane wcześniej.
+
+### Pierwsze wdrożenie w Coolify
+
+1. Coolify → **New Resource → Docker Compose** → wskaż to repo (branch `main`) — Coolify
+   wykryje `docker-compose.yml` automatycznie.
+2. Wklej wszystkie zmienne z `.env.example` + nadpisania z sekcji wyżej do Coolify's
+   environment variables UI (nie commituj `.env` do repo — zostaje `.gitignore`'owany
+   jak dotychczas).
+3. Deploy. `php` serwis przy starcie czeka na MySQL (`docker/entrypoint.sh` pinguje przez
+   PDO w pętli), potem robi migracje.
+4. Health check: Coolify sprawdza `web` przez `GET /up` (wbudowany route Laravela 11,
+   `bootstrap/app.php:health`) — automatycznie zielony gdy `web`+`php`+`mysql` wstały.
+5. Podepnij domenę w Coolify (Coolify samo obsługuje SSL przez Let's Encrypt via Traefik).
+
+### Migracja z Pleska — kolejność kroków (nie pomijaj, produkcja ma realnych klientów)
+
+1. **Backup** pełnego `mysqldump --all-databases` z produkcyjnego Plesk MySQL (`hovera_core`
+   + wszystkie `hovera_t_*`) + snapshot `storage/app`, zapisane **poza** serwerem Plesk.
+2. Postaw pełny stack w Coolify pod tymczasową subdomeną, zweryfikuj że wstaje czysto
+   (migracje na pustej bazie, `/up` zielony).
+3. Zaimportuj dump z kroku 1 do kontenera `mysql` — enumeruj **wszystkie** `hovera_t_*`
+   bazy (sprawdź `php artisan tenants:list` na produkcji Plesk) i odtwórz też
+   userów/granty per-tenant, nie tylko dane.
+4. Zsynchronizuj `storage/app/public` z Pleska → bucket Hetzner (`rclone sync` lub
+   `aws s3 sync`) — **przed** przepięciem DNS, inaczej stare `storage_key`/ścieżki w DB
+   przestaną się rozwiązywać.
+5. Krótkie okno maintenance na Plesku (`php artisan down`) → finalny delta-dump →
+   finalny delta-sync plików → import do Coolify.
+6. Przepnij DNS `app.hovera.app` → serwer Coolify/Hetzner (obniż TTL z wyprzedzeniem).
+7. Zweryfikuj: logowanie, `/up`, `/admin/login`, `/app/login`, testowa faktura/mail,
+   logi serwisów `queue`/`scheduler` w Coolify (potwierdź że faktycznie chodzą).
+8. **Plesk zostaje uruchomiony min. 48-72h** jako fallback (DNS rollback = szybki powrót
+   starego A-recordu). Wyłącz dopiero po tym oknie.
+
+---
+
+## Najszybsza droga: bootstrap script (Plesk — legacy/fallback)
 
 Z czystego serwera (Plesk lub plain VPS) jednym poleceniem:
 

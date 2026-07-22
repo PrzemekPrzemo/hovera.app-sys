@@ -11,6 +11,7 @@ use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -22,6 +23,21 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Behind a reverse proxy (Coolify/Traefik, or previously any Plesk
+        // nginx-in-front-of-Apache setup) the app container only ever sees
+        // plain HTTP from the proxy — without this, Laravel can't tell the
+        // original request was HTTPS, which breaks SESSION_SECURE_COOKIE and
+        // url()/redirect() scheme detection. The proxy is the only thing
+        // that can reach this container's port, so trusting all inbound
+        // connections here is safe (equivalent to trusting "the LB").
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO,
+        );
+
         $publicPrefix = env('HOVERA_PUBLIC_SITE_PREFIX', 's');
         $middleware->validateCsrfTokens(except: [
             $publicPrefix.'/*/payments/*/webhook',
