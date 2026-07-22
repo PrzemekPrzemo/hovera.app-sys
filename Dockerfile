@@ -4,6 +4,12 @@
 # docs/DEPLOY.md "Coolify (Hetzner)" for the full deployment guide.
 
 # ---- Stage 1: PHP dependencies (needs full app source for autoload map) ----
+# --ignore-platform-reqs: the official composer:2 image is deliberately
+# minimal (only bz2/sodium/zip loaded) and doesn't carry the app's runtime
+# extensions (intl, gd, ...) — those get installed in the `runtime` stage
+# below, where the code actually executes. Composer's platform check here
+# would otherwise reject the lock file for extensions this stage never
+# needs to load itself.
 FROM composer:2 AS vendor
 WORKDIR /app
 COPY . .
@@ -12,7 +18,8 @@ RUN composer install \
     --optimize-autoloader \
     --no-interaction \
     --no-ansi \
-    --prefer-dist
+    --prefer-dist \
+    --ignore-platform-reqs
 
 # ---- Stage 2: frontend assets (Vite/Tailwind) ----
 # `npm install` not `npm ci` — no package-lock.json is committed in this
