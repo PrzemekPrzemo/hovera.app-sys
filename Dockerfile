@@ -27,18 +27,17 @@ RUN npm run build
 # ---- Stage 3: runtime image ----
 FROM php:8.4-fpm-alpine AS runtime
 
-RUN apk add --no-cache \
-        bash \
-        su-exec \
-        icu-libs \
-        icu-dev \
-        libzip-dev \
-        libpng-dev \
-        libjpeg-turbo-dev \
-        freetype-dev \
-        oniguruma-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" \
+# install-php-extensions (mlocati) instead of hand-rolled apk+docker-php-ext-install:
+# it knows which extensions php:8.4-fpm-alpine already ships built-in (curl, json,
+# ctype, session, tokenizer, openssl, sodium, dom/xml/simplexml, etc. — no-ops those
+# safely) vs which genuinely need apk -dev packages + compiling, so this list can
+# safely be "everything the app + its composer deps declare" without guessing.
+# Full ext-* requirement list cross-checked against vendor/composer/installed.json.
+RUN apk add --no-cache bash su-exec curl \
+    && curl -sSLf -o /usr/local/bin/install-php-extensions \
+        https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
+    && chmod +x /usr/local/bin/install-php-extensions \
+    && install-php-extensions \
         pdo_mysql \
         mbstring \
         bcmath \
@@ -46,7 +45,9 @@ RUN apk add --no-cache \
         gd \
         zip \
         exif \
-        opcache
+        opcache \
+        curl \
+        sodium
 
 # opcache: sane production defaults (Coolify redeploys = new container, so
 # no need for the OPcache-flush dance the Plesk `hu` script does today).
