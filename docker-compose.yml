@@ -1,0 +1,105 @@
+# Coolify deployment stack for hovera.app-sys. See docs/DEPLOY.md
+# "Coolify (Hetzner)" for the full setup/cutover guide, and .env.example
+# for the complete list of required environment variables.
+#
+# `php`, `queue`, and `scheduler` all run the exact same built image —
+# CONTAINER_ROLE (read by docker/entrypoint.sh) decides which one runs
+# migrations/cache rebuild (web only) and which artisan process it execs.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    depends_on:
+      - php
+    ports:
+      - "80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    env_file: .env
+    environment:
+      CONTAINER_ROLE: web
+      # Overrides for .env's Plesk-era 127.0.0.1 defaults — inside the
+      # compose network the DB is reached by service name.
+      DB_CENTRAL_HOST: mysql
+      DB_TENANT_HOST: mysql
+      DB_PROVISIONER_HOST: mysql
+      HOVERA_TENANT_DB_HOST: mysql
+    depends_on:
+      - mysql
+    volumes:
+      - storage_data:/var/www/html/storage
+    restart: unless-stopped
+
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    env_file: .env
+    environment:
+      CONTAINER_ROLE: queue
+      DB_CENTRAL_HOST: mysql
+      DB_TENANT_HOST: mysql
+      DB_PROVISIONER_HOST: mysql
+      HOVERA_TENANT_DB_HOST: mysql
+    command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600"]
+    depends_on:
+      - mysql
+    volumes:
+      - storage_data:/var/www/html/storage
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    env_file: .env
+    environment:
+      CONTAINER_ROLE: scheduler
+      DB_CENTRAL_HOST: mysql
+      DB_TENANT_HOST: mysql
+      DB_PROVISIONER_HOST: mysql
+      HOVERA_TENANT_DB_HOST: mysql
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      - mysql
+    volumes:
+      - storage_data:/var/www/html/storage
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_CENTRAL_DATABASE}
+      MYSQL_USER: ${DB_CENTRAL_USERNAME}
+      MYSQL_PASSWORD: ${DB_CENTRAL_PASSWORD}
+      DB_PROVISIONER_USERNAME: ${DB_PROVISIONER_USERNAME}
+      DB_PROVISIONER_PASSWORD: ${DB_PROVISIONER_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql_data:
+  storage_data:
