@@ -1,0 +1,79 @@
+name: Docker build (Coolify image)
+
+# Validates that the Coolify deployment image actually builds. This repo
+# has no other CI (see docs/CURRENT-STATUS.md) — this workflow exists
+# specifically because Dockerfile/docker-compose.yml can't be build-tested
+# from a sandboxed dev environment without normal internet access to
+# Docker Hub. A red run here means `docker compose build` will fail for
+# anyone else too, including Coolify itself.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "docker/**"
+      - "composer.json"
+      - "composer.lock"
+      - "package.json"
+      - ".github/workflows/docker-build.yml"
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "docker/**"
+      - "composer.json"
+      - "composer.lock"
+      - "package.json"
+      - ".github/workflows/docker-build.yml"
+
+concurrency:
+  group: docker-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build runtime target (php/queue/scheduler image)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runtime
+          push: false
+          load: true
+          tags: hovera-runtime:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build web target (nginx image)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: web
+          push: false
+          load: true
+          tags: hovera-web:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Sanity check runtime image
+        # --entrypoint php bypasses docker/entrypoint.sh (which otherwise
+        # tries to migrate against a MySQL that doesn't exist in this job).
+        run: |
+          docker run --rm --entrypoint php hovera-runtime:ci -v
+          docker run --rm --entrypoint php hovera-runtime:ci -m | grep -qi pdo_mysql
+          docker run --rm --entrypoint php hovera-runtime:ci -m | grep -qi gd
+          docker run --rm --entrypoint php hovera-runtime:ci artisan --version
+
+      - name: Validate docker-compose.yml
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
