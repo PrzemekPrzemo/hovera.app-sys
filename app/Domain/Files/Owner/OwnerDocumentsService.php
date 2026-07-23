@@ -207,11 +207,11 @@ class OwnerDocumentsService
         if (! $this->pathBelongsToStable($filePath, $stableTenant)) {
             throw new AuthorizationException(__('owner/documents.access.path_mismatch'));
         }
-        if (! Storage::disk('local')->exists($filePath)) {
+        if (! Storage::disk($this->disk())->exists($filePath)) {
             throw new RuntimeException('Document file not found on disk');
         }
 
-        return Storage::disk('local')->response($filePath, $originalName, [
+        return Storage::disk($this->disk())->response($filePath, $originalName, [
             'Content-Type' => $mime,
         ]);
     }
@@ -221,12 +221,17 @@ class OwnerDocumentsService
         $dir = "horse-documents/{$stableTenantId}/{$horseId}";
         $sanitized = preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->getClientOriginalName());
         $filename = 'client-'.(string) Str::ulid().'_'.$sanitized;
-        $path = $file->storeAs($dir, $filename, 'local');
+        $path = $file->storeAs($dir, $filename, $this->disk());
         if ($path === false || $path === '') {
             throw new RuntimeException('Failed to store document file');
         }
 
         return (string) $path;
+    }
+
+    private function disk(): string
+    {
+        return (string) config('hovera.uploads.disk', 'local');
     }
 
     private function validateFile(UploadedFile $file): void

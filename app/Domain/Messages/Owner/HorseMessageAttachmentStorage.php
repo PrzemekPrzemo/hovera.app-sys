@@ -73,7 +73,7 @@ class HorseMessageAttachmentStorage
         $sanitizedName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->getClientOriginalName());
         $filename = $uploaderRole.'-'.(string) Str::ulid().'_'.$sanitizedName;
 
-        $path = $file->storeAs($dir, $filename, 'local');
+        $path = $file->storeAs($dir, $filename, $this->disk());
 
         if ($path === false || $path === '') {
             throw new RuntimeException('Failed to store attachment file');
@@ -97,14 +97,14 @@ class HorseMessageAttachmentStorage
     public function streamFromAttachment(array $attachment): StreamedResponse
     {
         $path = (string) ($attachment['path'] ?? '');
-        if ($path === '' || ! Storage::disk('local')->exists($path)) {
+        if ($path === '' || ! Storage::disk($this->disk())->exists($path)) {
             throw new RuntimeException('Attachment file not found');
         }
 
         $mime = (string) ($attachment['mime'] ?? 'application/octet-stream');
         $originalName = (string) ($attachment['original_name'] ?? basename($path));
 
-        return Storage::disk('local')->response($path, $originalName, [
+        return Storage::disk($this->disk())->response($path, $originalName, [
             'Content-Type' => $mime,
         ]);
     }
@@ -119,9 +119,14 @@ class HorseMessageAttachmentStorage
         if ($path === '') {
             return;
         }
-        if (Storage::disk('local')->exists($path)) {
-            Storage::disk('local')->delete($path);
+        if (Storage::disk($this->disk())->exists($path)) {
+            Storage::disk($this->disk())->delete($path);
         }
+    }
+
+    private function disk(): string
+    {
+        return (string) config('hovera.uploads.disk', 'local');
     }
 
     /**

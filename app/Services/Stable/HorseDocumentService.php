@@ -98,7 +98,7 @@ class HorseDocumentService
 
         $dir = "horse-documents/{$tenant->id}/{$horse->id}";
         $diskName = (string) Str::ulid().'_'.preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->getClientOriginalName());
-        $path = $file->storeAs($dir, $diskName, 'local');
+        $path = $file->storeAs($dir, $diskName, $this->disk());
 
         $doc = HorseDocument::create([
             'id' => (string) Str::ulid(),
@@ -144,5 +144,10 @@ class HorseDocumentService
         $doc->delete();
 
         $this->audit->record('horse_document.deleted', 'HorseDocument', (string) $doc->id);
+    }
+
+    private function disk(): string
+    {
+        return (string) config('hovera.uploads.disk', 'local');
     }
 }
