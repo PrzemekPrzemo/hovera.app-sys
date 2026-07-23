@@ -547,11 +547,11 @@ class ClientPortalController extends Controller
 
         $attachments = (array) ($message->attachments ?? []);
         $a = $attachments[$index] ?? null;
-        if (! $a || ! Storage::disk('local')->exists((string) $a['path'])) {
+        if (! $a || ! Storage::disk($this->uploadsDisk())->exists((string) $a['path'])) {
             abort(404);
         }
 
-        return Storage::disk('local')->download(
+        return Storage::disk($this->uploadsDisk())->download(
             (string) $a['path'],
             (string) ($a['original_name'] ?? 'attachment'),
         );
@@ -616,11 +616,11 @@ class ClientPortalController extends Controller
         $photo = HorsePhoto::query()
             ->where('horse_id', $horse->id)
             ->find($photoId);
-        if (! $photo || ! Storage::disk('local')->exists($photo->file_path)) {
+        if (! $photo || ! Storage::disk($this->uploadsDisk())->exists($photo->file_path)) {
             abort(404);
         }
 
-        return Storage::disk('local')->response($photo->file_path, $photo->original_name, [
+        return Storage::disk($this->uploadsDisk())->response($photo->file_path, $photo->original_name, [
             'Content-Type' => $photo->mime,
             'Cache-Control' => 'private, max-age=3600',
         ]);
@@ -644,11 +644,11 @@ class ClientPortalController extends Controller
         $doc = HorseDocument::query()
             ->where('horse_id', $horse->id)
             ->find($documentId);
-        if (! $doc || ! Storage::disk('local')->exists($doc->file_path)) {
+        if (! $doc || ! Storage::disk($this->uploadsDisk())->exists($doc->file_path)) {
             abort(404);
         }
 
-        return Storage::disk('local')->download($doc->file_path, $doc->original_name);
+        return Storage::disk($this->uploadsDisk())->download($doc->file_path, $doc->original_name);
     }
 
     public function deleteHorseDocument(Request $request, string $slug, string $horseId, string $documentId): RedirectResponse
@@ -805,5 +805,10 @@ class ClientPortalController extends Controller
         }
 
         return $tenant;
+    }
+
+    private function uploadsDisk(): string
+    {
+        return (string) config('hovera.uploads.disk', 'local');
     }
 }

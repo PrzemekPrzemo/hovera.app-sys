@@ -58,7 +58,7 @@ class PhotosRelationManager extends RelationManager
                 ->required()
                 ->maxSize(10 * 1024) // 10 MB
                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/heic'])
-                ->disk('local')
+                ->disk($this->disk())
                 ->visibility('private')
                 ->storeFiles(false),
         ]);
@@ -71,7 +71,7 @@ class PhotosRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\ImageColumn::make('file_path')
                     ->label(__('app/horse_photo.table.column.thumb'))
-                    ->disk('local')
+                    ->disk($this->disk())
                     ->visibility('private')
                     ->square()
                     ->size(60),
@@ -131,7 +131,7 @@ class PhotosRelationManager extends RelationManager
                         }
 
                         $directory = "tenants/{$tenant->slug}/horses/{$horse->id}/photos";
-                        $storedPath = $file->store($directory, 'local');
+                        $storedPath = $file->store($directory, $this->disk());
                         if ($storedPath === false) {
                             abort(500, 'Failed to store photo');
                         }
@@ -155,7 +155,7 @@ class PhotosRelationManager extends RelationManager
                 Tables\Actions\DeleteAction::make()
                     ->before(function (HorsePhoto $record): void {
                         if ($record->file_path) {
-                            Storage::disk('local')->delete($record->file_path);
+                            Storage::disk($this->disk())->delete($record->file_path);
                         }
                     }),
             ]);
@@ -177,5 +177,10 @@ class PhotosRelationManager extends RelationManager
         }
 
         return null;
+    }
+
+    private function disk(): string
+    {
+        return (string) config('hovera.uploads.disk', 'local');
     }
 }

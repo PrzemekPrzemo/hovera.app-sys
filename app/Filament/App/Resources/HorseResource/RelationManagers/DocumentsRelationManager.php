@@ -75,7 +75,7 @@ class DocumentsRelationManager extends RelationManager
                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                     'image/jpeg', 'image/png', 'image/webp', 'image/heic',
                 ])
-                ->disk('local')
+                ->disk($this->disk())
                 ->visibility('private')
                 ->storeFiles(false), // przekazujemy raw do uploadByStable
             Forms\Components\Grid::make(2)
@@ -177,7 +177,7 @@ class DocumentsRelationManager extends RelationManager
                     ->label(__('app/horse_document.action.download.label'))
                     ->icon('heroicon-m-arrow-down-tray')
                     ->action(function (HorseDocument $record) {
-                        return Storage::disk('local')->download($record->file_path, $record->original_name);
+                        return Storage::disk($this->disk())->download($record->file_path, $record->original_name);
                     }),
                 Tables\Actions\EditAction::make()
                     ->visible(fn (HorseDocument $r) => $r->uploadedByStable())
@@ -220,5 +220,10 @@ class DocumentsRelationManager extends RelationManager
         }
 
         return null;
+    }
+
+    private function disk(): string
+    {
+        return (string) config('hovera.uploads.disk', 'local');
     }
 }

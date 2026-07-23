@@ -64,7 +64,7 @@ class MessagesRelationManager extends RelationManager
                 ->maxFiles(5)
                 ->maxSize(10 * 1024) // KB
                 ->acceptedFileTypes(['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
-                ->disk('local')
+                ->disk($this->disk())
                 ->visibility('private')
                 ->storeFiles(false), // przekazujemy raw do save handlera
         ]);
@@ -171,5 +171,10 @@ class MessagesRelationManager extends RelationManager
         }
 
         return $out;
+    }
+
+    private function disk(): string
+    {
+        return (string) config('hovera.uploads.disk', 'local');
     }
 }

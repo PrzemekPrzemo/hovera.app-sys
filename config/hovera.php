@@ -57,6 +57,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Uploads
+    |--------------------------------------------------------------------------
+    | Disk for stable/client-uploaded horse documents, photos, and message
+    | attachments (paszporty, skany, zdjęcia). Defaults to 'local' disk;
+    | point at 's3' (+ configure the `s3` disk in config/filesystems.php
+    | with Hetzner Object Storage credentials) to store these off-host —
+    | recommended once running on a shared server. See docs/DEPLOY.md
+    | "Storage: migracja na Hetzner Object Storage".
+    */
+
+    'uploads' => [
+        'disk' => env('HOVERA_UPLOADS_DISK', 'local'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Analytics
     |--------------------------------------------------------------------------
     | Google Analytics 4 measurement ID — używane przez <x-google-analytics />
