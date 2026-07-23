@@ -23,6 +23,19 @@ chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 # docs/DEPLOY.md "Coolify (Hetzner)".
 ROLE="${CONTAINER_ROLE:-web}"
 
+if [ -z "${APP_KEY:-}" ]; then
+    echo "[entrypoint] FATAL: APP_KEY is not set."
+    echo "[entrypoint]   Existing prod key must be reused (it encrypts sessions"
+    echo "[entrypoint]   and tenant DB credentials) — do not generate a new one."
+    echo "[entrypoint]   Only for a brand-new deployment, generate with:"
+    echo "[entrypoint]     printf 'base64:%s\n' \"\$(openssl rand -base64 32)\""
+    exit 1
+fi
+
+# Stub .env so `artisan about`/`tinker` find a file even though real config
+# arrives as Docker env vars (Coolify), not a committed .env.
+[ -f .env ] || touch .env
+
 if [ "$ROLE" = "web" ]; then
     echo "[entrypoint] role=web — waiting for MySQL..."
     until php -r '

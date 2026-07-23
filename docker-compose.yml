@@ -12,10 +12,15 @@ services:
       context: .
       dockerfile: Dockerfile
       target: web
+    environment:
+      # Magic Coolify/Traefik var — "80" is the WEB CONTAINER'S internal
+      # port, not a host port. No `ports:` section here on purpose: on a
+      # host running many other Coolify apps, publishing a fixed/host port
+      # would fight over it. This lets Coolify generate the Traefik label
+      # and own the actual host-side routing instead.
+      SERVICE_FQDN_WEB_80: /
     depends_on:
       - php
-    ports:
-      - "80"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/up"]
@@ -38,7 +43,8 @@ services:
       DB_PROVISIONER_HOST: mysql
       HOVERA_TENANT_DB_HOST: mysql
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     volumes:
       - storage_data:/var/www/html/storage
     restart: unless-stopped
@@ -57,7 +63,8 @@ services:
       HOVERA_TENANT_DB_HOST: mysql
     command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600"]
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     volumes:
       - storage_data:/var/www/html/storage
     restart: unless-stopped
@@ -76,7 +83,8 @@ services:
       HOVERA_TENANT_DB_HOST: mysql
     command: ["php", "artisan", "schedule:work"]
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     volumes:
       - storage_data:/var/www/html/storage
     restart: unless-stopped
