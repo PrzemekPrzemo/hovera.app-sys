@@ -61,7 +61,12 @@ zaszyfrowane wcześniej.
    PDO w pętli), potem robi migracje.
 4. Health check: Coolify sprawdza `web` przez `GET /up` (wbudowany route Laravela 11,
    `bootstrap/app.php:health`) — automatycznie zielony gdy `web`+`php`+`mysql` wstały.
-5. Podepnij domenę w Coolify (Coolify samo obsługuje SSL przez Let's Encrypt via Traefik).
+5. Domena: `web` w `docker-compose.yml` deklaruje `SERVICE_FQDN_WEB_80` (magic Coolify var,
+   `80` to port WEWNĘTRZNY kontenera `web`, nie hosta — celowo brak sekcji `ports:`, żeby na
+   serwerze z wieloma appkami nic nie rezerwowało portu na hoście poza Traefikiem). W Coolify
+   UI → Environment Variables znajdziesz tę zmienną i tam wpisujesz właściwą domenę
+   (`https://app.hovera.app`) zamiast domyślnego `*.sslip.io`. Coolify samo generuje label
+   Traefika i obsługuje SSL przez Let's Encrypt.
 
 ### Migracja z Pleska — kolejność kroków (nie pomijaj, produkcja ma realnych klientów)
 
