@@ -23,7 +23,14 @@ services:
       - php
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/up"]
+      # 127.0.0.1, not "localhost": our custom nginx.conf only `listen`s on
+      # IPv4 (unlike the stock nginx image, which the entrypoint patches to
+      # also listen on [::]:80 — it skips that once it sees a customized
+      # config). wget resolves "localhost" to ::1 first and gets Connection
+      # refused there, marking the container unhealthy — and Traefik drops
+      # unhealthy containers from routing, producing a 404 with everything
+      # else (app, migrations, php-fpm) actually working fine.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/up"]
       interval: 30s
       timeout: 5s
       retries: 3
